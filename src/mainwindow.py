@@ -511,6 +511,17 @@ class ArrowHeadItem(QGraphicsItem):
         painter.drawPolygon(self.polygon)
         painter.restore()
 
+class dummyNodeItem(HandleItem):
+    """ a graphics-only node to manage joins for hyperedges """
+    def __init__(self,center: QPointF, hSize=HITSIZE, color=Qt.red, parent=None):
+
+        super().__init__(-hSize, -hSize, 2 * hSize, 2 * hSize, parent)
+        #from a selection PoV, is this not still just a handle?
+        #This might be resolved by the starts end finishEdges code 
+        #self.setData(KEY_ROLE, ROLE_DUMMYNODE)
+        self.startsEdgeLines = []
+        self.endsEdgeLines = []
+
 class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     """ Create a new edge - both Graph Model and Visual ("graphics")
       This connects visual edges to model and list 
@@ -591,7 +602,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #Draw name in the middle
         #self.textItem = QGraphicsTextItem(self.model.Gr.edgeD[self.edgeNum].metadata['name'], parent=self)
         # chatGPT's suggestion to avoid shape() not selecting it - TransparentTextItem
-        self.textItem = TransparentTextItem(self.model.Gr.edgeD[self.edgeNum].metadata['name'], parent=self) 
+        self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
         #Stop Python GC from mangling things on delete. This ref is critical?? - Python crashes on delete without it.?
         self.textItem.my_parent_item = self
 
@@ -609,7 +620,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #PointList to pass to polyLine
         if len(points) > 0:
             ptList = [self.startNode.pos()] + points + [self.endNode.pos()]
-        else:
+        else: #just start with a 2-pt line
             ptList = [self.startNode.pos(),self.endNode.pos()]
         #Track what sort of edge this one is
         self._polyEdge = polyLineType
@@ -831,20 +842,25 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
 
     def setPolylineType(self, lineType:int):
         """set and change _polyEdge """
-        #check and then call 
+
         if self._polyEdge != lineType:
             self._polyEdge = lineType
             ptList = self.edgeLine._p
+            self.edgeLine.my_parent_item = None
             if self.isOnlySelected:
                 self.scene().clearEdgeOnly(self)
             if self._polyEdge == STRAIGHT:
-                #is this going to cause garbage collection issues?
+                #BUG (PySide) is this going to cause garbage collection issues? - yes!
                 self.scene().removeItem(self.edgeLine)
                 self.edgeLine = StraightLineItem(ptList,parent=self)
+                
             elif self._polyEdge == SPLINE:
                 self.scene().removeItem(self.edgeLine)
                 self.edgeLine = HermiteSplineItem(ptList,parent=self)
-            #Add as onlySelected?
+
+            self.edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
+            self.edgeLine.my_parent_item = self
+            self.edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
             self.updateLine()
 
     def setDirected(self, isDirected:bool):
@@ -1110,7 +1126,7 @@ class grScene(QGraphicsScene):
     def startMovingEdgeEnd(self,edge, handle):
         """ relink edge, using handle as the floating end point
         similar to rubberLine, but we now have a line to work with"""
-        #print(f"StartMovingEdge {edge}")
+        #print(f"StartMovingEdge {edge.metadata['name']}")
         self.handle = handle #Store the box for the Move/ Finish functions
         #is handle at start or end?
         if self.handle.pos() == edge.startNode.pos():
@@ -1137,7 +1153,7 @@ class grScene(QGraphicsScene):
 
         #Check that this is on a valid node/ Termination pt
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE])
-        #print(f"finMovEdge {newTermItem=} {mPos=}")
+        #print(f"finMovEdge {newTermItem.metadata['name']=} {mPos=}")
         if newTermItem:
             #Unlink Edge from CB, link to newItem, if we have really moved:
             #TODO: Extend to self-edges once multi-point edges are working
@@ -1169,7 +1185,6 @@ class grScene(QGraphicsScene):
 
     def clearEdgeOnly(self, edge):
         """ Remove the controlboxes from an edge and deselect."""
-        #TODO: Multipoint edges can add points as they go
         #For edges, was there only one selected? Clear.
         edge.isOnlySelected = None
 
@@ -1183,6 +1198,7 @@ class grScene(QGraphicsScene):
         if edge.endH:
             edge.endH = None
         edge.edgeLine.setSelected(False)
+        edge.setSelected(False)
         
     def mousePressEvent(self, mouseEvent):
         mPos = mouseEvent.scenePos()
@@ -1288,7 +1304,7 @@ class grScene(QGraphicsScene):
                     #For edges, was there only one selected? Clear.
                     if self.onlySelected:
                         self.clearEdgeOnly(self.onlySelected)
-                        self.onlySelected = None               
+                        #self.onlySelected = None               
 
                 #Minor hack - leaves handles until end of drag
                 if selItem and selItem.data(KEY_ROLE) == ROLE_NODE:
@@ -1316,7 +1332,7 @@ class grScene(QGraphicsScene):
                 #clear handle unless edge or handle, which we deal with here 
                 #different edge selected
                 clickedDifferentEdge:bool = selItem and selItem.data(KEY_ROLE) == ROLE_EDGE  and \
-                    (self.onlySelected and selItem != self.onlySelected ) #empty start
+                        (self.onlySelected and selItem != self.onlySelected ) #empty start
                 #if not clickedHandle and clickedDifferentEdge:
                 if clickedDifferentEdge:
                     self.clearSelection()
@@ -1370,7 +1386,7 @@ class grScene(QGraphicsScene):
                     if p.data(KEY_ROLE) == ROLE_POLYLINE and (selItem == p._pHandles[0] or selItem == p._pHandles[-1]):
                         #mouseEvent.accept()
                         self.mouseMode = self.MOVEEDGEEND
-                        #print(f"{self.mouseMode=} {selItem.parentItem()=}")
+                        #print(f"start MOVEEDGEEND{self.mouseMode=} {selItem.parentItem()=}")
                         #Start move
                         #selItem  _Must_ be a handle, and parent must be a visEdge - deal with the polyline inbetween
                         self.startMovingEdgeEnd(selItem.parentItem().parentItem(), selItem)
@@ -1390,6 +1406,7 @@ class grScene(QGraphicsScene):
             mPos = mouseEvent.scenePos()
             #selItem = self.itemAt(mPos,self.views()[0].transform())
             selItem = self.selectedItems()
+            #TODO if selItem == None: selItem = itemAt
             # createContextMenu(mouseEvent, listOfTuples option:action)->action??
             cxMenu = None
             if len(selItem) == 1:
@@ -1402,7 +1419,9 @@ class grScene(QGraphicsScene):
                                 ("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item))
                             ]
                 if item.data(KEY_ROLE) == ROLE_NODE:
-                    pass
+                    cxMenu = [  (("Edit Details", 
+                                lambda: self.mainwindow.showEditNodeDialog(item)))
+                            ]
             else: #no or >1 selected.
                 cxMenu =[("print",lambda: MainWindow.action_DebugPrint(MainWin))]
 
@@ -1434,7 +1453,7 @@ class grScene(QGraphicsScene):
         #Hovering would be nice, but this gets the job done.
         #Just filter for valid items:
         items=self.itemsHere(mPos, QSize(HITSIZE,HITSIZE), [ROLE_NODE])
-        #if items != []: print(f"{[type(_) for _ in items]=}")
+        #if len(items)>=1: print(f"{[type(_) for _ in items]=}")
         if items != [] and (self.mouseMode in (self.INSERTEDGE, self.INSERTEDGE2CLICK, self.MOVEEDGEEND)):
             self.views()[0].setCursor(Qt.CrossCursor)
         else:
@@ -2076,7 +2095,9 @@ class MainWindow(QMainWindow):
         #print("FileNew")
         #Tidy up where we are
         self.Scene.clearSelection()
-        self.Scene.isOnlySelected = None
+        if self.Scene.onlySelected:
+            self.Scene.onlySelected.isOnlySelected =False
+        self.Scene.onlySelected = None
         
         #clear window vars
         self.setWindowTitle(APP_NAME +"[*]")
