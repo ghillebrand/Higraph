@@ -240,9 +240,10 @@ class StraightLineItem(QGraphicsItem):
 
     def addPoint(self, point: QPointF):
         """ Add a point to the line, if close enough"""
+        #TODO: This is disabled to allow self-edges. is this a problem?
         #Close enough?
-        if not self.contains(point): 
-            return
+        #if not self.contains(point): 
+        #    return
 
         #Put point in at the right place
         minD = math.inf
@@ -257,7 +258,7 @@ class StraightLineItem(QGraphicsItem):
         self._p.insert(idx+1,point)
         self.prepareGeometryChange()
         self._createHandles()
-        self.update()
+        self.updatePath()
 
     def deletePoint(self, point: QPointF):
         # Remove nearest point within HITSIZE

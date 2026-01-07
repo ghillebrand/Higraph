@@ -1156,8 +1156,15 @@ class grScene(QGraphicsScene):
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE])
         #print(f"finMovEdge {newTermItem.metadata['name']=} {mPos=}")
         if newTermItem:
+            #Check for a self-edge: newTerm == startE or  endE
+            #  if so, make sure there is a mid point in the  polyline line
+            if newTermItem == edge.startNode or newTermItem == edge.endNode:
+                if len(edge.edgeLine._p) < 3:
+                    #add in a point on the middle for now. (only works for straight, splines are OK)
+                    #TODO: Refine!!!
+                    edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
+
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
-            #print(f"finMovEdge {newTermItem.metadata['name']=}, {self.oldTermItem.metadata['name']=}")
             if self.EdgeEnd == "start":# and newTermItem != self.oldTermItem:
                 edge.setStart(newTermItem)
                 #relink self.oldTermItem in Graph
