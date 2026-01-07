@@ -126,15 +126,6 @@ class HandleItem(QGraphicsRectItem):
         self._onMoveCallback = None
 
     def itemChange(self, change, value):
-        #print(f"HI Change {self.scene()=}: {change=}, {value=} ")
-        #Avoid processing calls in "odd" circumstances
-        #if change in (
-        #    QGraphicsItem.ItemSceneChange,
-        #    QGraphicsItem.ItemParentChange,
-        #    QGraphicsItem.ItemVisibleChange,
-        #    QGraphicsItem.ItemEnabledChange,
-        #):
-        #    return super().itemChange(change, value)
         #print(f"Handle change {change=} {value=}")
         if ( change == QGraphicsItem.ItemPositionHasChanged
             and not self.suppressItemChange 
@@ -418,7 +409,8 @@ class HermiteSplineItem(QGraphicsItem):
 
     def __repr__(self):
         #tuple formatted, can be fed into constructor
-        return str(f"({self._p},\n{self._t})")
+        #return str(f"({self._p},\n{self._t})")
+        return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
         #return super().__repr__()
 
     def boundingRect(self) -> QRectF:
@@ -555,6 +547,7 @@ class HermiteSplineItem(QGraphicsItem):
             #Not last point
             if ic != len(self._p):
                 self.scene().removeItem(self._tHandles[ic][0])
+            #TODO: What if ic _is_ 0 or last? Will this not corrupt things?
             self._tHandles.pop(ic)
 
             #remove tangents
@@ -574,6 +567,7 @@ class HermiteSplineItem(QGraphicsItem):
     def setP(self, n:int, p:QPointF):
         """sets the nth point to the value p. n is a list index """
         self._p[n] = p
+        #print(f"setP {self._p[n]} {hex(id(self._p[n]))} set to {p}, {hex(id(p))} ")
 
     def updatePath(self):
         """ Allow the calling of the recalculation independently of handle updates"""

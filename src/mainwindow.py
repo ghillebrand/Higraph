@@ -196,6 +196,7 @@ class graphModel(QStandardItemModel):
         self.Gr = Graph()
         #Reset the global Gr id counter too
         Graph.nextID = 0
+        Graph.IDsUsed = set()
         super().clear()
 
 class VisNodeItem(QGraphicsObject):
@@ -317,6 +318,7 @@ class VisNodeItem(QGraphicsObject):
         """setup metadata to display
             This should be the same code as in VisEdgeItem
         """
+        #TODO: This needs to be called by itemChange somehow.
         metaStr = ''
         for k,v in self.metadata.items():
             if k != 'name':
@@ -396,10 +398,11 @@ class VisNodeItem(QGraphicsObject):
             self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
             
             #Position change
-            for sEdge in self.startsEdges:
-                sEdge.updateLine(self)
-            for eEdge in self.endsEdges:
-                eEdge.updateLine(self)
+            if change == QGraphicsItem.ItemPositionHasChanged:
+                for sEdge in self.startsEdges:
+                    sEdge.updateLine(self)
+                for eEdge in self.endsEdges:
+                    eEdge.updateLine(self)
 
         #note the **return**
         return super().itemChange(change,value)
@@ -880,20 +883,18 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     #From musicamente's SO post   
     # These are to setup the initial edge, which will always start out as a 2 pt edge. 
     ###TODO: Polylines will allow creation of multi-point lines up front - change rubberline to use a polyline
-    def setP2(self, p2):
+    def XXsetP2(self, p2):
         self.edgeLine.setP(-1,p2) #-1 is the last pointin the list
 
     def setStart(self, start):
         """ Set the startItem to start. Also update model, for edits"""
-        #TODO: Add updateEdge() to Graph class, then include here (Done in scene??)
         self.startNode = start
+        #self.edgeLine.setP(0,start.scenePos())
         self.updateLine(start)
 
     def setEnd(self, end):
         #TODO: Add updateEdge() to Graph class, then include here??
         self.endNode = end
-        #self._line.setP2(end.scenePos())
-        ###
         self.edgeLine.setP(-1,end.scenePos())
         self.updateLine(end)
 
@@ -904,7 +905,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #TODO If both start and end are selected, move all the polyline points too.
         if source == self.startNode:
             self.edgeLine.setP(0,source.scenePos())
-        elif source == self.endNode: #endNode
+        if source == self.endNode: #endNode
             self.edgeLine.setP(-1,source.scenePos())
 
         #Draw the arrow/ end shape
@@ -1131,8 +1132,8 @@ class grScene(QGraphicsScene):
         #is handle at start or end?
         if self.handle.pos() == edge.startNode.pos():
             # NOTE: Node relinking is only done on successful finish, so track the old Terminator item
-            self.oldTermItem = edge.startNode
             self.EdgeEnd = "start"
+            self.oldTermItem = edge.startNode
             #link edge to handle to move
             edge.setStart(handle)
         else:
@@ -1155,23 +1156,24 @@ class grScene(QGraphicsScene):
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE])
         #print(f"finMovEdge {newTermItem.metadata['name']=} {mPos=}")
         if newTermItem:
-            #Unlink Edge from CB, link to newItem, if we have really moved:
-            #TODO: Extend to self-edges once multi-point edges are working
-            if self.EdgeEnd == "start" and newTermItem != self.oldTermItem:
+            #Unlink Edge from handle, link to newItem, (if we have really moved:)
+            #print(f"finMovEdge {newTermItem.metadata['name']=}, {self.oldTermItem.metadata['name']=}")
+            if self.EdgeEnd == "start":# and newTermItem != self.oldTermItem:
                 edge.setStart(newTermItem)
-                #relink self.oldTermItem in Gr
+                #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "start", newTermItem.data(KEY_INDEX))
                 #Move the reverse pointer from the oldTermItem to the new:
                 self.oldTermItem.startsEdges.remove(edge)
                 newTermItem.startsEdges.append(edge)
-            elif newTermItem != self.oldTermItem:  #end
-                #edge.endNode = newTermItem
-                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "end", newTermItem.data(KEY_INDEX))
+            
+            elif self.EdgeEnd == "end":# and newTermItem != self.oldTermItem:  #end
                 edge.setEnd(newTermItem)
+                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "end", newTermItem.data(KEY_INDEX))
                 #Move the reverse pointer from the oldTermItem to the new:
                 self.oldTermItem.endsEdges.remove(edge)
                 newTermItem.endsEdges.append(edge)
+        
         else: # link back to old
             #print("Missed (nothing found) on relink")
             self.handle.setPos(self.oldTermItem.pos())
@@ -1516,6 +1518,7 @@ class grScene(QGraphicsScene):
                 itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE]) # add ,ROLE_EDGE to the list for multigraphs
                 if itm:
                     #For now, disallow self edges/ loops
+                    #TODO: When they are allowed, note that tangent calc breaks.
                     if self.tmpEdgeSt != itm:
                         self.tmpEdgeEnd = itm 
                         self.endPoint = mPos
