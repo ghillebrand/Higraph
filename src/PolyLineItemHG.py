@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QGraphicsObject, QGraphicsItem, QGraphicsRectItem
 
 #HITSIZE = 5
 from  HGConstants import *
+from GraphicsSupport import *
 
 def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
     """ Finds the closesest point between p1&p2 to point. Returns closest_point, distance
@@ -93,58 +94,6 @@ class xxHandleItem(QGraphicsRectItem):
         painter.drawRect(self.rect())
         painter.restore()
 
-class HandleItem(QGraphicsRectItem):
-    """ a generic graphics handle to facilitate moving points during editing"""
-    lastChanged = None  #Track the handle which was last changed
-
-    def __init__(self, center: QPointF, hSize=HITSIZE, color=Qt.red, parent=None):
-
-        super().__init__(-hSize, -hSize, 2 * hSize, 2 * hSize, parent)
-
-        #stop constructor changes messing with .itemChange()
-        self.suppressItemChange = True 
-
-        self.setBrush(QBrush(color))
-        self.setPen(QPen(Qt.NoPen))
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        #NOT selectable, otherwise default click handling gets in the way
-        self.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,True)
-        self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges,True)
-        self.setData(KEY_ROLE, ROLE_HANDLE)
-        #Guarantee its at the front
-        self.setZValue(3000)
-        self.setPos(center)
-        self._onMoveCallback = None
-        
-        self.suppressItemChange = False
-
-    def setMoveCallback(self, callback):
-        self._onMoveCallback = callback
-
-    def clearMoveCallback(self):
-        self._onMoveCallback = None
-
-    def itemChange(self, change, value):
-        #print(f"Handle change {change=} {value=}")
-        if ( change == QGraphicsItem.ItemPositionHasChanged
-            and not self.suppressItemChange 
-            and self._onMoveCallback
-        ):
-            HandleItem.lastChanged = self   #Track which was the last handle touched
-            self._onMoveCallback(self.scenePos())
-
-        return super().itemChange(change, value)
-
-    def paint(self, painter: QPainter, option, widget=None):
-
-        painter.save()
-        painter.setBrush(self.brush())
-        painter.setPen(self.pen())
-        #painter.drawEllipse(self.rect())
-        painter.drawRect(self.rect())
-        painter.restore()
-        
 
 class StraightLineItem(QGraphicsItem):
 
