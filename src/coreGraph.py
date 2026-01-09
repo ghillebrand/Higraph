@@ -25,7 +25,7 @@ class Graph:
     # a container class of nodes. Mostly exists as a place to hold metadata, and some optimisations 
     class node():
       
-        def __init__(self,metadata=None,id=None):
+        def __init__(self,metadata=None,id=None, parents = [], children = []):
             #Check for unique ID
             if id:
                 if not id in Graph.IDsUsed:
@@ -41,10 +41,13 @@ class Graph:
             self.metadata = metadata
             self.startsEdges = []  
             self.endsEdges = []
+            self.parents = parents   #Technically redundant, as this can be inferred from walking through self.children
+            self.children = children  #Loosely equivalent to Harels sub-blob function σ^1
 
 
         def __repr__(self):
-            return f"nodeID:{self.nodeID},metadata:{self.metadata},startsEdges:{self.startsEdges},endsEdges:{self.endsEdges}\n"
+            return f"nodeID:{self.nodeID},metadata:{self.metadata},startsEdges:{self.startsEdges},"\
+                    f"endsEdges:{self.endsEdges}, parents:{self.parents}, children:{self.children}\n"
 
         __str__ = __repr__
         
@@ -55,8 +58,21 @@ class Graph:
         def addEnds(self,edge):
             """add that this node ends <edge>  """
             self.endsEdges.append(edge)
+    
+        def addParent(self,parent):
+            #TODO: Add checks for self-parenting - loops are bad here.
+            self.parents.append(parent)
         
-            
+        def delParent(self,parent):
+            if parent in self.parents:
+                self.parents.remove(parent)
+
+        def addChild(self,child):
+            self.children.append(child)
+
+        def delChild(self,child):
+            if child in self.children:
+                self.children.remove(child)
     #-------------------------------------------------------------------------------------#
     
     class edge():
@@ -112,9 +128,14 @@ class Graph:
         return(f"nodes:\n{self.nodeD}\nedges:\n{self.edgeD}")
     
     __str__ = __repr__
-    
+
+    def resetIDs(self):
+        """reset the Class vars. Not all new instances may want to do this """
+        Graph.nextID:int = 0
+        Graph.IDsUsed = set()
+
     def addNode(self,name=None, id=None)->int: 
-        n = self.node({"name" : name},id=id)
+        n = self.node({"name" : name},id=id,parents = [], children = [])
         self.nodeD.update({n.nodeID : n})
         return n.nodeID
         
@@ -193,6 +214,20 @@ class Graph:
                     self.delEdge(endEdge)
                 else: #remove from the endlist
                     self.edgeD[endEdge].endNodes.remove(nodeID)
+            
+            #Check and relink for parents/children
+            for p in self.nodeD[nodeID].parents:
+                self.nodeD[p].delChild(nodeID)
+                for c in self.nodeD[nodeID].children:
+                    self.nodeD[p].addChild(c)
+
+            #Reparent to "grandparents"
+            for c in self.nodeD[nodeID].children:
+                self.nodeD[c].delParent(nodeID)
+                for gp in self.nodeD[nodeID].parents:
+                    self.nodeD[c].addParent(gp)
+
+               
             #delete the node
             Graph.IDsUsed.remove(nodeID)
             self.nodeD.pop(nodeID)

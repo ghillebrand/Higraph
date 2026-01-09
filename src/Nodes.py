@@ -26,7 +26,6 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
             QMimeData, QBuffer, QByteArray, QIODevice)
 
 
-
 class VisNodeItem(QGraphicsObject):
     """ Create a new node - both Graph Model and Visual ("graphics") 
     This connects visual Rect to model and list 
@@ -177,8 +176,6 @@ class VisNodeItem(QGraphicsObject):
         #adjust = 2 # self.pen.width() / 2
         #return self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
 
-
-
     def paint(self, painter, option, widget=None):
         """ Draw a VisNode item"""
         #Debug: Show the centre of the node
@@ -260,3 +257,13 @@ class VisNodeItem(QGraphicsObject):
             self.listWidget.setCurrentItem(lWItem)
 
         super().mousePressEvent(mouseEvent)
+
+
+class VisBlobItem(VisNodeItem):
+    """Generalise point-like nodes to sets. Blame Harel for the name"""
+    
+    def __init__(self,posn,model,listWidget, parent=None, nameP ="", id=None,
+                    metadata={}, metadataAttributes={}):
+        #print(f"In VisNodeItem {posn =}")
+        super().__init__(parent)
+        self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
