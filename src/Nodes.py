@@ -190,7 +190,7 @@ class VisNodeItem(QGraphicsObject):
         self.setZValue(1000)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.setFlags(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
+        self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
 
         #self.setAcceptHoverEvents(True)
         self.hovered = False
