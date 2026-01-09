@@ -11,7 +11,7 @@ from xml.dom import minidom
 
 from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
-            QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
+            QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem, QAbstractGraphicsShapeItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
             QSlider, QLabel, QStatusBar,
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
@@ -19,11 +19,94 @@ from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor,
+            QPainterPath, QPainterPathStroker, QCursor,QColor,
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
             QMimeData, QBuffer, QByteArray, QIODevice)
+
+
+#A helper blob drawing class
+# Gemini code.
+from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem
+from PySide6.QtCore import QRectF, Qt, Signal
+from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
+
+class QRoundedRectItem(QGraphicsObject):
+    # Custom signal emitted when the border is clicked
+    clicked = Signal()
+
+    def __init__(self, rect: QRectF, xRadius: float=0, yRadius: float=0, mode=Qt.AbsoluteSize,parent=None):
+        super().__init__(parent)
+        self._rect = rect
+        self._xRadius = xRadius
+        self._yRadius = yRadius
+        self._mode = mode
+        
+        # Style configuration
+        self._penWidth = 1.0
+        self._baseColor = QColor("black")
+        self._hoverColor = QColor("red")
+        self._pen = QPen(Qt.NoPen)  #QPen(self._baseColor, self._penWidth)
+        
+        # Interaction settings
+        self.setAcceptHoverEvents(True)
+        #self.setFlags(QGraphicsObject.ItemIsSelectable | QGraphicsObject.ItemIsMovable)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        self.setFlag(QGraphicsItem.ItemIsMovable, False)
+        #Let the parent handle the buttons
+        self.setAcceptedMouseButtons(Qt.NoButton)
+        
+        self._isHovered = False
+
+    def boundingRect(self) -> QRectF:
+        # Increase the bounding box slightly to account for the pen width
+        margin = self._pen.widthF() / 2
+
+        return self._rect.adjusted(-margin, -margin, margin, margin)
+
+    def shape(self) -> QPainterPath:
+        # Returns only the hollow border path
+        basePath = QPainterPath()
+        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius, self._mode)
+        stroker = QPainterPathStroker()
+        stroker.setWidth(HITSIZE) # Hit-area thickness
+        return stroker.createStroke(basePath)
+
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
+        #painter.setRenderHint(QPainter.Antialiasing)
+        
+        # Determine styling by looking at the PARENT'S state
+        parent = self.parentItem()
+        if parent and parent.isSelected():
+            painter.setPen(QPen(Qt.blue, 1.5, Qt.DashLine))
+        elif parent and getattr(parent, '_isHovered', False):
+            painter.setPen(QPen(QColor("red"), 1.5))
+        else:
+            painter.setPen(QPen(Qt.black, 1.0))
+            
+        painter.setBrush(Qt.NoBrush)
+        painter.drawRoundedRect(self._rect, self._xRadius, self._yRadius, self._mode)
+
+    def setPen(self,pen):
+        self._pen = pen
+
+    def hoverEnterEvent(self, event):
+        self._isHovered = True
+        self.update()
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self._isHovered = False
+        self.update()
+        super().hoverLeaveEvent(event)
+
+    def mousePressEvent(self, event):
+        # Only emits if the user clicks the actual 'shape' (the outline)
+        #print(f"RR mouse pressed {event=}")
+        #self.clicked.emit()
+        super().mousePressEvent(event)
+
 
 
 class VisNodeItem(QGraphicsObject):
@@ -261,9 +344,100 @@ class VisNodeItem(QGraphicsObject):
 
 class VisBlobItem(VisNodeItem):
     """Generalise point-like nodes to sets. Blame Harel for the name"""
+
+    def __init__(self,posn, model,listWidget, parent=None, nameP ="", id=None,
+                    metadata={}, metadataAttributes={},
+                    height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]):
+        """  posn is the topleft, size is width and height, Radii are corner curves
+           NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
+        
+        super().__init__(posn, model,listWidget, parent=parent, nameP ="", id=None,
+                    metadata={}, metadataAttributes={})
+
+        self.suppressItemChange = True
+        self.parents = parents
+        self.children = children
+
+        #Node constructor doesn't take parents & children, so add now
+
+        # make the rect
+        #self.nodeShape = QGraphicsEllipseItem(-NODESIZE/2,-NODESIZE/2,NODESIZE,NODESIZE,self)
+
+        #    def __init__(self, rect: QRectF, xRadius: float=0, yRadius: float=0, mode=Qt.AbsoluteSize,parent=None):
+
+        self._rect = QRectF(0,0,width,height)
+        self._xRadius = xRadius
+        self._yRadius = yRadius
+        self._radMode = radMode
+        self.nodeShape = QRoundedRectItem(self._rect,parent=self,
+                                xRadius = self._xRadius, yRadius = self._yRadius, mode = self._radMode)
+        self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
+        self.nodeShape.setPen(QPen(Qt.NoPen))
+        #TODO: Set selectable False - see if that processes clicks better?
+        self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        #Make child ignore mouse buttons
+        #From parent - not set in super() call?!?
+        self.setZValue(1000)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
+
+        self.suppressItemChange = False
+
+    def __repr__(self):
+        r = super().__repr__()
+        r += f"\n{self.parents=}\n{self.children}"
+
+    def boundingRect(self):
+        #TODO: Add in the displayed text
+        # Must cover both the rectangle and the text area
+        return self._rect.adjusted(-5, -20, 5, 5)
     
-    def __init__(self,posn,model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={}):
-        #print(f"In VisNodeItem {posn =}")
-        super().__init__(parent)
-        self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
+    def shape(self):
+        # Combined shape: Hollow Border + Solid Text Area
+        #path = self.nodeShape.shape() 
+        path = self.mapFromItem(self.nodeShape, self.nodeShape.shape())
+        if self.metadataAttributes.get('name', {}).get('display', True):
+            #TODO: When text is rich text, this will need updating
+            tFont = QFont()
+            fm = QFontMetrics(tFont)
+            # Use same rect/logic as paint() for text hit-area
+            textRect = fm.boundingRect(self._rect.toRect(), Qt.AlignCenter, self.dispText)
+            path.addRect(QRectF(textRect))
+            
+        return path
+
+    def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
+        if self.isSelected():
+            painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+        else:
+            painter.setPen(Qt.black)
+
+        #self.nodeShape is painted by Qt
+
+        #Draw the text if set to display
+        if self.metadataAttributes['name']['display']:
+            # Pos on top (this can be generalised to left, bottom, right, etc)
+            #r = QRectF(0,-NODESIZE,0,0) 
+            #update height & width
+            #r = painter.drawText(r,Qt.AlignCenter,self.dispText)
+            #painter.drawText(r, Qt.AlignCenter, self.dispText)
+            painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
+
+    def itemChange(self, change, value):
+        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
+            # This triggers whenever the item is selected or deselected
+            # We tell the child (the border) to redraw itself
+            self.nodeShape.update()
+        
+        # Detect when the selection state changes
+        if change == QGraphicsItem.ItemSelectedChange:
+            # value is the new selection state (True/False)
+            # Force the child border to repaint so it picks up the new state
+            if hasattr(self, 'nodeShape'):
+                self.nodeShape.update()
+        return super().itemChange(change, value)
+
+    def mousePressEvent(self, event):
+        #Call VisNode's mouse handler
+        super().mousePressEvent(event)

@@ -255,6 +255,10 @@ class grScene(QGraphicsScene):
         HLine.setPen(QPen(Qt.black))
         self.addItem(HLine) 
         """
+        ### - TEsting Blobs
+        blob = VisBlobItem(QPointF(0,0),self.model, self.listWidget, height = 100, width = 200,xRadius=10,yRadius=10)
+        self.addItem(blob)
+        blob.setSelected(True)
 
     def itemsHere(self, pos: QPointF, size: QSizeF, itemRoles: List[int]):
         """Return a list of the items who's roles match `itemRoles`, within `size` of `pos` """
@@ -498,6 +502,7 @@ class grScene(QGraphicsScene):
         edge.setSelected(False)
         
     def mousePressEvent(self, mouseEvent):
+        
         mPos = mouseEvent.scenePos()
         #Track the last mouse position for Pointer moves
         self._lastMousePos = mPos
@@ -642,8 +647,9 @@ class grScene(QGraphicsScene):
                         selItem.edgeLine.setSelected(True)
 
                 #Why set this to selected? Rather handle in NODE and EDGE if's?
-                if selItem:
+                if selItem is not None:
                     selItem.setSelected(True)
+
                 selected_items = self.selectedItems()
                 #len is 0 or 1
                 #exactly 1 edge selected
@@ -2203,7 +2209,7 @@ class action_CreditsDlg(QDialog):
 #import cProfile
 
 if __name__ == "__main__":
-    #print("="*100)
+    print("="*100)
     #logger = logging.getLogger(__name__)
     #logging.basicConfig(filename='higraphDebug.log', 
     #                    encoding='utf-8', 
