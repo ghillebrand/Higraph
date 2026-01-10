@@ -113,7 +113,7 @@
     <addaction name="actionZoomOut"/>
     <addaction name="separator"/>
     <addaction name="actionNewNode"/>
-    <addaction name="actionNew_Blob"/>
+    <addaction name="actionNewBlob"/>
     <addaction name="actionNewEdge"/>
    </widget>
    <widget class="QMenu" name="menuTools">
@@ -155,7 +155,7 @@
    <addaction name="action_Delete"/>
    <addaction name="separator"/>
    <addaction name="actionNewNode"/>
-   <addaction name="actionNew_Blob"/>
+   <addaction name="actionNewBlob"/>
    <addaction name="actionNewEdge"/>
    <addaction name="actionPointer"/>
   </widget>
@@ -352,7 +352,7 @@
     <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
-  <action name="actionNew_Blob">
+  <action name="actionNewBlob">
    <property name="icon">
     <iconset>
      <normaloff>src/icons/blob.png</normaloff>src/icons/blob.png</iconset>

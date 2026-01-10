@@ -214,7 +214,7 @@ class grScene(QGraphicsScene):
     #Mouse state enum
     # INSERTEDGE2CLICK for handling choice of item in ambiguous cases, which requires a click to choose, 
     # and thus the end is selected on a Press, not a release.
-    INSERTNODE, INSERTEDGE, POINTER, INSERTEDGE2CLICK, MOVEEDGEEND, MOVEHANDLE, DOUBLECLICK, DRAGGING = range(8)
+    INSERTNODE, INSERTBLOB, INSERTEDGE, POINTER, INSERTEDGE2CLICK, MOVEEDGEEND, MOVEHANDLE, DOUBLECLICK, DRAGGING = range(9)
 
     #TO pass edit requests to mainwindow. Signal must be class, not instance variables.
     edgeEditRequested = Signal(object)
@@ -230,7 +230,7 @@ class grScene(QGraphicsScene):
         # Placeholders for nodes & edges between mouse states when creating an edge
         self.tmpEdgeSt = None #QGraphicsItem - temp start
         self.tmpEdgeEnd = None
-        self.startPoint = None #QPoints, to draw the edge's sline
+        self.startPoint = None #QPoints, to draw the edge's line/ Blob rectangle
         self.endPoint = None
         self.rubberLine = None
         self.GrRubberLine =None
@@ -255,10 +255,8 @@ class grScene(QGraphicsScene):
         HLine.setPen(QPen(Qt.black))
         self.addItem(HLine) 
         """
-        ### - TEsting Blobs
-        blob = VisBlobItem(QPointF(0,0),self.model, self.listWidget, height = 100, width = 200,xRadius=10,yRadius=10)
-        self.addItem(blob)
-        blob.setSelected(True)
+
+
 
     def itemsHere(self, pos: QPointF, size: QSizeF, itemRoles: List[int]):
         """Return a list of the items who's roles match `itemRoles`, within `size` of `pos` """
@@ -542,8 +540,14 @@ class grScene(QGraphicsScene):
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
                 self.mouseMode = self.POINTER
+                mouseEvent.accept()
                 return
-                
+            elif self.mouseMode == self.INSERTBLOB:
+                self.clearSelection()
+                #For edges, was there only one selected? Clear.
+                if self.onlySelected:
+                    self.clearEdgeOnly(self.onlySelected)
+                self.startPoint = mouseEvent.scenePos()
             elif self.mouseMode == self.INSERTEDGE:
                 #print("Ins edge")
                 self.clearSelection()
@@ -809,8 +813,18 @@ class grScene(QGraphicsScene):
             #print("up node")
             #TODO: Clear selection after adding a node (or before?)
             self.clearSelection()
+            self.mouseMode = self.POINTER
             return # Or use the eventHandled method?
-            
+        elif self.mouseMode == self.INSERTBLOB:
+            #add the  Blob
+            #TODO: Check for parents/ children - here, or itemChanged?
+            blob = VisBlobItem(self.startPoint,self.model, self.listWidget, 
+                            height = mPos.y()-self.startPoint.y(), width = mPos.x()-self.startPoint.x(),
+                            xRadius=10,yRadius=10)
+            self.addItem(blob)
+            self.mouseMode = self.POINTER
+            mouseEvent.accept()
+            return
         elif self.mouseMode == self.INSERTEDGE:
             #print("up edge")
             #CreateEdge code 
@@ -1242,6 +1256,7 @@ class MainWindow(QMainWindow):
         #Graph Tool bar tools
         self.ui.actionNewNode.triggered.connect(self.actionNewNode)
         self.ui.actionNewEdge.triggered.connect(self.actionNewEdge)
+        self.ui.actionNewBlob.triggered.connect(self.actionNewBlob)
         self.ui.actionPointer.triggered.connect(self.actionPointer)
 
         #File
@@ -1308,6 +1323,11 @@ class MainWindow(QMainWindow):
             self.scene.set_mode(self._pointer_type_group.checkedId())
             self._button_group.button(item.diagram_type).setChecked(False)
         """
+
+    def actionNewBlob(self):
+        self.Scene.mouseMode = grScene.INSERTBLOB
+        #self.actionPointer.setChecked(False)
+        self.statusBar().showMessage("Insert Blob",3000)
 
     def actionNewEdge(self):
         self.statusBar().showMessage("Insert Edge",3000)

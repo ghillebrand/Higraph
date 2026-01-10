@@ -341,7 +341,6 @@ class VisNodeItem(QGraphicsObject):
 
         super().mousePressEvent(mouseEvent)
 
-
 class VisBlobItem(VisNodeItem):
     """Generalise point-like nodes to sets. Blame Harel for the name"""
 
@@ -373,14 +372,7 @@ class VisBlobItem(VisNodeItem):
                                 xRadius = self._xRadius, yRadius = self._yRadius, mode = self._radMode)
         self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
-        #TODO: Set selectable False - see if that processes clicks better?
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        #Make child ignore mouse buttons
-        #From parent - not set in super() call?!?
-        self.setZValue(1000)
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
 
         self.suppressItemChange = False
 
