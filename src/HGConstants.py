@@ -33,6 +33,7 @@ KEY_ROLE = Qt.UserRole + 2
 ROLE_NODE = QListWidgetItem.ItemType.UserType + 1
 ROLE_EDGE = QListWidgetItem.ItemType.UserType + 2
 ROLE_HYPEREDGE = QListWidgetItem.ItemType.UserType + 6
+ROLE_BLOB = QListWidgetItem.ItemType.UserType + 7
 
 #Handles for connecting/ moving
 ROLE_HANDLE = QListWidgetItem.ItemType.UserType + 3

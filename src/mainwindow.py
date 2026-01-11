@@ -83,7 +83,7 @@ class graphModel(QStandardItemModel):
         #Setup the abstract graph
         self.Gr = Graph()
         #TODO: Read this from config/ on file load
-        self.isDigraph = ISDIGRAPH   #Test with True, since removing stuff is normally easier
+        self.isDigraph = ISDIGRAPH  
 
     def __repr__(self):
         rStr =""
@@ -123,7 +123,7 @@ class graphModel(QStandardItemModel):
 
     def getGMNodes(self):
         """ Returns all the Graph Model Nodes"""
-        return [self.item(i).data(self.ROLE_NODE) for i in range(self.rowCount())]
+        return [self.item(i).data(self.ROLE_NODE) or self.item(i).data(self.ROLE_BLOB)  for i in range(self.rowCount())]
 
     def addGMEdge(self,sItem, eItem, nameP=None, id=None):
         """Make a Graph Model EDGE item, return the item and the index number (item,n) 
@@ -160,7 +160,7 @@ class graphModel(QStandardItemModel):
     def itemName(self,itm)->str:
         """ Take a KEY_INDEX, returns the name from the graph"""
         iName = ""
-        if itm.data(KEY_ROLE) == ROLE_NODE:
+        if itm.data(KEY_ROLE) in [ ROLE_NODE, ROLE_BLOB]:
             iName = self.Gr.nodeD[int(itm.nodeNum)].metadata['name']
         elif itm.data(KEY_ROLE) == ROLE_EDGE:
             iName = self.Gr.edgeD[int(itm.edgeNum)].metadata['name']
@@ -169,7 +169,7 @@ class graphModel(QStandardItemModel):
     def edgesAtNode(self,itm):
         """ Take a node's KEY_INDEX, returns a list of  attached graph edges (both ends), or None"""
         eList = []
-        if itm.data(KEY_ROLE) == ROLE_NODE:
+        if itm.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
             eList = copy.deepcopy(self.Gr.nodeD[int(itm.nodeNum)].startsEdges)
             eList += copy.deepcopy(self.Gr.nodeD[int(itm.nodeNum)].endsEdges)
         return(eList)
@@ -297,7 +297,7 @@ class grScene(QGraphicsScene):
                 if itm.data(KEY_ROLE) == ROLE_EDGE:
                     iType = "Edge"
                     label = f"{iType}:{itm.data(KEY_INDEX)}>{itm.textItem.toPlainText()}" 
-                elif itm.data(KEY_ROLE) == ROLE_NODE:
+                elif itm.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                     iType = "Node"
                     label = f"{iType}:{itm.data(KEY_INDEX)}>{itm.dispText}" 
                 elif itm.data(KEY_ROLE) == ROLE_HANDLE:
@@ -443,7 +443,7 @@ class grScene(QGraphicsScene):
         """ note pickItemAt needs the full mouseEvent (screenPos) """
 
         #Check that this is on a valid node/ Termination pt
-        newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE])
+        newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
         #print(f"finMovEdge {newTermItem.metadata['name']=} {mPos=}")
         if newTermItem:
             #Check for a self-edge: newTerm == startE or  endE
@@ -555,7 +555,7 @@ class grScene(QGraphicsScene):
                 if self.onlySelected:
                     self.clearEdgeOnly(self.onlySelected)
 
-                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE]) #,ROLE_EDGE
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB]) #,ROLE_EDGE
                 #print(f"{self.mouseMode =}")
                 if itm:
                     self.tmpEdgeSt = itm
@@ -565,7 +565,7 @@ class grScene(QGraphicsScene):
 
             #This is the end of a 2-click-insert (via pickItem) -  means END the rubberBanding, create the edge 
             elif self.mouseMode == self.INSERTEDGE2CLICK: 
-                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE]) #,ROLE_EDGE
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB]) #,ROLE_EDGE
                 if itm:
                     self.tmpEdgeEnd = itm 
                     self.endPoint = mPos
@@ -586,7 +586,7 @@ class grScene(QGraphicsScene):
 
                 #HACK: Currently this returns the TOP item.  - see TODO above
                 #ArrowHeads should _not_ be selectable/ movable, but they are breaking moves...
-                selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE, ROLE_POLYLINE])
+                selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE,ROLE_BLOB, ROLE_POLYLINE])
                 if selItem:
                     selItem = selItem[0]
                 else:
@@ -622,6 +622,15 @@ class grScene(QGraphicsScene):
                     #TODO: DRAGGING
                     #super().mousePressEvent(mouseEvent)
                     #return
+
+                if selItem and selItem.data(KEY_ROLE) == ROLE_BLOB:
+                    print(f"Sel Blob {selItem.metadata['name']}")
+                    if self.onlySelected: #Clear handles
+                        self.clearEdgeOnly(self.onlySelected)
+                    self.onlySelected = selItem
+                    selItem.isOnlySelected = True
+                    selItem.setSelected(True)
+
 
                 #deal with selecting end-point handles  (leave ordinary handles & tangents to Qt?)
                 #Move end point handles
@@ -725,7 +734,7 @@ class grScene(QGraphicsScene):
                                 ("del Point","delPt" ),
                                 ("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item))
                             ]
-                if item.data(KEY_ROLE) == ROLE_NODE:
+                if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                     cxMenu = [  (("Edit Details", 
                                 lambda: self.mainwindow.showEditNodeDialog(item)))
                             ]
@@ -759,7 +768,7 @@ class grScene(QGraphicsScene):
 
         #Hovering would be nice, but this gets the job done.
         #Just filter for valid items:
-        items=self.itemsHere(mPos, QSize(HITSIZE,HITSIZE), [ROLE_NODE])
+        items=self.itemsHere(mPos, QSize(HITSIZE,HITSIZE), [ROLE_NODE, ROLE_BLOB])
         #if len(items)>=1: print(f"{[type(_) for _ in items]=}")
         if items != [] and (self.mouseMode in (self.INSERTEDGE, self.INSERTEDGE2CLICK, self.MOVEEDGEEND)):
             self.views()[0].setCursor(Qt.CrossCursor)
@@ -830,7 +839,7 @@ class grScene(QGraphicsScene):
             #CreateEdge code 
             #TODO: Put this in its own function
             if self.tmpEdgeSt:
-                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE]) # add ,ROLE_EDGE to the list for multigraphs
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE,ROLE_BLOB]) # add ,ROLE_EDGE to the list for multigraphs
                 if itm:
                     #For now, disallow self edges/ loops
                     #TODO: When they are allowed, note that tangent calc breaks.
@@ -886,7 +895,7 @@ class grScene(QGraphicsScene):
             pos: QPointF = mouseEvent.scenePos()
             self.mouseMode = self.DOUBLECLICK
             #print(f"Double-click at {pos}")
-            item = self.pickItemAt(mouseEvent,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE])
+            item = self.pickItemAt(mouseEvent,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
             if item and item.data(KEY_ROLE) == ROLE_EDGE:
                 self.clearEdgeOnly(item)
                 #Pass the edit signal to Mainwindow.
@@ -898,7 +907,8 @@ class grScene(QGraphicsScene):
                 #HACK: Call the dialog directly. Signals would be better
                 self.mainwindow.showEditEdgeDialog(item)
 
-            if item and item.data(KEY_ROLE) == ROLE_NODE:
+            print(f"{item=}")
+            if item and item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                 self.mainwindow.showEditNodeDialog(item)
             
             self.mouseMode = self.POINTER
@@ -1041,9 +1051,19 @@ def findItemByIdx(self,idx):
     return None
 QListWidget.findItemByIdx = findItemByIdx
 
+def findItemByIdx(self,idx):
+    """another patch to LWid
+      feed in a ROLE_INDEX value, and get the ITEM out, or none """
+    for row in range(self.count()):
+        item = self.item(row)
+        if item.data(KEY_INDEX) == idx:
+            return item
+    return None
+QListWidget.findItemByIdx = findItemByIdx
+
 def findItemRowByIdx(self,idx):
     """another patch to LWid
-      feed in a ROLE_INDEX value, and get the item out, or none """
+      feed in a ROLE_INDEX value, and get the item ROW of the item out, or none """
     for row in range(self.count()):
         item = self.item(row)
         if item.data(KEY_INDEX) == idx:
@@ -1345,7 +1365,7 @@ class MainWindow(QMainWindow):
         #select the *graphics* view of the clicked item as well
         idx = item.data(KEY_INDEX)
         for sItem in self.Scene.items():
-            if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE]:
+            if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
                 if sItem.data(KEY_INDEX) == idx: # iNum:
                     sItem.setSelected(True)
                     #print(idx)
@@ -1364,7 +1384,7 @@ class MainWindow(QMainWindow):
             if edgeItem:
                 #TODO: This should be a signal? (but I can't make them work)
                 self.showEditEdgeDialog(edgeItem)
-        elif item.data(KEY_ROLE) == ROLE_NODE:
+        elif item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
             nodeItem = self.Scene.findItemByIdx(item.data(KEY_INDEX))
             if nodeItem:
                 self.showEditNodeDialog(nodeItem)
@@ -1386,7 +1406,7 @@ class MainWindow(QMainWindow):
         new_text = item.text()
         self.model.item(iNum).setText(new_text)
         #TODO: The list update should trigger some change flag/ be embedded 
-        if item.data(KEY_ROLE) == ROLE_NODE:
+        if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
             self.model.Gr.nodeD[iNum].metadata.update({'name':new_text})
         elif item.data(KEY_ROLE) == ROLE_EDGE:
             self.model.Gr.edgeD[iNum].metadata.update({'name':new_text})
@@ -1753,7 +1773,8 @@ class MainWindow(QMainWindow):
 
             #Add the nodes & edges
             for sItem in self.Scene.items():
-                if sItem.data(KEY_ROLE) == ROLE_NODE or sItem.data(KEY_ROLE) == ROLE_EDGE :
+                #if sItem.data(KEY_ROLE) == ROLE_NODE or sItem.data(KEY_ROLE) == ROLE_EDGE :
+                if sItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_EDGE,ROLE_BLOB]:
                     graph.append(sItem.toXML(graph))
 
             #Add the keys for the metadata at graph level
@@ -1893,7 +1914,7 @@ class MainWindow(QMainWindow):
 
         plainText = ""
         for sItem in selectedItems:
-            if sItem.data(KEY_ROLE) == ROLE_NODE:
+            if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                 plainText += str(self.model.Gr.nodeD[sItem.data(KEY_INDEX)])
             if sItem.data(KEY_ROLE) == ROLE_EDGE:
                 plainText += str(self.model.Gr.edgeD[sItem.data(KEY_INDEX)])
@@ -1930,7 +1951,7 @@ class MainWindow(QMainWindow):
 
         #Add the nodes & edges
         for sItem in selectedItems:
-            if sItem.data(KEY_ROLE) == ROLE_NODE :
+            if sItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] :
                 graph.append(sItem.toXML(graph))
             if sItem.data(KEY_ROLE) == ROLE_EDGE:
                 #TODO: Check the semantics here - does this make sense
@@ -2144,7 +2165,7 @@ class MainWindow(QMainWindow):
                     self.delEdge(delIdx)
             #Node delete - 1st del any connected edges - handled by GrScene
             for item in selected_items:
-                if item.data(KEY_ROLE) == ROLE_NODE:
+                if item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                     delIdx = item.data(KEY_INDEX)
                     self.delNode(delIdx)
 

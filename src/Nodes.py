@@ -354,6 +354,18 @@ class VisBlobItem(VisNodeItem):
                     metadata={}, metadataAttributes={})
 
         self.suppressItemChange = True
+
+        #Fix Blob-Node differences
+        #add to the text list
+        lWitem = self.listWidget.findItemByIdx(self.nodeNum)
+        #This is not setting the role - it is still 1001 - NODE
+        #TODO: Revisit the value the model adds
+        self.node.setData(KEY_ROLE,ROLE_BLOB)
+        lWitem.setData(KEY_ROLE,ROLE_BLOB)
+
+        self.setData(KEY_ROLE, ROLE_BLOB)
+        #self.scene().removeItem(self.nodeShape)
+
         self.parents = parents
         self.children = children
 
@@ -365,6 +377,8 @@ class VisBlobItem(VisNodeItem):
         #    def __init__(self, rect: QRectF, xRadius: float=0, yRadius: float=0, mode=Qt.AbsoluteSize,parent=None):
 
         self._rect = QRectF(0,0,width,height)
+        self._width = width
+        self._height = height
         self._xRadius = xRadius
         self._yRadius = yRadius
         self._radMode = radMode
@@ -374,11 +388,17 @@ class VisBlobItem(VisNodeItem):
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
+        #Use the edge `isOnlySelected` logic as far as possible for handle creation
+        self.isOnlySelected = False
+
         self.suppressItemChange = False
 
     def __repr__(self):
-        r = super().__repr__()
+        r = f"\noo VisBLOBItem\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n"+\
+                f"{self.startsEdges = },\n{self.endsEdges = }\n00" #\n {self.nodeShape =})"
         r += f"\n{self.parents=}\n{self.children}"
+        return r
+    __str__ = __repr__
 
     def boundingRect(self):
         #TODO: Add in the displayed text
@@ -418,9 +438,8 @@ class VisBlobItem(VisNodeItem):
 
     def itemChange(self, change, value):
         if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
-            # This triggers whenever the item is selected or deselected
-            # We tell the child (the border) to redraw itself
-            self.nodeShape.update()
+            if self.isOnlySelected:
+                self._createHandles()
         
         # Detect when the selection state changes
         if change == QGraphicsItem.ItemSelectedChange:
@@ -429,6 +448,42 @@ class VisBlobItem(VisNodeItem):
             if hasattr(self, 'nodeShape'):
                 self.nodeShape.update()
         return super().itemChange(change, value)
+
+    def _createHandles(self):
+        """ Handles for resizing"""
+
+        TLx = self.pos().x()
+        TLy = self.pos().y()
+        BRx = self._width
+        BRy = self._height
+        
+        #A list of handles, clockwise, 0 = TL, 1 = TR, 2 = BR, 3 = BL
+        self._Handles = []
+        self._Handles.append(HandleItem(QPointF(TLx,TLy),color=Qt.green,parent=self))
+        self._Handles.append(HandleItem(QPointF(BRx,TLy),color=Qt.green,parent=self))
+        self._Handles.append(HandleItem(QPointF(BRx,BRy),color=Qt.green,parent=self))
+        self._Handles.append(HandleItem(QPointF(TLx,BRy),color=Qt.green,parent=self))
+        
+        for h in self._Handles:
+            h.setMoveCallback(self._updateFromHandles)
+
+    def _deleteHandles(self):
+        """ Delete handles when deselected"""
+        self.suppressItemChange = True
+        # Remove existing handles
+        for h in self._Handles:
+            self.scene().removeItem(h)
+        self._Handles.clear()
+        self.suppressItemChange = False
+
+    def _updateFromHandles(self,pos):
+        if self.suppressItemChange == True:
+            return
+        
+
+
+
+
 
     def mousePressEvent(self, event):
         #Call VisNode's mouse handler
