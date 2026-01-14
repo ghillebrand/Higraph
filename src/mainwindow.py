@@ -247,14 +247,14 @@ class grScene(QGraphicsScene):
         #Add axes to help see how things move & debug graphical issues.
             #TODO: THere must be a better solution!
         #WHite to provide a auto-zoom anchor
-        """
+        #"""
         VLine = QGraphicsLineItem(0,100,0,-100)
         self.addItem(VLine)
         VLine.setPen(QPen(Qt.black))
         HLine = QGraphicsLineItem(100,0,-100,0)
         HLine.setPen(QPen(Qt.black))
         self.addItem(HLine) 
-        """
+        #"""
 
 
 
@@ -484,6 +484,8 @@ class grScene(QGraphicsScene):
 
     def clearEdgeOnly(self, edge):
         """ Remove the controlboxes from an edge and deselect."""
+        #TODO: Generalise to items, for blob handles
+
         #For edges, was there only one selected? Clear.
         edge.isOnlySelected = None
 
@@ -548,6 +550,8 @@ class grScene(QGraphicsScene):
                 if self.onlySelected:
                     self.clearEdgeOnly(self.onlySelected)
                 self.startPoint = mouseEvent.scenePos()
+                #TODO: Create the blob here, and draw a proper blob for creation, not a rect
+
             elif self.mouseMode == self.INSERTEDGE:
                 #print("Ins edge")
                 self.clearSelection()
@@ -706,8 +710,9 @@ class grScene(QGraphicsScene):
                         #Start move
                         #selItem  _Must_ be a handle, and parent must be a visEdge - deal with the polyline inbetween
                         self.startMovingEdgeEnd(selItem.parentItem().parentItem(), selItem)
-                    else: #tangent or Mid point to move
+                    else: #tangent or Mid point, or Blob corner to move
                         self.handle = selItem
+                        #self.handle.setBrush(QBrush(Qt.black))
                         self.mouseMode = self.MOVEHANDLE
                         #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
                         mouseEvent.accept()
@@ -811,6 +816,7 @@ class grScene(QGraphicsScene):
             #print("Move Handle")
             #Same code as moveEdgeEnd
             self.handle.setPos(mPos) 
+            pass
             
         super().mouseMoveEvent(mouseEvent)
 
@@ -881,7 +887,7 @@ class grScene(QGraphicsScene):
             mouseEvent.accept()
             #return
         elif self.mouseMode == self.MOVEHANDLE:
-            #SHOULD all be handled by Qt?
+            #SHOULD all be handled by Qt? or callback?
             #print("End move handle")
             self.mouseMode = self.POINTER
         elif self.mouseMode == self.DRAGGING:

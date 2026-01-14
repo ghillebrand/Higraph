@@ -388,6 +388,9 @@ class VisBlobItem(VisNodeItem):
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
+        #Placeholder for drag handles
+        self._Handles = []
+
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
         self.isOnlySelected = False
 
@@ -451,6 +454,11 @@ class VisBlobItem(VisNodeItem):
 
     def _createHandles(self):
         """ Handles for resizing"""
+        #Clear existing handles
+        #Needed?
+        #for h in self._Handles:
+        #    self.scene().removeItem(h)
+        #self._Handles.clear()
 
         TLx = self.pos().x()
         TLy = self.pos().y()
@@ -459,10 +467,10 @@ class VisBlobItem(VisNodeItem):
         
         #A list of handles, clockwise, 0 = TL, 1 = TR, 2 = BR, 3 = BL
         self._Handles = []
-        self._Handles.append(HandleItem(QPointF(TLx,TLy),color=Qt.green,parent=self))
-        self._Handles.append(HandleItem(QPointF(BRx,TLy),color=Qt.green,parent=self))
-        self._Handles.append(HandleItem(QPointF(BRx,BRy),color=Qt.green,parent=self))
-        self._Handles.append(HandleItem(QPointF(TLx,BRy),color=Qt.green,parent=self))
+        self._Handles.append(HandleItem(QPointF(0,0),color=Qt.green,parent=self))
+        self._Handles.append(HandleItem(QPointF(BRx,0),color=Qt.red,parent=self))
+        self._Handles.append(HandleItem(QPointF(BRx,BRy),color=Qt.blue,parent=self))
+        self._Handles.append(HandleItem(QPointF(0,BRy),color=Qt.cyan,parent=self))
         
         for h in self._Handles:
             h.setMoveCallback(self._updateFromHandles)
@@ -480,10 +488,6 @@ class VisBlobItem(VisNodeItem):
         if self.suppressItemChange == True:
             return
         
-
-
-
-
 
     def mousePressEvent(self, event):
         #Call VisNode's mouse handler
