@@ -1,0 +1,200 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+	<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+	<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+	<graph edgedefault="directed" id="G">
+		<node id="0">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-122.4210712194007" y="-100.06274019889509"/>
+					<y:NodeLabel>
+						n0
+						<h:metadataAttribute key="display" value="False"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="1">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="127.22103393089563" y="-105.71697170781175"/>
+					<y:NodeLabel>
+						n1
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<h:metadata key="atrib" value="Attribute">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+			<h:metadata key="v" value="23">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</node>
+		<node id="2">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="130.13162309447006" y="29.517949776044077"/>
+					<y:NodeLabel>
+						n2
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="3">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-172.13848616976358" y="55.16314410895282"/>
+					<y:NodeLabel>
+						n3
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="6">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-122.97322026092436" y="-183.2047037480616"/>
+					<y:NodeLabel>
+						n6
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<h:metadata key="o" value="2">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</node>
+		<node id="7">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="125.96689189189195" y="-194.76358699324328"/>
+					<y:NodeLabel>
+						n7
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<h:metadata key="v" value="3">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</node>
+		<edge id="12" source="7" target="1" directed="false">
+			<data key="data_edge">
+				<y:PolyLineEdge>
+					<y:Path/>
+					<y:EdgeLabel>
+						 12 
+						<h:metadataAttribute key="display" value="False"/>
+					</y:EdgeLabel>
+				</y:PolyLineEdge>
+			</data>
+		</edge>
+		<edge id="4" source="0" target="1" directed="true">
+			<data key="data_edge">
+				<y:PolyLineEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path/>
+					<y:EdgeLabel>
+						 4 strt, no pts 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:PolyLineEdge>
+			</data>
+			<h:metadata key="d" value="A line.">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</edge>
+		<edge id="5" source="1" target="2" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="-0.5796492733838364" y="39.99579986348399"/>
+						<h:EndTangent x="31.78451565645352" y="33.65018118100276"/>
+					</y:Path>
+					<y:EdgeLabel>
+						 5 spline, no pts 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="8" source="0" target="6" directed="false">
+			<data key="data_edge">
+				<y:PolyLineEdge>
+					<y:Path/>
+					<y:EdgeLabel>
+						 8 strt, undirected 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:PolyLineEdge>
+			</data>
+			<h:metadata key="w" value="4">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</edge>
+		<edge id="9" source="6" target="7" directed="false">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Path>
+						<h:StartTangent x="-24.089323479729728" y="-51.18981239442567"/>
+						<h:EndTangent x="-20.074436233108145" y="54.20097782939189"/>
+					</y:Path>
+					<y:EdgeLabel>
+						 9 spline, undirected 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+			<h:metadata key="w" value="34">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</edge>
+		<edge id="10" source="0" target="3" directed="true">
+			<data key="data_edge">
+				<y:PolyLineEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<y:Point x="-207.26874957770278" y="-71.30580415962832"/>
+						<y:Point x="-121.95239558699328" y="-26.13832263513507"/>
+						<y:Point x="-225.33574218750007" y="-7.067608213682348"/>
+					</y:Path>
+					<y:EdgeLabel>
+						 10 strt, 3 pts 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:PolyLineEdge>
+			</data>
+			<h:metadata key="w" value="12">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</edge>
+		<edge id="11" source="3" target="2" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<y:Point x="-86.82213217905408" y="40.10731693412171">
+							<h:Tangent leftx="7.026052681587856" lefty="-38.14142884290541" rightx="7.026052681587856" righty="-38.14142884290541"/>
+						</y:Point>
+						<y:Point x="-27.602545291385127" y="72.22641490709469">
+							<h:Tangent leftx="-45.16748152449327" lefty="2.0074436233108486" rightx="-45.16748152449327" righty="2.0074436233108486"/>
+						</y:Point>
+						<y:Point x="21.579823479729754" y="-2.048999155405312">
+							<h:Tangent leftx="-53.19725601773652" lefty="7.026052681587856" rightx="-53.19725601773652" righty="7.026052681587856"/>
+						</y:Point>
+						<h:StartTangent x="-48.397228115950696" y="32.33685589104718"/>
+						<h:EndTangent x="-53.79694833410136" y="-54.41062165252734"/>
+					</y:Path>
+					<y:EdgeLabel>
+						 11 spline 3 pts 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+	</graph>
+</graphml>

@@ -1,0 +1,675 @@
+2025-07-16 21:05:55,957 
+
+Starting
+********
+
+Stk>None
+2025-07-16 21:06:22,631 Scene updating
+Stk>None
+2025-07-16 21:07:02,034 core Graph Model
+nodes:
+{0: nodeID:0,metadata:{'name': 'n0'},startsEdges:[],endsEdges:[]
+, 1: nodeID:1,metadata:{'name': 'n1'},startsEdges:[2],endsEdges:[]
+, 3: nodeID:3,metadata:{'name': 'n3'},startsEdges:[],endsEdges:[2]
+}
+edges:
+{2: edgeID:2,metadata:{'name': '2 n1->n0'},startNodes:[1],endNodes:[3]
+}model items ['0::0 (1001)', '1::1 (1001)', '2::2 (1002)', '3::3 (1001)'] 
+
+ListView items:
+n0 ID:0 type:1001
+n1 ID:1 type:1001
+n3 ID:3 type:1001
+2 n1->n0 ID:2 type:1002
+ui.graphicsView items:
+<PySide6.QtWidgets.QGraphicsEllipseItem(0x18495678490, parent=0x184956783d0, pos=0,0) at 0x000001849437F100>
+   
+** VisNodeItem <__main__.VisNodeItem(0x184956783d0, pos=-22.9167,-27.0833, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x00000184904DF900>
+Index:3  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-22.916667, -27.083333)
+                  self.startsEdges = []  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x1848e0eee10, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001849057E140>
+ self.textItem =<__main__.TransparentTextItem(0x1848de25720, parent=0x1848e0eee10, pos=-70.5833,-71.0417, flags=(ItemUsesExtendedStyleOption)) at 0x000001849437DC80>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1848e0ee190, parent=0x1848e0eee10, pos=0,0) at 0x000001849437DD80>
+ID: 2 2 n1->n0 s:(1) e:(3) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1848e0ee1d0, parent=0x1848e0ed7d0, pos=0,0) at 0x000001849437D740> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x18495678490, parent=0x184956783d0, pos=0,0) at 0x000001849437F100><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1848e0ee1d0, parent=0x1848e0ed7d0, pos=0,0) at 0x000001849437D740>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1848e0ed7d0, pos=-61,-91, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001849437D6C0>
+Index:1  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-61.000000, -91.000000)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x1848e0eee10, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001849057E140>
+ self.textItem =<__main__.TransparentTextItem(0x1848de25720, parent=0x1848e0eee10, pos=-70.5833,-71.0417, flags=(ItemUsesExtendedStyleOption)) at 0x000001849437DC80>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1848e0ee190, parent=0x1848e0eee10, pos=0,0) at 0x000001849437DD80>
+ID: 2 2 n1->n0 s:(1) e:(3) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1848e0ee1d0, parent=0x1848e0ed7d0, pos=0,0) at 0x000001849437D740> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x18495678490, parent=0x184956783d0, pos=0,0) at 0x000001849437F100><<]  ,  self.endsEdges = []
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1848ddede20, parent=0x1848ddedba0, pos=0,0) at 0x00000184905980C0>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1848ddedba0, pos=-95,-24.75, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x00000184904C5D40>
+Index:0  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-95.000000, -24.750000)
+                  self.startsEdges = []  ,  self.endsEdges = []
+   <__main__.ArrowHeadItem(0x1848e0ee550, parent=0x1848e0eee10, pos=-22.9167,-27.0833) at 0x000001849437DD40>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x1848e0ee190, parent=0x1848e0eee10, pos=0,0) at 0x000001849437DD80>
+   <__main__.TransparentTextItem(0x1848de25720, parent=0x1848e0eee10, pos=-70.5833,-71.0417, flags=(ItemUsesExtendedStyleOption)) at 0x000001849437DC80>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x1848e0eee10, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001849057E140>
+ self.textItem =<__main__.TransparentTextItem(0x1848de25720, parent=0x1848e0eee10, pos=-70.5833,-71.0417, flags=(ItemUsesExtendedStyleOption)) at 0x000001849437DC80>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1848e0ee190, parent=0x1848e0eee10, pos=0,0) at 0x000001849437DD80>
+ID: 2 2 n1->n0 s:(1) e:(3) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1848e0ee1d0, parent=0x1848e0ed7d0, pos=0,0) at 0x000001849437D740> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x18495678490, parent=0x184956783d0, pos=0,0) at 0x000001849437F100><<
+Stk>None
+2025-07-17 20:23:24,404 
+
+Starting
+********
+
+Stk>None
+2025-07-17 20:23:37,692 Scene updating
+Stk>None
+2025-07-17 20:23:39,703 Scene updating
+Stk>None
+2025-07-17 20:23:41,002 Scene updating
+Stk>None
+2025-07-17 20:23:55,698 Scene updating
+Stk>None
+2025-07-17 20:23:55,700 Scene updating
+Stk>None
+2025-07-17 20:24:01,331 Scene updating
+Stk>None
+2025-07-17 20:31:45,445 
+
+Starting
+********
+
+Stk>None
+2025-07-17 20:31:53,312 Scene updating
+Stk>None
+2025-07-17 20:31:55,292 Scene updating
+Stk>None
+2025-07-17 20:31:57,516 Scene updating
+Stk>None
+2025-07-17 20:32:24,345 
+
+Starting
+********
+
+Stk>None
+2025-07-17 20:33:16,174 Scene updating
+Stk>None
+2025-07-17 20:33:16,176 Scene updating
+Stk>None
+2025-07-17 20:33:19,587 Scene updating
+Stk>None
+2025-07-17 20:33:24,126 Scene updating
+Stk>None
+2025-07-17 20:33:24,129 Scene updating
+Stk>None
+2025-07-17 20:33:30,573 Scene updating
+Stk>None
+2025-07-17 20:33:36,085 Scene updating
+Stk>None
+2025-07-17 20:33:36,088 Scene updating
+Stk>None
+2025-07-17 20:33:39,687 Scene updating
+Stk>None
+2025-07-17 20:34:11,490 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:34:18,216 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:34:41,480 Scene updating
+Stk>None
+2025-07-17 20:34:42,789 Scene updating
+Stk>None
+2025-07-17 20:35:05,958 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:35:07,029 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:35:16,538 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:35:18,058 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:35:22,031 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:35:29,068 core Graph Model
+nodes:
+{2: nodeID:2,metadata:{'name': 'n2'},startsEdges:[],endsEdges:[]
+, 5: nodeID:5,metadata:{'name': 'n2'},startsEdges:[],endsEdges:[]
+, 6: nodeID:6,metadata:{'name': 'n1'},startsEdges:[],endsEdges:[]
+, 10: nodeID:10,metadata:{'name': 'n2'},startsEdges:[17],endsEdges:[]
+, 11: nodeID:11,metadata:{'name': 'n1'},startsEdges:[],endsEdges:[17]
+, 12: nodeID:12,metadata:{'name': 'n0'},startsEdges:[],endsEdges:[16]
+, 14: nodeID:14,metadata:{'name': 'n2'},startsEdges:[],endsEdges:[]
+, 15: nodeID:15,metadata:{'name': 'n1'},startsEdges:[16],endsEdges:[]
+}
+edges:
+{16: edgeID:16,metadata:{'name': '4 n1->n0'},startNodes:[15],endNodes:[12]
+, 17: edgeID:17,metadata:{'name': '3 n2->n1'},startNodes:[10],endNodes:[11]
+}model items ['2::2 (1001)', '5::5 (1001)', '6::6 (1001)', '10::10 (1001)', '11::11 (1001)', '12::12 (1001)', '14::14 (1001)', '15::15 (1001)', '16::16 (1002)', '17::17 (1002)'] 
+
+ListView items:
+n2 ID:2 type:1001
+n2 ID:5 type:1001
+n1 ID:6 type:1001
+n2 ID:10 type:1001
+n1 ID:11 type:1001
+n0 ID:12 type:1001
+n2 ID:14 type:1001
+n1 ID:15 type:1001
+4 n1->n0 ID:16 type:1002
+3 n2->n1 ID:17 type:1002
+ui.graphicsView items:
+<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58fe90, parent=0x1cc2f590b10, pos=0,0) at 0x000001CC302716C0>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f590b10, pos=46.7663,-11.0201, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC3026AEC0>
+Index:15  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(46.766332, -11.020101)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x1cc2f5902d0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30271840>
+ self.textItem =<__main__.TransparentTextItem(0x1cc284c0dd0, parent=0x1cc2f5902d0, pos=-54.066,-16.9523, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271040>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f590b90, parent=0x1cc2f5902d0, pos=0,0) at 0x000001CC30270F00>
+ID: 16 4 n1->n0 s:(15) e:(12) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58fe90, parent=0x1cc2f590b10, pos=0,0) at 0x000001CC302716C0> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f5908d0, parent=0x1cc2f58ffd0, pos=0,0) at 0x000001CC3026B180><<]  ,  self.endsEdges = []
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f5900d0, parent=0x1cc2f590ad0, pos=0,0) at 0x000001CC30269D80>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f590ad0, pos=141.425,-65.6307, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC3026B2C0>
+Index:14  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(141.424623, -65.630653)
+                  self.startsEdges = []  ,  self.endsEdges = []
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f5908d0, parent=0x1cc2f58ffd0, pos=0,0) at 0x000001CC3026B180>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f58ffd0, pos=-97.6482,1.11558, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC3026A2C0>
+Index:12  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-97.648241, 1.115578)
+                  self.startsEdges = []  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x1cc2f5902d0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30271840>
+ self.textItem =<__main__.TransparentTextItem(0x1cc284c0dd0, parent=0x1cc2f5902d0, pos=-54.066,-16.9523, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271040>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f590b90, parent=0x1cc2f5902d0, pos=0,0) at 0x000001CC30270F00>
+ID: 16 4 n1->n0 s:(15) e:(12) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58fe90, parent=0x1cc2f590b10, pos=0,0) at 0x000001CC302716C0> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f5908d0, parent=0x1cc2f58ffd0, pos=0,0) at 0x000001CC3026B180><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f590650, parent=0x1cc2f590250, pos=0,0) at 0x000001CC3026BF00>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f590250, pos=-21.7764,-78.3492, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC2A967880>
+Index:11  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-21.776382, -78.349246)
+                  self.startsEdges = []  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x1cc2f590c10, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30271780>
+ self.textItem =<__main__.TransparentTextItem(0x1cc284c2390, parent=0x1cc2f590c10, pos=-13.9943,-140.106, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271140>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f58fd90, parent=0x1cc2f590c10, pos=0,0) at 0x000001CC302726C0>
+ID: 17 3 n2->n1 s:(10) e:(11) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58ff10, parent=0x1cc2f590a50, pos=0,0) at 0x000001CC3026A380> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f590650, parent=0x1cc2f590250, pos=0,0) at 0x000001CC3026BF00><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58ff10, parent=0x1cc2f590a50, pos=0,0) at 0x000001CC3026A380>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f590a50, pos=51.0377,-177.862, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC3025C480>
+Index:10  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(51.037688, -177.861809)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x1cc2f590c10, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30271780>
+ self.textItem =<__main__.TransparentTextItem(0x1cc284c2390, parent=0x1cc2f590c10, pos=-13.9943,-140.106, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271140>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f58fd90, parent=0x1cc2f590c10, pos=0,0) at 0x000001CC302726C0>
+ID: 17 3 n2->n1 s:(10) e:(11) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58ff10, parent=0x1cc2f590a50, pos=0,0) at 0x000001CC3026A380> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f590650, parent=0x1cc2f590250, pos=0,0) at 0x000001CC3026BF00><<]  ,  self.endsEdges = []
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58f590, parent=0x1cc2f58fa90, pos=0,0) at 0x000001CC30227C80>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f58fa90, pos=13.4171,-41.9422, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30227E00>
+Index:6  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(13.417085, -41.942211)
+                  self.startsEdges = []  ,  self.endsEdges = []
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58f410, parent=0x1cc2f58ed10, pos=0,0) at 0x000001CC30227E40>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f58ed10, pos=146.91,-151.163, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30226BC0>
+Index:5  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(146.909548, -151.163317)
+                  self.startsEdges = []  ,  self.endsEdges = []
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58eb10, parent=0x1cc2f58ea90, pos=0,0) at 0x000001CC2A972840>
+   
+** VisNodeItem <__main__.VisNodeItem(0x1cc2f58ea90, pos=-35.7085,-189.367, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC2A971B00>
+Index:2  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-35.708543, -189.366834)
+                  self.startsEdges = []  ,  self.endsEdges = []
+   <__main__.ArrowHeadItem(0x1cc2f590350, parent=0x1cc2f590c10, pos=-21.7764,-78.3492) at 0x000001CC30272680>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f58fd90, parent=0x1cc2f590c10, pos=0,0) at 0x000001CC302726C0>
+   <__main__.TransparentTextItem(0x1cc284c2390, parent=0x1cc2f590c10, pos=-13.9943,-140.106, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271140>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x1cc2f590c10, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30271780>
+ self.textItem =<__main__.TransparentTextItem(0x1cc284c2390, parent=0x1cc2f590c10, pos=-13.9943,-140.106, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271140>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f58fd90, parent=0x1cc2f590c10, pos=0,0) at 0x000001CC302726C0>
+ID: 17 3 n2->n1 s:(10) e:(11) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58ff10, parent=0x1cc2f590a50, pos=0,0) at 0x000001CC3026A380> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f590650, parent=0x1cc2f590250, pos=0,0) at 0x000001CC3026BF00><<
+   <__main__.ArrowHeadItem(0x1cc2f590bd0, parent=0x1cc2f5902d0, pos=-97.6482,1.11558) at 0x000001CC30271000>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f590b90, parent=0x1cc2f5902d0, pos=0,0) at 0x000001CC30270F00>
+   <__main__.TransparentTextItem(0x1cc284c0dd0, parent=0x1cc2f5902d0, pos=-54.066,-16.9523, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271040>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x1cc2f5902d0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001CC30271840>
+ self.textItem =<__main__.TransparentTextItem(0x1cc284c0dd0, parent=0x1cc2f5902d0, pos=-54.066,-16.9523, flags=(ItemUsesExtendedStyleOption)) at 0x000001CC30271040>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x1cc2f590b90, parent=0x1cc2f5902d0, pos=0,0) at 0x000001CC30270F00>
+ID: 16 4 n1->n0 s:(15) e:(12) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f58fe90, parent=0x1cc2f590b10, pos=0,0) at 0x000001CC302716C0> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x1cc2f5908d0, parent=0x1cc2f58ffd0, pos=0,0) at 0x000001CC3026B180><<
+Stk>None
+2025-07-17 20:36:30,803 
+
+Starting
+********
+
+Stk>None
+2025-07-17 20:36:58,700 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:37:03,559 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:37:10,395 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:37:11,131 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-17 20:37:22,940 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2171, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2099, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-18 20:45:51,908 
+
+Starting
+********
+
+Stk>None
+2025-07-18 20:45:58,213 Scene updating
+Stk>None
+2025-07-18 20:46:01,213 Scene updating
+Stk>None
+2025-07-18 20:46:02,524 Scene updating
+Stk>None
+2025-07-18 20:46:58,117 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2164, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2090, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2164, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2090, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-18 20:47:01,760 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2164, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2090, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2164, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2090, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-18 20:47:16,508 Scene updating
+Stk>None
+2025-07-18 20:47:18,900 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2164, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2090, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2164, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2090, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-18 20:47:27,679 core Graph Model
+nodes:
+{0: nodeID:0,metadata:{'name': 'n0'},startsEdges:[],endsEdges:[]
+, 6: nodeID:6,metadata:{'name': 'n1'},startsEdges:[10],endsEdges:[9]
+, 7: nodeID:7,metadata:{'name': 'n0'},startsEdges:[9],endsEdges:[11]
+, 8: nodeID:8,metadata:{'name': 'n2'},startsEdges:[11],endsEdges:[10]
+}
+edges:
+{9: edgeID:9,metadata:{'name': '5 n0->n1'},startNodes:[7],endNodes:[6]
+, 10: edgeID:10,metadata:{'name': '3 n1->n2'},startNodes:[6],endNodes:[8]
+, 11: edgeID:11,metadata:{'name': '4 n2->n0'},startNodes:[8],endNodes:[7]
+}model items ['0::0 (1001)', '6::6 (1001)', '7::7 (1001)', '8::8 (1001)', '9::9 (1002)', '10::10 (1002)', '11::11 (1002)'] 
+
+ListView items:
+n0 ID:0 type:1001
+n1 ID:6 type:1001
+n0 ID:7 type:1001
+n2 ID:8 type:1001
+5 n0->n1 ID:9 type:1002
+3 n1->n2 ID:10 type:1002
+4 n2->n0 ID:11 type:1002
+ui.graphicsView items:
+<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414e50620, pos=-88.1613,122.301, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x0000015417294A00>
+Index:8  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-88.161290, 122.301075)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e50ba0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7040>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+ID: 11 4 n2->n0 s:(8) e:(7) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100><<]  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4fee0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6FC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+ID: 10 3 n1->n2 s:(6) e:(8) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414e50220, pos=90.8387,91.3011, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD5A00>
+Index:7  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(90.838710, 91.301075)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4f960, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6EC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+ID: 9 5 n0->n1 s:(7) e:(6) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40><<]  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e50ba0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7040>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+ID: 11 4 n2->n0 s:(8) e:(7) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414e4fa20, pos=37.1505,-94.6774, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7CC0>
+Index:6  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(37.150538, -94.677419)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4fee0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6FC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+ID: 10 3 n1->n2 s:(6) e:(8) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640><<]  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4f960, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6EC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+ID: 9 5 n0->n1 s:(7) e:(6) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x15414d78c40, parent=0x15414d78c00, pos=0,0) at 0x00000154172AB600>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414d78c00, pos=-86.1505,-101.817, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541727E9C0>
+Index:0  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-86.150538, -101.817204)
+                  self.startsEdges = []  ,  self.endsEdges = []
+   <__main__.ArrowHeadItem(0x15414e50a20, parent=0x15414e50ba0, pos=90.8387,91.3011) at 0x000001541ABD8300>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+   <__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e50ba0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7040>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+ID: 11 4 n2->n0 s:(8) e:(7) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100><<
+   <__main__.ArrowHeadItem(0x15414e50f60, parent=0x15414e4fee0, pos=-88.1613,122.301) at 0x000001541ABD6500>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+   <__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4fee0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6FC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+ID: 10 3 n1->n2 s:(6) e:(8) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640><<
+   <__main__.ArrowHeadItem(0x15414e4fde0, parent=0x15414e4f960, pos=37.1505,-94.6774) at 0x000001541ABD6F40>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+   <__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4f960, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6EC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+ID: 9 5 n0->n1 s:(7) e:(6) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40><<
+Stk>None
+2025-07-18 20:47:36,461 core Graph Model
+nodes:
+{0: nodeID:0,metadata:{'name': 'n0'},startsEdges:[],endsEdges:[]
+, 6: nodeID:6,metadata:{'name': 'n1'},startsEdges:[10],endsEdges:[9]
+, 7: nodeID:7,metadata:{'name': 'n0'},startsEdges:[9],endsEdges:[11]
+, 8: nodeID:8,metadata:{'name': 'n2'},startsEdges:[11],endsEdges:[10]
+}
+edges:
+{9: edgeID:9,metadata:{'name': '5 n0->n1'},startNodes:[7],endNodes:[6]
+, 10: edgeID:10,metadata:{'name': '3 n1->n2'},startNodes:[6],endNodes:[8]
+, 11: edgeID:11,metadata:{'name': '4 n2->n0'},startNodes:[8],endNodes:[7]
+}model items ['0::0 (1001)', '6::6 (1001)', '7::7 (1001)', '8::8 (1001)', '9::9 (1002)', '10::10 (1002)', '11::11 (1002)'] 
+
+ListView items:
+n0 ID:0 type:1001
+n1 ID:6 type:1001
+n0 ID:7 type:1001
+n2 ID:8 type:1001
+5 n0->n1 ID:9 type:1002
+3 n1->n2 ID:10 type:1002
+4 n2->n0 ID:11 type:1002
+ui.graphicsView items:
+<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414e50620, pos=-88.1613,122.301, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x0000015417294A00>
+Index:8  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-88.161290, 122.301075)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e50ba0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7040>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+ID: 11 4 n2->n0 s:(8) e:(7) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100><<]  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4fee0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6FC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+ID: 10 3 n1->n2 s:(6) e:(8) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414e50220, pos=90.8387,91.3011, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD5A00>
+Index:7  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(90.838710, 91.301075)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4f960, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6EC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+ID: 9 5 n0->n1 s:(7) e:(6) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40><<]  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e50ba0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7040>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+ID: 11 4 n2->n0 s:(8) e:(7) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414e4fa20, pos=37.1505,-94.6774, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7CC0>
+Index:6  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(37.150538, -94.677419)
+                  self.startsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4fee0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6FC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+ID: 10 3 n1->n2 s:(6) e:(8) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640><<]  ,  self.endsEdges = [
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4f960, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6EC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+ID: 9 5 n0->n1 s:(7) e:(6) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40><<]
+   <PySide6.QtWidgets.QGraphicsEllipseItem(0x15414d78c40, parent=0x15414d78c00, pos=0,0) at 0x00000154172AB600>
+   
+** VisNodeItem <__main__.VisNodeItem(0x15414d78c00, pos=-86.1505,-101.817, z=1000, flags=(ItemIsMovable|ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541727E9C0>
+Index:0  Role:self.data(KEY_ROLE) =1001 @ self.pos() =PySide6.QtCore.QPointF(-86.150538, -101.817204)
+                  self.startsEdges = []  ,  self.endsEdges = []
+   <__main__.ArrowHeadItem(0x15414e50a20, parent=0x15414e50ba0, pos=90.8387,91.3011) at 0x000001541ABD8300>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+   <__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e50ba0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD7040>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc26a0, parent=0x15414e50ba0, pos=-27.2863,94.8011, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD8200>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e51320, parent=0x15414e50ba0, pos=0,0) at 0x000001541ABD8440>
+ID: 11 4 n2->n0 s:(8) e:(7) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100><<
+   <__main__.ArrowHeadItem(0x15414e50f60, parent=0x15414e4fee0, pos=-88.1613,122.301) at 0x000001541ABD6500>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+   <__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4fee0, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6FC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc0de0, parent=0x15414e4fee0, pos=-54.1304,1.81183, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD65C0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e50ca0, parent=0x15414e4fee0, pos=0,0) at 0x000001541ABD6480>
+ID: 10 3 n1->n2 s:(6) e:(8) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e50260, parent=0x15414e50620, pos=0,0) at 0x000001541ABD7640><<
+   <__main__.ArrowHeadItem(0x15414e4fde0, parent=0x15414e4f960, pos=37.1505,-94.6774) at 0x000001541ABD6F40>
+   <PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+   <__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>
+   
+>> VisEdgeItem <__main__.VisEdgeItem(0x15414e4f960, pos=0,0, flags=(ItemIsSelectable|ItemSendsScenePositionChanges)) at 0x000001541ABD6EC0>
+ self.textItem =<__main__.TransparentTextItem(0x15414dc1da0, parent=0x15414e4f960, pos=35.3696,-13.6882, flags=(ItemUsesExtendedStyleOption)) at 0x000001541ABD5CC0>  self.edgeLine =<PySide6.QtWidgets.QGraphicsLineItem(0x15414e4fc20, parent=0x15414e4f960, pos=0,0) at 0x000001541ABD6840>
+ID: 9 5 n0->n1 s:(7) e:(6) self.startNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e505e0, parent=0x15414e50220, pos=0,0) at 0x000001541ABD6100> self.endNode.nodeShape =<PySide6.QtWidgets.QGraphicsEllipseItem(0x15414e4fd60, parent=0x15414e4fa20, pos=0,0) at 0x000001541ABD7B40><<
+Stk>None
+2025-07-19 14:47:49,278 
+
+Starting
+********
+
+Stk>None
+2025-07-19 14:48:05,439 Scene updating
+Stk>None
+2025-07-19 14:48:07,807 Scene updating
+Stk>None
+2025-07-19 14:48:14,279 Scene updating
+Stk>None
+2025-07-19 14:48:14,281 Scene updating
+Stk>None
+2025-07-19 14:48:16,521 Scene updating
+Stk>None
+2025-07-19 14:48:16,695 Scene updating
+Stk>None
+2025-07-19 14:48:16,697 Scene updating
+Stk>None
+2025-07-19 14:48:17,608 Scene updating
+Stk>None
+2025-07-19 14:48:23,647 Scene updating
+Stk>None
+2025-07-19 14:48:23,649 Scene updating
+Stk>None
+2025-07-19 14:48:28,336 Scene updating
+Stk>None
+2025-07-19 14:48:28,514 Scene updating
+Stk>None
+2025-07-19 14:48:28,516 Scene updating
+Stk>None
+2025-07-19 14:48:36,625 Scene updating
+Stk>None
+2025-07-19 14:48:36,803 Scene updating
+Stk>None
+2025-07-19 14:48:36,804 Scene updating
+Stk>None
+2025-07-19 14:48:38,517 Scene updating
+Stk>None
+2025-07-19 14:48:58,279 Scene updating
+Stk>None
+2025-07-19 14:48:59,879 Scene updating
+Stk>None
+2025-07-19 14:48:59,881 Scene updating
+Stk>None
+2025-07-19 14:49:01,560 Scene updating
+Stk>None
+2025-07-19 17:25:59,343 
+
+Starting
+********
+
+Stk>None
+2025-07-19 17:27:31,472 
+
+Starting
+********
+
+Stk>None
+2025-07-19 17:27:58,808 
+
+Starting
+********
+
+Stk>None
+2025-07-19 17:35:11,643 
+
+Starting
+********
+
+Stk>None
+2025-07-19 17:35:24,633 Scene updating
+Stk>None
+2025-07-19 17:35:28,089 Scene updating
+Stk>None
+2025-07-19 17:35:29,561 Scene updating
+Stk>None
+2025-07-19 17:36:42,324 
+
+Starting
+********
+
+Stk>None
+2025-07-19 17:38:58,036 
+
+Starting
+********
+
+Stk>None
+2025-07-19 17:39:50,844 
+
+Starting
+********
+
+Stk>None
+2025-07-19 17:40:23,352 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2177, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2100, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2177, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2100, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+2025-07-19 17:40:39,157 Scene updating
+Stk>None
+2025-07-19 17:40:56,957 about to update from action_EditDelete
+Stk>Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2177, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2100, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
+Stack (most recent call last):
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2177, in <module>
+    sys.exit(app.exec())
+  File "c:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hgPySide6\hg0\V00\src\mainwindow.py", line 2100, in action_EditDelete
+    logging.debug("about to update from action_EditDelete",stack_info=True  )
