@@ -1,0 +1,78 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+	<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+	<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+	<graph edgedefault="directed" id="G">
+		<node id="5">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-186.2785697201627" y="-194.89306386032052"/>
+					<y:NodeLabel>
+						n5
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="3">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-118.90377900023921" y="-255.53037550825164"/>
+					<y:NodeLabel>
+						n3
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="0">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-165.4867256637168" y="-121.23893805309736"/>
+					<y:NodeLabel>
+						n0
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="1">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="40.707964601769916" y="-181.41592920353983"/>
+					<y:NodeLabel>
+						n1
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<edge id="4" source="3" target="1" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="50.53109303994259" y="0.0"/>
+						<h:EndTangent x="27.107988519492963" y="41.549964123415464"/>
+					</y:Path>
+					<y:EdgeLabel>
+						4 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="2" source="1" target="0" directed="true">
+			<data key="data_edge">
+				<y:PolyLineEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path/>
+					<y:EdgeLabel>
+						 2 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:PolyLineEdge>
+			</data>
+		</edge>
+	</graph>
+</graphml>

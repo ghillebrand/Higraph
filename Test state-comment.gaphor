@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<gaphor xmlns="https://gaphor.org/model" xmlns:Core="https://gaphor.org/modelinglanguage/Core" xmlns:UML="https://gaphor.org/modelinglanguage/UML" version="4" gaphor-version="3.0.0">
+<model>
+<Core:StyleSheet id="58d6989a-66f8-11ec-b4c8-0456e5e540ed"/>
+<UML:Package id="58d6c2e8-66f8-11ec-b4c8-0456e5e540ed">
+<name>
+<val>New model</val>
+</name>
+<ownedDiagram>
+<reflist>
+<ref refid="58d6c536-66f8-11ec-b4c8-0456e5e540ed"/>
+</reflist>
+</ownedDiagram>
+<ownedType>
+<reflist>
+<ref refid="7719b360-eed6-11f0-957d-8c04ba03c64c"/>
+</reflist>
+</ownedType>
+<packagedElement>
+<reflist>
+<ref refid="7719b360-eed6-11f0-957d-8c04ba03c64c"/>
+</reflist>
+</packagedElement>
+</UML:Package>
+<UML:Diagram id="58d6c536-66f8-11ec-b4c8-0456e5e540ed">
+<element>
+<ref refid="58d6c2e8-66f8-11ec-b4c8-0456e5e540ed"/>
+</element>
+<name>
+<val>New Diagram</val>
+</name>
+<ownedPresentation>
+<reflist>
+<ref refid="6b974836-eed6-11f0-b3e2-8c04ba03c64c"/>
+<ref refid="7718e8d6-eed6-11f0-a2d3-8c04ba03c64c"/>
+<ref refid="7c4dd8c0-eed6-11f0-b41a-8c04ba03c64c"/>
+<ref refid="9039acb5-eed6-11f0-94d4-8c04ba03c64c"/>
+<ref refid="a442f07e-eed6-11f0-8336-8c04ba03c64c"/>
+</reflist>
+</ownedPresentation>
+</UML:Diagram>
+<UML:Comment id="6b97417f-eed6-11f0-8fd1-8c04ba03c64c">
+<body>
+<val></val>
+</body>
+<presentation>
+<reflist>
+<ref refid="6b974836-eed6-11f0-b3e2-8c04ba03c64c"/>
+</reflist>
+</presentation>
+</UML:Comment>
+<UML:CommentItem id="6b974836-eed6-11f0-b3e2-8c04ba03c64c">
+<matrix>
+<val>(1.0, 0.0, 0.0, 1.0, 578.0, 115.10204081632651)</val>
+</matrix>
+<top-left>
+<val>(0.0, 0.0)</val>
+</top-left>
+<width>
+<val>100.0</val>
+</width>
+<height>
+<val>65.0</val>
+</height>
+<diagram>
+<ref refid="58d6c536-66f8-11ec-b4c8-0456e5e540ed"/>
+</diagram>
+<subject>
+<ref refid="6b97417f-eed6-11f0-8fd1-8c04ba03c64c"/>
+</subject>
+</UML:CommentItem>
+<UML:State id="7718ab5c-eed6-11f0-990d-8c04ba03c64c">
+<container>
+<ref refid="771b3c4f-eed6-11f0-aa6a-8c04ba03c64c"/>
+</container>
+<incoming>
+<reflist>
+<ref refid="90c9ae60-eed6-11f0-83fe-8c04ba03c64c"/>
+</reflist>
+</incoming>
+<name>
+<val>New State</val>
+</name>
+<presentation>
+<reflist>
+<ref refid="7718e8d6-eed6-11f0-a2d3-8c04ba03c64c"/>
+</reflist>
+</presentation>
+<region>
+<reflist>
+<ref refid="7c4ed69a-eed6-11f0-aa47-8c04ba03c64c"/>
+</reflist>
+</region>
+</UML:State>
+<UML:StateItem id="7718e8d6-eed6-11f0-a2d3-8c04ba03c64c">
+<matrix>
+<val>(1.0, 0.0, 0.0, 1.0, 338.0, 251.0)</val>
+</matrix>
+<top-left>
+<val>(-91.0, 0.0)</val>
+</top-left>
+<width>
+<val>224.0</val>
+</width>
+<height>
+<val>282.0</val>
+</height>
+<children>
+<reflist>
+<ref refid="7c4dd8c0-eed6-11f0-b41a-8c04ba03c64c"/>
+</reflist>
+</children>
+<diagram>
+<ref refid="58d6c536-66f8-11ec-b4c8-0456e5e540ed"/>
+</diagram>
+<subject>
+<ref refid="7718ab5c-eed6-11f0-990d-8c04ba03c64c"/>
+</subject>
+</UML:StateItem>
+<UML:StateMachine id="7719b360-eed6-11f0-957d-8c04ba03c64c">
+<name>
+<val>State Machine</val>
+</name>
+<owningPackage>
+<ref refid="58d6c2e8-66f8-11ec-b4c8-0456e5e540ed"/>
+</owningPackage>
+<package>
+<ref refid="58d6c2e8-66f8-11ec-b4c8-0456e5e540ed"/>
+</package>
+<region>
+<reflist>
+<ref refid="771b3c4f-eed6-11f0-aa6a-8c04ba03c64c"/>
+</reflist>
+</region>
+</UML:StateMachine>
+<UML:Region id="771b3c4f-eed6-11f0-aa6a-8c04ba03c64c">
+<stateMachine>
+<ref refid="7719b360-eed6-11f0-957d-8c04ba03c64c"/>
+</stateMachine>
+<subvertex>
+<reflist>
+<ref refid="7718ab5c-eed6-11f0-990d-8c04ba03c64c"/>
+</reflist>
+</subvertex>
+</UML:Region>
+<UML:State id="7c4d9a4b-eed6-11f0-b421-8c04ba03c64c">
+<container>
+<ref refid="7c4ed69a-eed6-11f0-aa47-8c04ba03c64c"/>
+</container>
+<name>
+<val>New State</val>
+</name>
+<outgoing>
+<reflist>
+<ref refid="90c9ae60-eed6-11f0-83fe-8c04ba03c64c"/>
+</reflist>
+</outgoing>
+<presentation>
+<reflist>
+<ref refid="7c4dd8c0-eed6-11f0-b41a-8c04ba03c64c"/>
+</reflist>
+</presentation>
+</UML:State>
+<UML:StateItem id="7c4dd8c0-eed6-11f0-b41a-8c04ba03c64c">
+<matrix>
+<val>(1.0, 0.0, 0.0, 1.0, 5.5, 188.0980392156863)</val>
+</matrix>
+<top-left>
+<val>(0.0, 0.0)</val>
+</top-left>
+<width>
+<val>59.0</val>
+</width>
+<height>
+<val>62.0</val>
+</height>
+<diagram>
+<ref refid="58d6c536-66f8-11ec-b4c8-0456e5e540ed"/>
+</diagram>
+<parent>
+<ref refid="7718e8d6-eed6-11f0-a2d3-8c04ba03c64c"/>
+</parent>
+<subject>
+<ref refid="7c4d9a4b-eed6-11f0-b421-8c04ba03c64c"/>
+</subject>
+</UML:StateItem>
+<UML:Region id="7c4ed69a-eed6-11f0-aa47-8c04ba03c64c">
+<state>
+<ref refid="7718ab5c-eed6-11f0-990d-8c04ba03c64c"/>
+</state>
+<subvertex>
+<reflist>
+<ref refid="7c4d9a4b-eed6-11f0-b421-8c04ba03c64c"/>
+</reflist>
+</subvertex>
+</UML:Region>
+<UML:TransitionItem id="9039acb5-eed6-11f0-94d4-8c04ba03c64c">
+<diagram>
+<ref refid="58d6c536-66f8-11ec-b4c8-0456e5e540ed"/>
+</diagram>
+<horizontal>
+<val>0</val>
+</horizontal>
+<orthogonal>
+<val>0</val>
+</orthogonal>
+<subject>
+<ref refid="90c9ae60-eed6-11f0-83fe-8c04ba03c64c"/>
+</subject>
+<matrix>
+<val>(1.0, 0.0, 0.0, 1.0, 397.0, 357.95098039215685)</val>
+</matrix>
+<points>
+<val>[(5.5, 115.1960784313726), (163.0, 72.0), (74.0, 6.0490196078431495)]</val>
+</points>
+<head-connection>
+<ref refid="7c4dd8c0-eed6-11f0-b41a-8c04ba03c64c"/>
+</head-connection>
+<tail-connection>
+<ref refid="7718e8d6-eed6-11f0-a2d3-8c04ba03c64c"/>
+</tail-connection>
+</UML:TransitionItem>
+<UML:Transition id="90c9ae60-eed6-11f0-83fe-8c04ba03c64c">
+<container>
+<ref refid="7c4ed69a-eed6-11f0-aa47-8c04ba03c64c"/>
+</container>
+<guard>
+<ref refid="90cc0ebf-eed6-11f0-94fe-8c04ba03c64c"/>
+</guard>
+<presentation>
+<reflist>
+<ref refid="9039acb5-eed6-11f0-94d4-8c04ba03c64c"/>
+</reflist>
+</presentation>
+<source>
+<ref refid="7c4d9a4b-eed6-11f0-b421-8c04ba03c64c"/>
+</source>
+<target>
+<ref refid="7718ab5c-eed6-11f0-990d-8c04ba03c64c"/>
+</target>
+</UML:Transition>
+<UML:Constraint id="90cc0ebf-eed6-11f0-94fe-8c04ba03c64c">
+<transition>
+<ref refid="90c9ae60-eed6-11f0-83fe-8c04ba03c64c"/>
+</transition>
+</UML:Constraint>
+<UML:CommentLineItem id="a442f07e-eed6-11f0-8336-8c04ba03c64c">
+<diagram>
+<ref refid="58d6c536-66f8-11ec-b4c8-0456e5e540ed"/>
+</diagram>
+<horizontal>
+<val>0</val>
+</horizontal>
+<orthogonal>
+<val>0</val>
+</orthogonal>
+<matrix>
+<val>(1.0, 0.0, 0.0, 1.0, 716.0, 271.0)</val>
+</matrix>
+<points>
+<val>[(-88.0, -90.89795918367349), (-245.0, 65.0)]</val>
+</points>
+<tail-connection>
+<ref refid="7718e8d6-eed6-11f0-a2d3-8c04ba03c64c"/>
+</tail-connection>
+</UML:CommentLineItem>
+</model>
+</gaphor>

@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+	<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+	<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+	<graph edgedefault="directed" id="G">
+		<node id="0">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-98.0" y="-42.0"/>
+					<y:NodeLabel>
+						n0
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<h:metadata key="dd" value="ddddd">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+		</node>
+		<node id="1">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="39.0" y="-40.0"/>
+					<y:NodeLabel>
+						n1
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<edge id="3" source="0" target="1" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="23.5" y="-46.0"/>
+						<h:EndTangent x="40.5" y="63.0"/>
+					</y:Path>
+					<y:EdgeLabel>
+						3 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="2" source="1" target="0" directed="true">
+			<data key="data_edge">
+				<y:PolyLineEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path/>
+					<y:EdgeLabel>
+						 2 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:PolyLineEdge>
+			</data>
+			<h:metadata key="dd" value="rrrrrrrrrrrrr">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+			<h:metadata key="rrr" value="rrrrr not disp">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+			<h:metadata key="h" value="33">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</edge>
+	</graph>
+</graphml>

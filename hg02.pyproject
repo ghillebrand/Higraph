@@ -1,0 +1,9 @@
+{
+    "files": [
+        "mainwindow.py",
+        "form.ui",
+        "HelpAbout.ui",
+        "Credits.ui",
+        "treeTestWid.ui"
+    ]
+}
