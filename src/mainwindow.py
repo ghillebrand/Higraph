@@ -215,7 +215,8 @@ class grScene(QGraphicsScene):
     # INSERTEDGE2CLICK for handling choice of item in ambiguous cases, which requires a click to choose, 
     # and thus the end is selected on a Press, not a release.
     INSERTNODE, INSERTBLOB, INSERTEDGE, POINTER, INSERTEDGE2CLICK, MOVEEDGEEND, MOVEHANDLE, DOUBLECLICK, DRAGGING = range(9)
-
+    mouseModeDic={INSERTNODE:"INSERTNODE", INSERTBLOB:"INSERTBLOB", INSERTEDGE:"INSERTEDGE", POINTER:"POINTER", INSERTEDGE2CLICK:"INSERTEDGE2CLICK",\
+                   MOVEEDGEEND:"MOVEEDGEEND", MOVEHANDLE:"MOVEHANDLE", DOUBLECLICK:"DOUBLECLICK", DRAGGING:"DRAGGING"}
     #TO pass edit requests to mainwindow. Signal must be class, not instance variables.
     edgeEditRequested = Signal(object)
     nodeEditRequested = Signal(object)
@@ -1241,7 +1242,7 @@ class MainWindow(QMainWindow):
 
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
         self.Scene = grScene(self.model,self.ui.listWidget,self)
-        self.Scene.selectionChanged.connect(self.actionSceneSelectChange(self.Scene))
+        #self.Scene.selectionChanged.connect(self.actionSceneSelectChange(self.Scene)) JH Commented out
     
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
         self.Scene.nodeEditRequested.connect(self.showEditNodeDialog)
