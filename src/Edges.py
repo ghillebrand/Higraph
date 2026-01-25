@@ -361,7 +361,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             if self.isOnlySelected:
                 self.scene().clearEdgeOnly(self)
             if self._polyEdge == STRAIGHT:
-                #BUG (PySide) is this going to cause garbage collection issues? - yes!
+                #BUG (PySide) is this going to cause garbage collection issues? - yes - there is a delay ~5-10s
                 self.scene().removeItem(self.edgeLine)
                 self.edgeLine = StraightLineItem(ptList,parent=self)
                 
@@ -390,9 +390,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
 
     #From musicamente's SO post   
     # These are to setup the initial edge, which will always start out as a 2 pt edge. 
-    ###TODO: Polylines will allow creation of multi-point lines up front - change rubberline to use a polyline
-    def XXsetP2(self, p2):
-        self.edgeLine.setP(-1,p2) #-1 is the last pointin the list
+    #TODO: Polylines will allow creation of multi-point lines up front - change rubberline to use a polyline
 
     def setStart(self, start):
         """ Set the startItem to start. Also update model, for edits"""
@@ -410,7 +408,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         """ Tell Qt the ends have moved. source = None allows an arrow recalc without point change"""
         self.prepareGeometryChange()
         #TODO: For hypergraphs, start/ end may be a point on a PolyLine
-        #TODO If both start and end are selected, move all the polyline points too.
+     
         if source == self.startNode:
             self.edgeLine.setP(0,source.scenePos())
         if source == self.endNode: #endNode
@@ -424,5 +422,5 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             angle_deg = self.edgeLine.endAngle()
             self.endShape.setRotation(angle_deg)
             self.endShape.setPos(self.edgeLine._p[-1])
-
+        #If needed move all the polyline points - updatePath handles this.
         self.edgeLine.updatePath()

@@ -428,7 +428,7 @@ class VisBlobItem(VisNodeItem):
         else:
             painter.setPen(Qt.black)
 
-        #self.nodeShape is painted by Qt
+        #self.nodeShape is painted by Qt, using parent's pen???
 
         #Draw the text if set to display
         if self.metadataAttributes['name']['display']:
@@ -440,25 +440,38 @@ class VisBlobItem(VisNodeItem):
             painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
 
     def itemChange(self, change, value):
-        if change == QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
-            if self.isOnlySelected:
-                self._createHandles()
+        if self.suppressItemChange:
+            return super().itemChange(change, value)
+
+
         
-        # Detect when the selection state changes
-        if change == QGraphicsItem.ItemSelectedChange:
-            # value is the new selection state (True/False)
-            # Force the child border to repaint so it picks up the new state
-            if hasattr(self, 'nodeShape'):
-                self.nodeShape.update()
+        #Moved
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            #print("blob move")
+            pass
+
         return super().itemChange(change, value)
+
+    def setSelected(self,state:bool):
+        """ set as selected if parent is selected"""
+        if state:
+            #print(f"Blob setSel createH")
+            self._createHandles()
+        else:
+            #print("blob setSel calling _deleteHandles")
+            self.scene().onlySelected = None
+            self.isOnlySelected = False
+            self._deleteHandles()
+        #super().setSelected(isSelected)
 
     def _createHandles(self):
         """ Handles for resizing"""
         #Clear existing handles
-        #Needed?
-        #for h in self._Handles:
-        #    self.scene().removeItem(h)
-        #self._Handles.clear()
+        #Needed? Seems to always be empty
+        #print(f"Blob createHandles {len(self._Handles)=}")
+        for h in self._Handles:
+            self.scene().removeItem(h)
+        self._Handles.clear()
 
         TLx = self.pos().x()
         TLy = self.pos().y()
@@ -479,14 +492,21 @@ class VisBlobItem(VisNodeItem):
         """ Delete handles when deselected"""
         self.suppressItemChange = True
         # Remove existing handles
+        #print(f" b4 {self._Handles=}")
         for h in self._Handles:
+            #print(f"{h.parentItem()=}" , end=", ")
+            h.setParentItem(None)
+            #print(f"{h.parentItem()=}")
             self.scene().removeItem(h)
         self._Handles.clear()
+        #print(f"Blob delH {len(self._Handles)=}")
         self.suppressItemChange = False
 
     def _updateFromHandles(self,pos):
         if self.suppressItemChange == True:
             return
+        print(f" Blob updateHand")
+        # HandleItem.lastChanged holds the moved Handle - find it, then update the coords appropriately
         
 
     def mousePressEvent(self, event):

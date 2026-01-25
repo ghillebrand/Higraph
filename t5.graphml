@@ -1,0 +1,44 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+	<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+	<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+	<graph edgedefault="directed" id="G">
+		<node id="1">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-73.9496631128331" y="-22.51706688883081"/>
+					<y:NodeLabel>
+						n1
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="0">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-249.34927309500614" y="-156.48369813505744"/>
+					<y:NodeLabel>
+						n0
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<edge id="2" source="1" target="0" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="-31.78851724272267" y="-24.27941868144959"/>
+						<h:EndTangent x="-31.78851724272267" y="-24.27941868144959"/>
+					</y:Path>
+					<y:EdgeLabel>
+						2 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+	</graph>
+</graphml>

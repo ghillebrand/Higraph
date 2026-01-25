@@ -493,12 +493,17 @@ class grScene(QGraphicsScene):
         self.onlySelected = None
 
         #clear any pointers to handles
-        if edge.stH:
+        #HACK: func needs to be generalised to blobs. use getAttribute() for blobs for now
+        #if edge.stH:
+        if getattr(edge,'stH',None):
             edge.setZValue(0) #below nodes
             edge.stH = None
-        if edge.endH:
+        #if edge.endH:
+        if getattr(edge,'endH',None):
             edge.endH = None
-        edge.edgeLine.setSelected(False)
+        #HACK: deal with blobs better
+        if getattr(edge,'edgeLine',None):
+            edge.edgeLine.setSelected(False)
         edge.setSelected(False)
         
     def mousePressEvent(self, mouseEvent):
@@ -1460,6 +1465,9 @@ class MainWindow(QMainWindow):
         #Clear Scene
         #TODO: Reset the temp vars for odd reloads
         # eg self.onlySelected
+        #suppress itemChanged processing (will put the flag on _everything_, which is ugly, but easy.)
+        for i in self.Scene.items():
+            i.suppressItemChange = True
         self.Scene.clear()
 
     def nodeFromXML(self,xNode,newID=False)->VisNodeItem:
@@ -1532,7 +1540,7 @@ class MainWindow(QMainWindow):
         else:
             id = ''
         
-        #TODO: yEd uses string IDs, not ints :/
+        #yEd uses string IDs, not ints :/
         if newStartID is not None: #Note: Can't use "truthy" here since 0 is a valid option!
             sItemID = newStartID
         else:
@@ -1603,7 +1611,7 @@ class MainWindow(QMainWindow):
 
                 edgeLable = polylineedge.find("EdgeLabel")
                 if edgeLable is not None:
-                    edgeName = edgeLable.text
+                    edgeName = edgeLable.text #TODO: This gets a prepended space. Check
                     for edgeNameAttribs in edgeLable.iter("metadataAttribute"):
                         #Deal with Boolean for display (This is why you should use the proper key types!)
                         if edgeNameAttribs.attrib.get("key") == 'display':
