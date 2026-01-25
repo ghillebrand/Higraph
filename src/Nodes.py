@@ -343,6 +343,11 @@ class VisNodeItem(QGraphicsObject):
 
 class VisBlobItem(VisNodeItem):
     """Generalise point-like nodes to sets. Blame Harel for the name"""
+    #Constants for the corners of a (rectangular) blob
+    TL = 0
+    TR = 1
+    BR = 2
+    BL = 3
 
     def __init__(self,posn, model,listWidget, parent=None, nameP ="", id=None,
                     metadata={}, metadataAttributes={},
@@ -443,7 +448,6 @@ class VisBlobItem(VisNodeItem):
         if self.suppressItemChange:
             return super().itemChange(change, value)
 
-
         
         #Moved
         if change == QGraphicsItem.ItemPositionHasChanged:
@@ -492,21 +496,61 @@ class VisBlobItem(VisNodeItem):
         """ Delete handles when deselected"""
         self.suppressItemChange = True
         # Remove existing handles
-        #print(f" b4 {self._Handles=}")
         for h in self._Handles:
-            #print(f"{h.parentItem()=}" , end=", ")
             h.setParentItem(None)
-            #print(f"{h.parentItem()=}")
             self.scene().removeItem(h)
         self._Handles.clear()
-        #print(f"Blob delH {len(self._Handles)=}")
         self.suppressItemChange = False
 
     def _updateFromHandles(self,pos):
         if self.suppressItemChange == True:
             return
-        print(f" Blob updateHand")
-        # HandleItem.lastChanged holds the moved Handle - find it, then update the coords appropriately
+
+        self.suppressItemChange = True
+
+        self.prepareGeometryChange()
+
+        BlobPos = self.pos()
+        TLx = self.pos().x()
+        TLy = self.pos().y()
+        BRx = self._width
+        BRy = self._height
+
+        #Translate to Blob coords
+        #TODO: use proper Qt translate?
+        relPos = pos-BlobPos
+        # print(f"{BlobPos=}\n{pos=}\n{relPos}")
+
+        # HandleItem.lastChanged (a class variable!) holds the moved Handle - find it, then update the coords appropriately
+        #scene.MoveEvent for a handle sets the handle.pos to scenePos, but this breaks child handles for blobs
+        #TODO: Look at what handle is set to during move - will impact polyLines
+
+        for i,h in enumerate(self._Handles):
+            if h == HandleItem.lastChanged :
+                break
+        match i:
+            case 0: #TL
+                TLx = relPos.x() - TLx
+                TLy = relPos.y() - TLy
+                self._Handles[VisBlobItem.TL].setPos(QPointF(TLx,TLy)) 
+            case 1: #TR BRx is width
+                BRx = relPos.x()
+                TLy = relPos.y() - TLy
+                self._Handles[VisBlobItem.TR].setPos(QPointF(BRx,TLy))
+            case 2: #BR
+                BRx = relPos.x()
+                BRy = relPos.y()
+                self._Handles[VisBlobItem.BR].setPos(BRx,BRy)
+            case 3: #BL
+                TLx = relPos.x() - TLx 
+                BRy = relPos.y()
+                self._Handles[VisBlobItem.BL].setPos(TLx,BRy)
+
+        #Now set the blob pos & w/h from the blobs
+        # QRoundedRectItem will need an updateCoords method
+        
+        self.suppressItemChange = False
+        #self._Handle[i].setPos
         
 
     def mousePressEvent(self, event):

@@ -821,7 +821,7 @@ class grScene(QGraphicsScene):
             #print("Move Handle")
             #Same code as moveEdgeEnd
             self.handle.setPos(mPos) 
-            pass
+            
             
         super().mouseMoveEvent(mouseEvent)
 
