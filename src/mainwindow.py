@@ -51,13 +51,6 @@ from Ui_HelpAbout import Ui_dlgAbout
 
 #Global constants. 
 from  HGConstants import *
-roleDic={ROLE_NODE: "ROLE_NODE",
-        ROLE_EDGE:"ROLE_EDGE", 
-        ROLE_HYPEREDGE :"ROLE_HYPEREDGE",
-        ROLE_BLOB:"ROLE_BLOB",
-        ROLE_HANDLE:"ROLE_HANDLE",
-        ROLE_POLYLINE:"ROLE_POLYLINE",
-        ROLE_DUMMYNODE:"ROLE_DUMMYNODE"}
 
 # core Graph class:
 from coreGraph import Graph
