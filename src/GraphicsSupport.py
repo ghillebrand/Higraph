@@ -137,7 +137,8 @@ class HandleItem(QGraphicsRectItem):
             and not self.suppressItemChange 
             and self._onMoveCallback
         ):
-            HandleItem.lastChanged = self   #Track which was the last handle touched
+            #Track which was the last handle touched
+            HandleItem.lastChanged = self   
             self._onMoveCallback(self.scenePos())
 
         return super().itemChange(change, value)

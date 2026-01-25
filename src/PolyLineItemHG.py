@@ -545,15 +545,17 @@ class HermiteSplineItem(QGraphicsItem):
         #Tangent handles
         self._tHandles = []
         #start
+        # no left tgt, use 0
         self._tHandles.append((QPointF(0,0),
-                                HandleItem(self._t[0][1],color=Qt.blue,parent=self._pHandles[0]))) # no left tgt, use 0
+                                HandleItem(self._t[0][1],color=Qt.blue,parent=self._pHandles[0]))) 
         #Middle
         for i in range(1,len(self._t) -1): #End points have 1 tgt, mid pts 2
             self._tHandles.append((HandleItem(-self._t[i][0],color=Qt.blue,parent=self._pHandles[i]), #left
                                    HandleItem(self._t[i][1],color=Qt.blue,parent=self._pHandles[i]))) #right
         #End
+        #no right tangent, use 0, must be a QPointF
         self._tHandles.append((HandleItem(-self._t[-1][0],color=Qt.blue,parent=self._pHandles[-1]),
-                                QPointF(0,0)))  #no right tangent, use 0, must be a QPointF
+                                QPointF(0,0))) 
 
         for ph in self._pHandles:
             ph.setMoveCallback(self._updateFromHandles)
