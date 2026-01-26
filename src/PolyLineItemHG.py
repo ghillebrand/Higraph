@@ -164,8 +164,8 @@ class StraightLineItem(QGraphicsItem):
         """ show self as selected if the parent is selected"""
         return self.parentItem() and self.parentItem().isSelected()
     
-    def setSelected(self,state:bool):
-        """ set as selected if parent is selected"""
+    """def setSelected(self,state:bool):
+        # set as selected if parent is selected
         #print(f"SL setSelected {state=}")
         #TODO: Check how this messes with built-in selection handling.
         isSelected = self.parentItem() and self.parentItem().isSelected()
@@ -177,7 +177,7 @@ class StraightLineItem(QGraphicsItem):
         else:
             #print("calling _deleteHandles")
             self._deleteHandles()
-        #super().setSelected(isSelected)
+        #super().setSelected(isSelected)"""
 
     def endAngle(self):
         """ Use the path details to work out the end angle. """
@@ -249,9 +249,10 @@ class StraightLineItem(QGraphicsItem):
     def _createHandles(self):
         """ show control handles. Used on selection and add/ delete """
         #clear existing handles
-        for h in self._pHandles:
-            self.scene().removeItem(h)
+        #for h in self._pHandles:
+        #    self.scene().removeItem(h)
         self._pHandles.clear()
+        self.parentItem().setZValue(3000)
         # Add new handles
         #TODO: is idx used?
 
@@ -266,7 +267,9 @@ class StraightLineItem(QGraphicsItem):
         # Remove existing handles
         for h in self._pHandles:
             self.scene().removeItem(h)
+            del h
         self._pHandles.clear()
+        self.parentItem().setZValue(0)
         self.suppressItemChange = False
 
     def _updateFromHandles(self, moved):
@@ -419,8 +422,8 @@ class HermiteSplineItem(QGraphicsItem):
         """ show self as selected if the parent is selected"""
         return self.parentItem() and self.parentItem().isSelected()
     
-    def setSelected(self,state:bool):
-        """ set as selected if parent is selected"""
+    """def setSelected(self,state:bool):
+        # set as selected if parent is selected
         #print(f"HS setSelected {state=}")
         #TODO: Check how this messes with built-in selection handling.
         isSelected = self.parentItem() and self.parentItem().isSelected()
@@ -432,7 +435,7 @@ class HermiteSplineItem(QGraphicsItem):
         else:
             #print("calling _deleteHandles")
             self._deleteHandles()
-        #super().setSelected(isSelected)
+        #super().setSelected(isSelected)"""
 
     def endAngle(self):
         """ Use the path details to work out the end angle. For HS, use the tangent """
@@ -538,6 +541,7 @@ class HermiteSplineItem(QGraphicsItem):
         #Start and end points always present p0, pn (or p-1)
         #have a list of point and tgnt handles
         # print("createHandles")
+        self.parentItem().setZValue(3000)
         self._pHandles = []
         for pi in self._p: 
             self._pHandles.append(HandleItem(pi,color=Qt.green,parent=self))
@@ -581,10 +585,13 @@ class HermiteSplineItem(QGraphicsItem):
         self._tHandles.clear()
 
         #del self._pHandles
-        for i in range(len(self._pHandles)):
-            self.scene().removeItem(self._pHandles[i])
+        for handle in self._pHandles:  
+            self.scene().removeItem(handle)
+            del handle
+        #for i in range(len(self._pHandles)):
+        #    self.scene().removeItem(self._pHandles[i])
         self._pHandles.clear()
-
+        self.parentItem().setZValue(0)
         
         self.suppressItemChange = False
         

@@ -241,6 +241,7 @@ class grScene(QGraphicsScene):
 
         #Track single item selection (for edges)
         self.onlySelected = None
+        self.thisHandleObjectSelected = None
 
         #For dragging
         self._lastMousePos = QPointF(0,0)
@@ -526,8 +527,150 @@ class grScene(QGraphicsScene):
             return
 
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
+            if self.mouseMode==self.POINTER:
+                selItems = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_HANDLE])
+                if len(selItems) > 0:
+                    selItem=selItems[0]
+                    #it's a handle, process
+                    selItem.setSelected(True)
+                    p = selItem.parentItem()
+                    p.setSelected(True)
+                    # p.parentItem.setSelected(True)
+                    if p.data(KEY_ROLE) == ROLE_POLYLINE and (selItem == p._pHandles[0] or selItem == p._pHandles[-1]):
+                        self.mouseMode = self.MOVEEDGEEND
+                        #Start move
+                        #selHandles  _Must_ be a handle, and parent must be a visEdge - deal with the polyline inbetween
+                        self.startMovingEdgeEnd(selItem.parentItem().parentItem(), selItem)
+                    else: #tangent or Mid point, or Blob corner to move
+                        self.handle = selItem
+                        self.mouseMode = self.MOVEHANDLE
+                        #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
+                        #mouseEvent.accept()
+                        #return
+                    mouseEvent.accept()
+                    return
+            if len(self.selectedItems())>1:
+                self.mouseMode=self.DRAGGING #or in the middle of a modifier selection
+                # hand over to QT? or exit?
+                super().mousePressEvent(mouseEvent)
+                return
+            
+            # in all other cases clear selection
+            self.clearSelection()
+            if self.thisHandleObjectSelected:
+                self.thisHandleObjectSelected._deleteHandles()
+                self.thisHandleObjectSelected=None
 
+            # process menu insert objects
             if self.mouseMode == self.INSERTNODE:
+                #TODO: For blobs, this will have to move to mouseRelease, to allow rectangle drag
+                #Items sizes should be relative to (0,0)
+                mPos = mouseEvent.scenePos()
+                #VisNodeItem adds to the model and the  list
+                item = VisNodeItem(mPos, self.model,self.listWidget)
+                item.setPos(mPos)
+                #Add to *Scene*
+                self.addItem(item)
+
+                item.setFlag(QGraphicsItem.ItemIsSelectable, True)
+                item.setFlag(QGraphicsItem.ItemIsMovable, True)
+
+                #TODO: Should this be actionPointer, to update the toolbar, etc
+                self.mouseMode = self.POINTER
+                mouseEvent.accept()
+                return
+            #
+            if self.mouseMode == self.INSERTBLOB:
+                self.startPoint = mouseEvent.scenePos()
+                #TODO: Create the blob here, and draw a proper blob for creation, not a rect
+                # JH check what needs to be set and where this goes (accept and return?)
+            #
+            if self.mouseMode == self.INSERTEDGE:
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB]) #,ROLE_EDGE
+                if itm:
+                    self.tmpEdgeSt = itm
+                    self.startRubberLine(mPos)
+                else: #Miss
+                    self.tmpEdgeSt = None
+                mouseEvent.accept()
+                return
+            #
+            #This is the end of a 2-click-insert (via pickItem) -  means END the rubberBanding, create the edge 
+            if self.mouseMode == self.INSERTEDGE2CLICK: 
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB]) #,ROLE_EDGE
+                if itm:
+                    self.tmpEdgeEnd = itm 
+                    self.endPoint = mPos
+                    self.endRubberLine()
+                self.resetRubberLine()
+                self.mouseMode = self.POINTER
+                mouseEvent.accept()
+                return
+            #
+            # Now process item selection
+            if self.mouseMode == self.POINTER:
+                selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE,ROLE_BLOB, ROLE_POLYLINE])
+                if selItem:
+                    selItem = selItem[0]
+#                else:
+#                    selItem = None
+
+                    if selItem.data(KEY_ROLE) == ROLE_NODE:
+                        super().mousePressEvent(mouseEvent)
+                        return
+                    #immediately hand off for Qt to move
+                    #BUG:Dragging With these on, DRAGGING doesn't happen, off, a single node select doesn't clear selection
+                    #Solution: Move `isSelected` to mouseRelease, to allow for movement
+                    #TODO: DRAGGING
+                    #super().mousePressEvent(mouseEvent)
+                    #return
+
+                    if selItem.data(KEY_ROLE) == ROLE_BLOB:
+                        print(f"Sel Blob {selItem.metadata['name']}")
+                        self.onlySelected = selItem
+                        self.thisHandleObjectSelected=selItem
+                        selItem.isOnlySelected = True
+                        selItem.setSelected(True)
+                        # accept? return?
+
+                    #If selecting a POLYLINE, bump select to parent - JH why?
+                    if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
+                        # save handleobject and create handles
+                        self.thisHandleObjectSelected=selItem
+                        self.onlySelected=selItem
+                        selItem.setSelected(True)
+                        parent = selItem.parentItem()
+                        parent.setSelected(True)
+                        parent.isOnlySelected = True
+                        selItem._createHandles()
+
+                        #selItem.setSelected(False) # JH does this remove from QT selection also? Wait, this is Gcode
+                        #selItem = parent
+                        #selItem.setSelected(True) # check this
+                       # super().mousePressEvent(mouseEvent)
+                       # return
+                    
+                    if selItem.data(KEY_ROLE) == ROLE_EDGE:
+                        if not selItem.stH:
+                            selItem.setZValue(2000) #move the edge above nodes
+                        # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
+                        #print("Setting stH", end="")
+                            if len(selItem.edgeLine._pHandles)>0:
+                                selItem.stH = selItem.edgeLine._pHandles[0]
+                            else:
+                                print("No handles yet")
+                        if not selItem.endH:
+                        #print(", endH")
+                             selItem.endH = selItem.edgeLine._pHandles[-1]
+                        # will this ever be needed?
+                        #selItem.setSelected(True) #JH do we need this?
+                        #selItem.isOnlySelected = True
+                    #Let the scene remember, for unsetting
+                        #self.onlySelected = selItem
+                        mouseEvent.accept()
+                        return
+
+            """if self.mouseMode == self.INSERTNODE:
                 self.clearSelection()
                 #For edges, was there only one selected? Clear.
                 if self.onlySelected:
@@ -727,7 +870,7 @@ class grScene(QGraphicsScene):
                 #if we get here, and selected_items >2, we're about to drag
                 if len(selected_items) > 2:
                     #print("setting mode to DRAGGING")
-                    self.mouseMode = self.DRAGGING
+                    self.mouseMode = self.DRAGGING"""
 
         if (mouseEvent.button() == Qt.MouseButton.RightButton):
             mPos = mouseEvent.scenePos()
@@ -815,7 +958,7 @@ class grScene(QGraphicsScene):
                         #print("e" , end ="")
             
         elif self.mouseMode == self.MOVEEDGEEND:
-            self.MoveEdgeEnd(self.onlySelected,mPos)
+            self.MoveEdgeEnd(self.onlySelected.parentItem(),mPos)
             mouseEvent.accept()
             
         elif self.mouseMode == self.MOVEHANDLE:
@@ -887,7 +1030,7 @@ class grScene(QGraphicsScene):
             #MainWindow.actionSceneSelectChange(MainWindow.Scene)
         elif self.mouseMode == self.MOVEEDGEEND:
             #print("Finish moveEdgeEnd")
-            self.finishMovingEdgeEnd(self.onlySelected, mPos,mouseEvent)
+            self.finishMovingEdgeEnd(self.onlySelected.parentItem(), mPos,mouseEvent)
             self.mouseMode = self.POINTER
             self.views()[0].setCursor(Qt.ArrowCursor)
             mouseEvent.accept()
@@ -1454,6 +1597,7 @@ class MainWindow(QMainWindow):
         if self.Scene.onlySelected:
             self.Scene.onlySelected.isOnlySelected =False
         self.Scene.onlySelected = None
+        self.Scene.thisHandleObjectSelected = None
         
         #clear window vars
         self.setWindowTitle(APP_NAME +"[*]")
