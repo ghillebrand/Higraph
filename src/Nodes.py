@@ -331,8 +331,9 @@ class VisNodeItem(QGraphicsObject):
             #TODO: check for <shift> & <ctrl> click to add, otherwise clear.
             #NOTE: Qt clears the selection elsewhere on mouseRelease 
             modifiers = mouseEvent.modifiers()
-            if not (modifiers & Qt.ShiftModifier or modifiers & Qt.ControlModifier) \
-                and not self.isSelected():
+            if not (modifiers & Qt.ShiftModifier or modifiers & Qt.ControlModifier)\
+                    and self.scene().mouseMode!=self.scene().DRAGGING:
+          #      and not self.isSelected():
                 self.scene().clearSelection()
             self.setSelected(True)
             #Highlight the list item as well
