@@ -2315,6 +2315,14 @@ class MainWindow(QMainWindow):
         #print("Edit>Delete")
         #Edge Delete (must delete edges 1st)
         selected_items = self.Scene.selectedItems()
+        print("In delete, number of selected items", len(selected_items))
+        for jenny in selected_items:
+            print(roleDic[jenny.data(KEY_ROLE)])
+            print("No of child items", len(jenny.childItems()))
+            print("edgeline", roleDic[jenny.edgeLine.data(KEY_ROLE)])
+            
+        #    for j2 in jenny.childItems():
+        #        print(j2)
         self.Scene.clearSelection()
         if selected_items:
             for item in selected_items:

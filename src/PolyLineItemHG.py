@@ -594,7 +594,9 @@ class HermiteSplineItem(QGraphicsItem):
         #print("Deleting handles")
 
         self.suppressItemChange = True
-        
+
+        for handle in self._tHandles:
+            del handle
         self._tHandles.clear()
 
         #del self._pHandles
