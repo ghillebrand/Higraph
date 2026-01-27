@@ -538,8 +538,8 @@ class VisBlobItem(VisNodeItem):
                 TLy = relPos.y() - TLy
                 self._Handles[VisBlobItem.TR].setPos(QPointF(BRx,TLy))
             case 2: #BR
-                BRx = relPos.x()
-                BRy = relPos.y()
+                BRx = relPos.x() + BRx
+                BRy = relPos.y() + BRy
                 self._Handles[VisBlobItem.BR].setPos(BRx,BRy)
             case 3: #BL
                 TLx = relPos.x() - TLx 
