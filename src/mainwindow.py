@@ -1126,7 +1126,7 @@ class grScene(QGraphicsScene):
         # Register a finalize callback to confirm deletion
         #weakref.finalize(item, self._on_finalize, repr(item))
 
-        item.suppressItemChange = True
+        item.suppressItemChange = False  #changed from True JH
         self.removeItem(item)
         #import referrers
         #print(referrers.get_referrer_graph(item, max_depth=3))
@@ -2288,8 +2288,11 @@ class MainWindow(QMainWindow):
         #Delete from Scene
         delItem = self.Scene.findItemByIdx(delIdx)
         #remove CBs
-        self.Scene.clearEdgeOnly(delItem)
+        #self.Scene.clearEdgeOnly(delItem)
+        delItem.edgeLine._deleteHandles()
         self.Scene.deleteItemAndChildren(delItem)
+
+        del delItem #not sure why this works JH added
 
     def delNode(self, delIdx):
         """ all the calls to delete an node"""
@@ -2315,14 +2318,6 @@ class MainWindow(QMainWindow):
         #print("Edit>Delete")
         #Edge Delete (must delete edges 1st)
         selected_items = self.Scene.selectedItems()
-        print("In delete, number of selected items", len(selected_items))
-        for jenny in selected_items:
-            print(roleDic[jenny.data(KEY_ROLE)])
-            print("No of child items", len(jenny.childItems()))
-            print("edgeline", roleDic[jenny.edgeLine.data(KEY_ROLE)])
-            
-        #    for j2 in jenny.childItems():
-        #        print(j2)
         self.Scene.clearSelection()
         if selected_items:
             for item in selected_items:
