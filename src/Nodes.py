@@ -351,8 +351,8 @@ class VisBlobItem(VisNodeItem):
     BL = 3
 
     def __init__(self,posn, model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={},
-                    height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]):
+                    metadata={}, metadataAttributes={}, endposn=QPointF(0,0,),
+                    height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): #JH endposn added for debugging
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
         
@@ -401,6 +401,8 @@ class VisBlobItem(VisNodeItem):
         self.isOnlySelected = False
 
         self.suppressItemChange = False
+        self.posn=posn #JH added for debugging
+        self.endposn=endposn #JH added for debugging
 
     def __repr__(self):
         r = f"\noo VisBLOBItem\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n"+\
@@ -525,25 +527,26 @@ class VisBlobItem(VisNodeItem):
         # HandleItem.lastChanged (a class variable!) holds the moved Handle - find it, then update the coords appropriately
         #scene.MoveEvent for a handle sets the handle.pos to scenePos, but this breaks child handles for blobs
         #TODO: Look at what handle is set to during move - will impact polyLines
-
         for i,h in enumerate(self._Handles):
-            if h == HandleItem.lastChanged :
+            if h == HandleItem.lastChanged or h.centre==HandleItem.lastChangedbyCentre: #JH changed for debug
                 break
         match i:
             case 0: #TL
-                TLx = relPos.x() - TLx
-                TLy = relPos.y() - TLy
+                #TLx = relPos.x() - TLx
+                #TLy = relPos.y() - TLy
+                TLx=relPos.x()
+                TLy=relPos.y()
                 self._Handles[VisBlobItem.TL].setPos(QPointF(TLx,TLy)) 
             case 1: #TR BRx is width
                 BRx = relPos.x()
-                TLy = relPos.y() - TLy
+                TLy = relPos.y() #- TLy
                 self._Handles[VisBlobItem.TR].setPos(QPointF(BRx,TLy))
             case 2: #BR
                 BRx = relPos.x()
                 BRy = relPos.y()
                 self._Handles[VisBlobItem.BR].setPos(BRx,BRy)
             case 3: #BL
-                TLx = relPos.x() - TLx 
+                TLx = relPos.x() #- TLx 
                 BRy = relPos.y()
                 self._Handles[VisBlobItem.BL].setPos(TLx,BRy)
 

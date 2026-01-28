@@ -630,7 +630,7 @@ class grScene(QGraphicsScene):
                         self.onlySelected = selItem
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
-                        selItem.setSelected(True)
+                  #      selItem.setSelected(True)
                         # accept? return?
 
                     #If selecting a POLYLINE, bump select to parent - JH why?
@@ -982,9 +982,9 @@ class grScene(QGraphicsScene):
         elif self.mouseMode == self.INSERTBLOB:
             #add the  Blob
             #TODO: Check for parents/ children - here, or itemChanged?
-            blob = VisBlobItem(self.startPoint,self.model, self.listWidget, 
+            blob = VisBlobItem(self.startPoint, self.model, self.listWidget, endposn=mPos, 
                             height = mPos.y()-self.startPoint.y(), width = mPos.x()-self.startPoint.x(),
-                            xRadius=10,yRadius=10)
+                            xRadius=10,yRadius=10) #JH mPos added for debugging
             self.addItem(blob)
             self.mouseMode = self.POINTER
             mouseEvent.accept()

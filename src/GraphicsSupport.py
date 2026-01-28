@@ -32,7 +32,7 @@ class TransparentTextItem(QGraphicsTextItem):
     def paint(self, painter, option, widget=None):
         super().paint(painter,option,widget)
 
-    def mousePressEvent(self, event):
+    def mousessEvent(self, event):
         # Forward to parent
         if self.parentItem():
             self.parentItem().mousePressEvent(event)
@@ -102,6 +102,7 @@ class ArrowHeadItem(QGraphicsItem):
 class HandleItem(QGraphicsRectItem):
     """ a generic graphics handle to facilitate moving points during editing"""
     lastChanged = None  #Track the handle which was last changed
+    lastChangedbyCentre = QPointF(0,0)  # JH add for debugging
 
     def __init__(self, center: QPointF, hSize=HITSIZE, color=Qt.red, parent=None):
 
@@ -124,6 +125,7 @@ class HandleItem(QGraphicsRectItem):
         self._onMoveCallback = None
         
         self.suppressItemChange = False
+        self.centre=center #JH added for debugging
 
     def setMoveCallback(self, callback):
         self._onMoveCallback = callback
@@ -139,6 +141,7 @@ class HandleItem(QGraphicsRectItem):
         ):
             #Track which was the last handle touched
             HandleItem.lastChanged = self   
+            HandleItem.lastChangedbyCentre = self.centre  #JH added for debugging
             self._onMoveCallback(self.scenePos())
 
         return super().itemChange(change, value)
