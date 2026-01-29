@@ -2349,12 +2349,20 @@ class MainWindow(QMainWindow):
         #  Maybe select all needs to be context sensitive - scene, or list =model
         for item in self.Scene.items():
             if item.GraphicsItemFlag.ItemIsSelectable:
+                item.isOnlySelected=False #JH change
                 item.setSelected(True)
+            if self.Scene.thisHandleObjectSelected: #JH added
+                self.Scene.thisHandleObjectSelected._deleteHandles()
+                self.Scene.thisHandleObjectSelected=None
 
     def action_EditSelectNone(self):
         #print("Edit>SelectNone")
-        if self.Scene.onlySelected: 
-            self.Scene.clearEdgeOnly(self.Scene.onlySelected)
+        #JH modified to remove handles on edges
+        if len(self.Scene.selectedItems())==1 and self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
+        #if self.Scene.onlySelected: 
+        #    self.Scene.clearEdgeOnly(self.Scene.onlySelected)
         self.Scene.clearSelection()
 
     def action_EditZoomIn(self):
