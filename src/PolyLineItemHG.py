@@ -377,6 +377,7 @@ class HermiteSplineItem(QGraphicsItem):
     
     def itemChange(self, change, value):
         #print(f"HS itemChanged {change=} {value=}")
+        #JH Hopefully this is never suddenly called (it would be unexpected)
         if change == QGraphicsItem.ItemSelectedHasChanged:
             # value is a bool indicating new selected state
             #isSelected = bool(value)

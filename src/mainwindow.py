@@ -583,7 +583,7 @@ class grScene(QGraphicsScene):
             if self.mouseMode == self.INSERTBLOB:
                 self.startPoint = mouseEvent.scenePos()
                 #TODO: Create the blob here, and draw a proper blob for creation, not a rect
-                # JH check what needs to be set and where this goes (accept and return?)
+                
             #
             if self.mouseMode == self.INSERTEDGE:
                 itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB]) #,ROLE_EDGE
@@ -630,10 +630,9 @@ class grScene(QGraphicsScene):
                         self.onlySelected = selItem
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
-                        selItem.setSelected(True)
+                  #      selItem.setSelected(True)
                         # accept? return?
 
-                    #If selecting a POLYLINE, bump select to parent - JH why?
                     if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
                         # save handleobject and create handles
                         self.thisHandleObjectSelected=selItem
@@ -644,7 +643,7 @@ class grScene(QGraphicsScene):
                         parent.isOnlySelected = True
                         selItem._createHandles()
 
-                        #selItem.setSelected(False) # JH does this remove from QT selection also? Wait, this is Gcode
+                        #selItem.setSelected(False)
                         #selItem = parent
                         #selItem.setSelected(True) # check this
                        # super().mousePressEvent(mouseEvent)
@@ -663,7 +662,7 @@ class grScene(QGraphicsScene):
                         #print(", endH")
                              selItem.endH = selItem.edgeLine._pHandles[-1]
                         # will this ever be needed?
-                        #selItem.setSelected(True) #JH do we need this?
+                        #selItem.setSelected(True) 
                         #selItem.isOnlySelected = True
                     #Let the scene remember, for unsetting
                         #self.onlySelected = selItem
@@ -982,9 +981,9 @@ class grScene(QGraphicsScene):
         elif self.mouseMode == self.INSERTBLOB:
             #add the  Blob
             #TODO: Check for parents/ children - here, or itemChanged?
-            blob = VisBlobItem(self.startPoint,self.model, self.listWidget, 
+            blob = VisBlobItem(self.startPoint, self.model, self.listWidget, endposn=mPos, 
                             height = mPos.y()-self.startPoint.y(), width = mPos.x()-self.startPoint.x(),
-                            xRadius=10,yRadius=10)
+                            xRadius=10,yRadius=10) #JH mPos added for debugging
             self.addItem(blob)
             self.mouseMode = self.POINTER
             mouseEvent.accept()
@@ -2278,7 +2277,7 @@ class MainWindow(QMainWindow):
 
     def delEdge(self, delIdx):
         """ all the calls to delete an edge"""
-        
+
         #delete from model
         self.model.delEdge(delIdx)
         #Delete from LWscene updat
@@ -2339,9 +2338,9 @@ class MainWindow(QMainWindow):
         #Trying to get rid of the orphan lines - which go when the view changes so that scrollbars are added.
         self.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
         #GC takes some time (~100ms?) to finalise, so delay the repaint
-        QTimer.singleShot(500, lambda: self.ui.graphicsView.viewport().repaint())
+     #JH   QTimer.singleShot(500, lambda: self.ui.graphicsView.viewport().repaint())
         #self.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
-        self.ui.graphicsView.viewport().repaint()  #update()
+      #JH  self.ui.graphicsView.viewport().repaint()  #update()
         #self.Scene.invalidate()
 
     def action_EditSelectAll(self):
@@ -2350,12 +2349,20 @@ class MainWindow(QMainWindow):
         #  Maybe select all needs to be context sensitive - scene, or list =model
         for item in self.Scene.items():
             if item.GraphicsItemFlag.ItemIsSelectable:
+                item.isOnlySelected=False #JH change
                 item.setSelected(True)
+            if self.Scene.thisHandleObjectSelected: #JH added
+                self.Scene.thisHandleObjectSelected._deleteHandles()
+                self.Scene.thisHandleObjectSelected=None
 
     def action_EditSelectNone(self):
         #print("Edit>SelectNone")
-        if self.Scene.onlySelected: 
-            self.Scene.clearEdgeOnly(self.Scene.onlySelected)
+        #JH modified to remove handles on edges
+        if len(self.Scene.selectedItems())==1 and self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
+        #if self.Scene.onlySelected: 
+        #    self.Scene.clearEdgeOnly(self.Scene.onlySelected)
         self.Scene.clearSelection()
 
     def action_EditZoomIn(self):
