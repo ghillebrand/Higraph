@@ -87,21 +87,25 @@ class ArrowHeadItem(QGraphicsItem):
                 #print("Setting arrow as selected")
                 painter.setBrush(QBrush(Qt.blue))
                 painter.setPen(QPen(Qt.blue,1,Qt.DashLine)) 
+            else:
+                painter.setBrush(QBrush(Qt.black))
+                painter.setPen(QPen(Qt.black))
 
-        if self.isSelected():
+        """if self.isSelected():
             #TODO: Arrow is never selected!
             #print("Arrow Paint SELECTED")
             painter.setBrush(QBrush(Qt.blue))
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine)) 
         else:
             painter.setBrush(QBrush(Qt.black))
-            painter.setPen(QPen(Qt.black))
+            painter.setPen(QPen(Qt.black))"""
         painter.drawPolygon(self.polygon)
         painter.restore()
 
 class HandleItem(QGraphicsRectItem):
     """ a generic graphics handle to facilitate moving points during editing"""
     lastChanged = None  #Track the handle which was last changed
+    lastChangedbyCentre = QPointF(0,0)  # JH add for debugging
 
     def __init__(self, center: QPointF, hSize=HITSIZE, color=Qt.red, parent=None):
 
@@ -124,6 +128,7 @@ class HandleItem(QGraphicsRectItem):
         self._onMoveCallback = None
         
         self.suppressItemChange = False
+        self.centre=center #JH added for debugging
 
     def setMoveCallback(self, callback):
         self._onMoveCallback = callback
@@ -139,6 +144,7 @@ class HandleItem(QGraphicsRectItem):
         ):
             #Track which was the last handle touched
             HandleItem.lastChanged = self   
+            HandleItem.lastChangedbyCentre = self.centre  #JH added for debugging
             self._onMoveCallback(self.scenePos())
 
         return super().itemChange(change, value)

@@ -357,21 +357,26 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         if self._polyEdge != lineType:
             self._polyEdge = lineType
             ptList = self.edgeLine._p
-            self.edgeLine.my_parent_item = None
-            if self.isOnlySelected:
-                self.scene().clearEdgeOnly(self)
+            self.edgeLine._deleteHandles() 
+            self.scene().removeItem(self.edgeLine) 
+            del self.edgeLine 
+            #self.edgeLine.my_parent_item = None
+            #if self.isOnlySelected:
+            #    self.scene().clearEdgeOnly(self)
             if self._polyEdge == STRAIGHT:
                 #BUG (PySide) is this going to cause garbage collection issues? - yes - there is a delay ~5-10s
-                self.scene().removeItem(self.edgeLine)
+              #  self.scene().removeItem(self.edgeLine)
                 self.edgeLine = StraightLineItem(ptList,parent=self)
                 
             elif self._polyEdge == SPLINE:
-                self.scene().removeItem(self.edgeLine)
+                #self.scene().removeItem(self.edgeLine)
                 self.edgeLine = HermiteSplineItem(ptList,parent=self)
 
             self.edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
             self.edgeLine.my_parent_item = self
             self.edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            self.setSelected(False)
+            self.scene().thisHandleObjectSelected=None
             self.updateLine()
 
     def setDirected(self, isDirected:bool):

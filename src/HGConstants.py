@@ -39,3 +39,11 @@ ROLE_BLOB = QListWidgetItem.ItemType.UserType + 7
 ROLE_HANDLE = QListWidgetItem.ItemType.UserType + 3
 ROLE_POLYLINE = QListWidgetItem.ItemType.UserType + 4
 ROLE_DUMMYNODE = QListWidgetItem.ItemType.UserType + 5
+
+roleDic={ROLE_NODE: "ROLE_NODE",
+        ROLE_EDGE:"ROLE_EDGE", 
+        ROLE_HYPEREDGE :"ROLE_HYPEREDGE",
+        ROLE_BLOB:"ROLE_BLOB",
+        ROLE_HANDLE:"ROLE_HANDLE",
+        ROLE_POLYLINE:"ROLE_POLYLINE",
+        ROLE_DUMMYNODE:"ROLE_DUMMYNODE"}

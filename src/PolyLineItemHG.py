@@ -164,8 +164,8 @@ class StraightLineItem(QGraphicsItem):
         """ show self as selected if the parent is selected"""
         return self.parentItem() and self.parentItem().isSelected()
     
-    def setSelected(self,state:bool):
-        """ set as selected if parent is selected"""
+    """def setSelected(self,state:bool):
+        # set as selected if parent is selected
         #print(f"SL setSelected {state=}")
         #TODO: Check how this messes with built-in selection handling.
         isSelected = self.parentItem() and self.parentItem().isSelected()
@@ -177,7 +177,7 @@ class StraightLineItem(QGraphicsItem):
         else:
             #print("calling _deleteHandles")
             self._deleteHandles()
-        #super().setSelected(isSelected)
+        #super().setSelected(isSelected)"""
 
     def endAngle(self):
         """ Use the path details to work out the end angle. """
@@ -249,9 +249,10 @@ class StraightLineItem(QGraphicsItem):
     def _createHandles(self):
         """ show control handles. Used on selection and add/ delete """
         #clear existing handles
-        for h in self._pHandles:
-            self.scene().removeItem(h)
+        #for h in self._pHandles:
+        #    self.scene().removeItem(h)
         self._pHandles.clear()
+        self.parentItem().setZValue(3000)
         # Add new handles
         #TODO: is idx used?
 
@@ -266,7 +267,9 @@ class StraightLineItem(QGraphicsItem):
         # Remove existing handles
         for h in self._pHandles:
             self.scene().removeItem(h)
+            del h
         self._pHandles.clear()
+        self.parentItem().setZValue(0)
         self.suppressItemChange = False
 
     def _updateFromHandles(self, moved):
@@ -374,6 +377,7 @@ class HermiteSplineItem(QGraphicsItem):
     
     def itemChange(self, change, value):
         #print(f"HS itemChanged {change=} {value=}")
+        #JH Hopefully this is never suddenly called (it would be unexpected)
         if change == QGraphicsItem.ItemSelectedHasChanged:
             # value is a bool indicating new selected state
             #isSelected = bool(value)
@@ -419,8 +423,8 @@ class HermiteSplineItem(QGraphicsItem):
         """ show self as selected if the parent is selected"""
         return self.parentItem() and self.parentItem().isSelected()
     
-    def setSelected(self,state:bool):
-        """ set as selected if parent is selected"""
+    """def setSelected(self,state:bool):
+        # set as selected if parent is selected
         #print(f"HS setSelected {state=}")
         #TODO: Check how this messes with built-in selection handling.
         isSelected = self.parentItem() and self.parentItem().isSelected()
@@ -432,7 +436,7 @@ class HermiteSplineItem(QGraphicsItem):
         else:
             #print("calling _deleteHandles")
             self._deleteHandles()
-        #super().setSelected(isSelected)
+        #super().setSelected(isSelected)"""
 
     def endAngle(self):
         """ Use the path details to work out the end angle. For HS, use the tangent """
@@ -474,45 +478,58 @@ class HermiteSplineItem(QGraphicsItem):
         #Add to the lists
         self._p.insert(i+1,QPointF(xc,yc))
         self._t.insert(i+1,(QPointF(dx,dy), QPointF(dx,dy)))
+        self._deleteHandles()
+        self._createHandles()
         self.update()
 
     def deletePoint(self,delP:QPointF):
         """Delete the control point nearest delP"""
-        minD = math.inf
-        ic, xc, yc = 0,0,0  #c for closest
-        for i in range(len(self._p)):
-            xo, yo = self._p[i].x(), self._p[i].y()
-            newD = math.sqrt((delP.x() - xo)**2+ (delP.y() - yo)**2)
-            if newD < minD:
-                ic, xc, yc = i,xo,yo
-                minD = newD
+        if len(self._p)>2:  # can't delete start or end points
+            minD = math.inf
+            ic, xc, yc = 0,0,0  #c for closest
+            for i in range(len(self._p)):
+                xo, yo = self._p[i].x(), self._p[i].y()
+                newD = math.sqrt((delP.x() - xo)**2+ (delP.y() - yo)**2)
+                if newD < minD:
+                    ic, xc, yc = i,xo,yo
+                    minD = newD
 
-        self.suppressItemChange = True
+            self.suppressItemChange = True
         #TODO: CHeck for <hitsize?
-        if minD <= HITSIZE and len(self._p) > 2:
-            #remove handles 
-            #Not first point
-            if ic != 0:
-                self.scene().removeItem(self._tHandles[ic][1])
-            #Not last point
-            if ic != len(self._p):
-                self.scene().removeItem(self._tHandles[ic][0])
-            #TODO: What if ic _is_ 0 or last? Will this not corrupt things?
-            self._tHandles.pop(ic)
+            if minD <= HITSIZE and ic !=0 and ic!=len(self._p)-1:
+                self._deleteHandles()
+                #remove tangents
+                self._t.pop(ic)
+                #remove point
+                self._p.pop(ic)
+                self.suppressItemChange = False
+                self._createHandles()
+                self.update()
+            """if minD <= HITSIZE and len(self._p) > 2:
+                #remove handles 
+                #Not first point
+                if ic != 0:
+                    self.scene().removeItem(self._tHandles[ic][1])
+                #Not last point
+                if ic != len(self._p):
+                    self.scene().removeItem(self._tHandles[ic][0])
+                #TODO: What if ic _is_ 0 or last? Will this not corrupt things?
+                self._tHandles.pop(ic)
 
-            #remove tangents
-            self._t.pop(ic)
+                
 
-            #remove point
-            #self._pHandles[ic].suppressItemChange = True
-            self.scene().removeItem(self._pHandles[ic])
-            self._pHandles.pop(ic)
-            self._p.pop(ic)
+                #remove point
+                #self._pHandles[ic].suppressItemChange = True
+                self.scene().removeItem(self._pHandles[ic])
+                self._pHandles.pop(ic)
+                self._p.pop(ic)"""
 
-            self.suppressItemChange = False
+                
             #redraw
-            self._updateFromHandles(delP)
-            self.update()
+            #self._updateFromHandles(delP)
+        else:
+            return
+                
 
     def setP(self, n:int, p:QPointF):
         """sets the nth point to the value p. n is a list index """
@@ -538,6 +555,7 @@ class HermiteSplineItem(QGraphicsItem):
         #Start and end points always present p0, pn (or p-1)
         #have a list of point and tgnt handles
         # print("createHandles")
+        self.parentItem().setZValue(3000)
         self._pHandles = []
         for pi in self._p: 
             self._pHandles.append(HandleItem(pi,color=Qt.green,parent=self))
@@ -577,14 +595,19 @@ class HermiteSplineItem(QGraphicsItem):
         #print("Deleting handles")
 
         self.suppressItemChange = True
-        
+
+        for handle in self._tHandles:
+            del handle
         self._tHandles.clear()
 
         #del self._pHandles
-        for i in range(len(self._pHandles)):
-            self.scene().removeItem(self._pHandles[i])
+        for handle in self._pHandles:  
+            self.scene().removeItem(handle)
+            del handle
+        #for i in range(len(self._pHandles)):
+        #    self.scene().removeItem(self._pHandles[i])
         self._pHandles.clear()
-
+        self.parentItem().setZValue(0)
         
         self.suppressItemChange = False
         

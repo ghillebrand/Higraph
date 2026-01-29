@@ -1,4 +1,7 @@
-# qtPyGraphEdit
+# Higraph Development Repo
+_See [pyGraphEdit](https://github.com/ghillebrand/qtPyGraphEdit) for 'milestone' releases._
+
+
 A graphical node-edge graph editor, in Python and Qt (PySide6). Currently very much in development, in a pre-alpha state.
 <p align="centre">
 <img width="205" height="153" alt="image" src="https://github.com/user-attachments/assets/3003b49e-4625-4cc3-91b0-0da034a61bbc" />  V0.0.0
@@ -50,13 +53,15 @@ The editing dialog. It is simple and functional - I'm still working out how to u
 ## TODO:
 
 ### V0.2
-- Hyperedges - n-ended edges. 
+- Higraphs - nodes become sets. This will likely be strictly heirarchical sets (ie no set intersections/ overlaps)
+- Hyperedges were going to be next, but there is more utility in simple blobs, so the order got adjusted.
+
             
 ### V0.3
 - Multiple tabs - editable views of different subsets of the master Graph model 
 
 ### V0.4
-- Higraphs - nodes become sets. This will likely be strictly heirarchical sets (ie no set intersections/ overlaps)
+- Hyperedges - n-ended edges
 
 ### V0.5
 - Overlapping sets.
