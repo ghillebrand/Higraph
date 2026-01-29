@@ -32,7 +32,7 @@ class TransparentTextItem(QGraphicsTextItem):
     def paint(self, painter, option, widget=None):
         super().paint(painter,option,widget)
 
-    def mousessEvent(self, event):
+    def mousePressEvent(self, event):
         # Forward to parent
         if self.parentItem():
             self.parentItem().mousePressEvent(event)
