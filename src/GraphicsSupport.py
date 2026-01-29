@@ -87,15 +87,18 @@ class ArrowHeadItem(QGraphicsItem):
                 #print("Setting arrow as selected")
                 painter.setBrush(QBrush(Qt.blue))
                 painter.setPen(QPen(Qt.blue,1,Qt.DashLine)) 
+            else:
+                painter.setBrush(QBrush(Qt.black))
+                painter.setPen(QPen(Qt.black))
 
-        if self.isSelected():
+        """if self.isSelected():
             #TODO: Arrow is never selected!
             #print("Arrow Paint SELECTED")
             painter.setBrush(QBrush(Qt.blue))
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine)) 
         else:
             painter.setBrush(QBrush(Qt.black))
-            painter.setPen(QPen(Qt.black))
+            painter.setPen(QPen(Qt.black))"""
         painter.drawPolygon(self.polygon)
         painter.restore()
 
