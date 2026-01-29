@@ -293,7 +293,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #TODO: Move this to itemChanged?
         self.textItem.setVisible(self.metadataAttributes['name']['display'])
 
-        self.edgeLine.paint(painter,option,widget)
+        #self.edgeLine.paint(painter,option,widget)
 
         #painter.drawText(QPoint(0,0),self.textItem.toPlainText())
         #painter.drawText(tPos,self.dispText) #textItem.toPlainText())

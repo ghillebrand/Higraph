@@ -838,8 +838,22 @@ class grScene(QGraphicsScene):
         elif self.mouseMode == self.INSERTBLOB:
             #add the  Blob
             #TODO: Check for parents/ children - here, or itemChanged?
-            blob = VisBlobItem(self.startPoint,self.model, self.listWidget, 
-                            height = mPos.y()-self.startPoint.y(), width = mPos.x()-self.startPoint.x(),
+            #BUG Drawing from BR to TL makes ellipse
+            #Ensure startPoint is TL, mPos is BR
+            TLx = self.startPoint.x()
+            TLy = self.startPoint.y()
+            BRx = mPos.x()
+            BRy = mPos.y()
+            if TLx < BRx:
+                TLx,BRx = BRx, TLx
+            if TLy < BRy:
+                TLy, BRy = BRy, TLy
+            height = TLy - BRy
+            width = TLx-BRx
+            TLx -= width
+            TLy -= height
+            blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 
+                            height = height, width = width,
                             xRadius=10,yRadius=10)
             self.addItem(blob)
             self.mouseMode = self.POINTER
@@ -1413,7 +1427,7 @@ class MainWindow(QMainWindow):
         #print(f"updateSceneText id = {item.data(KEY_INDEX)} {item.text()}::{item.data(KEY_ROLE)}")
 
         iNum = item.data(KEY_INDEX)
-        #print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
+        print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
         new_text = item.text()
         self.model.item(iNum).setText(new_text)
         #TODO: The list update should trigger some change flag/ be embedded 
