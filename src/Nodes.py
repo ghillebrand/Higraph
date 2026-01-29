@@ -36,7 +36,8 @@ class QRoundedRectItem(QGraphicsObject):
     # Custom signal emitted when the border is clicked
     clicked = Signal()
 
-    def __init__(self, rect: QRectF, xRadius: float=0, yRadius: float=0, mode=Qt.AbsoluteSize,parent=None):
+    def __init__(self, rect: QRectF, xRadius: float=BLOB_CORNER_RADIUS, yRadius: float=BLOB_CORNER_RADIUS, 
+                    mode=Qt.AbsoluteSize,parent=None):
         super().__init__(parent)
         self._rect = rect
         self._xRadius = xRadius
@@ -90,6 +91,11 @@ class QRoundedRectItem(QGraphicsObject):
 
     def setPen(self,pen):
         self._pen = pen
+
+    def setRoundedRect(self, rect: QRectF):
+        """ Allows the changing of Rounded Rect params in a Qt-like way"""
+        #TODO: Extend to **kwargs processing to allow changing of all params
+        self._rect = rect
 
     def hoverEnterEvent(self, event):
         self._isHovered = True
@@ -351,8 +357,8 @@ class VisBlobItem(VisNodeItem):
     BL = 3
 
     def __init__(self,posn, model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={}, endposn=QPointF(0,0,),
-                    height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): #JH endposn added for debugging
+                    metadata={}, metadataAttributes={}, 
+                    height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
         
@@ -401,8 +407,6 @@ class VisBlobItem(VisNodeItem):
         self.isOnlySelected = False
 
         self.suppressItemChange = False
-        self.posn=posn #JH added for debugging
-        self.endposn=endposn #JH added for debugging
 
     def __repr__(self):
         r = f"\noo VisBLOBItem\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n"+\
@@ -522,7 +526,6 @@ class VisBlobItem(VisNodeItem):
         #Translate to Blob coords
         #TODO: use proper Qt translate?
         relPos = pos-BlobPos
-        # print(f"{BlobPos=}\n{pos=}\n{relPos}")
 
         # HandleItem.lastChanged (a class variable!) holds the moved Handle - find it, then update the coords appropriately
         #scene.MoveEvent for a handle sets the handle.pos to scenePos, but this breaks child handles for blobs
@@ -532,26 +535,38 @@ class VisBlobItem(VisNodeItem):
                 break
         match i:
             case 0: #TL
-                #TLx = relPos.x() - TLx
-                #TLy = relPos.y() - TLy
                 TLx=relPos.x()
                 TLy=relPos.y()
                 self._Handles[VisBlobItem.TL].setPos(QPointF(TLx,TLy)) 
             case 1: #TR BRx is width
                 BRx = relPos.x()
-                TLy = relPos.y() #- TLy
+                TLy = relPos.y() 
                 self._Handles[VisBlobItem.TR].setPos(QPointF(BRx,TLy))
             case 2: #BR
-                BRx = relPos.x() + BRx
-                BRy = relPos.y() + BRy
+                BRx = relPos.x() 
+                BRy = relPos.y() 
                 self._Handles[VisBlobItem.BR].setPos(BRx,BRy)
             case 3: #BL
-                TLx = relPos.x() #- TLx 
+                TLx = relPos.x() 
                 BRy = relPos.y()
                 self._Handles[VisBlobItem.BL].setPos(TLx,BRy)
 
         #Now set the blob pos & w/h from the blobs
         # QRoundedRectItem will need an updateCoords method
+
+        if TLx < BRx:
+            TLx,BRx = BRx, TLx
+        if TLy < BRy:
+            TLy, BRy = BRy, TLy
+        height = TLy - BRy
+        width = TLx-BRx
+        TLx -= width
+        TLy -= height
+        #height = TLy - BRy
+        #width =  TLx - BRx
+        #Figure out the geometry for these lines
+        self.setPos(TLx,TLy)
+        self.nodeShape.setRoundedRect(QRectF(0,0,width,height))
         
         self.suppressItemChange = False
         #self._Handle[i].setPos

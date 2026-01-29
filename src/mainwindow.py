@@ -997,7 +997,7 @@ class grScene(QGraphicsScene):
             TLy -= height
             blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 
                             height = height, width = width,
-                            xRadius=10,yRadius=10)
+                            xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
             self.addItem(blob)
             self.mouseMode = self.POINTER
             mouseEvent.accept()
