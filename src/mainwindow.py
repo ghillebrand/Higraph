@@ -612,8 +612,8 @@ class grScene(QGraphicsScene):
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE,ROLE_BLOB, ROLE_POLYLINE])
                 if selItem:
                     selItem = selItem[0]
-#                else:
-#                    selItem = None
+                #else:
+                #    selItem = None
 
                     if selItem.data(KEY_ROLE) == ROLE_NODE:
                         super().mousePressEvent(mouseEvent)
@@ -630,7 +630,7 @@ class grScene(QGraphicsScene):
                         self.onlySelected = selItem
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
-                  #      selItem.setSelected(True)
+                        #selItem.setSelected(True)
                         # accept? return?
 
                     if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
@@ -669,7 +669,8 @@ class grScene(QGraphicsScene):
                         mouseEvent.accept()
                         return
 
-            """if self.mouseMode == self.INSERTNODE:
+            """
+            if self.mouseMode == self.INSERTNODE:
                 self.clearSelection()
                 #For edges, was there only one selected? Clear.
                 if self.onlySelected:
@@ -869,7 +870,8 @@ class grScene(QGraphicsScene):
                 #if we get here, and selected_items >2, we're about to drag
                 if len(selected_items) > 2:
                     #print("setting mode to DRAGGING")
-                    self.mouseMode = self.DRAGGING"""
+                    self.mouseMode = self.DRAGGING
+            """
 
         if (mouseEvent.button() == Qt.MouseButton.RightButton):
             mPos = mouseEvent.scenePos()
@@ -964,8 +966,7 @@ class grScene(QGraphicsScene):
             #print("Move Handle")
             #Same code as moveEdgeEnd
             self.handle.setPos(mPos) 
-            
-            
+              
         super().mouseMoveEvent(mouseEvent)
 
     def mouseReleaseEvent(self, mouseEvent):
@@ -981,7 +982,7 @@ class grScene(QGraphicsScene):
         elif self.mouseMode == self.INSERTBLOB:
             #add the  Blob
             #TODO: Check for parents/ children - here, or itemChanged?
-            #BUG Drawing from BR to TL makes ellipse
+            # Drawing from BR to TL makes ellipse
             #Ensure startPoint is TL, mPos is BR
             TLx = self.startPoint.x()
             TLy = self.startPoint.y()
@@ -992,7 +993,7 @@ class grScene(QGraphicsScene):
             if TLy < BRy:
                 TLy, BRy = BRy, TLy
             height = TLy - BRy
-            width = TLx-BRx
+            width = TLx - BRx
             TLx -= width
             TLy -= height
             blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 

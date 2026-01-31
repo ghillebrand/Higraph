@@ -75,14 +75,11 @@ class QRoundedRectItem(QGraphicsObject):
         return stroker.createStroke(basePath)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
-        #painter.setRenderHint(QPainter.Antialiasing)
         
         # Determine styling by looking at the PARENT'S state
         parent = self.parentItem()
         if parent and parent.isSelected():
-            painter.setPen(QPen(Qt.blue, 1.5, Qt.DashLine))
-        elif parent and getattr(parent, '_isHovered', False):
-            painter.setPen(QPen(QColor("red"), 1.5))
+            painter.setPen(QPen(Qt.blue, 1.0, Qt.DashLine))
         else:
             painter.setPen(QPen(Qt.black, 1.0))
             
@@ -522,6 +519,7 @@ class VisBlobItem(VisNodeItem):
         TLy = self.pos().y()
         BRx = self._width
         BRy = self._height
+        print(f"start update {TLx},{TLy},{BRx},{BRy}")
 
         #Translate to Blob coords
         #TODO: use proper Qt translate?
@@ -530,46 +528,53 @@ class VisBlobItem(VisNodeItem):
         # HandleItem.lastChanged (a class variable!) holds the moved Handle - find it, then update the coords appropriately
         #scene.MoveEvent for a handle sets the handle.pos to scenePos, but this breaks child handles for blobs
         #TODO: Look at what handle is set to during move - will impact polyLines
+        #TODO: Handles are recreated by mousepresses, not reused, so use position to ID them, not address
         for i,h in enumerate(self._Handles):
-            if h == HandleItem.lastChanged or h.centre==HandleItem.lastChangedbyCentre: #JH changed for debug
+            if h.centre==HandleItem.lastChangedbyCentre:
                 break
+        #Note - all these positions are RELATIVE to pos()
         match i:
             case 0: #TL
-                TLx=relPos.x()
-                TLy=relPos.y()
-                self._Handles[VisBlobItem.TL].setPos(QPointF(TLx,TLy)) 
+                rTLx=relPos.x()
+                rTLy=relPos.y()
+                TLx += rTLx
+                TLy += rTLy
+                self._Handles[VisBlobItem.TL].setPos(QPointF(rTLx,rTLy)) 
             case 1: #TR BRx is width
-                BRx = relPos.x()
-                TLy = relPos.y() 
-                self._Handles[VisBlobItem.TR].setPos(QPointF(BRx,TLy))
+                rBRx = relPos.x()
+                rTLy = relPos.y() 
+                BRx = rBRx
+                TLy += rTLy
+                self._Handles[VisBlobItem.TR].setPos(QPointF(rBRx,rTLy))
             case 2: #BR
-                BRx = relPos.x() 
-                BRy = relPos.y() 
-                self._Handles[VisBlobItem.BR].setPos(BRx,BRy)
+                rBRx = relPos.x() 
+                rBRy = relPos.y() 
+                BRx = rBRx
+                BRy = rBRy
+                self._Handles[VisBlobItem.BR].setPos(rBRx,rBRy)
             case 3: #BL
-                TLx = relPos.x() 
-                BRy = relPos.y()
-                self._Handles[VisBlobItem.BL].setPos(TLx,BRy)
-
+                rTLx = relPos.x() 
+                rBRy = relPos.y()
+                TLx += rTLx
+                BRy = rBRy
+                self._Handles[VisBlobItem.BL].setPos(rTLx,rBRy)
         #Now set the blob pos & w/h from the blobs
-        # QRoundedRectItem will need an updateCoords method
+        #at this point TL must be blob pos, BR width & height
+        #if TLx < BRx:
+        #    TLx,BRx = BRx, TLx
+        #if TLy < BRy:
+        #    TLy, BRy = BRy, TLy
+        #orders are right, transform back blob coords
 
-        if TLx < BRx:
-            TLx,BRx = BRx, TLx
-        if TLy < BRy:
-            TLy, BRy = BRy, TLy
-        height = TLy - BRy
-        width = TLx-BRx
-        TLx -= width
-        TLy -= height
-        #height = TLy - BRy
-        #width =  TLx - BRx
+        self._height = -BRy + TLy
+        self._width = -BRx + TLx
+        print(f"b4 update {TLx},{TLy}, {self._width}, {self._height}")
+
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
-        self.nodeShape.setRoundedRect(QRectF(0,0,width,height))
+        self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
         
         self.suppressItemChange = False
-        #self._Handle[i].setPos
         
 
     def mousePressEvent(self, event):
