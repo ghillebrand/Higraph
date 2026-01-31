@@ -1996,7 +1996,8 @@ class MainWindow(QMainWindow):
             painter = QPainter(printer)
             
             # Get the full scene rectangle
-            sceneRect = self.Scene.sceneRect()
+            #sceneRect = self.Scene.sceneRect()
+            sceneRect = self.Scene.itemsBoundingRect() 
             #print(f"{sceneRect =}")
 
             # Compute scale to fit scene onto the page
@@ -2010,11 +2011,11 @@ class MainWindow(QMainWindow):
             scale = scale/5 #needs tweaking
 
             # Center the scene on the page
-            xOffset = (pageRect.width() - sceneRect.width() * scale) / 2
-            yOffset = (pageRect.height() - sceneRect.height() * scale) / 2
+            #xOffset = (pageRect.width() - sceneRect.width() * scale) / 2
+            #yOffset = (pageRect.height() - sceneRect.height() * scale) / 2
 
-            painter.translate(xOffset, yOffset)
-            painter.scale(scale, scale)
+            #painter.translate(xOffset, yOffset)
+            #painter.scale(scale, scale)
         
             # Render the scene
             self.Scene.render(painter)
