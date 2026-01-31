@@ -51,12 +51,13 @@ class QRoundedRectItem(QGraphicsObject):
         self._pen = QPen(Qt.NoPen)  #QPen(self._baseColor, self._penWidth)
         
         # Interaction settings
-        self.setAcceptHoverEvents(True)
+        #self.setAcceptHoverEvents(True)
         #self.setFlags(QGraphicsObject.ItemIsSelectable | QGraphicsObject.ItemIsMovable)
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.setFlag(QGraphicsItem.ItemIsMovable, False)
         #Let the parent handle the buttons
         self.setAcceptedMouseButtons(Qt.NoButton)
+        self.setCacheMode(QGraphicsItem.CacheMode.NoCache)
         
         self._isHovered = False
 
@@ -419,6 +420,7 @@ class VisBlobItem(VisNodeItem):
     
     def shape(self):
         # Combined shape: Hollow Border + Solid Text Area
+        #print("Blob shape udpate")
         #path = self.nodeShape.shape() 
         path = self.mapFromItem(self.nodeShape, self.nodeShape.shape())
         if self.metadataAttributes.get('name', {}).get('display', True):
@@ -428,7 +430,10 @@ class VisBlobItem(VisNodeItem):
             # Use same rect/logic as paint() for text hit-area
             textRect = fm.boundingRect(self._rect.toRect(), Qt.AlignCenter, self.dispText)
             path.addRect(QRectF(textRect))
-            
+
+        #outlinePath = QPainterPathStroker()
+        #outlinePath.setWidth(HITSIZE*2)
+        #return outlinePath.createStroke(path)            
         return path
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
@@ -438,6 +443,8 @@ class VisBlobItem(VisNodeItem):
             painter.setPen(Qt.black)
 
         #self.nodeShape is painted by Qt, using parent's pen???
+        #Debug - draw the shape path
+        #painter.drawPath(self.shape())
 
         #Draw the text if set to display
         if self.metadataAttributes['name']['display']:
@@ -446,6 +453,7 @@ class VisBlobItem(VisNodeItem):
             #update height & width
             #r = painter.drawText(r,Qt.AlignCenter,self.dispText)
             #painter.drawText(r, Qt.AlignCenter, self.dispText)
+            #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
             painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
 
     def itemChange(self, change, value):
@@ -519,16 +527,25 @@ class VisBlobItem(VisNodeItem):
         TLy = self.pos().y()
         BRx = self._width
         BRy = self._height
-        print(f"start update {TLx},{TLy},{BRx},{BRy}")
+        #print(f"start update {TLx},{TLy},{BRx},{BRy}")
+        rTLx,rTLy,rBRx,rBRy = 0,0,BRx,BRy
 
         #Translate to Blob coords
         #TODO: use proper Qt translate?
-        relPos = pos-BlobPos
+        relPos = pos - BlobPos
+        #Don't allow blobs to be "inverted"
+        #TODO: This sometimes throws away legit resizes - refine
+        #if relPos.x() < 0 or relPos.y() < 0:
+        #    #print("invert")
+        #    self.suppressItemChange = False
+        #    return
+
 
         # HandleItem.lastChanged (a class variable!) holds the moved Handle - find it, then update the coords appropriately
         #scene.MoveEvent for a handle sets the handle.pos to scenePos, but this breaks child handles for blobs
         #TODO: Look at what handle is set to during move - will impact polyLines
         #TODO: Handles are recreated by mousepresses, not reused, so use position to ID them, not address
+        #TODO: Fix selection to not re-create, as this causes grief when resizing and `centres` change
         for i,h in enumerate(self._Handles):
             if h.centre==HandleItem.lastChangedbyCentre:
                 break
@@ -539,40 +556,52 @@ class VisBlobItem(VisNodeItem):
                 rTLy=relPos.y()
                 TLx += rTLx
                 TLy += rTLy
-                self._Handles[VisBlobItem.TL].setPos(QPointF(rTLx,rTLy)) 
+                BRx -= rTLx
+                BRy -= rTLy
+
             case 1: #TR BRx is width
                 rBRx = relPos.x()
                 rTLy = relPos.y() 
                 BRx = rBRx
                 TLy += rTLy
-                self._Handles[VisBlobItem.TR].setPos(QPointF(rBRx,rTLy))
+                BRy -= rTLy
+
             case 2: #BR
                 rBRx = relPos.x() 
                 rBRy = relPos.y() 
                 BRx = rBRx
                 BRy = rBRy
-                self._Handles[VisBlobItem.BR].setPos(rBRx,rBRy)
+
             case 3: #BL
                 rTLx = relPos.x() 
                 rBRy = relPos.y()
                 TLx += rTLx
                 BRy = rBRy
-                self._Handles[VisBlobItem.BL].setPos(rTLx,rBRy)
+                BRx -= rTLx
+
+
+        self._Handles[VisBlobItem.TL].setPos(QPointF(rTLx,rTLy))
+        self._Handles[VisBlobItem.TR].setPos(QPointF(rBRx,rTLy))
+        self._Handles[VisBlobItem.BR].setPos(rBRx,rBRy)
+        self._Handles[VisBlobItem.BL].setPos(rTLx,rBRy)
+
         #Now set the blob pos & w/h from the blobs
         #at this point TL must be blob pos, BR width & height
-        #if TLx < BRx:
-        #    TLx,BRx = BRx, TLx
-        #if TLy < BRy:
-        #    TLy, BRy = BRy, TLy
+        if TLx > BRx:
+            TLx,BRx = BRx, TLx
+        if TLy > BRy:
+            TLy, BRy = BRy, TLy
         #orders are right, transform back blob coords
-
-        self._height = -BRy + TLy
-        self._width = -BRx + TLx
-        print(f"b4 update {TLx},{TLy}, {self._width}, {self._height}")
+        #print(f"rel vals {rTLx},{rTLy},{rBRx},{rBRy}")
+        self._height = BRy #- TLy
+        self._width = BRx #- TLx
+        #print(f"b4 update {TLx},{TLy}, {self._width}, {self._height}")
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
+
+        #TODO Tell the connected edges that the Blob has moved
         
         self.suppressItemChange = False
         
