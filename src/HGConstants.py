@@ -7,6 +7,8 @@ HITSIZE = 5
 #Offset to use when pasting nodes
 PASTE_OFFSET = 20
 
+BLOB_CORNER_RADIUS = 10
+
 DISPLAY_NAME_BY_DEFAULT = True
 
 #Constants for edge type
@@ -30,15 +32,16 @@ KEY_ROLE = Qt.UserRole + 2
 
 # To let Qt know what are nodes and what are edges
 #TODO: Can ListWidgets take any type for roles? (Items can)
+# The order here is used for the sort in the listWidget
 ROLE_NODE = QListWidgetItem.ItemType.UserType + 1
-ROLE_EDGE = QListWidgetItem.ItemType.UserType + 2
-ROLE_HYPEREDGE = QListWidgetItem.ItemType.UserType + 6
-ROLE_BLOB = QListWidgetItem.ItemType.UserType + 7
+ROLE_BLOB = QListWidgetItem.ItemType.UserType + 2
+ROLE_EDGE = QListWidgetItem.ItemType.UserType + 3
+ROLE_HYPEREDGE = QListWidgetItem.ItemType.UserType + 4
 
-#Handles for connecting/ moving
-ROLE_HANDLE = QListWidgetItem.ItemType.UserType + 3
-ROLE_POLYLINE = QListWidgetItem.ItemType.UserType + 4
-ROLE_DUMMYNODE = QListWidgetItem.ItemType.UserType + 5
+#Handles for connecting/ moving - don't appear in the model dict
+ROLE_HANDLE = QListWidgetItem.ItemType.UserType + 10
+ROLE_POLYLINE = QListWidgetItem.ItemType.UserType + 11
+ROLE_DUMMYNODE = QListWidgetItem.ItemType.UserType + 12
 
 roleDic={ROLE_NODE: "ROLE_NODE",
         ROLE_EDGE:"ROLE_EDGE", 
