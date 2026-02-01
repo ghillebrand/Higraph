@@ -483,8 +483,6 @@ class VisBlobItem(VisNodeItem):
     def _createHandles(self):
         """ Handles for resizing"""
         #Clear existing handles
-        #Needed? Seems to always be empty
-        #print(f"Blob createHandles {len(self._Handles)=}")
         for h in self._Handles:
             self.scene().removeItem(h)
         self._Handles.clear()
@@ -515,6 +513,7 @@ class VisBlobItem(VisNodeItem):
         self.suppressItemChange = False
 
     def _updateFromHandles(self,pos):
+        
         if self.suppressItemChange == True:
             return
 
@@ -527,33 +526,26 @@ class VisBlobItem(VisNodeItem):
         TLy = self.pos().y()
         BRx = self._width
         BRy = self._height
+
         #print(f"start update {TLx},{TLy},{BRx},{BRy}")
         rTLx,rTLy,rBRx,rBRy = 0,0,BRx,BRy
 
         #Translate to Blob coords
         #TODO: use proper Qt translate?
         relPos = pos - BlobPos
-        #Don't allow blobs to be "inverted"
-        #TODO: This sometimes throws away legit resizes - refine
-        #if relPos.x() < 0 or relPos.y() < 0:
-        #    #print("invert")
-        #    self.suppressItemChange = False
-        #    return
-
 
         # HandleItem.lastChanged (a class variable!) holds the moved Handle - find it, then update the coords appropriately
-        #scene.MoveEvent for a handle sets the handle.pos to scenePos, but this breaks child handles for blobs
         #TODO: Look at what handle is set to during move - will impact polyLines
         #TODO: Handles are recreated by mousepresses, not reused, so use position to ID them, not address
-        #TODO: Fix selection to not re-create, as this causes grief when resizing and `centres` change
-        for i,h in enumerate(self._Handles):
-            if h.centre==HandleItem.lastChangedbyCentre:
+        for lastHandle,h in enumerate(self._Handles):
+            #TODO: Put hi is h.lastchanged back h is HandleItem.lastChanged or
+            if  h.centre==HandleItem.lastChangedbyCentre:
                 break
         #Note - all these positions are RELATIVE to pos()
-        match i:
+        match lastHandle:
             case 0: #TL
-                rTLx=relPos.x()
-                rTLy=relPos.y()
+                rTLx = relPos.x()
+                rTLy = relPos.y()
                 TLx += rTLx
                 TLy += rTLy
                 BRx -= rTLx
@@ -579,6 +571,11 @@ class VisBlobItem(VisNodeItem):
                 BRy = rBRy
                 BRx -= rTLx
 
+        #Check for "too thin" before updating, using HITSIZE as measure
+        if BRx < HITSIZE:
+            return
+        if BRy < HITSIZE:
+            return
 
         self._Handles[VisBlobItem.TL].setPos(QPointF(rTLx,rTLy))
         self._Handles[VisBlobItem.TR].setPos(QPointF(rBRx,rTLy))
@@ -586,15 +583,11 @@ class VisBlobItem(VisNodeItem):
         self._Handles[VisBlobItem.BL].setPos(rTLx,rBRy)
 
         #Now set the blob pos & w/h from the blobs
-        #at this point TL must be blob pos, BR width & height
-        if TLx > BRx:
-            TLx,BRx = BRx, TLx
-        if TLy > BRy:
-            TLy, BRy = BRy, TLy
+
         #orders are right, transform back blob coords
         #print(f"rel vals {rTLx},{rTLy},{rBRx},{rBRy}")
-        self._height = BRy #- TLy
-        self._width = BRx #- TLx
+        self._height = BRy
+        self._width = BRx 
         #print(f"b4 update {TLx},{TLy}, {self._width}, {self._height}")
 
         #Figure out the geometry for these lines
