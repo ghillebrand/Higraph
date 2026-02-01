@@ -260,11 +260,14 @@ class grScene(QGraphicsScene):
 
 
 
-    def itemsHere(self, pos: QPointF, size: QSizeF, itemRoles: List[int]):
+    def itemsHere(self, pos: QPointF, size: QSizeF, itemRoles: List[int], hitRect=None):
         """Return a list of the items who's roles match `itemRoles`, within `size` of `pos` """
-        half_w = size.width() / 2
-        half_h = size.height() / 2
-        rect = QRectF(pos.x() - half_w, pos.y() - half_h, size.width(), size.height())
+        if hitRect==None:
+            half_w = size.width() / 2
+            half_h = size.height() / 2
+            rect = QRectF(pos.x() - half_w, pos.y() - half_h, size.width(), size.height())
+        else:
+            rect=hitRect
         raw = self.items(rect, Qt.IntersectsItemShape, Qt.DescendingOrder)
         filtered = []
         for itm in raw:
@@ -2156,8 +2159,14 @@ class MainWindow(QMainWindow):
         image.fill(Qt.white)
 
         #Deselect to show in black, not blue!
-        if len(selectedItems) == 1 and selectedItems[0].data(KEY_ROLE) == ROLE_EDGE:
-            self.Scene.clearEdgeOnly(selectedItems[0])
+        #if len(selectedItems) == 1 and selectedItems[0].data(KEY_ROLE) == ROLE_EDGE:
+        #    self.Scene.clearEdgeOnly(selectedItems[0])
+
+        if self.Scene.thisHandleObjectSelected != None and \
+                (self.Scene.thisHandleObjectSelected in selectedItems or \
+                self.Scene.thisHandleObjectSelected.parentItem() in selectedItems):
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+
         self.Scene.clearSelection()
 
         # Render the selected items
@@ -2170,6 +2179,13 @@ class MainWindow(QMainWindow):
 
         # Draw only selected items
         #"""
+        itemsInRect = self.Scene.itemsHere((0,0),0,[ROLE_EDGE,ROLE_NODE,ROLE_BLOB],boundingRect)
+        visibleItems=[]
+        for it in itemsInRect:
+            if it not in selectedItems:
+                visibleItems.append(it)
+                it.setVisible(False)
+
         # Temp - chop off at bounding rect
         self.Scene.render(painter, target=QRectF(), source=boundingRect) # item.sceneBoundingRect())
         #"""
@@ -2197,10 +2213,16 @@ class MainWindow(QMainWindow):
                 painter.restore()
         """
         painter.end()
-
+        for it in visibleItems:
+            it.setVisible(True)
         #Reselect
         for item in selectedItems:
             item.setSelected(True)
+
+        if self.Scene.thisHandleObjectSelected != None and \
+                (self.Scene.thisHandleObjectSelected in selectedItems or \
+                self.Scene.thisHandleObjectSelected.parentItem() in selectedItems):
+            self.Scene.thisHandleObjectSelected._createHandles()
 
         mimeData.setImageData(image)
         QGuiApplication.clipboard().setMimeData(mimeData)
