@@ -1069,7 +1069,7 @@ class grScene(QGraphicsScene):
             #print(f"Double-click at {pos}")
             item = self.pickItemAt(mouseEvent,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
             if item and item.data(KEY_ROLE) == ROLE_EDGE:
-                self.clearEdgeOnly(item)
+                #self.clearEdgeOnly(item)
                 #Pass the edit signal to Mainwindow.
                 #print(f"{item.requestEdit.connect=}, {self.mainwindow.showEditEdgeDialog=}")
                 #item.requestEdit.connect(self.mainwindow.showEditEdgeDialog)   #edgeEditRequested.emit)
@@ -1079,7 +1079,7 @@ class grScene(QGraphicsScene):
                 #HACK: Call the dialog directly. Signals would be better
                 self.mainwindow.showEditEdgeDialog(item)
 
-            print(f"{item=}")
+            #print(f"{item=}")
             if item and item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                 self.mainwindow.showEditNodeDialog(item)
             
