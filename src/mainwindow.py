@@ -510,6 +510,12 @@ class grScene(QGraphicsScene):
         if getattr(edge,'edgeLine',None):
             edge.edgeLine.setSelected(False)
         edge.setSelected(False)
+
+    def clearSelection(self):
+        # consider deleting handles here JH
+        for item in self.selectedItems():
+            item.isOnlySelected=False
+        return super().clearSelection()
         
     def mousePressEvent(self, mouseEvent):
         
