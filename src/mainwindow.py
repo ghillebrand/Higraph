@@ -460,7 +460,7 @@ class grScene(QGraphicsScene):
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
 
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
-            if self.EdgeEnd == "start":# and newTermItem != self.oldTermItem:
+            if self.EdgeEnd == "start":
                 edge.setStart(newTermItem)
                 #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
@@ -469,7 +469,7 @@ class grScene(QGraphicsScene):
                 self.oldTermItem.startsEdges.remove(edge)
                 newTermItem.startsEdges.append(edge)
             
-            elif self.EdgeEnd == "end":# and newTermItem != self.oldTermItem:  #end
+            elif self.EdgeEnd == "end":
                 edge.setEnd(newTermItem)
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "end", newTermItem.data(KEY_INDEX))
                 #Move the reverse pointer from the oldTermItem to the new:
@@ -2047,8 +2047,8 @@ class MainWindow(QMainWindow):
         # The newly pasted items will be selected, to make them easy to move
 
         self.Scene.clearSelection()
-        if self.Scene.onlySelected:
-            self.Scene.clearEdgeOnly()
+        #if self.Scene.onlySelected:
+        #    self.Scene.clearEdgeOnly()
 
         clipboard = QGuiApplication.clipboard()
         mimeData = clipboard.mimeData()

@@ -47,53 +47,6 @@ def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
 
     return closest_point, distance
 
-# To be deleted.
-class xxHandleItem(QGraphicsRectItem):
-    """ a generic graphics handle to facilitate moving points during editing"""
-    lastChanged = None  #Track the handle which was last changed
-
-    def __init__(self, center: QPointF, radius=5, color=Qt.red, parent=None):
-        #TODO: Generalise to allow for other shapes (eg rect)
-        super().__init__(-radius, -radius, 2 * radius, 2 * radius, parent)
-
-
-        #stop constructor changes messing with .itemChange()
-        self.suppressItemChange = True 
-
-        self.setBrush(QBrush(color))
-        self.setPen(QPen(Qt.black))
-        self.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,True)
-        self.setZValue(10)
-        self.setPos(center)
-        self._onMoveCallback = None
-        
-        self.suppressItemChange = False
-
-    def setMoveCallback(self, callback):
-        self._onMoveCallback = callback
-
-    def clearMoveCallback(self):
-        self._onMoveCallback = None
-
-    def itemChange(self, change, value):
-        #TODO: Include if change == QGraphicsItem.ItemPositionChange.
-
-        if not self.suppressItemChange and self._onMoveCallback:
-            HandleItem.lastChanged = self   #Track which was the last handle touched
-            self._onMoveCallback(self.scenePos())
-
-        return super().itemChange(change, value)
-
-    def paint(self, painter: QPainter, option, widget=None):
-
-        painter.save()
-        painter.setBrush(self.brush())
-        painter.setPen(self.pen())
-        #painter.drawEllipse(self.rect())
-        painter.drawRect(self.rect())
-        painter.restore()
-
 
 class StraightLineItem(QGraphicsItem):
 
