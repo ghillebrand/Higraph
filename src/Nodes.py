@@ -8,6 +8,7 @@ from GraphicsSupport import *
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
+import math
 
 from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
@@ -310,7 +311,7 @@ class VisNodeItem(QGraphicsObject):
             self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
             
             #Position change
-            if change == QGraphicsItem.ItemPositionHasChanged:
+            if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
                 for sEdge in self.startsEdges:
                     sEdge.updateLine(self)
                 for eEdge in self.endsEdges:
@@ -459,10 +460,9 @@ class VisBlobItem(VisNodeItem):
     def itemChange(self, change, value):
         if self.suppressItemChange:
             return super().itemChange(change, value)
-
-        
+        #print(f"{change=} {value=}")
         #Moved
-        if change == QGraphicsItem.ItemPositionHasChanged:
+        if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
             #print("blob move")
             pass
 
@@ -534,13 +534,14 @@ class VisBlobItem(VisNodeItem):
         #TODO: use proper Qt translate?
         relPos = pos - BlobPos
 
-        # HandleItem.lastChanged (a class variable!) holds the moved Handle - find it, then update the coords appropriately
-        #TODO: Look at what handle is set to during move - will impact polyLines
-        #TODO: Handles are recreated by mousepresses, not reused, so use position to ID them, not address
-        for lastHandle,h in enumerate(self._Handles):
-            #TODO: Put hi is h.lastchanged back h is HandleItem.lastChanged or
-            if  h.centre==HandleItem.lastChangedbyCentre:
-                break
+        lastHandle = -1
+        dist = HITSIZE * 10 #Effectively, infinity!
+        for i,h in enumerate(self._Handles):
+            hDist = math.hypot(h.pos().x() - relPos.x(), h.pos().y() - relPos.y())
+            if hDist < dist:
+                dist = hDist
+                lastHandle = i
+
         #Note - all these positions are RELATIVE to pos()
         match lastHandle:
             case 0: #TL
@@ -572,9 +573,9 @@ class VisBlobItem(VisNodeItem):
                 BRx -= rTLx
 
         #Check for "too thin" before updating, using HITSIZE as measure
-        if BRx < HITSIZE:
+        if BRx < HITSIZE*2:
             return
-        if BRy < HITSIZE:
+        if BRy < HITSIZE*2:
             return
 
         self._Handles[VisBlobItem.TL].setPos(QPointF(rTLx,rTLy))
@@ -585,19 +586,21 @@ class VisBlobItem(VisNodeItem):
         #Now set the blob pos & w/h from the blobs
 
         #orders are right, transform back blob coords
-        #print(f"rel vals {rTLx},{rTLy},{rBRx},{rBRy}")
         self._height = BRy
         self._width = BRx 
-        #print(f"b4 update {TLx},{TLy}, {self._width}, {self._height}")
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
 
-        #TODO Tell the connected edges that the Blob has moved
-        
         self.suppressItemChange = False
         
+        #TODO this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
+        for sEdge in self.startsEdges:
+            sEdge.updateLine(self)
+        for eEdge in self.endsEdges:
+            eEdge.updateLine(self)
+
 
     def mousePressEvent(self, event):
         #Call VisNode's mouse handler

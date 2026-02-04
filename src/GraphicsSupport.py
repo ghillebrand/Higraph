@@ -161,7 +161,7 @@ class HandleItem(QGraphicsRectItem):
 
 
 class dummyNodeItem(HandleItem):
-    """ a graphics-only node to manage joins for hyperedges """
+    """ a graphics-only node to manage joins for hyperedges, ports for nodes """
     def __init__(self,center: QPointF, hSize=HITSIZE, color=Qt.red, parent=None):
 
         super().__init__(-hSize, -hSize, 2 * hSize, 2 * hSize, parent)
