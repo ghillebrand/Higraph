@@ -7,3 +7,4 @@ src/__pycache__/HGConstants.cpython-311.pyc
 src/__pycache__/Nodes.cpython-311.pyc
 src/__pycache__/ui_Credits.cpython-311.pyc
 src/__pycache__/Ui_HelpAbout.cpython-311.pyc
+*.pyc

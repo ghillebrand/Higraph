@@ -639,7 +639,7 @@ class grScene(QGraphicsScene):
                         self.onlySelected = selItem
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
-                        #selItem.setSelected(True)
+                        selItem.setSelected(True)
                         # accept? return?
 
                     if selItem.data(KEY_ROLE) == ROLE_POLYLINE :

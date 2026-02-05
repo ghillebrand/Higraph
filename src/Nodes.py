@@ -35,7 +35,7 @@ from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBr
 
 class QRoundedRectItem(QGraphicsObject):
     # Custom signal emitted when the border is clicked
-    clicked = Signal()
+ #JH   clicked = Signal()
 
     def __init__(self, rect: QRectF, xRadius: float=BLOB_CORNER_RADIUS, yRadius: float=BLOB_CORNER_RADIUS, 
                     mode=Qt.AbsoluteSize,parent=None):
@@ -59,7 +59,7 @@ class QRoundedRectItem(QGraphicsObject):
         #Let the parent handle the buttons
         self.setAcceptedMouseButtons(Qt.NoButton)
         self.setCacheMode(QGraphicsItem.CacheMode.NoCache)
-        
+        #self.setVisible(False) #JH needed if local paint is removed
         self._isHovered = False
 
     def boundingRect(self) -> QRectF:
@@ -77,7 +77,7 @@ class QRoundedRectItem(QGraphicsObject):
         return stroker.createStroke(basePath)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
-        
+    #jh commented out entire function    
         # Determine styling by looking at the PARENT'S state
         parent = self.parentItem()
         if parent and parent.isSelected():
@@ -186,7 +186,7 @@ class VisNodeItem(QGraphicsObject):
         #self.nodeShape = QGraphicsRectItem(-NODESIZE/2,-NODESIZE/2,NODESIZE,NODESIZE,self)
         #Circle Shape
         self.nodeShape = QGraphicsEllipseItem(-NODESIZE/2,-NODESIZE/2,NODESIZE,NODESIZE,self)
-        self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
+        #JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         #TODO: Set selectable False - see if that processes clicks better?
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
@@ -395,7 +395,7 @@ class VisBlobItem(VisNodeItem):
         self._radMode = radMode
         self.nodeShape = QRoundedRectItem(self._rect,parent=self,
                                 xRadius = self._xRadius, yRadius = self._yRadius, mode = self._radMode)
-        self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
+        # JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
@@ -417,7 +417,7 @@ class VisBlobItem(VisNodeItem):
     def boundingRect(self):
         #TODO: Add in the displayed text
         # Must cover both the rectangle and the text area
-        return self._rect.adjusted(-5, -20, 5, 5)
+        return self.nodeShape._rect.adjusted(-5, -20, 5, 5)
     
     def shape(self):
         # Combined shape: Hollow Border + Solid Text Area
@@ -444,8 +444,9 @@ class VisBlobItem(VisNodeItem):
             painter.setPen(Qt.black)
 
         #self.nodeShape is painted by Qt, using parent's pen???
-        #Debug - draw the shape path
-        #painter.drawPath(self.shape())
+
+        #JH put this (below) in if rectangle paint is removed
+        #painter.drawRoundedRect(self.nodeShape._rect, self.nodeShape._xRadius, self.nodeShape._yRadius, self.nodeShape._mode)
 
         #Draw the text if set to display
         if self.metadataAttributes['name']['display']:
