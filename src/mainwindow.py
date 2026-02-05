@@ -1336,13 +1336,33 @@ class MainWindow(QMainWindow):
     def listClick(self,item):
         #print(f"listClick {item} , {item.text()}")
         #clear the selection
+
+        if self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
+            self.Scene.onlySelected=None
         self.Scene.clearSelection()
+
         #select the *graphics* view of the clicked item as well
         idx = item.data(KEY_INDEX)
         for sItem in self.Scene.items():
             if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
                 if sItem.data(KEY_INDEX) == idx: # iNum:
                     sItem.setSelected(True)
+                    if sItem.data(KEY_ROLE) in [ROLE_EDGE]:
+                        self.Scene.thisHandleObjectSelected=sItem.edgeLine
+                        self.Scene.onlySelected=sItem.edgeLine
+                        sItem.edgeLine.setSelected(True)
+                        sItem.isOnlySelected=True
+                        sItem.edgeLine._createHandles()
+                        if not sItem.stH:
+                            sItem.setZValue(2000) #move the edge above nodes
+                            if len(sItem.edgeLine._pHandles)>0:
+                                sItem.stH = sItem.edgeLine._pHandles[0]
+                                sItem.endH = sItem.edgeLine._pHandles[-1]
+                            else:
+                                print("No handles yet")
+
                     #print(idx)
                     #break
 
