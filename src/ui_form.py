@@ -21,6 +21,9 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QGraphicsView, Q
     QMenuBar, QSizePolicy, QSplitter, QStatusBar,
     QToolBar, QWidget)
 
+import os
+basedir = os.path.dirname(__file__)
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -76,7 +79,7 @@ class Ui_MainWindow(object):
         self.actionNewNode = QAction(MainWindow)
         self.actionNewNode.setObjectName(u"actionNewNode")
         icon8 = QIcon()
-        icon8.addFile(u"src/icons/node.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon8.addFile(os.path.join(basedir,"icons/node.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionNewNode.setIcon(icon8)
         self.actionNewNode.setMenuRole(QAction.MenuRole.NoRole)
         self.actionZoomIn = QAction(MainWindow)
@@ -86,18 +89,18 @@ class Ui_MainWindow(object):
         self.actionNewEdge = QAction(MainWindow)
         self.actionNewEdge.setObjectName(u"actionNewEdge")
         icon9 = QIcon()
-        icon9.addFile(u"src/icons/icons8-double-path-50e.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon9.addFile(os.path.join(basedir,"icons/icons8-double-path-50e.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionNewEdge.setIcon(icon9)
         self.actionPointer = QAction(MainWindow)
         self.actionPointer.setObjectName(u"actionPointer")
         icon10 = QIcon()
-        icon10.addFile(u"src/icons/cursor.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon10.addFile(os.path.join(basedir,"icons/cursor.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionPointer.setIcon(icon10)
         self.actionPointer.setMenuRole(QAction.MenuRole.NoRole)
         self.actionNewBlob = QAction(MainWindow)
         self.actionNewBlob.setObjectName(u"actionNewBlob")
         icon11 = QIcon()
-        icon11.addFile(u"src/icons/blob.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon11.addFile(os.path.join(basedir,"icons/blob.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionNewBlob.setIcon(icon11)
         self.actionsdsd = QAction(MainWindow)
         self.actionsdsd.setObjectName(u"actionsdsd")
