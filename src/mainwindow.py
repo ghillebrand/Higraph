@@ -512,7 +512,6 @@ class grScene(QGraphicsScene):
         edge.setSelected(False)
 
     def clearSelection(self):
-        # consider deleting handles here JH
         for item in self.selectedItems():
             item.isOnlySelected=False
         return super().clearSelection()
@@ -946,7 +945,7 @@ class grScene(QGraphicsScene):
         # Register a finalize callback to confirm deletion
         #weakref.finalize(item, self._on_finalize, repr(item))
 
-        item.suppressItemChange = False  #changed from True JH
+        item.suppressItemChange = False  
         self.removeItem(item)
         #import referrers
         #print(referrers.get_referrer_graph(item, max_depth=3))
@@ -1362,7 +1361,13 @@ class MainWindow(QMainWindow):
                                 sItem.endH = sItem.edgeLine._pHandles[-1]
                             else:
                                 print("No handles yet")
-
+                    elif sItem.data(KEY_ROLE) in [ROLE_BLOB]:
+                        self.Scene.thisHandleObjectSelected=sItem
+                        self.Scene.onlySelected=sItem
+                        sItem.setSelected(True)
+                        sItem.isOnlySelected=True
+                       # sItem.edgeLine._createHandles()
+ 
                     #print(idx)
                     #break
 
@@ -2150,6 +2155,8 @@ class MainWindow(QMainWindow):
         #remove CBs
         #self.Scene.clearEdgeOnly(delItem)
         delItem.edgeLine._deleteHandles()
+        if self.Scene.thisHandleObjectSelected==delItem.edgeLine:
+            self.Scene.thisHandleObjectSelected = None
         self.Scene.deleteItemAndChildren(delItem)
 
         del delItem #not sure why this works JH added
@@ -2162,7 +2169,8 @@ class MainWindow(QMainWindow):
         if eList:
             for e in eList:
                 self.delEdge(e)
-
+        if self.Scene.thisHandleObjectSelected==self.Scene.findItemByIdx(delIdx):
+            self.Scene.thisHandleObjectSelected = None
         #Delete from Scene first, since there are complex deps to other parts which get in a knot
         self.Scene.deleteItemAndChildren(self.Scene.findItemByIdx(delIdx))
         #delete from model
@@ -2171,6 +2179,7 @@ class MainWindow(QMainWindow):
         delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
         delItem = self.ui.listWidget.takeItem(delRow)
         del delItem
+
         #Delete from Scene
         #self.Scene.deleteItemAndChildren(self.Scene.findItemByIdx(delIdx))
 
@@ -2210,15 +2219,14 @@ class MainWindow(QMainWindow):
         #  Maybe select all needs to be context sensitive - scene, or list =model
         for item in self.Scene.items():
             if item.GraphicsItemFlag.ItemIsSelectable:
-                item.isOnlySelected=False #JH change
+                item.isOnlySelected=False  
                 item.setSelected(True)
-            if self.Scene.thisHandleObjectSelected: #JH added
+            if self.Scene.thisHandleObjectSelected:  
                 self.Scene.thisHandleObjectSelected._deleteHandles()
                 self.Scene.thisHandleObjectSelected=None
 
     def action_EditSelectNone(self):
         #print("Edit>SelectNone")
-        #JH modified to remove handles on edges
         if len(self.Scene.selectedItems())==1 and self.Scene.thisHandleObjectSelected:
             self.Scene.thisHandleObjectSelected._deleteHandles()
             self.Scene.thisHandleObjectSelected=None

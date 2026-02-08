@@ -77,7 +77,7 @@ class QRoundedRectItem(QGraphicsObject):
         return stroker.createStroke(basePath)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
-    #jh commented out entire function    
+    #jh commented out entire function to romove local paint   
         # Determine styling by looking at the PARENT'S state
         parent = self.parentItem()
         if parent and parent.isSelected():
@@ -471,15 +471,18 @@ class VisBlobItem(VisNodeItem):
 
     def setSelected(self,state:bool):
         """ set as selected if parent is selected"""
-        if state:
-            #print(f"Blob setSel createH")
-            self._createHandles()
-        else:
-            #print("blob setSel calling _deleteHandles")
-            self.scene().onlySelected = None
-            self.isOnlySelected = False
-            self._deleteHandles()
-        #super().setSelected(isSelected)
+        if len(self.scene().selectedItems())<=1:
+            if state:
+                #print(f"Blob setSel createH")
+                self._createHandles()
+                self.scene().thisHandleObjectSelected=self
+            else:
+                #print("blob setSel calling _deleteHandles")
+                self.scene().onlySelected = None
+                self.scene().thisHandleObjectSelected = None
+                self.isOnlySelected = False
+                self._deleteHandles()
+        super().setSelected(state)
 
     def _createHandles(self):
         """ Handles for resizing"""
