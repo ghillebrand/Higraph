@@ -312,7 +312,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         outlinePath.setWidth(HITSIZE*2)
         return outlinePath.createStroke(path)
 
-    def mousePressEvent(self, mouseEvent):
+    """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
 
             modifiers = mouseEvent.modifiers()
@@ -328,7 +328,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             #Highlight the list item as well
             #print(f"\nSelected elt: {self.data(KEY_INDEX)}\n")
             lWItem = self.listWidget.findItemByIdx(self.data(KEY_INDEX))
-            self.listWidget.setCurrentItem(lWItem)
+            self.listWidget.setCurrentItem(lWItem)"""
 
     def mouseDoubleClickEvent(self, mouseEvent):
         self.requestEdit.emit(self)
