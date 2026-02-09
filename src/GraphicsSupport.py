@@ -26,8 +26,6 @@ class TransparentTextItem(QGraphicsTextItem):
         if not parent:
             print(f"Error creating TransparentTextItem - no parent set")
         super().__init__(text,parent)
-        # If you don’t need focus handling, remove focusable flag
-        #self.setFlag(QGraphicsTextItem.ItemIsFocusable, False)
 
     def paint(self, painter, option, widget=None):
         super().paint(painter,option,widget)
@@ -162,7 +160,7 @@ class HandleItem(QGraphicsRectItem):
 
 class dummyNodeItem(HandleItem):
     """ a graphics-only node to manage joins for hyperedges, ports for nodes """
-    def __init__(self,center: QPointF, hSize=HITSIZE, color=Qt.red, parent=None):
+    def __init__(self,center: QPointF, hSize=HITSIZE, color=Qt.NoPen, parent=None):
 
         super().__init__(-hSize, -hSize, 2 * hSize, 2 * hSize, parent)
         #from a selection PoV, is this not still just a handle?
