@@ -1219,7 +1219,7 @@ class MainWindow(QMainWindow):
         #setup the list to sort by TYPE then ID (using patched function above)
         self.ui.listWidget.setSortRoles( (KEY_ROLE,KEY_INDEX) )
         self.ui.listWidget.itemChanged.connect(self.updateSceneText)
-        self.ui.listWidget.itemClicked.connect(self.listClick)
+        #self.ui.listWidget.itemClicked.connect(self.listClick) # this is now called by itemSelectionChanged
         self.ui.listWidget.itemDoubleClicked.connect(self.listDblClicked)
         
 
@@ -1350,45 +1350,44 @@ class MainWindow(QMainWindow):
         self.Scene.mouseMode = grScene.POINTER
 
     def listClick(self,item):
-        print("JH listClick")
-        if not self.multipleListSelectionFlag:
+
+        #if not self.multipleListSelectionFlag:
             #print(f"listClick {item} , {item.text()}")
             #clear the selection
+        if self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
+            self.Scene.onlySelected=None
+        self.Scene.clearSelection()
 
-            if self.Scene.thisHandleObjectSelected:
-                self.Scene.thisHandleObjectSelected._deleteHandles()
-                self.Scene.thisHandleObjectSelected=None
-                self.Scene.onlySelected=None
-            self.Scene.clearSelection()
-
-            #select the *graphics* view of the clicked item as well
-            idx = item.data(KEY_INDEX)
-            for sItem in self.Scene.items():
-                if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
-                    if sItem.data(KEY_INDEX) == idx: # iNum:
+        #select the *graphics* view of the clicked item as well
+        idx = item.data(KEY_INDEX)
+        for sItem in self.Scene.items():
+            if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
+                if sItem.data(KEY_INDEX) == idx: # iNum:
+                    sItem.setSelected(True)
+                    if sItem.data(KEY_ROLE) in [ROLE_EDGE]:
+                        self.Scene.thisHandleObjectSelected=sItem.edgeLine
+                        self.Scene.onlySelected=sItem.edgeLine
+                        sItem.edgeLine.setSelected(True)
+                        sItem.isOnlySelected=True
+                        sItem.edgeLine._createHandles()
+                        if not sItem.stH:
+                            sItem.setZValue(2000) #move the edge above nodes
+                            if len(sItem.edgeLine._pHandles)>0:
+                                sItem.stH = sItem.edgeLine._pHandles[0]
+                                sItem.endH = sItem.edgeLine._pHandles[-1]
+                            else:
+                                print("No handles yet")
+                    elif sItem.data(KEY_ROLE) in [ROLE_BLOB]:
+                        self.Scene.thisHandleObjectSelected=sItem
+                        self.Scene.onlySelected=sItem
                         sItem.setSelected(True)
-                        if sItem.data(KEY_ROLE) in [ROLE_EDGE]:
-                            self.Scene.thisHandleObjectSelected=sItem.edgeLine
-                            self.Scene.onlySelected=sItem.edgeLine
-                            sItem.edgeLine.setSelected(True)
-                            sItem.isOnlySelected=True
-                            sItem.edgeLine._createHandles()
-                            if not sItem.stH:
-                                sItem.setZValue(2000) #move the edge above nodes
-                                if len(sItem.edgeLine._pHandles)>0:
-                                    sItem.stH = sItem.edgeLine._pHandles[0]
-                                    sItem.endH = sItem.edgeLine._pHandles[-1]
-                                else:
-                                    print("No handles yet")
-                        elif sItem.data(KEY_ROLE) in [ROLE_BLOB]:
-                            self.Scene.thisHandleObjectSelected=sItem
-                            self.Scene.onlySelected=sItem
-                            sItem.setSelected(True)
-                            sItem.isOnlySelected=True
-                        # sItem.edgeLine._createHandles()
-    
-                        #print(idx)
-                        #break
+                        sItem.isOnlySelected=True
+                    # sItem.edgeLine._createHandles()
+
+                    #print(idx)
+                    #break
 
     def listDblClicked(self,item):
         #print("listDblClicked", item.text(), item.index())
@@ -1414,7 +1413,6 @@ class MainWindow(QMainWindow):
         self.updateSceneText(item)
 
     def updateSceneText(self,item):
-        print("JH updateSceneText")
         """ Code for the listWidget to tell the scene that something has changed (name)"""
         #Maybe should be updateMODELText - scene updates via the model?
 
@@ -1445,10 +1443,8 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.repaint()
 
     def actionListSelectChange(self):
-        print("JH actionListSelectChange")
         selected_items = self.ui.listWidget.selectedItems()
         if len(selected_items)>1:
-            self.multipleListSelectionFlag=True
             if self.Scene.thisHandleObjectSelected:
                 self.Scene.thisHandleObjectSelected._deleteHandles()
                 self.Scene.thisHandleObjectSelected=None
@@ -1460,35 +1456,9 @@ class MainWindow(QMainWindow):
                     if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
                         if sItem.data(KEY_INDEX) == idx: # iNum:
                             sItem.setSelected(True)
-                            """if sItem.data(KEY_ROLE) in [ROLE_EDGE]:
-                                self.Scene.thisHandleObjectSelected=sItem.edgeLine
-                                self.Scene.onlySelected=sItem.edgeLine
-                                sItem.edgeLine.setSelected(True)
-                                sItem.isOnlySelected=True
-                                sItem.edgeLine._createHandles()
-                                if not sItem.stH:
-                                    sItem.setZValue(2000) #move the edge above nodes
-                                    if len(sItem.edgeLine._pHandles)>0:
-                                        sItem.stH = sItem.edgeLine._pHandles[0]
-                                        sItem.endH = sItem.edgeLine._pHandles[-1]
-                                    else:
-                                        print("No handles yet")
-                            elif sItem.data(KEY_ROLE) in [ROLE_BLOB]:
-                                self.Scene.thisHandleObjectSelected=sItem
-                                self.Scene.onlySelected=sItem
-                                sItem.setSelected(True)
-                                sItem.isOnlySelected=True"""
         else:
-            self.multipleListSelectionFlag=False
-            print("JH selected item", selected_items[0].data(KEY_INDEX))
-        #    self.ui.listWidget.setCurrentItem(selected_items[0])
-        
-        """if selected_items:
-            print("Selected items:")
-            for item in selected_items:
-                print("  ", item)"""
-        #else:
-        #    print("No items selected.")
+            if len(selected_items)!=0:
+                self.listClick(selected_items[0])
 
     #Menu-like Actions
     def action_FileNew(self):
