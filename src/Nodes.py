@@ -331,7 +331,7 @@ class VisNodeItem(QGraphicsObject):
         self.update()
         super().hoverLeaveEvent(event)
 
-    def mousePressEvent(self, mouseEvent):
+    """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
             #TODO: check for <shift> & <ctrl> click to add, otherwise clear.
             #NOTE: Qt clears the selection elsewhere on mouseRelease 
@@ -342,10 +342,12 @@ class VisNodeItem(QGraphicsObject):
                 self.scene().clearSelection()
             self.setSelected(True)
             #Highlight the list item as well
-            lWItem = self.listWidget.findItemByIdx(self.data(KEY_INDEX))
-            self.listWidget.setCurrentItem(lWItem)
+            print("JH node mousepress",len(self.scene().selectedItems()), self.scene().mouseMode)
+            if len(self.scene().selectedItems())==0:
+                lWItem = self.listWidget.findItemByIdx(self.data(KEY_INDEX))
+                self.listWidget.setCurrentItem(lWItem)
 
-        super().mousePressEvent(mouseEvent)
+        super().mousePressEvent(mouseEvent)"""
 
 class VisBlobItem(VisNodeItem):
     """Generalise point-like nodes to sets. Blame Harel for the name"""

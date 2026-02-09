@@ -535,6 +535,21 @@ class grScene(QGraphicsScene):
             return
 
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
+            if mouseEvent.modifiers() and Qt.ControlModifier and \
+                    self.mouseMode==self.POINTER and len(self.selectedItems())>0:
+                selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
+                if selItem:
+                    selItem = selItem[0]
+                    if self.thisHandleObjectSelected:
+                        self.thisHandleObjectSelected._deleteHandles()
+                        self.thisHandleObjectSelected=None
+                    #if selItem in self.selectedItems():  #deselect
+                    #    selItem.setSelected(False)
+                    #else:
+                    #    selItem.setSelected(True)
+                    super().mousePressEvent(mouseEvent)
+                    return
+                    
             if self.mouseMode==self.POINTER:
                 selItems = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_HANDLE])
                 if len(selItems) > 0:
@@ -634,7 +649,7 @@ class grScene(QGraphicsScene):
                     #return
 
                     if selItem.data(KEY_ROLE) == ROLE_BLOB:
-                        print(f"Sel Blob {selItem.metadata['name']}")
+                        #print(f"Sel Blob {selItem.metadata['name']}")
                         self.onlySelected = selItem
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
