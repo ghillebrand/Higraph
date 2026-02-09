@@ -41,9 +41,10 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
-            QMimeData, QBuffer, QByteArray, QIODevice)
+            QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
 from PySide6.QtSvg import QSvgGenerator
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
+#from PySide6.Qtcore import QItemSelectionModel
 
 from ui_form import Ui_MainWindow
 from ui_Credits import Ui_dlgCredits
@@ -235,6 +236,9 @@ class grScene(QGraphicsScene):
         self.endPoint = None
         self.rubberLine = None
         self.GrRubberLine =None
+
+        # For ListWidget
+        self.changedByCode=False
 
         #Handle hovering
         self.lastHovered = None #QGraphicsItem
@@ -543,13 +547,13 @@ class grScene(QGraphicsScene):
                     if self.thisHandleObjectSelected:
                         self.thisHandleObjectSelected._deleteHandles()
                         self.thisHandleObjectSelected=None
-                    #if selItem in self.selectedItems():  #deselect
-                    #    selItem.setSelected(False)
-                    #else:
-                    #    selItem.setSelected(True)
+                    lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                    self.changedByCode=True
+                    self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Toggle)
+                    self.changedByCode=False
                     super().mousePressEvent(mouseEvent)
                     return
-                    
+     
             if self.mouseMode==self.POINTER:
                 selItems = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_HANDLE])
                 if len(selItems) > 0:
@@ -580,9 +584,10 @@ class grScene(QGraphicsScene):
             
             # in all other cases clear selection
             self.clearSelection()
+            self.listWidget.clearSelection()
             if self.thisHandleObjectSelected:
                 self.thisHandleObjectSelected._deleteHandles()
-                self.thisHandleObjectSelected=None
+                self.thisHandleObjectSelected=None               
 
             # process menu insert objects
             if self.mouseMode == self.INSERTNODE:
@@ -639,6 +644,8 @@ class grScene(QGraphicsScene):
                 #    selItem = None
 
                     if selItem.data(KEY_ROLE) == ROLE_NODE:
+                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                        self.listWidget.setCurrentItem(lWItem)
                         super().mousePressEvent(mouseEvent)
                         return
                     #immediately hand off for Qt to move
@@ -654,6 +661,8 @@ class grScene(QGraphicsScene):
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
                         selItem.setSelected(True)
+                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                        self.listWidget.setCurrentItem(lWItem)
                         # accept? return?
 
                     if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
@@ -682,6 +691,8 @@ class grScene(QGraphicsScene):
                                 selItem.endH = selItem.edgeLine._pHandles[-1]
                             else:
                                 print("No handles yet")
+                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                        self.listWidget.setCurrentItem(lWItem)
                         # if not selItem.endH:
                         #print(", endH")
                         #     selItem.endH = selItem.edgeLine._pHandles[-1]
@@ -1219,13 +1230,15 @@ class MainWindow(QMainWindow):
         #setup the list to sort by TYPE then ID (using patched function above)
         self.ui.listWidget.setSortRoles( (KEY_ROLE,KEY_INDEX) )
         self.ui.listWidget.itemChanged.connect(self.updateSceneText)
-        self.ui.listWidget.itemClicked.connect(self.listClick)
+        #self.ui.listWidget.itemClicked.connect(self.listClick) # this is now called by itemSelectionChanged
         self.ui.listWidget.itemDoubleClicked.connect(self.listDblClicked)
+        
 
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
         self.Scene = grScene(self.model,self.ui.listWidget,self)
-        #self.Scene.selectionChanged.connect(self.actionSceneSelectChange(self.Scene)) JH Commented out
-    
+        #self.Scene.selectionChanged.connect(self.actionSceneSelectChange)
+        self.ui.listWidget.itemSelectionChanged.connect(self.actionListSelectChange)
+
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
         self.Scene.nodeEditRequested.connect(self.showEditNodeDialog)
 
@@ -1348,9 +1361,10 @@ class MainWindow(QMainWindow):
         self.Scene.mouseMode = grScene.POINTER
 
     def listClick(self,item):
-        #print(f"listClick {item} , {item.text()}")
-        #clear the selection
 
+        #if not self.multipleListSelectionFlag:
+            #print(f"listClick {item} , {item.text()}")
+            #clear the selection
         if self.Scene.thisHandleObjectSelected:
             self.Scene.thisHandleObjectSelected._deleteHandles()
             self.Scene.thisHandleObjectSelected=None
@@ -1381,8 +1395,8 @@ class MainWindow(QMainWindow):
                         self.Scene.onlySelected=sItem
                         sItem.setSelected(True)
                         sItem.isOnlySelected=True
-                       # sItem.edgeLine._createHandles()
- 
+                    # sItem.edgeLine._createHandles()
+
                     #print(idx)
                     #break
 
@@ -1439,15 +1453,37 @@ class MainWindow(QMainWindow):
         self.Scene.update()
         self.ui.listWidget.repaint()
 
-    def actionSceneSelectChange(self, scene):
+    def actionListSelectChange(self):
+        if not self.Scene.changedByCode:
+            selected_items = self.ui.listWidget.selectedItems()
+            if len(selected_items)>1:
+                if self.Scene.thisHandleObjectSelected:
+                    self.Scene.thisHandleObjectSelected._deleteHandles()
+                    self.Scene.thisHandleObjectSelected=None
+                    self.Scene.onlySelected=None
+                self.Scene.clearSelection()
+                for item in selected_items:
+                    idx = item.data(KEY_INDEX)
+                    for sItem in self.Scene.items():
+                        if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
+                            if sItem.data(KEY_INDEX) == idx: # iNum:
+                                sItem.setSelected(True)
+            else:
+                if len(selected_items)!=0:
+                    self.listClick(selected_items[0])
 
-        selected_items = scene.selectedItems()
-        if selected_items:
-            print("Selected items:")
+    """def actionSceneSelectChange(self):  Endless loop with listchange!
+        selected_items = self.Scene.selectedItems()
+        if len(selected_items)>1:
+            self.Scene.listWidget.clearSelection()
             for item in selected_items:
-                print("  ", item)
-        #else:
-        #    print("No items selected.")
+                idx = item.data(KEY_INDEX)
+                sItem=self.Scene.listWidget.findItemByIdx(idx)
+                if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
+                    #if sItem.data(KEY_INDEX) == idx: # iNum:
+                    self.Scene.listWidget.setCurrentItem(sItem)"""
+
+
 
     #Menu-like Actions
     def action_FileNew(self):
