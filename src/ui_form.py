@@ -127,7 +127,7 @@ class Ui_MainWindow(object):
         self.listWidget.setBaseSize(QSize(100, 0))
         self.listWidget.setFocusPolicy(Qt.FocusPolicy.WheelFocus)
         self.listWidget.setAlternatingRowColors(True)
-        self.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.listWidget.setProperty(u"isWrapping", True)
         self.splitter.addWidget(self.listWidget)
         self.graphicsView = QGraphicsView(self.splitter)
