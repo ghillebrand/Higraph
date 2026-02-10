@@ -27,7 +27,7 @@ import weakref
 
 from typing import List, Dict
 
-from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
+from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainWindow, QDialog,
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
@@ -1218,6 +1218,7 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.ui.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         #TODO: Put in the `isWindowModified()` code
         self.setWindowTitle(APP_NAME +"[*]")
         self.fileName = ""
