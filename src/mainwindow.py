@@ -515,6 +515,16 @@ class grScene(QGraphicsScene):
             edge.edgeLine.setSelected(False)
         edge.setSelected(False)
 
+    def thingToListOfIdxs(self, thing):
+        outlist=[]
+        for t in thing:
+            try:
+                outlist.append(t.data(KEY_INDEX))
+            except:
+                pass
+        outlist.sort()
+        return(outlist)
+
     def clearSelection(self):
         for item in self.selectedItems():
             item.isOnlySelected=False
@@ -576,12 +586,12 @@ class grScene(QGraphicsScene):
                         #return
                     mouseEvent.accept()
                     return
+      
             if len(self.selectedItems())>1:
                 self.mouseMode=self.DRAGGING #or in the middle of a modifier selection
                 # hand over to QT? or exit?
                 super().mousePressEvent(mouseEvent)
                 return
-            
             # in all other cases clear selection
             self.clearSelection()
             self.listWidget.clearSelection()
@@ -861,6 +871,12 @@ class grScene(QGraphicsScene):
 
         elif self.mouseMode == self.POINTER:
             if len(self.selectedItems()) > 0:
+                self.listWidget.clearSelection()
+                self.changedByCode=True
+                for selItem in self.selectedItems():
+                    lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                    self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
+                self.changedByCode=False
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
                 #    for s in self.selectedItems():
@@ -871,7 +887,7 @@ class grScene(QGraphicsScene):
                 #for s in self.selectedItems():
                 #    print(type(s),end = ",")
                 #print()
-                pass
+                #pass
             #MainWindow.actionSceneSelectChange(MainWindow.Scene)
         elif self.mouseMode == self.MOVEEDGEEND:
             #print("Finish moveEdgeEnd")
@@ -885,6 +901,14 @@ class grScene(QGraphicsScene):
             #print("End move handle")
             self.mouseMode = self.POINTER
         elif self.mouseMode == self.DRAGGING:
+            if self.thingToListOfIdxs(self.selectedItems()) != self.thingToListOfIdxs(self.listWidget.selectedItems()):
+                #update listview
+                self.listWidget.clearSelection()
+                self.changedByCode=True
+                for selItem in self.selectedItems():
+                    lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                    self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
+                self.changedByCode=False
             #print(f"up: DRAGGING --> POINTER")
             self.mouseMode = self.POINTER
 
