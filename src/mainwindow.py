@@ -378,7 +378,8 @@ class grScene(QGraphicsScene):
         self.tmpEdgeSt.setFlag(self.tmpEdgeSt.GraphicsItemFlag.ItemIsMovable, False)
         
         #This will change when the whole boundary/ edge can be a connection point
-        self.startPoint = self.tmpEdgeSt.pos()
+        #self.startPoint = self.tmpEdgeSt.pos()
+        self.startPoint = mPos  #self.tmpEdgeSt.pos()
         self.endPoint = self.getSceneMousePos()
 
         #Create the rubberBand line (actual edge is created on mouseRelease)
@@ -401,7 +402,12 @@ class grScene(QGraphicsScene):
     def endRubberLine(self):
         """called on successful end item found for edge:
          from INSERTEDGE mouseRelease or INSERTEDGE2CLICK mousePress """
+        #TODO: How does this relate to finishMovingEdgeEnd?
 
+        #TODO: Create the ports on the nodes
+        #Start port
+        startPort = self.tmpEdgeSt.createPort(self.startPoint)
+        
         #Create the actual edge
         edgeItem = VisEdgeItem(self.model,self.listWidget,self.tmpEdgeSt, self.tmpEdgeEnd, parent=None)
         #Add to *Scene*

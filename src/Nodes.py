@@ -197,6 +197,10 @@ class VisNodeItem(QGraphicsObject):
         #TODO: Set selectable False - see if that processes clicks better?
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
+        #Ports where edges will connect
+        self._nextPort = 0 #Counter for port index
+        self._Ports = []
+
         #Make nodes appear in front of edges for painting & selection
         self.setZValue(1000)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -327,6 +331,43 @@ class VisNodeItem(QGraphicsObject):
         #note the **return**
         return super().itemChange(change,value)
 
+    def createPort(self,screenPos)->int:
+        """ Create a port at `pos` for an edge to connect on, return the int index for reference"""
+        #This is harcoded to a circle of radius NODESIZE/2  Other shapes/ options later
+        #Find the parametric position of the point on the nodeshape
+        #Calculates the clockwise 'distance' around the perimeter.
+        # 0.0 = Top, 0.25 = Right, 0.5 = Bottom, 0.75 = Left.
+
+        center = self.pos()
+        #Map the screen position to the item's local coordinate system
+        localPos = self.mapFromScene(screenPos)
+        print(f"{localPos=}")
+        #Calculate delta from center
+        #dy = localPos.y() - center.y()
+        #dx = localPos.x() - center.x()
+        dy = screenPos.y() - center.y()
+        dx = screenPos.x() - center.x()
+        print(f"{dx=},{dy=}")
+        angle = math.atan2(dy, dx)
+        #Shift angle so that -PI/2 (Top) becomes 0, normalize to a 0.0 -> 1.0 range
+        fraction = (angle + math.pi / 2) / (2 * math.pi)
+        #Normalize to [0, 1) range to handle negative results from the shift (Python % 1 is magic!)
+        t =  fraction % 1.0
+
+        #Create the port, add to the node's list
+        # Calculate the exact coords from the angle ("snap")
+        portPos = QPointF(NODESIZE/2 *math.cos(angle),NODESIZE/2 *math.sin(angle)   )
+        print(f"{t=},{portPos=}")
+        #Parent to nodeShape for better geom flexibility
+        #TODO: Set color to NoPen once debugged - only "seen" when edge selected, so edgeHandles will display it.
+        #TODO: Does dummyNode need to be a QGraphicsItem? can it not just be a QPointF????
+        self._Ports.append(dummyNodeItem(portPos, color=Qt.red, parent=self.nodeShape))
+
+        #Store the index as the ID of the port
+        self.index = self._nextPort
+        self._nextPort += 1
+
+        return self.index
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
@@ -399,8 +440,7 @@ class VisBlobItem(VisNodeItem):
         #Placeholder for drag handles
         self._Handles = []
 
-        #Ports where edges will connect
-        self._Ports = []
+
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
         self.isOnlySelected = False
