@@ -166,10 +166,11 @@ class VisNodeItem(QGraphicsObject):
         #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
 
+        #TODO: Change this to TransparentTextItem
         self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
 
         #a place to display metadata
-        self.metaDisplay = TransparentTextItem("xx", parent=self)
+        self.metaDisplay = TransparentTextItem("", parent=self)
         self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2))  #NODESIZE/2,0))
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsFocusable, False)
@@ -187,7 +188,12 @@ class VisNodeItem(QGraphicsObject):
         #Circle Shape
         self.nodeShape = QGraphicsEllipseItem(-NODESIZE/2,-NODESIZE/2,NODESIZE,NODESIZE,self)
         #JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
-        self.nodeShape.setPen(QPen(Qt.NoPen))
+        #self.nodeShape.setPen(QPen(Qt.NoPen))
+        #Filled or clear - used for debugging
+        brush = QBrush(Qt.white)      # Normal fill
+        #brush = QBrush(Qt.NoBrush)   # clear)
+        self.nodeShape.setBrush(brush)
+
         #TODO: Set selectable False - see if that processes clicks better?
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
@@ -196,9 +202,10 @@ class VisNodeItem(QGraphicsObject):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
-
+        
+        #TODO: hoverEvents are not sent when there is an explicit mouseEVent handler. Handle in scene and delete here
         #self.setAcceptHoverEvents(True)
-        self.hovered = False
+        #self.hovered = False
 
         self.suppressItemChange = False  # enable itemChange normally
 
@@ -275,19 +282,19 @@ class VisNodeItem(QGraphicsObject):
 
         if self.isSelected():
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+            self.nodeShape.setPen(QPen(Qt.blue,1,Qt.DashLine))
         else:
             painter.setPen(Qt.black)
+            self.nodeShape.setPen(QPen(Qt.black))
 
-        if self.hovered:
-            brush = QBrush(Qt.lightGray)  # Light gray fill
-        else:
-            brush = QBrush(Qt.white)      # Normal fill
+
+        brush = QBrush(Qt.white)      # Normal fill
         #brush = QBrush(Qt.NoBrush) #white)
         painter.setBrush(brush)
 
         #TODO: Use the shape used in the constructor - will need a flag
         #painter.drawRect(self.nodeShape.rect())
-        painter.drawEllipse(self.nodeShape.rect())
+        #painter.drawEllipse(self.nodeShape.rect())
 
         #Draw the text if set to display
         if self.metadataAttributes['name']['display']:
@@ -297,7 +304,7 @@ class VisNodeItem(QGraphicsObject):
             r = painter.drawText(r,Qt.AlignCenter,self.dispText)
             painter.drawText(r, Qt.AlignCenter, self.dispText)
 
-        #Draw displayed metadata - automagic?
+        #Draw displayed metadata - automagically from the TransparentTextItem painter
 
     def mouseDoubleClickEvent(self, mouseEvent):
         self.requestEdit.emit(self)
@@ -320,16 +327,6 @@ class VisNodeItem(QGraphicsObject):
         #note the **return**
         return super().itemChange(change,value)
 
-    #TODO: hoverEvents are not sent when there is an explicit mouseEVent handler. Handle in scene and delete here
-    def xxhoverEnterEvent(self, event=None):
-        self.hovered = True
-        self.update()  # trigger repaint
-        super().hoverEnterEvent(event)
-
-    def xxhoverLeaveEvent(self, event):
-        self.hovered = False
-        self.update()
-        super().hoverLeaveEvent(event)
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
@@ -377,7 +374,9 @@ class VisBlobItem(VisNodeItem):
         lWitem.setData(KEY_ROLE,ROLE_BLOB)
 
         self.setData(KEY_ROLE, ROLE_BLOB)
-        #self.scene().removeItem(self.nodeShape)
+        #Remove the nodeShape set in the parent
+        self.nodeShape.setParentItem(None)
+        del self.nodeShape
 
         self.parents = parents
         self.children = children
@@ -385,10 +384,6 @@ class VisBlobItem(VisNodeItem):
         #Node constructor doesn't take parents & children, so add now
 
         # make the rect
-        #self.nodeShape = QGraphicsEllipseItem(-NODESIZE/2,-NODESIZE/2,NODESIZE,NODESIZE,self)
-
-        #    def __init__(self, rect: QRectF, xRadius: float=0, yRadius: float=0, mode=Qt.AbsoluteSize,parent=None):
-
         self._rect = QRectF(0,0,width,height)
         self._width = width
         self._height = height
@@ -403,6 +398,9 @@ class VisBlobItem(VisNodeItem):
 
         #Placeholder for drag handles
         self._Handles = []
+
+        #Ports where edges will connect
+        self._Ports = []
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
         self.isOnlySelected = False
