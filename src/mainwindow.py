@@ -2269,13 +2269,17 @@ class MainWindow(QMainWindow):
         #print("Edit>SelectAll")
         #TODO: For multiple scenes from 1 model, what to do? (select model, or scene?)
         #  Maybe select all needs to be context sensitive - scene, or list =model
+        self.Scene.changedByCode=True
         for item in self.Scene.items():
             if item.GraphicsItemFlag.ItemIsSelectable:
                 item.isOnlySelected=False  
                 item.setSelected(True)
+                lWItem = self.Scene.listWidget.findItemByIdx(item.data(KEY_INDEX))
+                self.Scene.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)                    
             if self.Scene.thisHandleObjectSelected:  
                 self.Scene.thisHandleObjectSelected._deleteHandles()
                 self.Scene.thisHandleObjectSelected=None
+        self.Scene.changedByCode=False
 
     def action_EditSelectNone(self):
         #print("Edit>SelectNone")
@@ -2285,6 +2289,7 @@ class MainWindow(QMainWindow):
         #if self.Scene.onlySelected: 
         #    self.Scene.clearEdgeOnly(self.Scene.onlySelected)
         self.Scene.clearSelection()
+        self.Scene.listWidget.clearSelection()
 
     def action_EditZoomIn(self):
         #print("Edit>ZoomIn")
