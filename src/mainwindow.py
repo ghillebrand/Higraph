@@ -871,12 +871,13 @@ class grScene(QGraphicsScene):
 
         elif self.mouseMode == self.POINTER:
             if len(self.selectedItems()) > 0:
-                self.listWidget.clearSelection()
-                self.changedByCode=True
-                for selItem in self.selectedItems():
-                    lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
-                    self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
-                self.changedByCode=False
+                if not(mouseEvent.modifiers() and Qt.ControlModifier):
+                    self.listWidget.clearSelection()
+                    self.changedByCode=True
+                    for selItem in self.selectedItems():
+                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                        self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
+                    self.changedByCode=False
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
                 #    for s in self.selectedItems():
