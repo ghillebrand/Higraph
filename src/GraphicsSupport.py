@@ -143,8 +143,8 @@ class HandleItem(QGraphicsRectItem):
             #Track which was the last handle touched
             HandleItem.lastChanged = self   
             HandleItem.lastChangedbyCentre = self.centre  #JH added for debugging
-            self._onMoveCallback(self.scenePos())
-
+            #self._onMoveCallback(self.scenePos())
+            self._onMoveCallback(value)  #new absolute? position of handle JH
         return super().itemChange(change, value)
 
     def paint(self, painter: QPainter, option, widget=None):
