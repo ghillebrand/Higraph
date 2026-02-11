@@ -515,9 +515,10 @@ class grScene(QGraphicsScene):
             edge.edgeLine.setSelected(False)
         edge.setSelected(False)
 
-    def thingToListOfIdxs(self, thing):
+    def qtListToListOfIdxs(self, qtList):
+        #qtlist is any list of item objects (that have data(KEY_INDEX))
         outlist=[]
-        for t in thing:
+        for t in qtList:
             try:
                 outlist.append(t.data(KEY_INDEX))
             except:
@@ -569,9 +570,10 @@ class grScene(QGraphicsScene):
                 if len(selItems) > 0:
                     selItem=selItems[0]
                     #it's a handle, process
-                    selItem.setSelected(True)
+                    #selItem.setSelected(True)   JH Handles aren't selectable
                     p = selItem.parentItem()
-                    p.setSelected(True)
+                    #p.setSelected(True)  JH should already be selected
+                    #p._createHandles()   #JH to figure out blobs testing
                     # p.parentItem.setSelected(True)
                     if p.data(KEY_ROLE) == ROLE_POLYLINE and (selItem == p._pHandles[0] or selItem == p._pHandles[-1]):
                         self.mouseMode = self.MOVEEDGEEND
@@ -581,6 +583,7 @@ class grScene(QGraphicsScene):
                     else: #tangent or Mid point, or Blob corner to move
                         self.handle = selItem
                         self.mouseMode = self.MOVEHANDLE
+                        selItem.setMoveCallback(p._updateFromHandles)  #JH
                         #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
                         #mouseEvent.accept()
                         #return
@@ -654,8 +657,10 @@ class grScene(QGraphicsScene):
                 #    selItem = None
 
                     if selItem.data(KEY_ROLE) == ROLE_NODE:
+                        self.changedByCode=True
                         lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                         self.listWidget.setCurrentItem(lWItem)
+                        self.changedByCode=False
                         super().mousePressEvent(mouseEvent)
                         return
                     #immediately hand off for Qt to move
@@ -671,8 +676,11 @@ class grScene(QGraphicsScene):
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
                         selItem.setSelected(True)
+                        selItem._createHandles() #JH
+                        self.changedByCode=True
                         lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                         self.listWidget.setCurrentItem(lWItem)
+                        self.changedByCode=False
                         # accept? return?
 
                     if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
@@ -701,8 +709,10 @@ class grScene(QGraphicsScene):
                                 selItem.endH = selItem.edgeLine._pHandles[-1]
                             else:
                                 print("No handles yet")
+                        self.changedByCode=True
                         lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                         self.listWidget.setCurrentItem(lWItem)
+                        self.changedByCode=False
                         # if not selItem.endH:
                         #print(", endH")
                         #     selItem.endH = selItem.edgeLine._pHandles[-1]
@@ -902,7 +912,7 @@ class grScene(QGraphicsScene):
             #print("End move handle")
             self.mouseMode = self.POINTER
         elif self.mouseMode == self.DRAGGING:
-            if self.thingToListOfIdxs(self.selectedItems()) != self.thingToListOfIdxs(self.listWidget.selectedItems()):
+            if self.qtListToListOfIdxs(self.selectedItems()) != self.qtListToListOfIdxs(self.listWidget.selectedItems()):
                 #update listview
                 self.listWidget.clearSelection()
                 self.changedByCode=True
@@ -1421,6 +1431,7 @@ class MainWindow(QMainWindow):
                         self.Scene.onlySelected=sItem
                         sItem.setSelected(True)
                         sItem.isOnlySelected=True
+                        sItem._createHandles() #JH
                     # sItem.edgeLine._createHandles()
 
                     #print(idx)
