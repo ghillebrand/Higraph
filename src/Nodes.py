@@ -551,40 +551,46 @@ class VisBlobItem(VisNodeItem):
         #Note - all these positions are RELATIVE to pos()
         match lastHandle:
             case 0: #TL
-                rTLx = relPos.x()
-                rTLy = relPos.y()
-                TLx += rTLx
-                TLy += rTLy
-                BRx -= rTLx
-                BRy -= rTLy
-
+                if BRx - relPos.x() >= HITSIZE*2: 
+                    rTLx = relPos.x()
+                    TLx += rTLx
+                    BRx -= rTLx                   
+                if BRy - relPos.y() >= HITSIZE*2:
+                    rTLy = relPos.y()
+                    TLy += rTLy
+                    BRy -= rTLy
             case 1: #TR BRx is width
-                rBRx = relPos.x()
-                rTLy = relPos.y() 
-                BRx = rBRx
-                TLy += rTLy
-                BRy -= rTLy
-
+                if relPos.x() >= HITSIZE*2:
+                    rBRx = relPos.x()
+                    BRx = rBRx
+                if BRy - relPos.y() >= HITSIZE*2:
+                    rTLy = relPos.y()               
+                    TLy += rTLy
+                    BRy -= rTLy
             case 2: #BR
-                rBRx = relPos.x() 
-                rBRy = relPos.y() 
-                BRx = rBRx
-                BRy = rBRy
-
+                if relPos.x() >= HITSIZE*2:
+                    rBRx = relPos.x() 
+                    BRx = rBRx
+                if relPos.y() >= HITSIZE*2:
+                    rBRy = relPos.y()                
+                    BRy = rBRy
             case 3: #BL
-                rTLx = relPos.x() 
-                rBRy = relPos.y()
-                TLx += rTLx
-                BRy = rBRy
-                BRx -= rTLx
+                if BRx - relPos.x() >= HITSIZE*2:
+                    rTLx = relPos.x() 
+                    TLx += rTLx
+                    BRx -= rTLx
+                if relPos.y() >= HITSIZE*2:
+                    rBRy = relPos.y()               
+                    BRy = rBRy
+                
 
-        #Check for "too thin" before updating, using HITSIZE as measure
+        """#Check for "too thin" before updating, using HITSIZE as measure
         if BRx < HITSIZE*2:
             self.suppressItemChange = False
             return
         if BRy < HITSIZE*2:
             self.suppressItemChange = False
-            return
+            return"""
         self._Handles[VisBlobItem.TL].setPos(QPointF(rTLx,rTLy))
         self._Handles[VisBlobItem.TR].setPos(QPointF(rBRx,rTLy))
         self._Handles[VisBlobItem.BR].setPos(rBRx,rBRy)
