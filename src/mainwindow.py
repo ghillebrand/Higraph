@@ -583,7 +583,8 @@ class grScene(QGraphicsScene):
                     else: #tangent or Mid point, or Blob corner to move
                         self.handle = selItem
                         self.mouseMode = self.MOVEHANDLE
-                        selItem.setMoveCallback(p._updateFromHandles)  #JH
+                        if p.data(KEY_ROLE) == ROLE_BLOB:
+                            selItem.setMoveCallback(p._updateFromHandles)  #JH
                         #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
                         #mouseEvent.accept()
                         #return
