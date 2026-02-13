@@ -31,7 +31,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
-            QSlider, QLabel, QStatusBar,
+            QSlider, QLabel, QStatusBar, 
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
 from PySide6 import (QtCore, QtWidgets, QtGui )
@@ -727,6 +727,7 @@ class grScene(QGraphicsScene):
 
         if (mouseEvent.button() == Qt.MouseButton.RightButton):
             mPos = mouseEvent.scenePos()
+            posText="Co ords ("+str(int(mPos.x()))+","+str(int(mPos.y()))+")"
             #selItem = self.itemAt(mPos,self.views()[0].transform())
             selItem = self.selectedItems()
             #TODO if selItem == None: selItem = itemAt
@@ -737,16 +738,19 @@ class grScene(QGraphicsScene):
                 
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     #Where to do the handles update for these?
-                    cxMenu = [  ("add Point","addPt" ),
+                    cxMenu = [  (posText, None),
+                                ("add Point","addPt" ),
                                 ("del Point","delPt" ),
                                 ("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item))
                             ]
                 if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
-                    cxMenu = [  (("Edit Details", 
+                    cxMenu = [  (posText, None),
+                              (("Edit Details", 
                                 lambda: self.mainwindow.showEditNodeDialog(item)))
                             ]
             else: #no or >1 selected.
-                cxMenu =[("print",lambda: MainWindow.action_DebugPrint(MainWin))]
+                cxMenu =[(posText, None),
+                         ("print",lambda: MainWindow.action_DebugPrint(MainWin))]
 
             if cxMenu:
                 cxChoice = self.contextMenu(mouseEvent, cxMenu)
@@ -824,6 +828,12 @@ class grScene(QGraphicsScene):
     def mouseReleaseEvent(self, mouseEvent):
         mPos = mouseEvent.scenePos()
         #print(f"release {self.mouseMode =}")
+        if (mouseEvent.button() == Qt.MouseButton.RightButton) and\
+                mouseEvent.modifiers() and Qt.ControlModifier: 
+            screamText=self.addText("Screams")
+            screamText.deleteLater
+            #self.posnLabel.deleteLater
+            #self.update()
         if self.mouseMode == self.INSERTNODE:
             #print("Node release at :",mouseEvent.scenePos())
             #print("up node")
