@@ -965,15 +965,6 @@ class grScene(QGraphicsScene):
     def signalTest(self):
         print("signal sent to scene successfully")
 
-    def WheelEvent(self, event):
-        #print("wheelevent")
-        zoomInFactor = 1.25
-        zoomOutFactor = 1 / zoomInFactor
-        if event.delta().y() > 0:
-            self.scale(zoomInFactor, zoomInFactor)
-        else:
-            self.scale(zoomOutFactor, zoomOutFactor)
-
     def findItemByIdx(self,idx):
         """takes a ROLE_INDEX value, and return the item out, or none """
         for item in self.items():
@@ -1116,6 +1107,18 @@ def findItemRowByIdx(self,idx):
             return row
     return None
 QListWidget.findItemRowByIdx = findItemRowByIdx
+
+_original_wheelEvent = QGraphicsView.wheelEvent
+def WheelEvent(self, event):
+    if event.modifiers() and Qt.ControlModifier:
+        zoomInFactor = 1.25
+        zoomOutFactor = 1 / zoomInFactor
+        if event.angleDelta().y() > 0:
+            self.scale(zoomInFactor, zoomInFactor)
+        else:
+            self.scale(zoomOutFactor, zoomOutFactor)
+    _original_wheelEvent(self,event)
+QGraphicsView.wheelEvent=WheelEvent
 
 #end monkeypatch    
 #=======
@@ -1292,9 +1295,12 @@ class MainWindow(QMainWindow):
         self.ui.graphicsView.setScene(self.Scene)
         self.ui.graphicsView.setRenderHint(QPainter.Antialiasing)
         self.ui.graphicsView.setDragMode(QGraphicsView.RubberBandDrag)
+        #JH try self.ui.graphicsView.setMouseTracking(True)
         self.ui.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        #JH try self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
         #TODO: Make this image centre until scrollwheel zooming is fixed
         self.ui.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        #JH try self.ui.graphicsView.setResizeAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
 
         # Create a status bar
         status_bar = QStatusBar()
@@ -2340,10 +2346,14 @@ class MainWindow(QMainWindow):
 
     def action_EditZoomIn(self):
         #print("Edit>ZoomIn")
-        pass
+        zoomInFactor=1.25
+        self.ui.graphicsView.scale(zoomInFactor, zoomInFactor)
+        #pass
 
     def action_EditZoomOut(self):
         #print("Edit>ZoomOut")
+        zoomInFactor=1/1.25
+        self.ui.graphicsView.scale(zoomInFactor, zoomInFactor)
         pass
 
     def action_HelpAbout(self):
