@@ -149,9 +149,11 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #Create the graphical line
         #PointList to pass to polyLine
         if len(points) > 0:
-            ptList = [self.startNode[1].pos()] + points + [self.endNode[1].pos()]
+            #ptList = [self.startNode[1].pos()] + points + [self.endNode[1].pos()]
+            ptList = [self.startNode[1].scenePos()] + points + [self.endNode[1].scenePos()]
         else: #just start with a 2-pt line
-            ptList = [self.startNode[1].pos(),self.endNode[1].pos()]
+            #ptList = [self.startNode[1].pos(),self.endNode[1].pos()]
+            ptList = [self.startNode[1].scenePos(),self.endNode[1].scenePos()]
         #Track what sort of edge this one is
         self._polyEdge = polyLineType
         

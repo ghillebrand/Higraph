@@ -268,7 +268,7 @@ class HermiteSplineItem(QGraphicsItem):
             #Compute default tangents for each point.
             self._t = [0 for _ in range(len(self._p))]
             
-            print(f"{self._p}")
+            print(f"create tangents from {self._p=}")
             #Start [0] (and end): Just aim for the next point (also deals with 2 pt case)
             hyp = math.sqrt((self._p[0].x() - self._p[1].x())**2 +(self._p[0].y() - self._p[1].y())**2 )
             dx = (self._p[1].x() - self._p[0].x())/hyp * self.scaleFactor
@@ -316,8 +316,8 @@ class HermiteSplineItem(QGraphicsItem):
 
     def __repr__(self):
         #tuple formatted, can be fed into constructor
-        #return str(f"({self._p},\n{self._t})")
-        return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
+        return str(f"({self._p},\n{self._t})")
+        #return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
         #return super().__repr__()
 
     def boundingRect(self) -> QRectF:
