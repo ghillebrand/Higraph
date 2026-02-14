@@ -27,11 +27,11 @@ import weakref
 
 from typing import List, Dict
 
-from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
+from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainWindow, QDialog,
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
-            QSlider, QLabel, QStatusBar,
+            QSlider, QLabel, QStatusBar, 
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
 from PySide6 import (QtCore, QtWidgets, QtGui )
@@ -528,6 +528,17 @@ class grScene(QGraphicsScene):
             edge.edgeLine.setSelected(False)
         edge.setSelected(False)
 
+    def qtListToListOfIdxs(self, qtList):
+        #qtlist is any list of item objects (that have data(KEY_INDEX))
+        outlist=[]
+        for t in qtList:
+            try:
+                outlist.append(t.data(KEY_INDEX))
+            except:
+                pass
+        outlist.sort()
+        return(outlist)
+
     def clearSelection(self):
         for item in self.selectedItems():
             item.isOnlySelected=False
@@ -572,9 +583,10 @@ class grScene(QGraphicsScene):
                 if len(selItems) > 0:
                     selItem=selItems[0]
                     #it's a handle, process
-                    selItem.setSelected(True)
+                    #selItem.setSelected(True)   JH Handles aren't selectable
                     p = selItem.parentItem()
-                    p.setSelected(True)
+                    #p.setSelected(True)  JH should already be selected
+                    #p._createHandles()   #JH to figure out blobs testing
                     # p.parentItem.setSelected(True)
                     if p.data(KEY_ROLE) == ROLE_POLYLINE and (selItem == p._pHandles[0] or selItem == p._pHandles[-1]):
                         self.mouseMode = self.MOVEEDGEEND
@@ -584,17 +596,19 @@ class grScene(QGraphicsScene):
                     else: #tangent or Mid point, or Blob corner to move
                         self.handle = selItem
                         self.mouseMode = self.MOVEHANDLE
+                        if p.data(KEY_ROLE) == ROLE_BLOB:
+                            selItem.setMoveCallback(p._updateFromHandles)  #JH
                         #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
                         #mouseEvent.accept()
                         #return
                     mouseEvent.accept()
                     return
+      
             if len(self.selectedItems())>1:
                 self.mouseMode=self.DRAGGING #or in the middle of a modifier selection
                 # hand over to QT? or exit?
                 super().mousePressEvent(mouseEvent)
                 return
-            
             # in all other cases clear selection
             self.clearSelection()
             self.listWidget.clearSelection()
@@ -657,8 +671,10 @@ class grScene(QGraphicsScene):
                 #    selItem = None
 
                     if selItem.data(KEY_ROLE) == ROLE_NODE:
+                        self.changedByCode=True
                         lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                         self.listWidget.setCurrentItem(lWItem)
+                        self.changedByCode=False
                         super().mousePressEvent(mouseEvent)
                         return
                     #immediately hand off for Qt to move
@@ -674,8 +690,11 @@ class grScene(QGraphicsScene):
                         self.thisHandleObjectSelected=selItem
                         selItem.isOnlySelected = True
                         selItem.setSelected(True)
+                        selItem._createHandles() #JH
+                        self.changedByCode=True
                         lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                         self.listWidget.setCurrentItem(lWItem)
+                        self.changedByCode=False
                         # accept? return?
 
                     if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
@@ -704,8 +723,10 @@ class grScene(QGraphicsScene):
                                 selItem.endH = selItem.edgeLine._pHandles[-1]
                             else:
                                 print("No handles yet")
+                        self.changedByCode=True
                         lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                         self.listWidget.setCurrentItem(lWItem)
+                        self.changedByCode=False
                         # if not selItem.endH:
                         #print(", endH")
                         #     selItem.endH = selItem.edgeLine._pHandles[-1]
@@ -719,6 +740,7 @@ class grScene(QGraphicsScene):
 
         if (mouseEvent.button() == Qt.MouseButton.RightButton):
             mPos = mouseEvent.scenePos()
+            posText="Co ords ("+str(int(mPos.x()))+","+str(int(mPos.y()))+")"
             #selItem = self.itemAt(mPos,self.views()[0].transform())
             selItem = self.selectedItems()
             #TODO if selItem == None: selItem = itemAt
@@ -729,16 +751,19 @@ class grScene(QGraphicsScene):
                 
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     #Where to do the handles update for these?
-                    cxMenu = [  ("add Point","addPt" ),
+                    cxMenu = [  (posText, None),
+                                ("add Point","addPt" ),
                                 ("del Point","delPt" ),
                                 ("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item))
                             ]
                 if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
-                    cxMenu = [  (("Edit Details", 
+                    cxMenu = [  (posText, None),
+                              (("Edit Details", 
                                 lambda: self.mainwindow.showEditNodeDialog(item)))
                             ]
             else: #no or >1 selected.
-                cxMenu =[("print",lambda: MainWindow.action_DebugPrint(MainWin))]
+                cxMenu =[(posText, None),
+                         ("print",lambda: MainWindow.action_DebugPrint(MainWin))]
 
             if cxMenu:
                 cxChoice = self.contextMenu(mouseEvent, cxMenu)
@@ -816,6 +841,12 @@ class grScene(QGraphicsScene):
     def mouseReleaseEvent(self, mouseEvent):
         mPos = mouseEvent.scenePos()
         #print(f"release {self.mouseMode =}")
+        if (mouseEvent.button() == Qt.MouseButton.RightButton) and\
+                mouseEvent.modifiers() and Qt.ControlModifier: 
+            screamText=self.addText("Screams")
+            screamText.deleteLater
+            #self.posnLabel.deleteLater
+            #self.update()
         if self.mouseMode == self.INSERTNODE:
             #print("Node release at :",mouseEvent.scenePos())
             #print("up node")
@@ -874,6 +905,13 @@ class grScene(QGraphicsScene):
 
         elif self.mouseMode == self.POINTER:
             if len(self.selectedItems()) > 0:
+                if not(mouseEvent.modifiers() and Qt.ControlModifier):
+                    self.listWidget.clearSelection()
+                    self.changedByCode=True
+                    for selItem in self.selectedItems():
+                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                        self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
+                    self.changedByCode=False
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
                 #    for s in self.selectedItems():
@@ -884,7 +922,7 @@ class grScene(QGraphicsScene):
                 #for s in self.selectedItems():
                 #    print(type(s),end = ",")
                 #print()
-                pass
+                #pass
             #MainWindow.actionSceneSelectChange(MainWindow.Scene)
         elif self.mouseMode == self.MOVEEDGEEND:
             #print("Finish moveEdgeEnd")
@@ -898,6 +936,14 @@ class grScene(QGraphicsScene):
             #print("End move handle")
             self.mouseMode = self.POINTER
         elif self.mouseMode == self.DRAGGING:
+            if self.qtListToListOfIdxs(self.selectedItems()) != self.qtListToListOfIdxs(self.listWidget.selectedItems()):
+                #update listview
+                self.listWidget.clearSelection()
+                self.changedByCode=True
+                for selItem in self.selectedItems():
+                    lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                    self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
+                self.changedByCode=False
             #print(f"up: DRAGGING --> POINTER")
             self.mouseMode = self.POINTER
 
@@ -931,15 +977,6 @@ class grScene(QGraphicsScene):
 
     def signalTest(self):
         print("signal sent to scene successfully")
-
-    def WheelEvent(self, event):
-        #print("wheelevent")
-        zoomInFactor = 1.25
-        zoomOutFactor = 1 / zoomInFactor
-        if event.delta().y() > 0:
-            self.scale(zoomInFactor, zoomInFactor)
-        else:
-            self.scale(zoomOutFactor, zoomOutFactor)
 
     def findItemByIdx(self,idx):
         """takes a ROLE_INDEX value, and return the item out, or none """
@@ -1083,6 +1120,18 @@ def findItemRowByIdx(self,idx):
             return row
     return None
 QListWidget.findItemRowByIdx = findItemRowByIdx
+
+_original_wheelEvent = QGraphicsView.wheelEvent
+def WheelEvent(self, event):
+    if event.modifiers() and Qt.ControlModifier:
+        zoomInFactor = 1.25
+        zoomOutFactor = 1 / zoomInFactor
+        if event.angleDelta().y() > 0:
+            self.scale(zoomInFactor, zoomInFactor)
+        else:
+            self.scale(zoomOutFactor, zoomOutFactor)
+    _original_wheelEvent(self,event)
+QGraphicsView.wheelEvent=WheelEvent
 
 #end monkeypatch    
 #=======
@@ -1231,6 +1280,7 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.ui.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         #TODO: Put in the `isWindowModified()` code
         self.setWindowTitle(APP_NAME +"[*]")
         self.fileName = ""
@@ -1258,9 +1308,12 @@ class MainWindow(QMainWindow):
         self.ui.graphicsView.setScene(self.Scene)
         self.ui.graphicsView.setRenderHint(QPainter.Antialiasing)
         self.ui.graphicsView.setDragMode(QGraphicsView.RubberBandDrag)
+        #JH try self.ui.graphicsView.setMouseTracking(True)
         self.ui.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
+        #JH try self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
         #TODO: Make this image centre until scrollwheel zooming is fixed
         self.ui.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        #JH try self.ui.graphicsView.setResizeAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
 
         # Create a status bar
         status_bar = QStatusBar()
@@ -1408,6 +1461,7 @@ class MainWindow(QMainWindow):
                         self.Scene.onlySelected=sItem
                         sItem.setSelected(True)
                         sItem.isOnlySelected=True
+                        sItem._createHandles() #JH
                     # sItem.edgeLine._createHandles()
 
                     #print(idx)
@@ -2281,13 +2335,17 @@ class MainWindow(QMainWindow):
         #print("Edit>SelectAll")
         #TODO: For multiple scenes from 1 model, what to do? (select model, or scene?)
         #  Maybe select all needs to be context sensitive - scene, or list =model
+        self.Scene.changedByCode=True
         for item in self.Scene.items():
             if item.GraphicsItemFlag.ItemIsSelectable:
                 item.isOnlySelected=False  
                 item.setSelected(True)
+                lWItem = self.Scene.listWidget.findItemByIdx(item.data(KEY_INDEX))
+                self.Scene.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)                    
             if self.Scene.thisHandleObjectSelected:  
                 self.Scene.thisHandleObjectSelected._deleteHandles()
                 self.Scene.thisHandleObjectSelected=None
+        self.Scene.changedByCode=False
 
     def action_EditSelectNone(self):
         #print("Edit>SelectNone")
@@ -2297,13 +2355,18 @@ class MainWindow(QMainWindow):
         #if self.Scene.onlySelected: 
         #    self.Scene.clearEdgeOnly(self.Scene.onlySelected)
         self.Scene.clearSelection()
+        self.Scene.listWidget.clearSelection()
 
     def action_EditZoomIn(self):
         #print("Edit>ZoomIn")
-        pass
+        zoomInFactor=1.25
+        self.ui.graphicsView.scale(zoomInFactor, zoomInFactor)
+        #pass
 
     def action_EditZoomOut(self):
         #print("Edit>ZoomOut")
+        zoomInFactor=1/1.25
+        self.ui.graphicsView.scale(zoomInFactor, zoomInFactor)
         pass
 
     def action_HelpAbout(self):

@@ -400,7 +400,6 @@ class VisBlobItem(VisNodeItem):
                     height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
-        
         super().__init__(posn, model,listWidget, parent=parent, nameP ="", id=None,
                     metadata={}, metadataAttributes={})
 
@@ -509,8 +508,7 @@ class VisBlobItem(VisNodeItem):
 
         return super().itemChange(change, value)
 
-    def setSelected(self,state:bool):
-        """ set as selected if parent is selected"""
+    """def setSelected(self,state:bool):
         if len(self.scene().selectedItems())<=1:
             if state:
                 #print(f"Blob setSel createH")
@@ -522,13 +520,15 @@ class VisBlobItem(VisNodeItem):
                 self.scene().thisHandleObjectSelected = None
                 self.isOnlySelected = False
                 self._deleteHandles()
-        super().setSelected(state)
+        super().setSelected(state)"""
 
     def _createHandles(self):
         """ Handles for resizing"""
+        self.suppressItemChange = True
         #Clear existing handles
         for h in self._Handles:
             self.scene().removeItem(h)
+            del h
         self._Handles.clear()
 
         TLx = self.pos().x()
@@ -542,9 +542,9 @@ class VisBlobItem(VisNodeItem):
         self._Handles.append(HandleItem(QPointF(BRx,0),color=Qt.red,parent=self))
         self._Handles.append(HandleItem(QPointF(BRx,BRy),color=Qt.blue,parent=self))
         self._Handles.append(HandleItem(QPointF(0,BRy),color=Qt.cyan,parent=self))
-        
-        for h in self._Handles:
-            h.setMoveCallback(self._updateFromHandles)
+        #for h in self._Handles: JH
+        #    h.setMoveCallback(self._updateFromHandles)
+        self.suppressItemChange = False
 
     def _deleteHandles(self):
         """ Delete handles when deselected"""
@@ -553,6 +553,7 @@ class VisBlobItem(VisNodeItem):
         for h in self._Handles:
             h.setParentItem(None)
             self.scene().removeItem(h)
+            del h
         self._Handles.clear()
         self.suppressItemChange = False
 
@@ -581,7 +582,8 @@ class VisBlobItem(VisNodeItem):
         lastHandle = -1
         dist = HITSIZE * 10 #Effectively, infinity!
         for i,h in enumerate(self._Handles):
-            hDist = math.hypot(h.pos().x() - relPos.x(), h.pos().y() - relPos.y())
+           # hDist = math.hypot(h.pos().x() - relPos.x(), h.pos().y() - relPos.y()) JH
+            hDist = math.hypot(h.pos().x() - pos.x(), h.pos().y() - pos.y())
             if hDist < dist:
                 dist = hDist
                 lastHandle = i
@@ -589,39 +591,46 @@ class VisBlobItem(VisNodeItem):
         #Note - all these positions are RELATIVE to pos()
         match lastHandle:
             case 0: #TL
-                rTLx = relPos.x()
-                rTLy = relPos.y()
-                TLx += rTLx
-                TLy += rTLy
-                BRx -= rTLx
-                BRy -= rTLy
-
+                if BRx - relPos.x() >= HITSIZE*2: 
+                    rTLx = relPos.x()
+                    TLx += rTLx
+                    BRx -= rTLx                   
+                if BRy - relPos.y() >= HITSIZE*2:
+                    rTLy = relPos.y()
+                    TLy += rTLy
+                    BRy -= rTLy
             case 1: #TR BRx is width
-                rBRx = relPos.x()
-                rTLy = relPos.y() 
-                BRx = rBRx
-                TLy += rTLy
-                BRy -= rTLy
-
+                if relPos.x() >= HITSIZE*2:
+                    rBRx = relPos.x()
+                    BRx = rBRx
+                if BRy - relPos.y() >= HITSIZE*2:
+                    rTLy = relPos.y()               
+                    TLy += rTLy
+                    BRy -= rTLy
             case 2: #BR
-                rBRx = relPos.x() 
-                rBRy = relPos.y() 
-                BRx = rBRx
-                BRy = rBRy
-
+                if relPos.x() >= HITSIZE*2:
+                    rBRx = relPos.x() 
+                    BRx = rBRx
+                if relPos.y() >= HITSIZE*2:
+                    rBRy = relPos.y()                
+                    BRy = rBRy
             case 3: #BL
-                rTLx = relPos.x() 
-                rBRy = relPos.y()
-                TLx += rTLx
-                BRy = rBRy
-                BRx -= rTLx
+                if BRx - relPos.x() >= HITSIZE*2:
+                    rTLx = relPos.x() 
+                    TLx += rTLx
+                    BRx -= rTLx
+                if relPos.y() >= HITSIZE*2:
+                    rBRy = relPos.y()               
+                    BRy = rBRy
+                
 
-        #Check for "too thin" before updating, using HITSIZE as measure
+        """#Check for "too thin" before updating, using HITSIZE as measure
         if BRx < HITSIZE*2:
+            self.suppressItemChange = False
             return
         if BRy < HITSIZE*2:
-            return
-
+            self.suppressItemChange = False
+            return"""
         self._Handles[VisBlobItem.TL].setPos(QPointF(rTLx,rTLy))
         self._Handles[VisBlobItem.TR].setPos(QPointF(rBRx,rTLy))
         self._Handles[VisBlobItem.BR].setPos(rBRx,rBRy)
