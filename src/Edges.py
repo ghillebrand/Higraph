@@ -1,7 +1,11 @@
 """ Edges code """
+#For debugging: (stack traces)
+import traceback
 
 #Global constants. 
 from  HGConstants import *
+
+from  GraphicsSupport import *
 
 # core Graph class:
 from coreGraph import Graph
@@ -10,6 +14,7 @@ from coreGraph import Graph
 #Draw nice edges
 from PolyLineItemHG import StraightLineItem, HermiteSplineItem, HandleItem
 from GraphicsSupport import *
+from Nodes import  * #Needed for type checking
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -42,7 +47,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
 
     def __init__(self,model,listWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
                     polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
-        """ Create a visual edge, using the pos of the st and end 
+        """ Create a visual edge, using the pos of the st and end, which are tuples of (Node,Port)
         points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
         """
         super().__init__(parent)
@@ -59,20 +64,34 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
 
         #SO code: track the VisNodes
         #TODO: update to startItem for hypergraphs
-        #TODO: fold this into setStart & setEnd, for updates!
+        #Set up basics here, call setStart & setEnd after the geom is in place, for updates.
+        #startNode must be a tuple (node,port). convert if not
+        if not type(sItem) is tuple: 
+            print(f"{sItem._Ports =}")
+            if len(sItem._Ports) == 0: #No ports, create one
+                spID = sItem.createPort(self.startNode.pos())
+            sItem = (sItem,sItem._Ports[spID])
         self.startNode = sItem
+        #print(f"port {sItem=}")
+        
+        #TODO: Add ports to endNode
+        if not type(eItem) is tuple: 
+            print(f"{eItem._Ports =}")
+            if len(eItem._Ports) == 0: #No ports, create one
+                spID = eItem.createPort(self.endNode.pos())
+            eItem = (eItem,eItem._Ports[spID])
         self.endNode = eItem
 
         #Create an abstract edge, and keep the index as well
-        sName =self.model.Gr.nodeD[sItem.nodeNum].metadata['name'] 
-        eName =self.model.Gr.nodeD[eItem.nodeNum].metadata['name'] 
+        sName =self.model.Gr.nodeD[sItem[0].nodeNum].metadata['name'] 
+        eName =self.model.Gr.nodeD[eItem[0].nodeNum].metadata['name'] 
 
         #if not nameP:
         #TODO: Refactor edgeNum & nodeNum to itemNum for hyperedges
         #TODO: Make nameP more configureable
         #defName = f"{sName}->{eName}"
         defName = "" #just the ID
-        self.edge,self.edgeNum = self.model.addGMEdge(sItem,eItem,nameP = defName,id=id)
+        self.edge,self.edgeNum = self.model.addGMEdge(sItem[0],eItem[0],nameP = defName,id=id)
 
         #update the name with the edge ID, to help tracking
         # self.metadata is just a more elegant wrapper
@@ -130,9 +149,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #Create the graphical line
         #PointList to pass to polyLine
         if len(points) > 0:
-            ptList = [self.startNode.pos()] + points + [self.endNode.pos()]
+            ptList = [self.startNode[1].pos()] + points + [self.endNode[1].pos()]
         else: #just start with a 2-pt line
-            ptList = [self.startNode.pos(),self.endNode.pos()]
+            ptList = [self.startNode[1].pos(),self.endNode[1].pos()]
         #Track what sort of edge this one is
         self._polyEdge = polyLineType
         
@@ -164,9 +183,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
 
         #Link up the topology for the visual graph.
         #TODO: hypergraph - lines  can start xor end on an edge - 
-        sItem.startsEdges.append(self)
+        sItem[0].startsEdges.append(self)
         self.setStart(sItem)
-        eItem.endsEdges.append(self)
+        eItem[0].endsEdges.append(self)
         self.setEnd(eItem)
 
         #Selection and editing vars:
@@ -189,8 +208,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n>> VisEdgeItem {super().__repr__()}\n {self.textItem.toPlainText() =}\n{self.edgeLine =}\nID: {self.edgeNum} text:{self.textItem.toPlainText()} s:({self.startNode.data(KEY_INDEX)})" + \
-                        f" e:({self.endNode.data(KEY_INDEX)}) <<"
+        return f"\n>> VisEdgeItem {super().__repr__()}\n {self.textItem.toPlainText() =}\n{self.edgeLine =}\n" + \
+                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} s:({self.startNode[0].data(KEY_INDEX)}, {self.startNode[1].index})" + \
+                        f" e:({self.endNode[0].data(KEY_INDEX)}, {self.endNode[1].index})) <<"
 
     def toXML(self,Xparent):
         """ add an Element Tree node to the XML parent node with the Edge Data 
@@ -199,7 +219,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         xmlEdge = ET.Element(
             "edge",
             id=str(self.edgeNum),
-            source=str(self.startNode.nodeNum),
+            source=str(self.startNode[0].nodeNum),
             target=str(self.endNode.nodeNum)
         )
         if self.isDirected: 
@@ -394,8 +414,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     #TODO: Polylines will allow creation of multi-point lines up front - change rubberline to use a polyline
 
     def setStart(self, start):
-        """ Set the startItem to start. Also update model, for edits"""
+        """ Set the startItem to start, a (Node,Port) tuple. Also update model, for edits"""
         self.startNode = start
+        #Set the port startsLines
         #self.edgeLine.setP(0,start.scenePos())
         self.updateLine(start)
 
@@ -409,11 +430,40 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         """ Tell Qt the ends have moved. source = None allows an arrow recalc without point change"""
         self.prepareGeometryChange()
         #TODO: For hypergraphs, start/ end may be a point on a PolyLine
-     
-        if source == self.startNode:
-            self.edgeLine.setP(0,source.scenePos())
+        #When called from VisNodeItem.itemChange, source is pure VisNode, not a tuple
+
+        
+        #print(f"updateLine called with {type(source)=}")
+        #print(traceback.print_stack())
+        #source may be a `Handle`, which a not a tuple, or just a Node: Normalise to tuple
+        if not type(source) is tuple: 
+            if type(source) is VisNodeItem:
+                # Search for the correct port!
+                if source == self.startNode[0]: #Start
+                    for p in source._Ports:
+                        if p == self.startNode[1]:
+                            source = (source,p)
+                            #print(f"setting start to {p.index=}")
+                else: #end
+                    for p in source._Ports:
+                        if p == self.endNode[1]:
+                            source = (source,p)
+                            #print(f"setting end to {p.index=}")
+                            
+            if  type(source) is HandleItem:
+                #print(f"Making Handle into a tuple")
+                source = (0,source)
+        #print(f"{source=}  == {self.startNode=}")
+
+        if source == self.startNode: 
+            #Set the 0th edgeLine point to where the `source` object port (now) is.
+            
+            print(f"setting start from {source[0].nodeNum}, {source[1].index}")
+            self.edgeLine.setP(0,source[1].scenePos())
+
         if source == self.endNode: #endNode
-            self.edgeLine.setP(-1,source.scenePos())
+            print(f"setting end from {source[0].nodeNum}, {source[1].index}")
+            self.edgeLine.setP(-1,source[1].scenePos())
 
         #Draw the arrow/ end shape
         if self.endShape:

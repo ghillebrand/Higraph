@@ -13,7 +13,7 @@ import os
 import copy
 import math
 import re
-import traceback  #for the Python window
+import traceback 
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -407,9 +407,13 @@ class grScene(QGraphicsScene):
         #TODO: Create the ports on the nodes
         #Start port
         startPort = self.tmpEdgeSt.createPort(self.startPoint)
-        
+        print(f"{startPort=}")
+        endPort = self.tmpEdgeEnd.createPort(self.endPoint)
         #Create the actual edge
-        edgeItem = VisEdgeItem(self.model,self.listWidget,self.tmpEdgeSt, self.tmpEdgeEnd, parent=None)
+        #edgeItem = VisEdgeItem(self.model,self.listWidget,self.tmpEdgeSt, self.tmpEdgeEnd, parent=None)
+        edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,self.tmpEdgeSt._Ports[startPort]), 
+                                                            (self.tmpEdgeEnd,self.tmpEdgeEnd._Ports[endPort]), parent=None)
+        print(f"{edgeItem=}")
         #Add to *Scene*
         self.addItem(edgeItem)
         edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
@@ -440,6 +444,7 @@ class grScene(QGraphicsScene):
             self.EdgeEnd = "start"
             self.oldTermItem = edge.startNode
             #link edge to handle to move
+            #TODO: How to make this work when Nodes are (node,port) tuples, but handles are just QGraphicsItems?
             edge.setStart(handle)
         else:
             self.EdgeEnd = "end"
@@ -476,8 +481,10 @@ class grScene(QGraphicsScene):
                 # While clunky, these params will work with any item type
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "start", newTermItem.data(KEY_INDEX))
                 #Move the reverse pointer from the oldTermItem to the new:
-                self.oldTermItem.startsEdges.remove(edge)
-                newTermItem.startsEdges.append(edge)
+                #TODO: What about port
+                self.oldTermItem[0].startsEdges.remove(edge)
+                #Needs to find/ create a port
+                newTermItem[0].startsEdges.append(edge)
             
             elif self.EdgeEnd == "end":
                 edge.setEnd(newTermItem)
@@ -488,7 +495,7 @@ class grScene(QGraphicsScene):
         
         else: # link back to old
             #print("Missed (nothing found) on relink")
-            self.handle.setPos(self.oldTermItem.pos())
+            self.handle.setPos(self.oldTermItem[1].pos())
             #TODO: Check all the linkages ()
             if self.EdgeEnd == "start":
                 edge.setStart(self.oldTermItem)

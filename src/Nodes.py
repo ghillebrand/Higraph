@@ -214,7 +214,7 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n** VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n\
+        return f"\n** VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}, {self._Ports=}\n\
                 {self.startsEdges = },\n{self.endsEdges = }\n**" #\n {self.nodeShape =})"
     __str__ = __repr__
 
@@ -341,13 +341,13 @@ class VisNodeItem(QGraphicsObject):
         center = self.pos()
         #Map the screen position to the item's local coordinate system
         localPos = self.mapFromScene(screenPos)
-        print(f"{localPos=}")
+        #print(f"{localPos=}")
         #Calculate delta from center
         #dy = localPos.y() - center.y()
         #dx = localPos.x() - center.x()
         dy = screenPos.y() - center.y()
         dx = screenPos.x() - center.x()
-        print(f"{dx=},{dy=}")
+        #print(f"{dx=},{dy=}")
         angle = math.atan2(dy, dx)
         #Shift angle so that -PI/2 (Top) becomes 0, normalize to a 0.0 -> 1.0 range
         fraction = (angle + math.pi / 2) / (2 * math.pi)
@@ -357,17 +357,17 @@ class VisNodeItem(QGraphicsObject):
         #Create the port, add to the node's list
         # Calculate the exact coords from the angle ("snap")
         portPos = QPointF(NODESIZE/2 *math.cos(angle),NODESIZE/2 *math.sin(angle)   )
-        print(f"{t=},{portPos=}")
+        #print(f"{t=},{portPos=}")
         #Parent to nodeShape for better geom flexibility
-        #TODO: Set color to NoPen once debugged - only "seen" when edge selected, so edgeHandles will display it.
         #TODO: Does dummyNode need to be a QGraphicsItem? can it not just be a QPointF????
-        self._Ports.append(dummyNodeItem(portPos, color=Qt.red, parent=self.nodeShape))
-
+        p = dummyNodeItem(portPos, parent=self.nodeShape)
         #Store the index as the ID of the port
-        self.index = self._nextPort
+        p.index = self._nextPort
+        self._Ports.append(p)
+  
         self._nextPort += 1
 
-        return self.index
+        return p.index
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
