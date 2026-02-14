@@ -214,8 +214,8 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n** VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}, {self._Ports=}\n\
-                {self.startsEdges = },\n{self.endsEdges = }\n**" #\n {self.nodeShape =})"
+        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}, {self._Ports=}\n\
+                {self.startsEdges = },\n{self.endsEdges = }\n*<*" #\n {self.nodeShape =})"
     __str__ = __repr__
 
     def toXML(self,Xparent):
@@ -333,21 +333,17 @@ class VisNodeItem(QGraphicsObject):
 
     def createPort(self,screenPos)->int:
         """ Create a port at `pos` for an edge to connect on, return the int index for reference"""
+        #gemini code
         #This is harcoded to a circle of radius NODESIZE/2  Other shapes/ options later
         #Find the parametric position of the point on the nodeshape
         #Calculates the clockwise 'distance' around the perimeter.
         # 0.0 = Top, 0.25 = Right, 0.5 = Bottom, 0.75 = Left.
 
         center = self.pos()
-        #Map the screen position to the item's local coordinate system
-        localPos = self.mapFromScene(screenPos)
-        #print(f"{localPos=}")
+
         #Calculate delta from center
-        #dy = localPos.y() - center.y()
-        #dx = localPos.x() - center.x()
         dy = screenPos.y() - center.y()
         dx = screenPos.x() - center.x()
-        #print(f"{dx=},{dy=}")
         angle = math.atan2(dy, dx)
         #Shift angle so that -PI/2 (Top) becomes 0, normalize to a 0.0 -> 1.0 range
         fraction = (angle + math.pi / 2) / (2 * math.pi)
@@ -361,13 +357,30 @@ class VisNodeItem(QGraphicsObject):
         #Parent to nodeShape for better geom flexibility
         #TODO: Does dummyNode need to be a QGraphicsItem? can it not just be a QPointF????
         p = dummyNodeItem(portPos, parent=self.nodeShape)
-        #Store the index as the ID of the port
+        #Store the position and index as the ID of the port
+        p.t = t 
         p.index = self._nextPort
+        print(f"Port created N={self.nodeNum}: P={p.index} at {p.t}")
         self._Ports.append(p)
+        print(f"{self._Ports=}")
   
         self._nextPort += 1
 
         return p.index
+
+    def findPort(self,screenPos)->int:
+        """ checks for a port at screenPos using HITSIZE, returns index if found, -1 if not"""
+        found = -1
+        minD = math.inf
+        for existingPort in self._Ports:
+            d = QLineF(existingPort.scenePos(), screenPos).length()
+            print(f"{self.nodeNum}:{existingPort.index=} findPort: {d}")
+            if d <= HITSIZE:
+                if d < minD:
+                    found = existingPort.index
+                    minD = d
+        print(f"{found=}")
+        return found
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):

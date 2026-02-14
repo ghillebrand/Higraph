@@ -406,14 +406,21 @@ class grScene(QGraphicsScene):
 
         #TODO: Create the ports on the nodes
         #Start port
-        startPort = self.tmpEdgeSt.createPort(self.startPoint)
+        startPort = self.tmpEdgeSt.findPort(self.startPoint)
+        #TODO: Come back and check if this shouldn't be a guard in `createPort` (which becomes `getPort``)
+        if startPort == -1:
+            startPort = self.tmpEdgeSt.createPort(self.startPoint)
         print(f"{startPort=}")
-        endPort = self.tmpEdgeEnd.createPort(self.endPoint)
+
+        endPort = self.tmpEdgeEnd.findPort(self.endPoint)
+        if endPort == -1:
+            endPort = self.tmpEdgeEnd.createPort(self.endPoint)
+        #endPort = self.tmpEdgeEnd.createPort(self.endPoint)
+
         #Create the actual edge
-        #edgeItem = VisEdgeItem(self.model,self.listWidget,self.tmpEdgeSt, self.tmpEdgeEnd, parent=None)
         edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,self.tmpEdgeSt._Ports[startPort]), 
                                                             (self.tmpEdgeEnd,self.tmpEdgeEnd._Ports[endPort]), parent=None)
-        print(f"{edgeItem=}")
+
         #Add to *Scene*
         self.addItem(edgeItem)
         edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
