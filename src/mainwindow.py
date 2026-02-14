@@ -1117,6 +1117,18 @@ def findItemRowByIdx(self,idx):
     return None
 QListWidget.findItemRowByIdx = findItemRowByIdx
 
+_original_wheelEvent = QGraphicsView.wheelEvent
+def WheelEvent(self, event):
+    if event.modifiers() and Qt.ControlModifier:
+        zoomInFactor = 1.25
+        zoomOutFactor = 1 / zoomInFactor
+        if event.angleDelta().y() > 0:
+            self.scale(zoomInFactor, zoomInFactor)
+        else:
+            self.scale(zoomOutFactor, zoomOutFactor)
+    _original_wheelEvent(self,event)
+QGraphicsView.wheelEvent=WheelEvent
+
 #end monkeypatch    
 #=======
 
