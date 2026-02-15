@@ -8,3 +8,17 @@ src/__pycache__/Nodes.cpython-311.pyc
 src/__pycache__/ui_Credits.cpython-311.pyc
 src/__pycache__/Ui_HelpAbout.cpython-311.pyc
 *.pyc
+savefile.graphml
+src/__pycache__/coreGraph.cpython-311.pyc
+src/__pycache__/Edges.cpython-311.pyc
+src/__pycache__/EditVisItemDialog.cpython-311.pyc
+src/__pycache__/GraphicsSupport.cpython-311.pyc
+src/__pycache__/HGConstants.cpython-311.pyc
+src/__pycache__/Nodes.cpython-311.pyc
+src/__pycache__/PolyLineItemHG.cpython-311.pyc
+src/__pycache__/ui_Credits.cpython-311.pyc
+src/__pycache__/ui_form.cpython-311.pyc
+src/__pycache__/Ui_HelpAbout.cpython-311.pyc
+src/__pycache__/coreGraph.cpython-311.pyc
+src/__pycache__/coreGraph.cpython-311.pyc
+src/__pycache__/coreGraph.cpython-311.pyc
