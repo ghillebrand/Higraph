@@ -413,6 +413,31 @@ class VisBlobItem(VisNodeItem):
         return r
     __str__ = __repr__
 
+    def toXML(self, Xparent):
+        
+        xmlBlob = ET.Element("blob", id=str(self.nodeNum))
+
+        data = ET.SubElement(xmlBlob, "data", key="data_blob")
+        shape = ET.SubElement(data, "y:" + "ShapeBlob")
+        ET.SubElement(shape, "y:Geometry", {'x':str(self.pos().x()),\
+             'y':str(self.pos().y()), 'width':str(self._width), 'height':str(self._height), \
+                'xRadius':str(self._xRadius),'yRadius':str(self._yRadius), \
+                'radMode':str(self._radMode)})
+        blobLabel = ET.SubElement(shape, "y:BlobLabel")
+        blobLabel.text = self.metadata['name']
+        for atK,atV in self.metadataAttributes['name'].items():
+            metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
+        
+        #add metadata other than name
+        if len(self.metadata) >= 2:
+            for k, v in self.metadata.items():
+                if k != "name":
+                    metaEl  = ET.SubElement(xmlBlob, "h:metadata", {"key":k,"value":str(v)})
+                    for atK,atV in self.metadataAttributes[k].items():
+                        metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
+
+        return xmlBlob
+
     def boundingRect(self):
         #TODO: Add in the displayed text
         # Must cover both the rectangle and the text area

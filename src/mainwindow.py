@@ -1623,6 +1623,68 @@ class MainWindow(QMainWindow):
                                 metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes)
         return newNode
 
+    def blobFromXML(self,xBlob,newID=False)->VisBlobItem:
+        """ Create a new node from an XML string
+            if newID is True, the item is created with a newID,otherwise, the read value.
+            This is the difference between file load (new items) and edit paste (structure)
+            Returns VisBlobItem
+        """
+        #Use old yEd + load code
+        blobMetadata = {}
+        blobMetadataAttributes = {}
+
+        #TODO: type check id
+        if not newID:
+            id = int(xBlob.attrib.get("id"))
+        else:
+            id = ''
+        for dataBlob in xBlob.iter("data"):
+            shapeBlob = dataBlob.find("ShapeBlob")
+            if shapeBlob != None:
+                # Geometry information
+                geom = shapeBlob.find("Geometry")
+                if geom is not None:
+                    blobX = float(geom.get("x"))
+                    blobY = float(geom.get("y"))
+                    blobWidth = float(geom.get("width"))
+                    blobHeight = float(geom.get("height"))
+                    blobXRadius=float(geom.get("xRadius"))
+                    blobYRadius=float(geom.get("yRadius"))
+
+                    #geometry_vars = ["height", "width", "x", "y"]
+                else:
+                    print("JH Geometry not found!", dataBlob)
+
+                blobLabel = shapeBlob.find("BlobLabel")
+                if blobLabel is not None:
+                    blobName = blobLabel.text.strip()
+                    for blobNameAttribs in blobLabel.iter("metadataAttribute"):
+                        #nodeMetadataAttributes['name'] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
+                        #Deal with Boolean for display (This is why you should use the proper key types!)
+                        if blobNameAttribs.attrib.get("key") == 'display':
+                            blobMetadataAttributes['name'] = {'display':blobNameAttribs.attrib.get("value") == "True"}
+                        else:
+                            blobMetadataAttributes['name'] = {blobNameAttribs.attrib.get("key"): blobNameAttribs.attrib.get("value")}
+
+            #TODO: Add in error processing for corrupt/ odd files
+        # Look for a metadata node
+        for metaEl in xBlob.iter("metadata"):
+            metaKey = metaEl.attrib.get("key")
+            blobMetadata[metaKey] = metaEl.attrib.get("value").strip()
+            for blobNameAttribs in metaEl.iter("metadataAttribute"):
+                #Deal with Boolean for display (This is why you should use the proper key types!)
+                #TODO: Get the boolean value into the XML
+                if blobNameAttribs.attrib.get("key") == 'display':
+                    blobMetadataAttributes[metaKey] = {'display':blobNameAttribs.attrib.get("value") == "True"}
+                else:
+                    blobMetadataAttributes[metaKey] = {blobNameAttribs.attrib.get("key"): blobNameAttribs.attrib.get("value")}
+
+        newBlob =  VisBlobItem(QPointF(blobX,blobY),self.model,self.ui.listWidget, width=blobWidth,\
+                               height=blobHeight, xRadius=blobXRadius, yRadius=blobYRadius,\
+                                nameP=blobName, id = id, \
+                                metadata=blobMetadata, metadataAttributes=blobMetadataAttributes)
+        return newBlob
+    
     def edgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
         """ Create a new edge from an XML string
             if newID is True, the item is created with a newID,otherwise, the read value.
@@ -1814,6 +1876,28 @@ class MainWindow(QMainWindow):
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
 
+        #Blobs
+        for xBlob in graphStr.iter("blob"):
+            #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
+            #Handle yEd-style string IDs
+            fileID = xNode.attrib.get("id")
+            try: #is the read ID a valid int- use it
+                id = int(fileID)
+                newID = False
+            except ValueError: #No - generate a new one.
+                newID = True
+
+            GItem = self.blobFromXML(xBlob, newID=newID)
+            #Track it, even if it doesn't change - simplifies the edge code
+            oldToNewID[fileID] = GItem.nodeNum
+            #TODO: Do something meaningful with mismatches
+            #if fileID != GItem.nodeNum:
+            #    print(f"WARNING: node id {fileID=} changed on load")
+            
+            self.Scene.addItem(GItem)
+            GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
+
         #Edges
         for xEdge in graphStr.iter("edge"):
             #Handle yEd-style string IDs
@@ -1871,6 +1955,10 @@ class MainWindow(QMainWindow):
             nodeKey = ET.SubElement(graphml, "key", id="data_node")
             nodeKey.set("for", "node")
             nodeKey.set("yfiles.type", "nodegraphics")
+
+            blobKey = ET.SubElement(graphml, "key", id="data_blob")
+            blobKey.set("for", "blob")
+            blobKey.set("yfiles.type", "blobgraphics")
 
             edgeKey = ET.SubElement(graphml, "key", id="data_edge")
             edgeKey.set("for", "edge")
@@ -2059,6 +2147,10 @@ class MainWindow(QMainWindow):
         nodeKey.set("for", "node")
         nodeKey.set("yfiles.type", "nodegraphics")
 
+        blobKey = ET.SubElement(graphml, "key", id="data_blob")
+        blobKey.set("for", "blob")
+        blobKey.set("yfiles.type", "blobgraphics")
+        
         edgeKey = ET.SubElement(graphml, "key", id="data_edge")
         edgeKey.set("for", "edge")
         edgeKey.set("yfiles.type", "edgegraphics")
@@ -2181,7 +2273,12 @@ class MainWindow(QMainWindow):
         # Extract the graphML->Graph code, and put in Edit>Paste(needing mods for new nodes)
         # The newly pasted items will be selected, to make them easy to move
 
-        self.Scene.clearSelection()
+        self.action_EditSelectNone()
+        """self.Scene.clearSelection()
+        if self.Scene.thisHandleObjectSelected:
+            print("JH yes it is")
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None"""
         #if self.Scene.onlySelected:
         #    self.Scene.clearEdgeOnly()
 
@@ -2229,6 +2326,19 @@ class MainWindow(QMainWindow):
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True) 
             GItem.setSelected(True)   
 
+        #blobs
+        for xBlob in graphStr.iter("blob"):
+            #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
+            GItem = self.blobFromXML(xBlob, newID=True)
+            oldToNewID[int(xBlob.attrib.get("id"))] = GItem.nodeNum
+
+            #Bump the pasted items over by PASTE_OFFSET
+            GItem.moveBy(PASTE_OFFSET,PASTE_OFFSET)
+            
+            self.Scene.addItem(GItem)
+            GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            GItem.setFlag(QGraphicsItem.ItemIsMovable, True) 
+            GItem.setSelected(True)   
         #Edges
         for xEdge in graphStr.iter("edge"):
             sItemID = int(xEdge.attrib.get("source", None))
