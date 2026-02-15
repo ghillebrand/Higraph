@@ -39,7 +39,7 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
             QPainterPath, QPainterPathStroker, QCursor,
             QGuiApplication, QImage, QPixmap)
-from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
+from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
 from PySide6.QtSvg import QSvgGenerator
@@ -1268,6 +1268,8 @@ class MainWindow(QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.ui.actionZoomIn.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl++", None))
+        self.ui.actionZoomOut.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+-", None))
         #TODO: Put in the `isWindowModified()` code
         self.setWindowTitle(APP_NAME +"[*]")
         self.fileName = ""
@@ -1297,10 +1299,10 @@ class MainWindow(QMainWindow):
         self.ui.graphicsView.setDragMode(QGraphicsView.RubberBandDrag)
         #JH try self.ui.graphicsView.setMouseTracking(True)
         self.ui.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-        #JH try self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
+       # JH self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
         #TODO: Make this image centre until scrollwheel zooming is fixed
         self.ui.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
-        #JH try self.ui.graphicsView.setResizeAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
+        # JH self.ui.graphicsView.setResizeAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
 
         # Create a status bar
         status_bar = QStatusBar()
