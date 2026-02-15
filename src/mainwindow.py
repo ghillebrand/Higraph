@@ -446,18 +446,19 @@ class grScene(QGraphicsScene):
         #print(f"StartMovingEdge {edge.metadata['name']}")
         self.handle = handle #Store the box for the Move/ Finish functions
         #is handle at start or end?
-        if self.handle.pos() == edge.startNode.pos():
+        if self.handle.pos() == edge.startNode[1].scenePos():
             # NOTE: Node relinking is only done on successful finish, so track the old Terminator item
             self.EdgeEnd = "start"
             self.oldTermItem = edge.startNode
+            print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
+
             #link edge to handle to move
-            #TODO: How to make this work when Nodes are (node,port) tuples, but handles are just QGraphicsItems?
-            edge.setStart(handle)
+            edge.setStart((handle,handle)) #Handles are dummy nodes and ports
         else:
             self.EdgeEnd = "end"
             # NOTE: Node relinking is only done on successful finish
             self.oldTermItem = edge.endNode
-            edge.setEnd(handle)
+            edge.setEnd((handle,handle))
 
         handle.setFlag(QGraphicsItem.ItemIsMovable, True)
 
@@ -468,15 +469,27 @@ class grScene(QGraphicsScene):
         
     def finishMovingEdgeEnd(self,edge,mPos,mouseEvent):
         """ note pickItemAt needs the full mouseEvent (screenPos) """
-
         #Check that this is on a valid node/ Termination pt
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
-        #print(f"finMovEdge {newTermItem.metadata['name']=} {mPos=}")
-        if newTermItem:
+        
+        if newTermItem != None:
+            print(f"finMovEdge {newTermItem.metadata['name']} {mPos=}")
+            if newTermItem == self.oldTermItem[0]: #Just reposition the port
+                #print(f"b4 {type(self.oldTermItem)}")
+                self.oldTermItem[0].updatePort(self.oldTermItem[1].index,mPos)
+                #print(f"after {self.oldTermItem}")
+                #TODO: Check this for flow with rest of func!
+                if self.EdgeEnd == "start":
+                    edge.setStart(self.oldTermItem)
+                else:  #end
+                    edge.setEnd(self.oldTermItem)
+                #edge.updateLine()
+                return
             #Check for a self-edge: newTerm == startE or  endE
             #  if so, make sure there is a mid point in the  polyline line
-            if newTermItem == edge.startNode or newTermItem == edge.endNode:
+            if newTermItem == edge.startNode[0] or newTermItem == edge.endNode[0]:
                 if len(edge.edgeLine._p) < 3:
+                    print(f"Self edge? {self.EdgeEnd}")
                     #add in a point on the middle for now. (only works for straight, splines are OK)
                     #TODO: Refine!!!
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
