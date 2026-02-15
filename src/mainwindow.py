@@ -1111,12 +1111,15 @@ QListWidget.findItemRowByIdx = findItemRowByIdx
 _original_wheelEvent = QGraphicsView.wheelEvent
 def WheelEvent(self, event):
     if event.modifiers() and Qt.ControlModifier:
-        zoomInFactor = 1.25
-        zoomOutFactor = 1 / zoomInFactor
+        currentZoom=self.transform().m11()
+        zoomInFactor = 1.25 * currentZoom * 100
+        zoomOutFactor=(1/1.25) * currentZoom * 100
         if event.angleDelta().y() > 0:
-            self.scale(zoomInFactor, zoomInFactor)
+            #self.scale(zoomInFactor, zoomInFactor)
+            self.window().zoom_slider.setValue(zoomInFactor)
         else:
-            self.scale(zoomOutFactor, zoomOutFactor)
+            #self.scale(zoomOutFactor, zoomOutFactor)
+            self.window().zoom_slider.setValue(zoomOutFactor)
     _original_wheelEvent(self,event)
 QGraphicsView.wheelEvent=WheelEvent
 
@@ -2348,15 +2351,16 @@ class MainWindow(QMainWindow):
 
     def action_EditZoomIn(self):
         #print("Edit>ZoomIn")
-        zoomInFactor=1.25
-        self.ui.graphicsView.scale(zoomInFactor, zoomInFactor)
-        #pass
+        currentZoom=self.ui.graphicsView.transform().m11() #horizontal value JH
+        #currentZoomy=self.self.ui.graphicsView.transform().m22() #vertical scale
+        zoomInFactor=1.25 * currentZoom * 100
+        self.zoom_slider.setValue(zoomInFactor)
 
     def action_EditZoomOut(self):
         #print("Edit>ZoomOut")
-        zoomInFactor=1/1.25
-        self.ui.graphicsView.scale(zoomInFactor, zoomInFactor)
-        pass
+        currentZoom=self.ui.graphicsView.transform().m11()
+        zoomOutFactor=(1/1.25) * currentZoom * 100
+        self.zoom_slider.setValue(zoomOutFactor)
 
     def action_HelpAbout(self):
         dlg = action_Aboutdlg(self)
