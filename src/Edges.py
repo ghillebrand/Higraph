@@ -458,13 +458,12 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #print(f"{source=}  == {self.startNode=}")
 
         if source == self.startNode: 
-            #Set the 0th edgeLine point to where the `source` object port (now) is.
-            
-            print(f"setting start from {source[0].nodeNum}, {source[1].index}")
+            #Set the 0th edgeLine point to where the `source` object port (now) is. 
+            #print(f"setting start from {source[0].nodeNum}, {source[1].index}")
             self.edgeLine.setP(0,source[1].scenePos())
 
         if source == self.endNode: #endNode
-            print(f"setting end from {source[0].nodeNum}, {source[1].index}")
+            #print(f"setting end from {source[0].nodeNum}, {source[1].index}")
             self.edgeLine.setP(-1,source[1].scenePos())
 
         #Draw the arrow/ end shape

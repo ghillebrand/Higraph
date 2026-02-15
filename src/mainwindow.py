@@ -406,15 +406,15 @@ class grScene(QGraphicsScene):
 
         #TODO: Create the ports on the nodes
         #Start port
-        startPort = self.tmpEdgeSt.findPort(self.startPoint)
-        #TODO: Come back and check if this shouldn't be a guard in `createPort` (which becomes `getPort``)
-        if startPort == -1:
-            startPort = self.tmpEdgeSt.createPort(self.startPoint)
-        print(f"{startPort=}")
+        #TODO: Sharing ports makes moving complex. The need for shared ports points to using hyperedges rather
+        #startPort = self.tmpEdgeSt.findPort(self.startPoint)
+        #if startPort == -1:
+        startPort = self.tmpEdgeSt.createPort(self.startPoint)
+        #print(f"{startPort=}")
 
-        endPort = self.tmpEdgeEnd.findPort(self.endPoint)
-        if endPort == -1:
-            endPort = self.tmpEdgeEnd.createPort(self.endPoint)
+        #endPort = self.tmpEdgeEnd.findPort(self.endPoint)
+        #if endPort == -1:
+        endPort = self.tmpEdgeEnd.createPort(self.endPoint)
         #endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
         #Create the actual edge
@@ -1108,7 +1108,7 @@ def findItemByIdx(self,idx):
     return None
 QListWidget.findItemByIdx = findItemByIdx
 
-def findItemByIdx(self,idx):
+def XXfindItemByIdx(self,idx):
     """another patch to LWid
       feed in a ROLE_INDEX value, and get the ITEM out, or none """
     for row in range(self.count()):

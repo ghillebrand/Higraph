@@ -337,7 +337,8 @@ class VisNodeItem(QGraphicsObject):
         #This is harcoded to a circle of radius NODESIZE/2  Other shapes/ options later
         #Find the parametric position of the point on the nodeshape
         #Calculates the clockwise 'distance' around the perimeter.
-        # 0.0 = Top, 0.25 = Right, 0.5 = Bottom, 0.75 = Left.
+        #TODO: Change to use the natural Qt 0 angle of right (y=0, x = 1)
+        # 0.0 = Right, 0.25 = bottom, 0.5 = left, 0.75 = top.
 
         center = self.pos()
 
@@ -345,24 +346,26 @@ class VisNodeItem(QGraphicsObject):
         dy = screenPos.y() - center.y()
         dx = screenPos.x() - center.x()
         angle = math.atan2(dy, dx)
+        #print(f"{dy:.3f}, {dx:.3f}, Raw angle {angle}, {angle % (2*math.pi)=}")
+
         #Shift angle so that -PI/2 (Top) becomes 0, normalize to a 0.0 -> 1.0 range
         fraction = (angle + math.pi / 2) / (2 * math.pi)
-        #Normalize to [0, 1) range to handle negative results from the shift (Python % 1 is magic!)
-        t =  fraction % 1.0
+        #Normalize to [0, 1) range  (Python % 1 is magic!)
+        t = (angle/(2*math.pi)) % 1
+
+        #print(f"{t=}, {t*2*math.pi=}, {angle=} , {t*2*math.pi - angle =}")
 
         #Create the port, add to the node's list
         # Calculate the exact coords from the angle ("snap")
-        portPos = QPointF(NODESIZE/2 *math.cos(angle),NODESIZE/2 *math.sin(angle)   )
+        portPos = QPointF(NODESIZE/2 * math.cos(angle),NODESIZE/2 * math.sin(angle)   )
         #print(f"{t=},{portPos=}")
         #Parent to nodeShape for better geom flexibility
-        #TODO: Does dummyNode need to be a QGraphicsItem? can it not just be a QPointF????
         p = dummyNodeItem(portPos, parent=self.nodeShape)
         #Store the position and index as the ID of the port
         p.t = t 
         p.index = self._nextPort
-        print(f"Port created N={self.nodeNum}: P={p.index} at {p.t}")
+        #print(f"Port created N={self.nodeNum}: P={p.index} at {p.t}")
         self._Ports.append(p)
-        print(f"{self._Ports=}")
   
         self._nextPort += 1
 
