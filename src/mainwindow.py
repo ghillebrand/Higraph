@@ -1652,8 +1652,6 @@ class MainWindow(QMainWindow):
                     blobYRadius=float(geom.get("yRadius"))
 
                     #geometry_vars = ["height", "width", "x", "y"]
-                else:
-                    print("JH Geometry not found!", dataBlob)
 
                 blobLabel = shapeBlob.find("BlobLabel")
                 if blobLabel is not None:
@@ -1701,7 +1699,6 @@ class MainWindow(QMainWindow):
             id = int(xEdge.attrib.get("id"))
         else:
             id = ''
-        
         #yEd uses string IDs, not ints :/
         if newStartID is not None: #Note: Can't use "truthy" here since 0 is a valid option!
             sItemID = newStartID
@@ -1880,7 +1877,7 @@ class MainWindow(QMainWindow):
         for xBlob in graphStr.iter("blob"):
             #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
             #Handle yEd-style string IDs
-            fileID = xNode.attrib.get("id")
+            fileID = xBlob.attrib.get("id")
             try: #is the read ID a valid int- use it
                 id = int(fileID)
                 newID = False
