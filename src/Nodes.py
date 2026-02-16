@@ -358,6 +358,7 @@ class VisNodeItem(QGraphicsObject):
 
     def createPort(self,screenPos)->int:
         """ Create a port at `pos` for an edge to connect on, return the int index for reference"""
+        #TODO: Return a tuple (index, object) ??
 
         #cycle the point through the param calc 1. to get the para for future use, 2. to get the exact shape fit for 'close' clicks
         #find the param position
@@ -373,6 +374,7 @@ class VisNodeItem(QGraphicsObject):
         #Parent to nodeShape for better geom flexibility
         p = dummyNodeItem(portPos, parent=self.nodeShape)
         #Store the position and index as the ID of the port
+        #TODO: Is this not making p a "psuedo object"? Should it maybe a proper class, inheriting from `dummyNode`? Code would be cleaner
         p.t = t 
         p.index = self._nextPort
         #print(f"Port created N={self.nodeNum}: P={p.index} at {p.t}")
@@ -401,6 +403,12 @@ class VisNodeItem(QGraphicsObject):
         port = self._Ports[i]
         port.t = self.positionToParameter(pos)
         port.setPos(self.parameterToPosition(port.t))
+
+    def deletePort(self,i:int):
+        """Remove a port """
+        #TODO: How to check there are no references to _Ports[i]
+        #Assume only one edge per port
+        self._Ports.pop(i)
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):

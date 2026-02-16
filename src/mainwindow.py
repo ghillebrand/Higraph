@@ -453,7 +453,7 @@ class grScene(QGraphicsScene):
             print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
 
             #link edge to handle to move
-            edge.setStart((handle,handle)) #Handles are dummy nodes and ports
+            edge.setStart((handle,handle)) #Handles are dummy nodes _and_ ports
         else:
             self.EdgeEnd = "end"
             # NOTE: Node relinking is only done on successful finish
@@ -473,18 +473,16 @@ class grScene(QGraphicsScene):
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
         
         if newTermItem != None:
-            print(f"finMovEdge {newTermItem.metadata['name']} {mPos=}")
+            #print(f"finMovEdge {newTermItem.metadata['name']} {mPos=}")
             if newTermItem == self.oldTermItem[0]: #Just reposition the port
-                #print(f"b4 {type(self.oldTermItem)}")
                 self.oldTermItem[0].updatePort(self.oldTermItem[1].index,mPos)
-                #print(f"after {self.oldTermItem}")
                 #TODO: Check this for flow with rest of func!
                 if self.EdgeEnd == "start":
                     edge.setStart(self.oldTermItem)
                 else:  #end
                     edge.setEnd(self.oldTermItem)
                 #edge.updateLine()
-                return
+                #return
             #Check for a self-edge: newTerm == startE or  endE
             #  if so, make sure there is a mid point in the  polyline line
             if newTermItem == edge.startNode[0] or newTermItem == edge.endNode[0]:
@@ -495,23 +493,40 @@ class grScene(QGraphicsScene):
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
 
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
+            #TODO **Crashes on "move back" - port counting mangled**
             if self.EdgeEnd == "start":
+                # Delete the old port
+                oldP = self.oldTermItem[1].index
+                #print(oldP)
+                self.oldTermItem[0].deletePort(oldP)
+                self.oldTermItem[0].startsEdges.remove(edge)
+                # Add a port at mPos
+                p = newTermItem.createPort(mPos)
+                newTermItem = (newTermItem, newTermItem._Ports[p])
                 edge.setStart(newTermItem)
                 #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
-                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "start", newTermItem.data(KEY_INDEX))
+                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
                 #Move the reverse pointer from the oldTermItem to the new:
-                #TODO: What about port
-                self.oldTermItem[0].startsEdges.remove(edge)
-                #Needs to find/ create a port
+
+                #The
                 newTermItem[0].startsEdges.append(edge)
             
             elif self.EdgeEnd == "end":
-                edge.setEnd(newTermItem)
-                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "end", newTermItem.data(KEY_INDEX))
+                #TODO: The port code is true for either end - review flow of function and tidy up
+                # Delete the old port
+                oldP = self.oldTermItem[1].index
+                #print(oldP)
+                self.oldTermItem[0].deletePort(oldP)
                 #Move the reverse pointer from the oldTermItem to the new:
-                self.oldTermItem.endsEdges.remove(edge)
-                newTermItem.endsEdges.append(edge)
+                self.oldTermItem[0].endsEdges.remove(edge)
+                # Add a port at mPos
+                p = newTermItem.createPort(mPos)
+                newTermItem = (newTermItem, newTermItem._Ports[p])
+                edge.setEnd(newTermItem)
+                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
+                
+                newTermItem[0].endsEdges.append(edge)
         
         else: # link back to old
             #print("Missed (nothing found) on relink")
