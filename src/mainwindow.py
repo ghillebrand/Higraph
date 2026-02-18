@@ -1548,11 +1548,12 @@ class MainWindow(QMainWindow):
     def action_FileNew(self):
         #print("FileNew")
         #Tidy up where we are
-        self.Scene.clearSelection()
+        """self.Scene.clearSelection()
         if self.Scene.onlySelected:
             self.Scene.onlySelected.isOnlySelected =False
         self.Scene.onlySelected = None
-        self.Scene.thisHandleObjectSelected = None
+        self.Scene.thisHandleObjectSelected = None"""
+        self.action_EditSelectNone()
         
         #clear window vars
         self.setWindowTitle(APP_NAME +"[*]")
