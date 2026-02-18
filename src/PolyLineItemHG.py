@@ -4,7 +4,8 @@ import math
 from typing import List
 
 from PySide6.QtCore import QRectF, QPointF, Qt, QLineF
-from PySide6.QtGui import QPen, QBrush, QPainter, QPainterPath, QPainterPathStroker
+from PySide6.QtGui import QPen, QBrush, QPainter, QPainterPath, QPainterPathStroker,\
+                            QColor
 from PySide6.QtWidgets import QGraphicsObject, QGraphicsItem, QGraphicsRectItem
 
 #HITSIZE = 5
@@ -61,6 +62,9 @@ class StraightLineItem(QGraphicsItem):
         self._path = self._createPolyPath()
         self._pHandles = []
         self.suppressItemChange = False
+        self.setAcceptHoverEvents(True)
+        self.isHovered=False
+        self._hoverColor=QColor('red')
 
     def __repr__(self):
         #tuple formatted, can't be fed into constructor, since it's a string :(
@@ -90,6 +94,16 @@ class StraightLineItem(QGraphicsItem):
             else:
                 self._deleteHandles()
         return super().itemChange(change, value)
+    
+    def hoverEnterEvent(self, event):
+        self.isHovered = True
+        self.update()
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.isHovered = False
+        self.update()
+        super().hoverLeaveEvent(event)
 
     def paint(self, painter: QPainter, option, widget=None):
         #print(f"SL Paint {self._p }")
@@ -102,6 +116,8 @@ class StraightLineItem(QGraphicsItem):
         if isSel:  #self.isSelected():
         #if self.isSelected():
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+        elif self.isHovered:
+            painter.setPen(QPen(Qt.red))
         else:
             painter.setPen(QPen(Qt.black))  #self.pen)
 
@@ -305,14 +321,16 @@ class HermiteSplineItem(QGraphicsItem):
         #Tell parent that things have changed, to update arrows??
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,True)
         self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges,True)
-
+        self.setAcceptHoverEvents(True)
+        self.isHovered=False
+        self._hoverColor = QColor("red")
         #draw, since itemChange is not called without handles
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
         self.update()
 
         self.suppressItemChange = False
-
+        
     def __repr__(self):
         #tuple formatted, can be fed into constructor
         #return str(f"({self._p},\n{self._t})")
@@ -342,14 +360,23 @@ class HermiteSplineItem(QGraphicsItem):
                 self._deleteHandles()
                 
         return super().itemChange(change, value)
+    
+    def hoverEnterEvent(self, event):
+        self.isHovered = True
+        self.update()
+        #super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.isHovered = False
+        self.update()
+        #super().hoverLeaveEvent(event)
+
 
     def paint(self, painter: QPainter, option, widget=None):
         #print(f"HS Paint {self._p }")
-
         isSel:bool = self.isSelected()
         if self.parentItem():
             isSel = isSel or self.parentItem().isSelected()
-
         if isSel: #self.isSelected():
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
 
@@ -361,11 +388,14 @@ class HermiteSplineItem(QGraphicsItem):
                     painter.drawLine(self._p[i], self._p[i] - self._t[i][0])      #left
                     painter.drawLine(self._p[i], self._p[i] + self._t[i][1])      #right
                 painter.drawLine(self._p[-1], self._p[-1] - self._t[-1][0]) 
+        elif self.isHovered:
+            painter.setPen(QPen(self._hoverColor))
         else:
             painter.setPen(self.pen)
             #painter.setPen(QPen(Qt.black,1))
 
         painter.drawPath(self._path)
+
 
     def textPos(self,t:float = 0.5)->QPointF:
         """ returns the QPointF coord of t in [0,1] along the line 
@@ -493,6 +523,7 @@ class HermiteSplineItem(QGraphicsItem):
         """ Allow the calling of the recalculation independently of handle updates"""
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
+        
         self.update()    
 
     def moveMidPoints(self,delta):
