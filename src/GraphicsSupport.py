@@ -176,3 +176,10 @@ class dummyNodeItem(QGraphicsItem):
     def paint(self, painter: QPainter, option, widget=None):
         """ This object is only visable via a handle, but paint is required by Qt """
         pass
+
+class port(dummyNodeItem):
+    """ a port for nodes to give edges a spot to connect. `t` is where on the perimeter the point is"""
+    def __init__(self,center: QPointF, t:float = 0, index:int = -1, parent=None):
+        super().__init__(center, parent=parent)
+        self.t = t  
+        self.index = index #Index must only be used for XML. 

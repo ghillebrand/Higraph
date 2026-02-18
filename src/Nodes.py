@@ -4,6 +4,7 @@
 
 from  HGConstants import *
 from GraphicsSupport import *
+#from Edges import  * #Needed for type checking
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -365,50 +366,62 @@ class VisNodeItem(QGraphicsObject):
         t = self.positionToParameter(screenPos)
 
         #Create the port, add to the node's list
-        # Calculate the exact coords from the angle ("snap")
-        #angle = t*math.pi*2
-        #portPos = QPointF(NODESIZE/2 * math.cos(angle),NODESIZE/2 * math.sin(angle)   )
+        #This snaps the port to exactly on the shape (pos may be slightly off)
         portPos = self.parameterToPosition(t)
 
-        print(f"{t=},{portPos=}")
+        #print(f"{t=},{portPos=}")
         #Parent to nodeShape for better geom flexibility
-        p = dummyNodeItem(portPos, parent=self.nodeShape)
-        #Store the position and index as the ID of the port
-        #TODO: Is this not making p a "psuedo object"? Should it maybe a proper class, inheriting from `dummyNode`? Code would be cleaner
-        p.t = t 
-        p.index = self._nextPort
-        #print(f"Port created N={self.nodeNum}: P={p.index} at {p.t}")
-        self._Ports.append(p)
-  
-        self._nextPort += 1
+        p = port(portPos, t=t, index =self._nextPort,  parent=self.nodeShape)
 
-        return p.index
+        print(f"Port created on node{self.nodeNum}: as port{p.index} at {p.t} {len(self._Ports)=}")
+        self._Ports.append(p)
+        #TODO: How to handle nextPort when reading from a file  
+        self._nextPort += 1  
+
+        #TODO: Should this not rather return `p`?
+        return p
 
     def findPort(self,screenPos)->int:
         """ checks for a port at screenPos using HITSIZE, returns index if found, -1 if not"""
-        found = -1
+        found = None
         minD = math.inf
         for existingPort in self._Ports:
             d = QLineF(existingPort.scenePos(), screenPos).length()
             print(f"{self.nodeNum}:{existingPort.index=} findPort: {d}")
             if d <= HITSIZE:
                 if d < minD:
-                    found = existingPort.index
+                    #found = existingPort.index
+                    found = existingPort
                     minD = d
         print(f"{found=}")
         return found
 
-    def updatePort(self,i:int, pos:QPointF):
-        """ update the ith port, setting the parameter and actual QItem pos """
-        port = self._Ports[i]
-        port.t = self.positionToParameter(pos)
-        port.setPos(self.parameterToPosition(port.t))
+    def updatePort(self, p:port, pos:QPointF):
+        """ update pos of port p in the nodes list of ports """
 
-    def deletePort(self,i:int):
+        p.t = self.positionToParameter(pos)
+        p.setPos(self.parameterToPosition(p.t))
+        #print(f"New pos = {p.pos()}")
+
+    def deletePort(self, delPort:port): # delIndex:int):
         """Remove a port """
         #TODO: How to check there are no references to _Ports[i]
+        #TODO: index is not used - delete based on ID 
         #Assume only one edge per port
-        self._Ports.pop(i)
+        #This breaks nextPort counter!
+        #self._Ports.pop(i)
+        print(f"delPort - node {self.nodeNum} has ports {self._Ports}")
+        print(f"{delPort}")
+        self._Ports.remove(delPort)
+
+        #for si, se in enumerate(self.startsEdges):
+        #    if type(se.startNode[1]) != HandleItem:
+        #        
+        #        print(type(se.startNode[1]))
+        #        print(f"check for delete port {si} edge:({se.startNode[0].data(KEY_INDEX)}, {se.startNode[1].index})")
+        #    if si == delIndex:
+        #        print(f"should del {si}")
+        
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):

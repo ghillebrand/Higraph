@@ -440,7 +440,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #source may be a `Handle`, which a not a tuple, or just a Node: Normalise to tuple
         if not type(source) is tuple: 
             if type(source) is VisNodeItem or type(source) is VisBlobItem:
-                # Search for the correct port!
+                # Search for the correct port
                 if source == self.startNode[0]: #Start
                     for p in source._Ports:
                         if p == self.startNode[1]:

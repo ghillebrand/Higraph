@@ -408,18 +408,16 @@ class grScene(QGraphicsScene):
         #Start port
         #TODO: Sharing ports makes moving complex. The need for shared ports points to using hyperedges rather
         #startPort = self.tmpEdgeSt.findPort(self.startPoint)
-        #if startPort == -1:
+        #if startPort != None:
         startPort = self.tmpEdgeSt.createPort(self.startPoint)
         #print(f"{startPort=}")
 
         #endPort = self.tmpEdgeEnd.findPort(self.endPoint)
-        #if endPort == -1:
+        #if endPort !- None:
         endPort = self.tmpEdgeEnd.createPort(self.endPoint)
-        #endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
         #Create the actual edge
-        edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,self.tmpEdgeSt._Ports[startPort]), 
-                                                            (self.tmpEdgeEnd,self.tmpEdgeEnd._Ports[endPort]), parent=None)
+        edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
         #Add to *Scene*
         self.addItem(edgeItem)
@@ -450,7 +448,7 @@ class grScene(QGraphicsScene):
             # NOTE: Node relinking is only done on successful finish, so track the old Terminator item
             self.EdgeEnd = "start"
             self.oldTermItem = edge.startNode
-            print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
+            #print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
 
             #link edge to handle to move
             edge.setStart((handle,handle)) #Handles are dummy nodes _and_ ports
@@ -471,23 +469,24 @@ class grScene(QGraphicsScene):
         """ note pickItemAt needs the full mouseEvent (screenPos) """
         #Check that this is on a valid node/ Termination pt
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
-        
+
         if newTermItem != None:
             #print(f"finMovEdge {newTermItem.metadata['name']} {mPos=}")
             if newTermItem == self.oldTermItem[0]: #Just reposition the port
-                self.oldTermItem[0].updatePort(self.oldTermItem[1].index,mPos)
+                #print(f"finMove - updating port {self.oldTermItem[1].index} ")
+                self.oldTermItem[0].updatePort(self.oldTermItem[1],mPos)
                 #TODO: Check this for flow with rest of func!
                 if self.EdgeEnd == "start":
                     edge.setStart(self.oldTermItem)
                 else:  #end
                     edge.setEnd(self.oldTermItem)
-                #edge.updateLine()
                 #return
-            #Check for a self-edge: newTerm == startE or  endE
+            #Check for a self-edge: newTerm == startE and we were moving `end` or the other end is now looped back
             #  if so, make sure there is a mid point in the  polyline line
-            if newTermItem == edge.startNode[0] or newTermItem == edge.endNode[0]:
+            elif (newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
+                newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
+                print(f"Self edge {self.EdgeEnd}")
                 if len(edge.edgeLine._p) < 3:
-                    print(f"Self edge? {self.EdgeEnd}")
                     #add in a point on the middle for now. (only works for straight, splines are OK)
                     #TODO: Refine!!!
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
@@ -496,33 +495,33 @@ class grScene(QGraphicsScene):
             #TODO **Crashes on "move back" - port counting mangled**
             if self.EdgeEnd == "start":
                 # Delete the old port
-                oldP = self.oldTermItem[1].index
+                oldP = self.oldTermItem[1]  #.index
                 #print(oldP)
                 self.oldTermItem[0].deletePort(oldP)
+                #Unlink from the old node
                 self.oldTermItem[0].startsEdges.remove(edge)
+
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
-                newTermItem = (newTermItem, newTermItem._Ports[p])
+                newTermItem = (newTermItem, p)
                 edge.setStart(newTermItem)
                 #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
-                #Move the reverse pointer from the oldTermItem to the new:
-
-                #The
+                #Relink to new node
                 newTermItem[0].startsEdges.append(edge)
             
-            elif self.EdgeEnd == "end":
+            if self.EdgeEnd == "end":
                 #TODO: The port code is true for either end - review flow of function and tidy up
                 # Delete the old port
-                oldP = self.oldTermItem[1].index
+                oldP = self.oldTermItem[1]   #.index
                 #print(oldP)
                 self.oldTermItem[0].deletePort(oldP)
                 #Move the reverse pointer from the oldTermItem to the new:
                 self.oldTermItem[0].endsEdges.remove(edge)
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
-                newTermItem = (newTermItem, newTermItem._Ports[p])
+                newTermItem = (newTermItem, p)
                 edge.setEnd(newTermItem)
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
                 
