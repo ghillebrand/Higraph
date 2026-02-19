@@ -158,28 +158,13 @@ class HandleItem(QGraphicsRectItem):
         
 
 
-class dummyNodeItem(QGraphicsItem):
-    """ a graphics-only node-like object to manage joins for hyperedges, ports for nodes """
-    def __init__(self,center: QPointF,  parent=None):
-        super().__init__(parent=parent)
+class dummyNodeItem(HandleItem):
+    """ a graphics-only node to manage joins for hyperedges, ports for nodes """
+    def __init__(self,center: QPointF, hSize=HITSIZE, color=Qt.NoPen, parent=None):
+
+        super().__init__(-hSize, -hSize, 2 * hSize, 2 * hSize, parent)
+        #from a selection PoV, is this not still just a handle?
         #This might be resolved by the starts end finishEdges code 
         #self.setData(KEY_ROLE, ROLE_DUMMYNODE)
-        self.setPos(center)
-        #Note - since this is a purely geometric construct, these are called `EdgeLines``, not `Edges`
-        #Not used for ports
         self.startsEdgeLines = []
         self.endsEdgeLines = []
-
-    def boundingRect(self):
-        return QRect(self.x(), self.y(), self.x()+1, self.y()+1)
-    
-    def paint(self, painter: QPainter, option, widget=None):
-        """ This object is only visable via a handle, but paint is required by Qt """
-        pass
-
-class port(dummyNodeItem):
-    """ a port for nodes to give edges a spot to connect. `t` is where on the perimeter the point is"""
-    def __init__(self,center: QPointF, t:float = 0, index:int = -1, parent=None):
-        super().__init__(center, parent=parent)
-        self.t = t  
-        self.index = index #Index must only be used for XML. 

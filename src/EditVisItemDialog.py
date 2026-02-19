@@ -109,8 +109,8 @@ class EditVisEdgeItemDialog(QDialog):
         # --- Gather initial values ---
         edgeNum = getattr(visEdgeItem, "edgeNum", "")
         #dispText = getattr(visEdgeItem, "dispText", "")
-        startNodeIdx = getattr(visEdgeItem.startNode[0], "nodeNum", "")
-        endNodeIdx = getattr(visEdgeItem.endNode[0], "nodeNum", "")
+        startNodeIdx = getattr(visEdgeItem.startNode, "nodeNum", "")
+        endNodeIdx = getattr(visEdgeItem.endNode, "nodeNum", "")
         polyEdge = visEdgeItem._polyEdge
         isDirected = getattr(visEdgeItem, "isDirected", None)
 
