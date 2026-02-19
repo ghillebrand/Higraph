@@ -4,6 +4,7 @@
 
 from  HGConstants import *
 from GraphicsSupport import *
+#from Edges import  * #Needed for type checking
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -199,6 +200,10 @@ class VisNodeItem(QGraphicsObject):
         #TODO: Set selectable False - see if that processes clicks better?
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
+        #Ports where edges will connect
+        self._nextPort = 0 #Counter for port index
+        self._Ports = []
+
         #Make nodes appear in front of edges for painting & selection
         self.setZValue(1000)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -212,8 +217,8 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n** VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n\
-                {self.startsEdges = },\n{self.endsEdges = }\n**" #\n {self.nodeShape =})"
+        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}, {self._Ports=}\n\
+                {self.startsEdges = },\n{self.endsEdges = }\n*<*" #\n {self.nodeShape =})"
     __str__ = __repr__
 
     def toXML(self,Xparent):
@@ -343,6 +348,96 @@ class VisNodeItem(QGraphicsObject):
         self.update()
         super().hoverLeaveEvent(event)
 
+    def positionToParameter(self, screenPos:QPointF)->float:
+        """ Takes a pos, and returns a value giving the position of the pos on the nodeshape's edge """
+        #gemini code
+
+        #Find the parametric position of the point on the nodeshape
+        #Calculates the clockwise 'distance' around the perimeter.
+        # 0.0 = Right, 0.25 = bottom, 0.5 = left, 0.75 = top.
+
+        center = self.pos()
+        #Calculate delta from center
+        dy = screenPos.y() - center.y()
+        dx = screenPos.x() - center.x()
+        angle = math.atan2(dy, dx)
+
+        #Normalize to [0, 1) range  (Python % 1 is very clever with signs & floats!!)
+        t = (angle/(2*math.pi)) % 1
+        return t
+
+    def parameterToPosition(self, t:float)->QPointF:
+        """ Takes a parameter, and uses nodeshape geometry to work out a pos on the nodeshape"""
+        #NODESIZE/2 is harcoded here
+        angle = t*math.pi*2
+        pos = QPointF(NODESIZE/2 * math.cos(angle),NODESIZE/2 * math.sin(angle)   )
+        return pos
+
+    def createPort(self,screenPos)->int:
+        """ Create a port at `pos` for an edge to connect on, return the int index for reference"""
+        #TODO: Return a tuple (index, object) ??
+
+        #cycle the point through the param calc 1. to get the para for future use, 2. to get the exact shape fit for 'close' clicks
+        #find the param position
+        t = self.positionToParameter(screenPos)
+
+        #Create the port, add to the node's list
+        #This snaps the port to exactly on the shape (pos may be slightly off)
+        portPos = self.parameterToPosition(t)
+
+        #print(f"{t=},{portPos=}")
+        #Parent to nodeShape for better geom flexibility
+        p = port(portPos, t=t, index =self._nextPort,  parent=self.nodeShape)
+
+        print(f"Port created on node{self.nodeNum}: as port{p.index} at {p.t} {len(self._Ports)=}")
+        self._Ports.append(p)
+        #TODO: How to handle nextPort when reading from a file  
+        self._nextPort += 1  
+
+        #TODO: Should this not rather return `p`?
+        return p
+
+    def findPort(self,screenPos)->int:
+        """ checks for a port at screenPos using HITSIZE, returns index if found, -1 if not"""
+        found = None
+        minD = math.inf
+        for existingPort in self._Ports:
+            d = QLineF(existingPort.scenePos(), screenPos).length()
+            print(f"{self.nodeNum}:{existingPort.index=} findPort: {d}")
+            if d <= HITSIZE:
+                if d < minD:
+                    #found = existingPort.index
+                    found = existingPort
+                    minD = d
+        print(f"{found=}")
+        return found
+
+    def updatePort(self, p:port, pos:QPointF):
+        """ update pos of port p in the nodes list of ports """
+
+        p.t = self.positionToParameter(pos)
+        p.setPos(self.parameterToPosition(p.t))
+        #print(f"New pos = {p.pos()}")
+
+    def deletePort(self, delPort:port): # delIndex:int):
+        """Remove a port """
+        #TODO: How to check there are no references to _Ports[i]
+        #TODO: index is not used - delete based on ID 
+        #Assume only one edge per port
+        #This breaks nextPort counter!
+        #self._Ports.pop(i)
+        print(f"delPort - node {self.nodeNum} has ports {self._Ports}")
+        print(f"{delPort}")
+        self._Ports.remove(delPort)
+
+        #for si, se in enumerate(self.startsEdges):
+        #    if type(se.startNode[1]) != HandleItem:
+        #        
+        #        print(type(se.startNode[1]))
+        #        print(f"check for delete port {si} edge:({se.startNode[0].data(KEY_INDEX)}, {se.startNode[1].index})")
+        #    if si == delIndex:
+        #        print(f"should del {si}")
+        
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
@@ -416,8 +511,7 @@ class VisBlobItem(VisNodeItem):
         #Placeholder for drag handles
         self._Handles = []
 
-        #Ports where edges will connect
-        self._Ports = []
+
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
         self.isOnlySelected = False

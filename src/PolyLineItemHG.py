@@ -273,6 +273,7 @@ class HermiteSplineItem(QGraphicsItem):
         self._p = p
         
         #How many lines per segment
+        #TODO: Put this in HGConstants
         self.linesPerSegment = 40
 
         #Tangents
@@ -333,8 +334,8 @@ class HermiteSplineItem(QGraphicsItem):
         
     def __repr__(self):
         #tuple formatted, can be fed into constructor
-        #return str(f"({self._p},\n{self._t})")
-        return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
+        return str(f"({self._p},\n{self._t})")
+        #return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
         #return super().__repr__()
 
     def boundingRect(self) -> QRectF:
