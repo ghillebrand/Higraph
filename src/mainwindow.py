@@ -13,7 +13,7 @@ import os
 import copy
 import math
 import re
-import traceback 
+import traceback  #for the Python window
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -378,8 +378,7 @@ class grScene(QGraphicsScene):
         self.tmpEdgeSt.setFlag(self.tmpEdgeSt.GraphicsItemFlag.ItemIsMovable, False)
         
         #This will change when the whole boundary/ edge can be a connection point
-        #self.startPoint = self.tmpEdgeSt.pos()
-        self.startPoint = mPos  #self.tmpEdgeSt.pos()
+        self.startPoint = self.tmpEdgeSt.pos()
         self.endPoint = self.getSceneMousePos()
 
         #Create the rubberBand line (actual edge is created on mouseRelease)
@@ -402,23 +401,9 @@ class grScene(QGraphicsScene):
     def endRubberLine(self):
         """called on successful end item found for edge:
          from INSERTEDGE mouseRelease or INSERTEDGE2CLICK mousePress """
-        #TODO: How does this relate to finishMovingEdgeEnd?
-
-        #TODO: Create the ports on the nodes
-        #Start port
-        #TODO: Sharing ports makes moving complex. The need for shared ports points to using hyperedges rather
-        #startPort = self.tmpEdgeSt.findPort(self.startPoint)
-        #if startPort != None:
-        startPort = self.tmpEdgeSt.createPort(self.startPoint)
-        #print(f"{startPort=}")
-
-        #endPort = self.tmpEdgeEnd.findPort(self.endPoint)
-        #if endPort !- None:
-        endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
         #Create the actual edge
-        edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-
+        edgeItem = VisEdgeItem(self.model,self.listWidget,self.tmpEdgeSt, self.tmpEdgeEnd, parent=None)
         #Add to *Scene*
         self.addItem(edgeItem)
         edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
@@ -444,19 +429,17 @@ class grScene(QGraphicsScene):
         #print(f"StartMovingEdge {edge.metadata['name']}")
         self.handle = handle #Store the box for the Move/ Finish functions
         #is handle at start or end?
-        if self.handle.pos() == edge.startNode[1].scenePos():
+        if self.handle.pos() == edge.startNode.pos():
             # NOTE: Node relinking is only done on successful finish, so track the old Terminator item
             self.EdgeEnd = "start"
             self.oldTermItem = edge.startNode
-            #print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
-
             #link edge to handle to move
-            edge.setStart((handle,handle)) #Handles are dummy nodes _and_ ports
+            edge.setStart(handle)
         else:
             self.EdgeEnd = "end"
             # NOTE: Node relinking is only done on successful finish
             self.oldTermItem = edge.endNode
-            edge.setEnd((handle,handle))
+            edge.setEnd(handle)
 
         handle.setFlag(QGraphicsItem.ItemIsMovable, True)
 
@@ -467,69 +450,39 @@ class grScene(QGraphicsScene):
         
     def finishMovingEdgeEnd(self,edge,mPos,mouseEvent):
         """ note pickItemAt needs the full mouseEvent (screenPos) """
+
         #Check that this is on a valid node/ Termination pt
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
-
-        if newTermItem != None:
-            #print(f"finMovEdge {newTermItem.metadata['name']} {mPos=}")
-            if newTermItem == self.oldTermItem[0]: #Just reposition the port
-                #print(f"finMove - updating port {self.oldTermItem[1].index} ")
-                self.oldTermItem[0].updatePort(self.oldTermItem[1],mPos)
-                #TODO: Check this for flow with rest of func!
-                if self.EdgeEnd == "start":
-                    edge.setStart(self.oldTermItem)
-                else:  #end
-                    edge.setEnd(self.oldTermItem)
-                #return
-            #Check for a self-edge: newTerm == startE and we were moving `end` or the other end is now looped back
+        #print(f"finMovEdge {newTermItem.metadata['name']=} {mPos=}")
+        if newTermItem:
+            #Check for a self-edge: newTerm == startE or  endE
             #  if so, make sure there is a mid point in the  polyline line
-            elif (newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
-                newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
-                print(f"Self edge {self.EdgeEnd}")
+            if newTermItem == edge.startNode or newTermItem == edge.endNode:
                 if len(edge.edgeLine._p) < 3:
                     #add in a point on the middle for now. (only works for straight, splines are OK)
                     #TODO: Refine!!!
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
 
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
-            #TODO **Crashes on "move back" - port counting mangled**
             if self.EdgeEnd == "start":
-                # Delete the old port
-                oldP = self.oldTermItem[1]  #.index
-                #print(oldP)
-                self.oldTermItem[0].deletePort(oldP)
-                #Unlink from the old node
-                self.oldTermItem[0].startsEdges.remove(edge)
-
-                # Add a port at mPos
-                p = newTermItem.createPort(mPos)
-                newTermItem = (newTermItem, p)
                 edge.setStart(newTermItem)
                 #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
-                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
-                #Relink to new node
-                newTermItem[0].startsEdges.append(edge)
-            
-            if self.EdgeEnd == "end":
-                #TODO: The port code is true for either end - review flow of function and tidy up
-                # Delete the old port
-                oldP = self.oldTermItem[1]   #.index
-                #print(oldP)
-                self.oldTermItem[0].deletePort(oldP)
+                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "start", newTermItem.data(KEY_INDEX))
                 #Move the reverse pointer from the oldTermItem to the new:
-                self.oldTermItem[0].endsEdges.remove(edge)
-                # Add a port at mPos
-                p = newTermItem.createPort(mPos)
-                newTermItem = (newTermItem, p)
+                self.oldTermItem.startsEdges.remove(edge)
+                newTermItem.startsEdges.append(edge)
+            
+            elif self.EdgeEnd == "end":
                 edge.setEnd(newTermItem)
-                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
-                
-                newTermItem[0].endsEdges.append(edge)
+                self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem.data(KEY_INDEX), "end", newTermItem.data(KEY_INDEX))
+                #Move the reverse pointer from the oldTermItem to the new:
+                self.oldTermItem.endsEdges.remove(edge)
+                newTermItem.endsEdges.append(edge)
         
         else: # link back to old
             #print("Missed (nothing found) on relink")
-            self.handle.setPos(self.oldTermItem[1].pos())
+            self.handle.setPos(self.oldTermItem.pos())
             #TODO: Check all the linkages ()
             if self.EdgeEnd == "start":
                 edge.setStart(self.oldTermItem)
@@ -1135,7 +1088,7 @@ def findItemByIdx(self,idx):
     return None
 QListWidget.findItemByIdx = findItemByIdx
 
-def XXfindItemByIdx(self,idx):
+def findItemByIdx(self,idx):
     """another patch to LWid
       feed in a ROLE_INDEX value, and get the ITEM out, or none """
     for row in range(self.count()):
