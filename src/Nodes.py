@@ -48,11 +48,11 @@ class QRoundedRectItem(QGraphicsObject):
         # Style configuration
         self._penWidth = 1.0
         self._baseColor = QColor("black")
-        self._hoverColor = QColor("red")
+        self._hoverColor = QColor("cyan")
         self._pen = QPen(Qt.NoPen)  #QPen(self._baseColor, self._penWidth)
         
         # Interaction settings
-        #self.setAcceptHoverEvents(True)
+        self.setAcceptHoverEvents(True)
         #self.setFlags(QGraphicsObject.ItemIsSelectable | QGraphicsObject.ItemIsMovable)
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.setFlag(QGraphicsItem.ItemIsMovable, False)
@@ -60,7 +60,7 @@ class QRoundedRectItem(QGraphicsObject):
         self.setAcceptedMouseButtons(Qt.NoButton)
         self.setCacheMode(QGraphicsItem.CacheMode.NoCache)
         #self.setVisible(False) #JH needed if local paint is removed
-        self._isHovered = False
+        self.isHovered = False
 
     def boundingRect(self) -> QRectF:
         # Increase the bounding box slightly to account for the pen width
@@ -82,6 +82,8 @@ class QRoundedRectItem(QGraphicsObject):
         parent = self.parentItem()
         if parent and parent.isSelected():
             painter.setPen(QPen(Qt.blue, 1.0, Qt.DashLine))
+        elif self.isHovered:
+            painter.setPen(self._hoverColor)
         else:
             painter.setPen(QPen(Qt.black, 1.0))
             
@@ -97,12 +99,12 @@ class QRoundedRectItem(QGraphicsObject):
         self._rect = rect
 
     def hoverEnterEvent(self, event):
-        self._isHovered = True
+        self.isHovered = True
         self.update()
         super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event):
-        self._isHovered = False
+        self.isHovered = False
         self.update()
         super().hoverLeaveEvent(event)
 
@@ -204,9 +206,9 @@ class VisNodeItem(QGraphicsObject):
         self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
         
         #TODO: hoverEvents are not sent when there is an explicit mouseEVent handler. Handle in scene and delete here
-        #self.setAcceptHoverEvents(True)
-        #self.hovered = False
-
+        self.setAcceptHoverEvents(True)
+        self.isHovered = False
+        self._hoverColor = QColor("red")
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
@@ -271,6 +273,7 @@ class VisNodeItem(QGraphicsObject):
         #adjust = 2 # self.pen.width() / 2
         #return self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
 
+    
     def paint(self, painter, option, widget=None):
         """ Draw a VisNode item"""
         #Debug: Show the centre of the node
@@ -283,6 +286,9 @@ class VisNodeItem(QGraphicsObject):
         if self.isSelected():
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
             self.nodeShape.setPen(QPen(Qt.blue,1,Qt.DashLine))
+        elif self.isHovered:
+            painter.setPen(Qt.red)
+            self.nodeShape.setPen(self._hoverColor)
         else:
             painter.setPen(Qt.black)
             self.nodeShape.setPen(QPen(Qt.black))
@@ -326,6 +332,16 @@ class VisNodeItem(QGraphicsObject):
 
         #note the **return**
         return super().itemChange(change,value)
+    
+    def hoverEnterEvent(self, event):
+        self.isHovered = True
+        self.update()
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.isHovered = False
+        self.update()
+        super().hoverLeaveEvent(event)
 
 
     """def mousePressEvent(self, mouseEvent):
@@ -376,7 +392,9 @@ class VisBlobItem(VisNodeItem):
         #Remove the nodeShape set in the parent
         self.nodeShape.setParentItem(None)
         del self.nodeShape
-
+        self.setAcceptHoverEvents(True)
+        self.isHovered=False
+        self._hoverColor=QColor("cyan")
         self.parents = parents
         self.children = children
 
@@ -460,10 +478,24 @@ class VisBlobItem(VisNodeItem):
         #outlinePath.setWidth(HITSIZE*2)
         #return outlinePath.createStroke(path)            
         return path
+    
+    
+    def hoverEnterEvent(self, event):
+        self.isHovered = True
+        self.update()
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.isHovered = False
+        self.update()
+        super().hoverLeaveEvent(event)
+
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
         if self.isSelected():
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+        elif self.isHovered:
+            painter.setPen(self._hoverColor)
         else:
             painter.setPen(Qt.black)
 

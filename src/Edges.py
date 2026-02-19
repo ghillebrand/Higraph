@@ -25,7 +25,7 @@ from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor,
+            QPainterPath, QPainterPathStroker, QCursor, QColor, 
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
@@ -180,6 +180,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.ItemIsMovable, False) #Moving done via enditems/ handles
         self.setZValue(0)
+        self.setAcceptHoverEvents(True)
+        self.isHovered=False
+        self._hoverColor = QColor("red")
         #Checking if this was why there were ghosts
         #self.setCacheMode(QGraphicsItem.NoCache)
         
@@ -285,6 +288,10 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
             self.textItem.setDefaultTextColor(Qt.blue)   
             self.metaDisplay.setDefaultTextColor(Qt.blue)
+        elif self.isHovered:
+            painter.setPen(QPen(self._hoverColor))
+            self.textItem.setDefaultTextColor(self._hoverColor)   
+            self.metaDisplay.setDefaultTextColor(self._hoverColor)
         else:
             painter.setPen(Qt.black)
             self.textItem.setDefaultTextColor(Qt.black)
@@ -333,6 +340,16 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     def mouseDoubleClickEvent(self, mouseEvent):
         self.requestEdit.emit(self)
         mouseEvent.accept()
+
+    def hoverEnterEvent(self, event):
+        self.isHovered = True
+        self.update()
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.isHovered = False
+        self.update()
+        super().hoverLeaveEvent(event)
 
     def itemChange(self, change, value):
         #print(f"edge item change {change},{value}")
