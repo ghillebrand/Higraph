@@ -1043,9 +1043,9 @@ class grScene(QGraphicsScene):
         # Remove from scene
         #if its an edge, tell the nodes ends that the edge is gone
         if item.data(KEY_ROLE) == ROLE_EDGE:
-            item.startNode.startsEdges.remove(item)
+            item.startNode[0].startsEdges.remove(item)
             #print(f"{item.endNode = }") #eItem
-            item.endNode.endsEdges.remove(item)
+            item.endNode[0].endsEdges.remove(item)
             #print(f"{item.endNode.endsEdges =}")
         #print(f"{item =}")  
         #logging.debug("delItem&chld scene items, BEFORE remove")
