@@ -225,7 +225,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             "edge",
             id=str(self.edgeNum),
             source=str(self.startNode[0].nodeNum),
-            target=str(self.endNode.nodeNum)
+            target=str(self.endNode[0].nodeNum),
+            sourceport=str(self.startNode[1].index),
+            targetport=str(self.endNode[1].index)
         )
         if self.isDirected: 
             xmlEdge.set("directed", "true")     
