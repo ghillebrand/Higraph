@@ -4,6 +4,7 @@
 
 from  HGConstants import *
 from GraphicsSupport import *
+#from Edges import  * #Needed for type checking
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -199,6 +200,10 @@ class VisNodeItem(QGraphicsObject):
         #TODO: Set selectable False - see if that processes clicks better?
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
+        #Ports where edges will connect
+        self._nextPort = 0 #Counter for port index
+        self._Ports = []
+
         #Make nodes appear in front of edges for painting & selection
         self.setZValue(1000)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -212,8 +217,8 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n** VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n\
-                {self.startsEdges = },\n{self.endsEdges = }\n**" #\n {self.nodeShape =})"
+        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}, {self._Ports=}\n\
+                {self.startsEdges = },\n{self.endsEdges = }\n*<*" #\n {self.nodeShape =})"
     __str__ = __repr__
 
     def toXML(self,Xparent):
@@ -343,6 +348,84 @@ class VisNodeItem(QGraphicsObject):
         self.update()
         super().hoverLeaveEvent(event)
 
+    def positionToParameter(self, screenPos:QPointF)->float:
+            """ Takes a pos, and returns a value giving the position of the pos on the nodeshape's edge """
+            #gemini code
+
+            #Find the parametric position of the point on the nodeshape
+            #Calculates the clockwise 'distance' around the perimeter.
+            # 0.0 = Right, 0.25 = bottom, 0.5 = left, 0.75 = top.
+
+            center = self.pos()
+            #Calculate delta from center
+            dy = screenPos.y() - center.y()
+            dx = screenPos.x() - center.x()
+            angle = math.atan2(dy, dx)
+
+            #Normalize to [0, 1) range  (Python % 1 is very clever with signs & floats!!)
+            t = (angle/(2*math.pi)) % 1
+            return t
+
+    def parameterToPosition(self, t:float)->QPointF:
+        """ Takes a parameter, and uses nodeshape geometry to work out a pos on the nodeshape"""
+        #NODESIZE/2 is harcoded here
+        angle = t*math.pi*2
+        pos = QPointF(NODESIZE/2 * math.cos(angle),NODESIZE/2 * math.sin(angle)   )
+        return pos
+
+    def createPort(self,screenPos)->int:
+        """ Create a port at `pos` for an edge to connect on, return the int index for reference"""
+        #TODO: Return a tuple (index, object) ??
+
+        #cycle the point through the param calc 1. to get the para for future use, 2. to get the exact shape fit for 'close' clicks
+        #find the param position
+        t = self.positionToParameter(screenPos)
+
+        #Create the port, add to the node's list
+        #This snaps the port to exactly on the shape (pos may be slightly off)
+        portPos = self.parameterToPosition(t)
+
+        #print(f"{t=},{portPos=}")
+        #Parent to nodeShape for better geom flexibility
+        p = port(portPos, t=t, index =self._nextPort,  parent=self.nodeShape)
+
+        print(f"Port created on node{self.nodeNum}: as port{p.index} at {p.t} {len(self._Ports)=}")
+        self._Ports.append(p)
+        #TODO: How to handle nextPort when reading from a file  
+        self._nextPort += 1  
+
+        #TODO: Should this not rather return `p`?
+        return p
+
+    def findPort(self,screenPos)->int:
+        """ checks for a port at screenPos using HITSIZE, returns index if found, -1 if not"""
+        found = None
+        minD = math.inf
+        for existingPort in self._Ports:
+            d = QLineF(existingPort.scenePos(), screenPos).length()
+            print(f"{self.nodeNum}:{existingPort.index=} findPort: {d}")
+            if d <= HITSIZE:
+                if d < minD:
+                    #found = existingPort.index
+                    found = existingPort
+                    minD = d
+        print(f"{found=}")
+        return found
+
+    def updatePort(self, p:port, pos:QPointF):
+        """ update pos of port p in the nodes list of ports """
+
+        p.t = self.positionToParameter(pos)
+        p.setPos(self.parameterToPosition(p.t))
+        #print(f"New pos = {p.pos()}")
+
+    def deletePort(self, delPort:port): # delIndex:int):
+        """Remove a port """
+        #TODO: How to check there are no references to _Ports[i]
+        #TODO: index is not used - delete based on ID 
+        #Assume only one edge per port
+
+        self._Ports.remove(delPort)
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
@@ -360,7 +443,8 @@ class VisNodeItem(QGraphicsObject):
                 lWItem = self.listWidget.findItemByIdx(self.data(KEY_INDEX))
                 self.listWidget.setCurrentItem(lWItem)
 
-        super().mousePressEvent(mouseEvent)"""
+        super().mousePressEvent(mouseEvent)
+        """
 
 class VisBlobItem(VisNodeItem):
     """Generalise point-like nodes to sets. Blame Harel for the name"""
@@ -416,8 +500,12 @@ class VisBlobItem(VisNodeItem):
         #Placeholder for drag handles
         self._Handles = []
 
-        #Ports where edges will connect
-        self._Ports = []
+        #Create a polygon version for `parameterFromPos` - also in `updateFromHandles`
+        basePath = QPainterPath()
+        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = basePath.length()
+        self._polygon = basePath.toFillPolygon()
+
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
         self.isOnlySelected = False
@@ -525,7 +613,78 @@ class VisBlobItem(VisNodeItem):
 
         return super().itemChange(change, value)
 
-    """def setSelected(self,state:bool):
+    def _closestTOnSegment(self, a: QPointF, b: QPointF, p: QPointF) -> float:
+        """ Calculates the local projection parameter t for point p on segment ab """
+        #gemini
+        line = QLineF(a, b)
+        if line.length() == 0: 
+            return 0.0
+        
+        dx = b.x() - a.x()
+        dy = b.y() - a.y()
+        
+        # Dot product projection formula: 
+        # t = [(p-a) · (b-a)] / |b-a|^2
+        t = ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / (dx**2 + dy**2)
+        return max(0.0, min(t, 1.0))
+
+    def positionToParameter(self, scenePos:QPointF)->float:
+        """ Takes a pos, and returns a value giving the position of the pos on the blobs's edge 
+            Uses _polygon set in `updateFromHandles`
+        """
+        #gemini code
+        #TODO: This should be in updateFromHandles
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+
+        if totalLength == 0:
+            return 0.0
+        #Find the parametric position of the point on the nodeshape
+        #Path to polygon segements
+        self._polygon = self._basePath.toFillPolygon()
+
+        localPos = self.mapFromScene(scenePos)
+
+        bestT = 0.0
+        minDist = math.inf
+        accumulatedLength = 0.0
+
+        # 3. Iterate through segments to find the closest projection
+        for i in range(self._polygon.count() - 1):
+            p1 = self._polygon[i]
+            p2 = self._polygon[i + 1]
+            line = QLineF(p1, p2)
+            segmentLen = line.length()
+
+            # Find the 0.0-1.0 parameter on this specific segment
+            tSeg = self._closestTOnSegment(p1, p2, localPos)
+            
+            pointOnSeg = line.pointAt(tSeg)
+            print(f"{pointOnSeg =}")
+            dist = QLineF(localPos, pointOnSeg).length()
+
+            # 4. Update the global bestT if this segment is closer
+            if dist < minDist:
+                minDist = dist
+                # Calculate global t: (LengthSoFar + ProgressInSegment) / totalLength
+                bestT = (accumulatedLength + (tSeg * segmentLen)) / totalLength
+            
+            accumulatedLength += segmentLen
+
+        t = max(0.0, min(bestT, 1.0))
+        return t
+
+    def parameterToPosition(self, t:float)->QPointF:
+        """ Takes a parameter, and uses nodeshape geometry to work out a pos on the nodeshape"""
+
+        #Stub
+        pos = self._basePath.pointAtPercent(t)
+
+        return pos
+
+    """
+    def setSelected(self,state:bool):
         if len(self.scene().selectedItems())<=1:
             if state:
                 #print(f"Blob setSel createH")
@@ -537,7 +696,8 @@ class VisBlobItem(VisNodeItem):
                 self.scene().thisHandleObjectSelected = None
                 self.isOnlySelected = False
                 self._deleteHandles()
-        super().setSelected(state)"""
+        super().setSelected(state)
+        """
 
     def _createHandles(self):
         """ Handles for resizing"""
@@ -662,6 +822,15 @@ class VisBlobItem(VisNodeItem):
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
+
+        #Create a polygon version for `parameterFromPos`
+        basePath = QPainterPath()
+        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = basePath.length()
+        self._polygon = basePath.toFillPolygon()
+        #TODO: Update all `port` positions - this almost/ sometimes works
+        for p in self._Ports:
+            p.setPos(self.parameterToPosition(p.t))
 
         self.suppressItemChange = False
         

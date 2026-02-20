@@ -273,6 +273,7 @@ class HermiteSplineItem(QGraphicsItem):
         self._p = p
         
         #How many lines per segment
+        #TODO: Put this in HGConstants
         self.linesPerSegment = 40
 
         #Tangents
@@ -330,11 +331,11 @@ class HermiteSplineItem(QGraphicsItem):
         self.update()
 
         self.suppressItemChange = False
-        
+
     def __repr__(self):
         #tuple formatted, can be fed into constructor
-        #return str(f"({self._p},\n{self._t})")
-        return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
+        return str(f"({self._p},\n{self._t})")
+        #return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
         #return super().__repr__()
 
     def boundingRect(self) -> QRectF:
@@ -374,9 +375,11 @@ class HermiteSplineItem(QGraphicsItem):
 
     def paint(self, painter: QPainter, option, widget=None):
         #print(f"HS Paint {self._p }")
+
         isSel:bool = self.isSelected()
         if self.parentItem():
             isSel = isSel or self.parentItem().isSelected()
+
         if isSel: #self.isSelected():
             painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
 
@@ -395,7 +398,6 @@ class HermiteSplineItem(QGraphicsItem):
             #painter.setPen(QPen(Qt.black,1))
 
         painter.drawPath(self._path)
-
 
     def textPos(self,t:float = 0.5)->QPointF:
         """ returns the QPointF coord of t in [0,1] along the line 
@@ -523,7 +525,6 @@ class HermiteSplineItem(QGraphicsItem):
         """ Allow the calling of the recalculation independently of handle updates"""
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
-        
         self.update()    
 
     def moveMidPoints(self,delta):
