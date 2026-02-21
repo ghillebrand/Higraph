@@ -1537,7 +1537,7 @@ class MainWindow(QMainWindow):
         """ Code for the listWidget to tell the scene that something has changed (name)"""
         #Maybe should be updateMODELText - scene updates via the model?
 
-        #print("Update scene text")
+        #print("Upddata_blobate scene text")
         #print(f"updateSceneText id = {item.data(KEY_INDEX)} {item.text()}::{item.data(KEY_ROLE)}")
 
         iNum = item.data(KEY_INDEX)
@@ -1646,6 +1646,8 @@ class MainWindow(QMainWindow):
                     nodeX = float(geom.get("x"))
                     nodeY = float(geom.get("y"))
                     #geometry_vars = ["height", "width", "x", "y"]
+                
+                #Get ports
 
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
@@ -1673,6 +1675,7 @@ class MainWindow(QMainWindow):
 
         newNode =  VisNodeItem(QPointF(nodeX,nodeY),self.model,self.ui.listWidget ,nameP=nodeName, id = id,
                                 metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes)
+        #update port positions
         return newNode
 
     def blobFromXML(self,xBlob,newID=False)->VisBlobItem:
@@ -2008,7 +2011,7 @@ class MainWindow(QMainWindow):
 
             blobKey = ET.SubElement(graphml, "key", id="data_blob")
             blobKey.set("for", "blob")
-            blobKey.set("yfiles.type", "blobgraphics")
+            blobKey.set("higraph.type", "blobgraphics")
 
             edgeKey = ET.SubElement(graphml, "key", id="data_edge")
             edgeKey.set("for", "edge")
@@ -2178,6 +2181,7 @@ class MainWindow(QMainWindow):
 
         # Code similar to action_FileOpen. Use that as the "master" copy.
         #Positions only updated on PASTE
+        #TODO: Create a function `initialiseGraphml` with all this boilerplate
 
         graphml = ET.Element("graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
         graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
@@ -2199,7 +2203,7 @@ class MainWindow(QMainWindow):
 
         blobKey = ET.SubElement(graphml, "key", id="data_blob")
         blobKey.set("for", "blob")
-        blobKey.set("yfiles.type", "blobgraphics")
+        blobKey.set("higraph.type", "blobgraphics")
         
         edgeKey = ET.SubElement(graphml, "key", id="data_edge")
         edgeKey.set("for", "edge")

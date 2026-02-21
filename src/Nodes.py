@@ -126,7 +126,7 @@ class VisNodeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,posn,model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={}):
+                    metadata={}, metadataAttributes={},ports = []):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
@@ -228,6 +228,9 @@ class VisNodeItem(QGraphicsObject):
         data = ET.SubElement(xmlNode, "data", key="data_node")
         shape = ET.SubElement(data, "y:" + "ShapeNode")
         ET.SubElement(shape, "y:Geometry", {'x':str(self.pos().x()), 'y':str(self.pos().y())})
+        for p in self._Ports:    
+            ET.SubElement(shape,"port",name=str(p.index), t=str(p.t))
+
         nodeLabel = ET.SubElement(shape, "y:NodeLabel")
         nodeLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
@@ -455,7 +458,7 @@ class VisBlobItem(VisNodeItem):
     BL = 3
 
     def __init__(self,posn, model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={}, 
+                    metadata={}, metadataAttributes={}, ports = [],
                     height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
@@ -521,14 +524,17 @@ class VisBlobItem(VisNodeItem):
 
     def toXML(self, Xparent):
         
-        xmlBlob = ET.Element("blob", id=str(self.nodeNum))
+        xmlBlob = ET.Element("h:blob", id=str(self.nodeNum))
 
         data = ET.SubElement(xmlBlob, "data", key="data_blob")
         shape = ET.SubElement(data, "h:" + "ShapeBlob")
-        ET.SubElement(shape, "y:Geometry", {'x':str(self.pos().x()),\
+        ET.SubElement(shape, "h:Geometry", {'x':str(self.pos().x()),\
              'y':str(self.pos().y()), 'width':str(self._width), 'height':str(self._height), \
                 'xRadius':str(self._xRadius),'yRadius':str(self._yRadius), \
                 'radMode':str(self._radMode)})
+        for p in self._Ports:    
+            ET.SubElement(shape,"port",name=str(p.index),t=str(p.t))
+
         blobLabel = ET.SubElement(shape, "h:BlobLabel")
         blobLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
