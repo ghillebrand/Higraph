@@ -500,6 +500,7 @@ class grScene(QGraphicsScene):
                 self.oldTermItem[0].deletePort(oldP)
                 #Unlink from the old node
                 self.oldTermItem[0].startsEdges.remove(edge)
+                self.oldTermItem[1].startsEdgeLines.remove(edge)
 
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
@@ -510,6 +511,7 @@ class grScene(QGraphicsScene):
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
                 #Relink to new node
                 newTermItem[0].startsEdges.append(edge)
+                newTermItem[1].startsEdgeLines.append(edge)
             
             if self.EdgeEnd == "end":
                 #TODO: The port code is true for either end - review flow of function and tidy up
@@ -519,6 +521,7 @@ class grScene(QGraphicsScene):
                 self.oldTermItem[0].deletePort(oldP)
                 #Move the reverse pointer from the oldTermItem to the new:
                 self.oldTermItem[0].endsEdges.remove(edge)
+                self.oldTermItem[1].endsEdgeLines.remove(edge)
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
                 newTermItem = (newTermItem, p)
@@ -526,6 +529,7 @@ class grScene(QGraphicsScene):
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
                 
                 newTermItem[0].endsEdges.append(edge)
+                newTermItem[1].endsEdgeLines.append(edge)
         
         else: # link back to old
             #print("Missed (nothing found) on relink")

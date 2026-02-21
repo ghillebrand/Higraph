@@ -612,6 +612,40 @@ class VisBlobItem(VisNodeItem):
             pass
 
         return super().itemChange(change, value)
+    
+    def positionToParameter(self, mousePos:QPointF)->float:
+        # the path may not always be reactangular, so keep options opem
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+
+        #turn shape to polygon by letting curves be multiple short edges
+        self._polygon = self._basePath.toFillPolygon()
+        relativeMousePos = self.mapFromScene(mousePos)
+        #step through the line segments accumulating the distance before the mouse is found
+        accumulatedLength=0
+        for i in range(self._polygon.count() - 1):
+            p1 = self._polygon[i]
+            p2 = self._polygon[i + 1]
+            line = QLineF(p1, p2)
+            #pointLine=QLineF(relativeMousePos,relativeMousePos)
+            betweenx=False
+            betweeny=False
+            if (p1.x()<=relativeMousePos.x()+HITSIZE and relativeMousePos.x()-HITSIZE<=p2.x()) or\
+               (p1.x()>=relativeMousePos.x()-HITSIZE and relativeMousePos.x()+HITSIZE>=p2.x()):
+                betweenx=True
+            if (p1.y()<=relativeMousePos.y()+HITSIZE and relativeMousePos.y()-HITSIZE<=p2.y()) or\
+               (p1.y()>=relativeMousePos.y()-HITSIZE and relativeMousePos.y()+HITSIZE>=p2.y()):
+                betweeny=True
+            if betweenx and betweeny:
+                shortLine=QLineF(p1, relativeMousePos)
+                accumulatedLength+=shortLine.length()
+                break
+            else:          
+                accumulatedLength+=line.length()
+        t=accumulatedLength/totalLength
+        return(t)    
+
 
     def _closestTOnSegment(self, a: QPointF, b: QPointF, p: QPointF) -> float:
         """ Calculates the local projection parameter t for point p on segment ab """
@@ -628,7 +662,7 @@ class VisBlobItem(VisNodeItem):
         t = ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / (dx**2 + dy**2)
         return max(0.0, min(t, 1.0))
 
-    def positionToParameter(self, scenePos:QPointF)->float:
+    def xxpositionToParameter(self, scenePos:QPointF)->float:
         """ Takes a pos, and returns a value giving the position of the pos on the blobs's edge 
             Uses _polygon set in `updateFromHandles`
         """
@@ -821,13 +855,14 @@ class VisBlobItem(VisNodeItem):
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
+        self._rect=QRectF(0,0,self._width,self._height)  #JH I hope this is right
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
 
         #Create a polygon version for `parameterFromPos`
-        basePath = QPainterPath()
-        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
-        totalLength = basePath.length()
-        self._polygon = basePath.toFillPolygon()
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+        self._polygon = self._basePath.toFillPolygon()
         #TODO: Update all `port` positions - this almost/ sometimes works
         for p in self._Ports:
             p.setPos(self.parameterToPosition(p.t))
@@ -835,10 +870,13 @@ class VisBlobItem(VisNodeItem):
         self.suppressItemChange = False
         
         #TODO this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
-        for sEdge in self.startsEdges:
-            sEdge.updateLine(self)
-        for eEdge in self.endsEdges:
-            eEdge.updateLine(self)
+        for port in self._Ports:
+            for sEdge in port.startsEdgeLines:
+        #for sEdge in self.startsEdges:
+                sEdge.updateLine((self,port))
+        #for eEdge in self.endsEdges:
+            for eEdge in port.endsEdgeLines:
+                eEdge.updateLine((self, port))
 
 
     def mousePressEvent(self, event):
