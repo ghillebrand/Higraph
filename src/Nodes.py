@@ -631,26 +631,19 @@ class VisBlobItem(VisNodeItem):
             #pointLine=QLineF(relativeMousePos,relativeMousePos)
             betweenx=False
             betweeny=False
-            print("JH here's the gen", p1,p2,relativeMousePos)
             if (p1.x()<=relativeMousePos.x()+HITSIZE and relativeMousePos.x()-HITSIZE<=p2.x()) or\
                (p1.x()>=relativeMousePos.x()-HITSIZE and relativeMousePos.x()+HITSIZE>=p2.x()):
                 betweenx=True
-                print("JH betweenx", p1.x(), relativeMousePos.x(), p2.x())
             if (p1.y()<=relativeMousePos.y()+HITSIZE and relativeMousePos.y()-HITSIZE<=p2.y()) or\
                (p1.y()>=relativeMousePos.y()-HITSIZE and relativeMousePos.y()+HITSIZE>=p2.y()):
                 betweeny=True
-                print("JH betweeny", p1.y(), relativeMousePos.y(), p2.y())
-            #if line.intersects(pointLine):
             if betweenx and betweeny:
-               # print("JH intersects", p1,p2, relativeMousePos)
                 shortLine=QLineF(p1, relativeMousePos)
                 accumulatedLength+=shortLine.length()
                 break
             else:          
                 accumulatedLength+=line.length()
-             #   print("JH accumulating", p1,p2,accumulatedLength)
         t=accumulatedLength/totalLength
-        print("JH here is t", t, accumulatedLength, totalLength)
         return(t)    
 
 
@@ -862,13 +855,14 @@ class VisBlobItem(VisNodeItem):
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
+        self._rect=QRectF(0,0,self._width,self._height)  #JH I hope this is right
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
 
         #Create a polygon version for `parameterFromPos`
-        basePath = QPainterPath()
-        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
-        totalLength = basePath.length()
-        self._polygon = basePath.toFillPolygon()
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+        self._polygon = self._basePath.toFillPolygon()
         #TODO: Update all `port` positions - this almost/ sometimes works
         for p in self._Ports:
             p.setPos(self.parameterToPosition(p.t))
@@ -876,10 +870,13 @@ class VisBlobItem(VisNodeItem):
         self.suppressItemChange = False
         
         #TODO this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
-        for sEdge in self.startsEdges:
-            sEdge.updateLine(self)
-        for eEdge in self.endsEdges:
-            eEdge.updateLine(self)
+        for port in self._Ports:
+            for sEdge in port.startsEdgeLines:
+        #for sEdge in self.startsEdges:
+                sEdge.updateLine((self,port))
+        #for eEdge in self.endsEdges:
+            for eEdge in port.endsEdgeLines:
+                eEdge.updateLine((self, port))
 
 
     def mousePressEvent(self, event):
