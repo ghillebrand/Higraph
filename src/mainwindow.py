@@ -2431,6 +2431,11 @@ class MainWindow(QMainWindow):
         delItem.edgeLine._deleteHandles()
         if self.Scene.thisHandleObjectSelected==delItem.edgeLine:
             self.Scene.thisHandleObjectSelected = None
+        
+        #Del the port on the nodes
+        delItem.startNode[0].deletePort(delItem.startNode[1])
+        delItem.endNode[0].deletePort(delItem.endNode[1])
+
         self.Scene.deleteItemAndChildren(delItem)
 
         del delItem #not sure why this works JH added

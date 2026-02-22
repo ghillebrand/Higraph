@@ -426,7 +426,7 @@ class VisNodeItem(QGraphicsObject):
         """Remove a port """
         #TODO: How to check there are no references to _Ports[i]
         #TODO: index is not used - delete based on ID 
-        #Assume only one edge per port
+        #Currently (02a) only one edge per port
 
         self._Ports.remove(delPort)
 
