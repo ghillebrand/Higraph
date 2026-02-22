@@ -1631,6 +1631,7 @@ class MainWindow(QMainWindow):
         #Use old yEd + load code
         nodeMetadata = {}
         nodeMetadataAttributes = {}
+        nodePorts = []
 
         #TODO: type check id
         if not newID:
@@ -1645,9 +1646,13 @@ class MainWindow(QMainWindow):
                 if geom is not None:
                     nodeX = float(geom.get("x"))
                     nodeY = float(geom.get("y"))
-                    #geometry_vars = ["height", "width", "x", "y"]
                 
                 #Get ports
+                for nextP, p in enumerate(shapeNode.iter("port")):
+                    #print(p.attrib)
+                    tmpP = port(QPointF(float(p.get("x")),float(p.get("y"))), t=float(p.get("t")), index = int(p.get("name"))  ) 
+                    nodePorts.append(tmpP)
+                #print(f"{id=},{nextP=}")
 
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
@@ -1674,8 +1679,13 @@ class MainWindow(QMainWindow):
                     nodeMetadataAttributes[metaKey] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
 
         newNode =  VisNodeItem(QPointF(nodeX,nodeY),self.model,self.ui.listWidget ,nameP=nodeName, id = id,
-                                metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes)
-        #update port positions
+                                metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes, ports=nodePorts)
+        
+        #update port  PARENTS (maybe recompute position?)
+        for p in newNode._Ports:
+            p.setParentItem(newNode)
+            #print(f"{newNode.nodeNum=},{p.index=}")
+
         return newNode
 
     def blobFromXML(self,xBlob,newID=False)->VisBlobItem:
@@ -1687,6 +1697,7 @@ class MainWindow(QMainWindow):
         #Use old yEd + load code
         blobMetadata = {}
         blobMetadataAttributes = {}
+        nodePorts = []
 
         #TODO: type check id
         if not newID:
@@ -1706,7 +1717,11 @@ class MainWindow(QMainWindow):
                     blobXRadius=float(geom.get("xRadius"))
                     blobYRadius=float(geom.get("yRadius"))
 
-                    #geometry_vars = ["height", "width", "x", "y"]
+                #Get ports
+                for nextP, p in enumerate(shapeBlob.iter("port")):
+                    tmpP = port(QPointF(float(p.get("x")),float(p.get("y"))), t=float(p.get("t")), index = int(p.get("name"))  ) 
+                    nodePorts.append(tmpP)
+                #print(f"{id=},{nextP=}")
 
                 blobLabel = shapeBlob.find("BlobLabel")
                 if blobLabel is not None:
@@ -1735,7 +1750,11 @@ class MainWindow(QMainWindow):
         newBlob =  VisBlobItem(QPointF(blobX,blobY),self.model,self.ui.listWidget, width=blobWidth,\
                                height=blobHeight, xRadius=blobXRadius, yRadius=blobYRadius,\
                                 nameP=blobName, id = id, \
-                                metadata=blobMetadata, metadataAttributes=blobMetadataAttributes)
+                                metadata=blobMetadata, metadataAttributes=blobMetadataAttributes,ports=nodePorts)
+        
+        for p in newBlob._Ports:
+            p.setParentItem(newBlob)
+
         return newBlob
     
     def edgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
@@ -1745,9 +1764,6 @@ class MainWindow(QMainWindow):
             newStartID & newEndID also must be overwritten on paste/ structure copy
             Returns VisEdgeItem
         """
-        #Use old yEd + load code
-        #print(ET.tostring(xEdge))
-        
 
         if not newID:
             #TODO: type check id/ process string IDs
@@ -1766,13 +1782,22 @@ class MainWindow(QMainWindow):
         else:
             eItemID = int(xEdge.attrib.get("target", None))
 
+        #Ports
+        srcPort = int(xEdge.attrib.get("sourceport"))
+        tgtPort = int(xEdge.attrib.get("targetport"))
+
         sItem = self.Scene.findItemByIdx(sItemID)
         eItem = self.Scene.findItemByIdx(eItemID)
         if sItem == None:
+            #TODO - this should be in a try-except, since this means the file is corrupt
             print(f"WARNING! - Start Item ID {sItemID} not found ")
         if eItem == None:
             print(f"WARNING! - End Item ID {eItemID} not found ")
-        #Find the items
+        
+        #Add the port
+        sItem = (sItem, sItem.portFromIndex(srcPort))
+        eItem = (eItem, eItem.portFromIndex(tgtPort))
+        #
 
         directed = xEdge.attrib.get("directed", '')
         edgeMetadata = {}
@@ -2217,7 +2242,7 @@ class MainWindow(QMainWindow):
             if sItem.data(KEY_ROLE) == ROLE_EDGE:
                 #TODO: Check the semantics here - does this make sense
                 #only copy edges if all ends are in the selection
-                if sItem.startNode in selectedItems and sItem.endNode in selectedItems:
+                if sItem.startNode[0] in selectedItems and sItem.endNode[0] in selectedItems:
                     graph.append(sItem.toXML(graph))
 
         #graphmlData = yGr.stringify_graph()
@@ -2398,6 +2423,8 @@ class MainWindow(QMainWindow):
             sItemID = int(xEdge.attrib.get("source", None))
             eItemID = int(xEdge.attrib.get("target", None))
 
+            #BUG - edges don't work on paste - ID's have changed!
+
             edgeItem = self.edgeFromXML(xEdge, newID=True, 
                                             newStartID=oldToNewID[sItemID],
                                             newEndID = oldToNewID[eItemID])
@@ -2431,6 +2458,11 @@ class MainWindow(QMainWindow):
         delItem.edgeLine._deleteHandles()
         if self.Scene.thisHandleObjectSelected==delItem.edgeLine:
             self.Scene.thisHandleObjectSelected = None
+        
+        #Del the port on the nodes
+        delItem.startNode[0].deletePort(delItem.startNode[1])
+        delItem.endNode[0].deletePort(delItem.endNode[1])
+
         self.Scene.deleteItemAndChildren(delItem)
 
         del delItem #not sure why this works JH added
