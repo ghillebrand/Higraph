@@ -341,10 +341,13 @@ class VisNodeItem(QGraphicsObject):
             
             #Position change
             if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
-                for sEdge in self.startsEdges:
-                    sEdge.updateLine(self)
-                for eEdge in self.endsEdges:
-                    eEdge.updateLine(self)
+                for port in self._Ports:
+                    for sEdge in port.startsEdgeLines:
+                #for sEdge in self.startsEdges:
+                        sEdge.updateLine((self,port))
+                #for eEdge in self.endsEdges:
+                    for eEdge in port.endsEdgeLines:
+                        eEdge.updateLine((self, port))
 
         #note the **return**
         return super().itemChange(change,value)
