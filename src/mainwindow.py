@@ -1543,7 +1543,8 @@ class MainWindow(QMainWindow):
         iNum = item.data(KEY_INDEX)
         print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
         new_text = item.text()
-        self.model.item(iNum).setText(new_text)
+        itemModelRow=self.model.findRowByIdx(iNum)
+        self.model.item(itemModelRow).setText(new_text)
         #TODO: The list update should trigger some change flag/ be embedded 
         if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
             self.model.Gr.nodeD[iNum].metadata.update({'name':new_text})
