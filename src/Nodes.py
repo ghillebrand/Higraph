@@ -49,7 +49,7 @@ class QRoundedRectItem(QGraphicsObject):
         # Style configuration
         self._penWidth = 1.0
         self._baseColor = QColor("black")
-        self._hoverColor = QColor("cyan")
+        self._hoverColor = QColor("blue")
         self._pen = QPen(Qt.NoPen)  #QPen(self._baseColor, self._penWidth)
         
         # Interaction settings
@@ -221,7 +221,7 @@ class VisNodeItem(QGraphicsObject):
         #TODO: hoverEvents are not sent when there is an explicit mouseEVent handler. Handle in scene and delete here
         self.setAcceptHoverEvents(True)
         self.isHovered = False
-        self._hoverColor = QColor("red")
+        self._hoverColor = QColor("blue")
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
@@ -497,7 +497,7 @@ class VisBlobItem(VisNodeItem):
         del self.nodeShape
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._hoverColor=QColor("cyan")
+        self._hoverColor=QColor("blue")
         self.parents = parents
         self.children = children
 

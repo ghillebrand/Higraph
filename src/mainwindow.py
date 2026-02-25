@@ -31,7 +31,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
-            QSlider, QLabel, QStatusBar, 
+            QSlider, QLabel, QStatusBar, QGraphicsSceneMouseEvent,
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
 from PySide6 import (QtCore, QtWidgets, QtGui )
@@ -40,7 +40,7 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QPainterPath, QPainterPathStroker, QCursor,
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
-            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
+            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
 from PySide6.QtSvg import QSvgGenerator
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
@@ -370,6 +370,26 @@ class grScene(QGraphicsScene):
         scene_pos = view.mapToScene(view_pos)
         return scene_pos
         
+    def snapToShape(self, mouseEvent, selItem, pos: QPointF, size: QSizeF, hitRect=None):
+        if hitRect==None:
+            half_w = size.width() / 2
+            half_h = size.height() / 2
+            rect = QRectF(pos.x() - half_w, pos.y() - half_h, size.width(), size.height())
+            self.addRect(rect)
+        else:
+            rect=hitRect
+        print("JH mousepos going in", mouseEvent.scenePos())
+        for i in range(int(pos.x()-half_w)-1, int(pos.x() + half_w)+1):
+            for j in range(int(pos.y()-half_h)-1, int(pos.y() + half_h)+1):
+                if selItem in self.itemsHere(QPoint(i,j),QSize(1,1),[ROLE_BLOB, ROLE_EDGE, ROLE_NODE, ROLE_POLYLINE]):
+                    mouseOffset=(pos.x()-i, pos.y()-j)
+                    mouseEvent.setPos(QPoint(mouseEvent.pos().x()-mouseOffset[0],(mouseEvent.pos().y()-mouseOffset[1] )))
+                    mouseEvent.setScenePos(QPoint(mouseEvent.scenePos().x()-mouseOffset[0],(mouseEvent.scenePos().y()-mouseOffset[1] )))
+                    mouseEvent.setScreenPos(QPoint(mouseEvent.screenPos().x()-mouseOffset[0],(mouseEvent.screenPos().y()-mouseOffset[1] )))
+                    rect=QRectF(mouseEvent.scenePos().x(), mouseEvent.scenePos().y(), HITSIZE, HITSIZE)
+                    self.addRect(rect)
+                    return(mouseEvent)
+
     #Code to handle the edge rubber banding during creation (QT handles edit changes)
 
     def startRubberLine(self, mPos):
@@ -707,74 +727,76 @@ class grScene(QGraphicsScene):
                     selItem = selItem[0]
                 #else:
                 #    selItem = None
+                    if selItem.isHovered:   #This stops it selecting just out of reach of the border line
+                        if selItem.data(KEY_ROLE) == ROLE_NODE:
+                            self.changedByCode=True
+                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            self.listWidget.setCurrentItem(lWItem)
+                            self.changedByCode=False
+                            selItem.isOnlySelected = True
+                            selItem.setSelected(True)
+                            super().mousePressEvent(mouseEvent)
+                            return
+                        #immediately hand off for Qt to move
+                        #BUG:Dragging With these on, DRAGGING doesn't happen, off, a single node select doesn't clear selection
+                        #Solution: Move `isSelected` to mouseRelease, to allow for movement
+                        #TODO: DRAGGING
+                        #super().mousePressEvent(mouseEvent)
+                        #return
 
-                    if selItem.data(KEY_ROLE) == ROLE_NODE:
-                        self.changedByCode=True
-                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                        self.listWidget.setCurrentItem(lWItem)
-                        self.changedByCode=False
-                        super().mousePressEvent(mouseEvent)
-                        return
-                    #immediately hand off for Qt to move
-                    #BUG:Dragging With these on, DRAGGING doesn't happen, off, a single node select doesn't clear selection
-                    #Solution: Move `isSelected` to mouseRelease, to allow for movement
-                    #TODO: DRAGGING
-                    #super().mousePressEvent(mouseEvent)
-                    #return
+                        if selItem.data(KEY_ROLE) == ROLE_BLOB:
+                            #print(f"Sel Blob {selItem.metadata['name']}")
+                            self.onlySelected = selItem
+                            self.thisHandleObjectSelected=selItem
+                            selItem.isOnlySelected = True
+                            selItem.setSelected(True)
+                            selItem._createHandles() #JH
+                            self.changedByCode=True
+                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            self.listWidget.setCurrentItem(lWItem)
+                            self.changedByCode=False
+                            # accept? return?
 
-                    if selItem.data(KEY_ROLE) == ROLE_BLOB:
-                        #print(f"Sel Blob {selItem.metadata['name']}")
-                        self.onlySelected = selItem
-                        self.thisHandleObjectSelected=selItem
-                        selItem.isOnlySelected = True
-                        selItem.setSelected(True)
-                        selItem._createHandles() #JH
-                        self.changedByCode=True
-                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                        self.listWidget.setCurrentItem(lWItem)
-                        self.changedByCode=False
-                        # accept? return?
+                        if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
+                            # save handleobject and create handles
+                            self.thisHandleObjectSelected=selItem
+                            self.onlySelected=selItem
+                            selItem.setSelected(True)
+                            parent = selItem.parentItem()
+                            parent.setSelected(True)
+                            parent.isOnlySelected = True
+                            selItem._createHandles()
 
-                    if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
-                        # save handleobject and create handles
-                        self.thisHandleObjectSelected=selItem
-                        self.onlySelected=selItem
-                        selItem.setSelected(True)
-                        parent = selItem.parentItem()
-                        parent.setSelected(True)
-                        parent.isOnlySelected = True
-                        selItem._createHandles()
-
-                        #selItem.setSelected(False)
-                        #selItem = parent
-                        #selItem.setSelected(True) # check this
-                       # super().mousePressEvent(mouseEvent)
-                       # return
-                    
-                    if selItem.data(KEY_ROLE) == ROLE_EDGE:
-                        if not selItem.stH:
-                            selItem.setZValue(2000) #move the edge above nodes
-                        # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
-                        #print("Setting stH", end="")
-                            if len(selItem.edgeLine._pHandles)>0:
-                                selItem.stH = selItem.edgeLine._pHandles[0]
-                                selItem.endH = selItem.edgeLine._pHandles[-1]
-                            else:
-                                print("No handles yet")
-                        self.changedByCode=True
-                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                        self.listWidget.setCurrentItem(lWItem)
-                        self.changedByCode=False
-                        # if not selItem.endH:
-                        #print(", endH")
-                        #     selItem.endH = selItem.edgeLine._pHandles[-1]
-                        # will this ever be needed?
-                        #selItem.setSelected(True) 
-                        #selItem.isOnlySelected = True
-                    #Let the scene remember, for unsetting
-                        #self.onlySelected = selItem
-                        mouseEvent.accept()
-                        return
+                            #selItem.setSelected(False)
+                            #selItem = parent
+                            #selItem.setSelected(True) # check this
+                        # super().mousePressEvent(mouseEvent)
+                        # return
+                        
+                        if selItem.data(KEY_ROLE) == ROLE_EDGE:
+                            if not selItem.stH:
+                                selItem.setZValue(2000) #move the edge above nodes
+                            # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
+                            #print("Setting stH", end="")
+                                if len(selItem.edgeLine._pHandles)>0:
+                                    selItem.stH = selItem.edgeLine._pHandles[0]
+                                    selItem.endH = selItem.edgeLine._pHandles[-1]
+                                else:
+                                    print("No handles yet")
+                            self.changedByCode=True
+                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            self.listWidget.setCurrentItem(lWItem)
+                            self.changedByCode=False
+                            # if not selItem.endH:
+                            #print(", endH")
+                            #     selItem.endH = selItem.edgeLine._pHandles[-1]
+                            # will this ever be needed?
+                            #selItem.setSelected(True) 
+                            #selItem.isOnlySelected = True
+                        #Let the scene remember, for unsetting
+                            #self.onlySelected = selItem
+                            mouseEvent.accept()
+                            return
 
         if (mouseEvent.button() == Qt.MouseButton.RightButton):
             mPos = mouseEvent.scenePos()
