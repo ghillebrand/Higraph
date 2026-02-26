@@ -1035,6 +1035,35 @@ class grScene(QGraphicsScene):
             mouseEvent.accept()
             #super().mouseDoubleClickEvent(mouseEvent)
 
+    def updateBlobParenting(self):
+        """Recalculate the parents & children of the blobs in the scene"""
+        print("Updating blob parenting")
+        #print(f"{self.itemIndexMethod()=}")
+
+        blobList = []
+        for sItem in self.items():
+            if sItem.data(KEY_ROLE) in [ROLE_BLOB]:
+                blobList.append(sItem)
+                #inside = self.items(someRect,Qt.ContainsItemShape)
+        
+        #print(f"{[b.nodeNum for b in blobList]}")
+        
+        #Gemini structure
+        containmentMap = {}
+        for b in blobList:
+            print(f"Blob {b.nodeNum} contains ",end = " {")
+            searchArea = b.sceneBoundingRect()
+            itemsInside = self.items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
+
+            childBlobs = []
+            for item in itemsInside:
+                if item != b and item.data(KEY_ROLE) == ROLE_BLOB:
+                    childBlobs.append(item.nodeNum)
+                    print(item.nodeNum, end = ",")
+            print("}")
+            containmentMap[b] = childBlobs
+
+
     def signalTest(self):
         print("signal sent to scene successfully")
 
@@ -1563,7 +1592,7 @@ class MainWindow(QMainWindow):
         #print(f"updateSceneText id = {item.data(KEY_INDEX)} {item.text()}::{item.data(KEY_ROLE)}")
 
         iNum = item.data(KEY_INDEX)
-        print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
+        #print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
         new_text = item.text()
         itemModelRow=self.model.findRowByIdx(iNum)
         self.model.item(itemModelRow).setText(new_text)

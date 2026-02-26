@@ -516,6 +516,9 @@ class VisBlobItem(VisNodeItem):
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
+        #Metadata disply position
+        self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
+
         #Placeholder for drag handles
         self._Handles = []
 
@@ -621,7 +624,7 @@ class VisBlobItem(VisNodeItem):
             #r = QRectF(0,-NODESIZE,0,0) 
             #update height & width
             #r = painter.drawText(r,Qt.AlignCenter,self.dispText)
-            #painter.drawText(r, Qt.AlignCenter, self.dispText)
+            #painter.drawText(self._rect, Qt.AlignCenter | Qt.AlignTop, self.dispText)
             #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
             painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
 
@@ -631,7 +634,8 @@ class VisBlobItem(VisNodeItem):
         #print(f"{change=} {value=}")
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
-            #print("blob move")
+            print("blob pos change")
+            self.scene().updateBlobParenting()
             pass
 
         return super().itemChange(change, value)
