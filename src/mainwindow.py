@@ -682,16 +682,17 @@ class grScene(QGraphicsScene):
                 #Items sizes should be relative to (0,0)
                 mPos = mouseEvent.scenePos()
                 #VisNodeItem adds to the model and the  list
-                item = VisNodeItem(mPos, self.model,self.listWidget)
-                item.setPos(mPos)
+                ###item = VisNodeItem(mPos, self.model,self.listWidget)
+                ###item.setPos(mPos)
                 #Add to *Scene*
-                self.addItem(item)
+                ###self.addItem(item)
 
-                item.setFlag(QGraphicsItem.ItemIsSelectable, True)
-                item.setFlag(QGraphicsItem.ItemIsMovable, True)
+                ###item.setFlag(QGraphicsItem.ItemIsSelectable, True)
+                ###item.setFlag(QGraphicsItem.ItemIsMovable, True)
 
                 #put create node on undo stack
-                self.undoStack.push(nodeCreateUndoCommand(item, mPos, self))
+                newAction=createNodeCommand(None, mPos, self, self.model, self.listWidget)
+                self.undoStack.push(newAction)
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
                 self.mouseMode = self.POINTER

@@ -35,12 +35,14 @@ from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
 
 # class for working with undo and redo (QUndoStack)
-class nodeCreateUndoCommand(QUndoCommand):
-    def __init__(self, node, posn, scene):
+class createNodeCommand(QUndoCommand):
+    def __init__(self, node, posn, scene, model, listWidget):
         super().__init__()
         self.node = node
         self.posn = posn
         self.scene = scene
+        self.model = model
+        self.listWidget=listWidget
 
         #self.new_text = new_text
         #self.old_text = old_text
@@ -52,20 +54,26 @@ class nodeCreateUndoCommand(QUndoCommand):
 
     def redo(self):
         #VisNodeItem adds to the model and the  list
-        newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
-                               id = self.node.nodeNum, \
-                                metadata=self.node.metadata, metadataAttributes=self.node.metadataAttributes, \
-                                    ports=self.node._Ports)
+        if self.node==None:
+            newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
+            #update port  PARENTS (maybe recompute position?)
+            for p in newNode._Ports:
+                p.setParentItem(newNode)
+        else:
+            newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+                               id = self.node.nodeNum, metadata=self.node.metadata, \
+                                metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
         
         #update port  PARENTS (maybe recompute position?)
-        for p in newNode._Ports:
-            p.setParentItem(newNode)
-        #item.setPos(newNode.getPos())
+        #for p in newNode._Ports:
+        #    p.setParentItem(newNode)
+        newNode.setPos(self.posn)
         #Add to *Scene*
         self.scene.addItem(newNode)
 
         newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
         newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.node=newNode
 
 
 class QRoundedRectItem(QGraphicsObject):
