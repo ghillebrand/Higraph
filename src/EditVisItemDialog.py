@@ -28,6 +28,14 @@ class EditVisNodeItemDialog(QDialog):
         self.nodeNumLabel = QLabel(str(visNodeItem.nodeNum))
         form.addRow("node ID", self.nodeNumLabel)
 
+        #Display parents and children
+        parents = ",".join([str(p.nodeNum) for p in visNodeItem.parents])
+        children = ",".join([str(c.nodeNum) for c in visNodeItem.children])
+        self.parentsLabel = QLabel(parents)
+        self.childrenLabel = QLabel(children)
+        form.addRow("Parents:", self.parentsLabel)
+        form.addRow("Children:", self.childrenLabel)
+
         # Start Edges Index (read-only)
         startsEdgestr = ",".join([str(ed.edgeNum) for ed in visNodeItem.startsEdges])
         endsEdgestr = ",".join([str(ed.edgeNum) for ed in visNodeItem.endsEdges])

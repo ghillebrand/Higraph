@@ -67,12 +67,20 @@ class Graph:
             if parent in self.parents:
                 self.parents.remove(parent)
 
+        def resetParents(self,parentList):
+            """ Overwrites the parents with a new list"""
+            self.parents = parentList
+
         def addChild(self,child):
             self.children.append(child)
 
         def delChild(self,child):
             if child in self.children:
                 self.children.remove(child)
+        
+        def resetChildren(self,childList):
+            """overwrites the children list with a new set of values"""
+            self.children = childList
     #-------------------------------------------------------------------------------------#
     
     class edge():
@@ -287,3 +295,11 @@ class Graph:
             e.endNodes.append(newID)
         return True
     
+    def resetParents(self, nodeID:int, parentList):
+        self.nodeD[nodeID].parents = parentList
+    
+    def resetChildren(self, nodeID:int, childrenList):
+        self.nodeD[nodeID].children = childrenList
+
+    def addNodeChild(self,nodeID:int, childID:int):
+        self.nodeD[nodeID].addChild(childID)

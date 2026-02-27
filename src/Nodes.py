@@ -126,7 +126,7 @@ class VisNodeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,posn,model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={},ports = []):
+                    metadata={}, metadataAttributes={},ports = [], parents=[]):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
@@ -186,6 +186,11 @@ class VisNodeItem(QGraphicsObject):
         self.setData(KEY_INDEX, self.nodeNum)
         self.setData(KEY_ROLE, ROLE_NODE)
         
+        self.parents = parents
+        #This will always be empty, but it makes the code more general
+        self.children = [] 
+
+
         #The shape of the node- rectangle
         #1st 2 parms are origin, 2nd 2 are width & height
         #Rect shape
@@ -538,7 +543,6 @@ class VisBlobItem(VisNodeItem):
     def __repr__(self):
         r = f"\noo VisBLOBItem\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n"+\
                 f"{self.startsEdges = },\n{self.endsEdges = }\n00" #\n {self.nodeShape =})"
-        r += f"\n{self.parents=}\n{self.children}"
         return r
     __str__ = __repr__
 
@@ -580,20 +584,21 @@ class VisBlobItem(VisNodeItem):
         #print("Blob shape udpate")
         #path = self.nodeShape.shape() 
         path = self.mapFromItem(self.nodeShape, self.nodeShape.shape())
-        if self.metadataAttributes.get('name', {}).get('display', True):
-            #TODO: When text is rich text, this will need updating
-            tFont = QFont()
-            fm = QFontMetrics(tFont)
-            # Use same rect/logic as paint() for text hit-area
-            textRect = fm.boundingRect(self._rect.toRect(), Qt.AlignCenter, self.dispText)
-            path.addRect(QRectF(textRect))
+
+        #TODO: This does not put the textRect where paint does (FontMetrics boundrect does not see the Qt.Align flags)
+        #if self.metadataAttributes.get('name', {}).get('display', True):
+        #    #TODO: When text is rich text, this will need updating
+        #    tFont = QFont()
+        #    fm = QFontMetrics(tFont)
+        #    # Use same rect/logic as paint() for text hit-area
+        #    textRect = fm.boundingRect(self._rect.toRect(), Qt.AlignLeft | Qt.AlignCenter, self.dispText)
+        #    path.addRect(QRectF(textRect))
 
         #outlinePath = QPainterPathStroker()
         #outlinePath.setWidth(HITSIZE*2)
         #return outlinePath.createStroke(path)            
         return path
-    
-    
+     
     def hoverEnterEvent(self, event):
         self.isHovered = True
         self.update()
@@ -603,7 +608,6 @@ class VisBlobItem(VisNodeItem):
         self.isHovered = False
         self.update()
         super().hoverLeaveEvent(event)
-
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
         if self.isSelected():
@@ -628,14 +632,17 @@ class VisBlobItem(VisNodeItem):
             #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
             painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
 
+        #Debug - draw the shape path
+        #painter.drawPath(self.shape())
+
     def itemChange(self, change, value):
         if self.suppressItemChange:
             return super().itemChange(change, value)
         #print(f"{change=} {value=}")
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
-            print("blob pos change")
-            self.scene().updateBlobParenting()
+            #print("blob pos change")
+            #self.scene().updateBlobParenting()
             pass
 
         return super().itemChange(change, value)
