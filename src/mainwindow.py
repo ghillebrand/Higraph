@@ -31,7 +31,8 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
-            QSlider, QLabel, QStatusBar, QGraphicsSceneMouseEvent,
+            QSlider, QLabel, QStatusBar, QColorDialog, 
+            QGraphicsSceneMouseEvent,
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
 from PySide6 import (QtCore, QtWidgets, QtGui )
@@ -1436,6 +1437,12 @@ class MainWindow(QMainWindow):
         self.execCodeAction.triggered.connect(self.showCodeDialog)
         self.ui.menuTools.addAction(self.execCodeAction)
 
+        """
+        self.selectColourDefaultsAction = QAction("Select Colours", self)
+        self.selectColourDefaultsAction.triggered.connect(self.selectColours)
+        self.ui.menuTools.addAction(self.selectColourDefaultsAction)
+        """
+
         #Help
         self.ui.action_About.triggered.connect(self.action_HelpAbout)
         self.ui.action_Credits.triggered.connect(self.action_HelpCredits)
@@ -1454,9 +1461,16 @@ class MainWindow(QMainWindow):
     #Action Code
 
     def showCodeDialog(self):
-        #store self.codeDialog as an attribute to prevent it from being garbage-collected 
         self.codeDialog  = CodeExecDialog(self, scene=self.Scene)
         self.codeDialog.show()
+
+    """
+    def selectColours(self):
+        #store self.codeDialog as an attribute to prevent it from being garbage-collected 
+        colour=QColorDialog.getColor()
+        if colour.isValid():
+            DRAWING_COLOUR=colour
+    """
 
     #Graph actions from the toolbar
 

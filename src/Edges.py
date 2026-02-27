@@ -205,7 +205,10 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         self.setZValue(0)
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._hoverColor = QColor("red")
+        #self._hoverColor = QColor("red")
+        self._baseColor = DRAWING_COLOUR
+        self._hoverColor = HOVER_COLOUR
+        self._selectColor = SELECT_COLOUR
         #Checking if this was why there were ghosts
         #self.setCacheMode(QGraphicsItem.NoCache)
         
@@ -311,17 +314,17 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #painter.drawRect(self.textItem.boundingRect())
        
         if self.isSelected():
-            painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
-            self.textItem.setDefaultTextColor(Qt.blue)   
-            self.metaDisplay.setDefaultTextColor(Qt.blue)
+            painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
+            self.textItem.setDefaultTextColor(self._selectColor)   
+            self.metaDisplay.setDefaultTextColor(self._selectColor)
         elif self.isHovered:
             painter.setPen(QPen(self._hoverColor))
             self.textItem.setDefaultTextColor(self._hoverColor)   
             self.metaDisplay.setDefaultTextColor(self._hoverColor)
         else:
-            painter.setPen(Qt.black)
-            self.textItem.setDefaultTextColor(Qt.black)
-            self.metaDisplay.setDefaultTextColor(Qt.black)
+            painter.setPen(self._baseColor)
+            self.textItem.setDefaultTextColor(self._baseColor)
+            self.metaDisplay.setDefaultTextColor(self._baseColor)
 
         #TODO: Move this to itemChanged?
         self.textItem.setVisible(self.metadataAttributes['name']['display'])
