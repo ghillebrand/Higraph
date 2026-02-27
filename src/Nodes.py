@@ -21,7 +21,7 @@ from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor,QColor,
+            QPainterPath, QPainterPathStroker, QCursor,QColor, QUndoStack, QUndoCommand,
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
@@ -33,6 +33,40 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem
 from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
+
+# class for working with undo and redo (QUndoStack)
+class nodeCreateUndoCommand(QUndoCommand):
+    def __init__(self, node, posn, scene):
+        super().__init__()
+        self.node = node
+        self.posn = posn
+        self.scene = scene
+
+        #self.new_text = new_text
+        #self.old_text = old_text
+
+    def undo(self):
+        delIdx = self.node.data(KEY_INDEX)
+        self.scene.mainwindow.delNode(delIdx)
+        #self.text_edit.setPlainText(self.old_text)
+
+    def redo(self):
+        #VisNodeItem adds to the model and the  list
+        newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+                               id = self.node.nodeNum, \
+                                metadata=self.node.metadata, metadataAttributes=self.node.metadataAttributes, \
+                                    ports=self.node._Ports)
+        
+        #update port  PARENTS (maybe recompute position?)
+        for p in newNode._Ports:
+            p.setParentItem(newNode)
+        #item.setPos(newNode.getPos())
+        #Add to *Scene*
+        self.scene.addItem(newNode)
+
+        newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
+
 
 class QRoundedRectItem(QGraphicsObject):
     # Custom signal emitted when the border is clicked

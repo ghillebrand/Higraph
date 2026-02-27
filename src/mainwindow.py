@@ -38,7 +38,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor,
+            QPainterPath, QPainterPathStroker, QCursor, QUndoStack, QUndoCommand,
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
@@ -223,10 +223,11 @@ class grScene(QGraphicsScene):
     edgeEditRequested = Signal(object)
     nodeEditRequested = Signal(object)
 
-    def __init__(self, model,listWidget,mainwindow):
+    def __init__(self, model,listWidget,undoStack, mainwindow):
         super().__init__()
         self.model = model
         self.listWidget = listWidget
+        self.undoStack = undoStack
         self.mainwindow = mainwindow
         self.mouseMode = self.POINTER
 
@@ -688,6 +689,9 @@ class grScene(QGraphicsScene):
 
                 item.setFlag(QGraphicsItem.ItemIsSelectable, True)
                 item.setFlag(QGraphicsItem.ItemIsMovable, True)
+
+                #put create node on undo stack
+                self.undoStack.push(nodeCreateUndoCommand(item, mPos, self))
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
                 self.mouseMode = self.POINTER
@@ -1362,9 +1366,10 @@ class MainWindow(QMainWindow):
         #self.ui.listWidget.itemClicked.connect(self.listClick) # this is now called by itemSelectionChanged
         self.ui.listWidget.itemDoubleClicked.connect(self.listDblClicked)
         
+        self.undoStack=QUndoStack()
 
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
-        self.Scene = grScene(self.model,self.ui.listWidget,self)
+        self.Scene = grScene(self.model,self.ui.listWidget, self.undoStack, self)
         #self.Scene.selectionChanged.connect(self.actionSceneSelectChange)
         self.ui.listWidget.itemSelectionChanged.connect(self.actionListSelectChange)
 
@@ -1431,6 +1436,15 @@ class MainWindow(QMainWindow):
         self.ui.actionSelect_None.triggered.connect(self.action_EditSelectNone)
         self.ui.actionZoomIn.triggered.connect(self.action_EditZoomIn)
         self.ui.actionZoomOut.triggered.connect(self.action_EditZoomOut)
+
+        self.actionEditUndo = QAction("Undo", self)
+        self.ui.menuEdit.addAction(self.actionEditUndo)
+        self.actionEditRedo = QAction("Redo", self)
+        self.ui.menuEdit.addAction(self.actionEditRedo)
+        self.actionEditUndo.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+z", None))
+        self.actionEditRedo.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+y", None))
+        self.actionEditUndo.triggered.connect(self.undoStack.undo)
+        self.actionEditRedo.triggered.connect(self.undoStack.redo)
 
         #Tools & other 
         self.execCodeAction = QAction("Run Python Code", self)
