@@ -56,7 +56,7 @@ class StraightLineItem(QGraphicsItem):
         super().__init__(parent)
         self.suppressItemChange = True
         self._p = p
-        self.pen = QPen(Qt.darkBlue, 1)
+        self.pen = QPen(self._selectColor, 1)
         self._boundingRect = QRectF()
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self._path = self._createPolyPath()
@@ -64,7 +64,10 @@ class StraightLineItem(QGraphicsItem):
         self.suppressItemChange = False
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._hoverColor=QColor('red')
+        #self._hoverColor=QColor('red')
+        self._baseColor = DRAWING_COLOUR
+        self._hoverColor = HOVER_COLOUR
+        self._selectColor = SELECT_COLOUR
 
     def __repr__(self):
         #tuple formatted, can't be fed into constructor, since it's a string :(
@@ -115,11 +118,11 @@ class StraightLineItem(QGraphicsItem):
 
         if isSel:  #self.isSelected():
         #if self.isSelected():
-            painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+            painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
         elif self.isHovered:
-            painter.setPen(QPen(Qt.red))
+            painter.setPen(QPen(self._hoverColor))
         else:
-            painter.setPen(QPen(Qt.black))  #self.pen)
+            painter.setPen(QPen(self._baseColor))  #self.pen)
 
         painter.drawPath(self._path)
         painter.restore()
@@ -226,7 +229,7 @@ class StraightLineItem(QGraphicsItem):
         #TODO: is idx used?
 
         for idx, pt in enumerate(self._p):
-            handle = HandleItem(pt, color=Qt.green,parent=self)
+            handle = HandleItem(pt, color=EDGE_HANDLE_COLOUR,parent=self)
             handle.setMoveCallback(self._updateFromHandles)
             self._pHandles.append(handle)
 
@@ -312,7 +315,7 @@ class HermiteSplineItem(QGraphicsItem):
         self._pHandles = []
         self._tHandles = []
 
-        self.pen = QPen(Qt.black, 1)# QPen(Qt.darkBlue, 1) 
+        
         self._boundingRect = QRectF()
         #self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         #For graph drawing, splines will only ever move via nodes moving, so this is not needed
@@ -324,7 +327,10 @@ class HermiteSplineItem(QGraphicsItem):
         self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges,True)
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._hoverColor = QColor("red")
+        self._baseColor = DRAWING_COLOUR
+        self._hoverColor = HOVER_COLOUR
+        self._selectColor = SELECT_COLOUR
+        self.pen = QPen(self._baseColor, 1)# QPen(Qt.darkBlue, 1) 
         #draw, since itemChange is not called without handles
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
@@ -381,11 +387,11 @@ class HermiteSplineItem(QGraphicsItem):
             isSel = isSel or self.parentItem().isSelected()
 
         if isSel: #self.isSelected():
-            painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+            painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
 
             # Draw tangents, if this is the ONLY selected edge
             if self.parentItem().isOnlySelected:
-                painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+                painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
                 painter.drawLine(self._p[0], self._p[0] + self._t[0][1])
                 for i in range(1,len(self._p)-1):
                     painter.drawLine(self._p[i], self._p[i] - self._t[i][0])      #left
@@ -543,21 +549,21 @@ class HermiteSplineItem(QGraphicsItem):
         self.parentItem().setZValue(3000)
         self._pHandles = []
         for pi in self._p: 
-            self._pHandles.append(HandleItem(pi,color=Qt.green,parent=self))
+            self._pHandles.append(HandleItem(pi,color=EDGE_HANDLE_COLOUR,parent=self))
 
         #Tangent handles
         self._tHandles = []
         #start
         # no left tgt, use 0
         self._tHandles.append((QPointF(0,0),
-                                HandleItem(self._t[0][1],color=Qt.blue,parent=self._pHandles[0]))) 
+                                HandleItem(self._t[0][1],color=self._selectColor,parent=self._pHandles[0]))) 
         #Middle
         for i in range(1,len(self._t) -1): #End points have 1 tgt, mid pts 2
-            self._tHandles.append((HandleItem(-self._t[i][0],color=Qt.blue,parent=self._pHandles[i]), #left
-                                   HandleItem(self._t[i][1],color=Qt.blue,parent=self._pHandles[i]))) #right
+            self._tHandles.append((HandleItem(-self._t[i][0],color=self._selectColor,parent=self._pHandles[i]), #left
+                                   HandleItem(self._t[i][1],color=self._selectColor,parent=self._pHandles[i]))) #right
         #End
         #no right tangent, use 0, must be a QPointF
-        self._tHandles.append((HandleItem(-self._t[-1][0],color=Qt.blue,parent=self._pHandles[-1]),
+        self._tHandles.append((HandleItem(-self._t[-1][0],color=self._selectColor,parent=self._pHandles[-1]),
                                 QPointF(0,0))) 
 
         for ph in self._pHandles:

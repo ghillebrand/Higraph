@@ -24,6 +24,7 @@ APP_NAME = "qtPyGraphEdit V02.0"
 # Indices for Qt Item metadata tags 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QListWidgetItem
+from PySide6.QtGui import QColor
 
 #index data: item Num from Graph
 KEY_INDEX = Qt.UserRole + 1
@@ -50,3 +51,11 @@ roleDic={ROLE_NODE: "ROLE_NODE",
         ROLE_HANDLE:"ROLE_HANDLE",
         ROLE_POLYLINE:"ROLE_POLYLINE",
         ROLE_DUMMYNODE:"ROLE_DUMMYNODE"}
+
+#options and defaults
+
+HOVER_COLOUR=QColor("blue")
+SELECT_COLOUR=QColor("blue")
+DRAWING_COLOUR=QColor("black")
+BLOB_HANDLE_COLOUR=QColor("green")
+EDGE_HANDLE_COLOUR=QColor("green")

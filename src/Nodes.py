@@ -48,8 +48,9 @@ class QRoundedRectItem(QGraphicsObject):
         
         # Style configuration
         self._penWidth = 1.0
-        self._baseColor = QColor("black")
-        self._hoverColor = QColor("cyan")
+        self._baseColor = DRAWING_COLOUR
+        self._hoverColor = HOVER_COLOUR
+        self._selectColor = SELECT_COLOUR
         self._pen = QPen(Qt.NoPen)  #QPen(self._baseColor, self._penWidth)
         
         # Interaction settings
@@ -82,11 +83,11 @@ class QRoundedRectItem(QGraphicsObject):
         # Determine styling by looking at the PARENT'S state
         parent = self.parentItem()
         if parent and parent.isSelected():
-            painter.setPen(QPen(Qt.blue, 1.0, Qt.DashLine))
+            painter.setPen(QPen(self._selectColor, 1.0, Qt.DashLine))
         elif self.isHovered:
             painter.setPen(self._hoverColor)
         else:
-            painter.setPen(QPen(Qt.black, 1.0))
+            painter.setPen(QPen(self._baseColor, 1.0))
             
         painter.setBrush(Qt.NoBrush)
         painter.drawRoundedRect(self._rect, self._xRadius, self._yRadius, self._mode)
@@ -213,7 +214,10 @@ class VisNodeItem(QGraphicsObject):
         #TODO: hoverEvents are not sent when there is an explicit mouseEVent handler. Handle in scene and delete here
         self.setAcceptHoverEvents(True)
         self.isHovered = False
-        self._hoverColor = QColor("red")
+        #self._hoverColor = QColor("red")
+        self._baseColor = DRAWING_COLOUR
+        self._hoverColor = HOVER_COLOUR
+        self._selectColor = SELECT_COLOUR
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
@@ -289,14 +293,14 @@ class VisNodeItem(QGraphicsObject):
         painter.setClipping(True)
 
         if self.isSelected():
-            painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
-            self.nodeShape.setPen(QPen(Qt.blue,1,Qt.DashLine))
+            painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
+            self.nodeShape.setPen(QPen(self._selectColor,1,Qt.DashLine))
         elif self.isHovered:
-            painter.setPen(Qt.red)
+            painter.setPen(self._hoverColor)
             self.nodeShape.setPen(self._hoverColor)
         else:
-            painter.setPen(Qt.black)
-            self.nodeShape.setPen(QPen(Qt.black))
+            painter.setPen(self._baseColor)
+            self.nodeShape.setPen(self._baseColor)
 
 
         brush = QBrush(Qt.white)      # Normal fill
@@ -478,7 +482,10 @@ class VisBlobItem(VisNodeItem):
         del self.nodeShape
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._hoverColor=QColor("cyan")
+        #self._hoverColor=QColor("cyan")
+        self._baseColor = DRAWING_COLOUR
+        self._hoverColor = HOVER_COLOUR
+        self._selectColor = SELECT_COLOUR
         self.parents = parents
         self.children = children
 
@@ -581,11 +588,11 @@ class VisBlobItem(VisNodeItem):
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
         if self.isSelected():
-            painter.setPen(QPen(Qt.blue,1,Qt.DashLine))
+            painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
         elif self.isHovered:
             painter.setPen(self._hoverColor)
         else:
-            painter.setPen(Qt.black)
+            painter.setPen(self._baseColor)
 
         #self.nodeShape is painted by Qt, using parent's pen???
 
@@ -715,10 +722,10 @@ class VisBlobItem(VisNodeItem):
         
         #A list of handles, clockwise, 0 = TL, 1 = TR, 2 = BR, 3 = BL
         self._Handles = []
-        self._Handles.append(HandleItem(QPointF(0,0),color=Qt.green,parent=self))
-        self._Handles.append(HandleItem(QPointF(BRx,0),color=Qt.red,parent=self))
-        self._Handles.append(HandleItem(QPointF(BRx,BRy),color=Qt.blue,parent=self))
-        self._Handles.append(HandleItem(QPointF(0,BRy),color=Qt.cyan,parent=self))
+        self._Handles.append(HandleItem(QPointF(0,0),color=BLOB_HANDLE_COLOUR,parent=self))
+        self._Handles.append(HandleItem(QPointF(BRx,0),color=BLOB_HANDLE_COLOUR,parent=self))
+        self._Handles.append(HandleItem(QPointF(BRx,BRy),color=BLOB_HANDLE_COLOUR,parent=self))
+        self._Handles.append(HandleItem(QPointF(0,BRy),color=BLOB_HANDLE_COLOUR,parent=self))
         #for h in self._Handles: JH
         #    h.setMoveCallback(self._updateFromHandles)
         self.suppressItemChange = False
