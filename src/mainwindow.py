@@ -32,6 +32,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
             QSlider, QLabel, QStatusBar, QColorDialog, 
+            QGraphicsSceneMouseEvent,
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
 from PySide6 import (QtCore, QtWidgets, QtGui )
@@ -40,7 +41,7 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QPainterPath, QPainterPathStroker, QCursor,
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
-            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
+            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
 from PySide6.QtSvg import QSvgGenerator
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
@@ -370,6 +371,26 @@ class grScene(QGraphicsScene):
         scene_pos = view.mapToScene(view_pos)
         return scene_pos
         
+    def snapToShape(self, mouseEvent, selItem, pos: QPointF, size: QSizeF, hitRect=None):
+        if hitRect==None:
+            half_w = size.width() / 2
+            half_h = size.height() / 2
+            rect = QRectF(pos.x() - half_w, pos.y() - half_h, size.width(), size.height())
+            self.addRect(rect)
+        else:
+            rect=hitRect
+        print("JH mousepos going in", mouseEvent.scenePos())
+        for i in range(int(pos.x()-half_w)-1, int(pos.x() + half_w)+1):
+            for j in range(int(pos.y()-half_h)-1, int(pos.y() + half_h)+1):
+                if selItem in self.itemsHere(QPoint(i,j),QSize(1,1),[ROLE_BLOB, ROLE_EDGE, ROLE_NODE, ROLE_POLYLINE]):
+                    mouseOffset=(pos.x()-i, pos.y()-j)
+                    mouseEvent.setPos(QPoint(mouseEvent.pos().x()-mouseOffset[0],(mouseEvent.pos().y()-mouseOffset[1] )))
+                    mouseEvent.setScenePos(QPoint(mouseEvent.scenePos().x()-mouseOffset[0],(mouseEvent.scenePos().y()-mouseOffset[1] )))
+                    mouseEvent.setScreenPos(QPoint(mouseEvent.screenPos().x()-mouseOffset[0],(mouseEvent.screenPos().y()-mouseOffset[1] )))
+                    rect=QRectF(mouseEvent.scenePos().x(), mouseEvent.scenePos().y(), HITSIZE, HITSIZE)
+                    self.addRect(rect)
+                    return(mouseEvent)
+
     #Code to handle the edge rubber banding during creation (QT handles edit changes)
 
     def startRubberLine(self, mPos):
@@ -500,6 +521,7 @@ class grScene(QGraphicsScene):
                 self.oldTermItem[0].deletePort(oldP)
                 #Unlink from the old node
                 self.oldTermItem[0].startsEdges.remove(edge)
+                self.oldTermItem[1].startsEdgeLines.remove(edge)
 
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
@@ -510,6 +532,7 @@ class grScene(QGraphicsScene):
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
                 #Relink to new node
                 newTermItem[0].startsEdges.append(edge)
+                newTermItem[1].startsEdgeLines.append(edge)
             
             if self.EdgeEnd == "end":
                 #TODO: The port code is true for either end - review flow of function and tidy up
@@ -519,6 +542,7 @@ class grScene(QGraphicsScene):
                 self.oldTermItem[0].deletePort(oldP)
                 #Move the reverse pointer from the oldTermItem to the new:
                 self.oldTermItem[0].endsEdges.remove(edge)
+                self.oldTermItem[1].endsEdgeLines.remove(edge)
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
                 newTermItem = (newTermItem, p)
@@ -526,6 +550,7 @@ class grScene(QGraphicsScene):
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
                 
                 newTermItem[0].endsEdges.append(edge)
+                newTermItem[1].endsEdgeLines.append(edge)
         
         else: # link back to old
             #print("Missed (nothing found) on relink")
@@ -703,74 +728,76 @@ class grScene(QGraphicsScene):
                     selItem = selItem[0]
                 #else:
                 #    selItem = None
+                    if selItem.isHovered:   #This stops it selecting just out of reach of the border line
+                        if selItem.data(KEY_ROLE) == ROLE_NODE:
+                            self.changedByCode=True
+                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            self.listWidget.setCurrentItem(lWItem)
+                            self.changedByCode=False
+                            selItem.isOnlySelected = True
+                            selItem.setSelected(True)
+                            super().mousePressEvent(mouseEvent)
+                            return
+                        #immediately hand off for Qt to move
+                        #BUG:Dragging With these on, DRAGGING doesn't happen, off, a single node select doesn't clear selection
+                        #Solution: Move `isSelected` to mouseRelease, to allow for movement
+                        #TODO: DRAGGING
+                        #super().mousePressEvent(mouseEvent)
+                        #return
 
-                    if selItem.data(KEY_ROLE) == ROLE_NODE:
-                        self.changedByCode=True
-                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                        self.listWidget.setCurrentItem(lWItem)
-                        self.changedByCode=False
-                        super().mousePressEvent(mouseEvent)
-                        return
-                    #immediately hand off for Qt to move
-                    #BUG:Dragging With these on, DRAGGING doesn't happen, off, a single node select doesn't clear selection
-                    #Solution: Move `isSelected` to mouseRelease, to allow for movement
-                    #TODO: DRAGGING
-                    #super().mousePressEvent(mouseEvent)
-                    #return
+                        if selItem.data(KEY_ROLE) == ROLE_BLOB:
+                            #print(f"Sel Blob {selItem.metadata['name']}")
+                            self.onlySelected = selItem
+                            self.thisHandleObjectSelected=selItem
+                            selItem.isOnlySelected = True
+                            selItem.setSelected(True)
+                            selItem._createHandles() #JH
+                            self.changedByCode=True
+                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            self.listWidget.setCurrentItem(lWItem)
+                            self.changedByCode=False
+                            # accept? return?
 
-                    if selItem.data(KEY_ROLE) == ROLE_BLOB:
-                        #print(f"Sel Blob {selItem.metadata['name']}")
-                        self.onlySelected = selItem
-                        self.thisHandleObjectSelected=selItem
-                        selItem.isOnlySelected = True
-                        selItem.setSelected(True)
-                        selItem._createHandles() #JH
-                        self.changedByCode=True
-                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                        self.listWidget.setCurrentItem(lWItem)
-                        self.changedByCode=False
-                        # accept? return?
+                        if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
+                            # save handleobject and create handles
+                            self.thisHandleObjectSelected=selItem
+                            self.onlySelected=selItem
+                            selItem.setSelected(True)
+                            parent = selItem.parentItem()
+                            parent.setSelected(True)
+                            parent.isOnlySelected = True
+                            selItem._createHandles()
 
-                    if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
-                        # save handleobject and create handles
-                        self.thisHandleObjectSelected=selItem
-                        self.onlySelected=selItem
-                        selItem.setSelected(True)
-                        parent = selItem.parentItem()
-                        parent.setSelected(True)
-                        parent.isOnlySelected = True
-                        selItem._createHandles()
-
-                        #selItem.setSelected(False)
-                        #selItem = parent
-                        #selItem.setSelected(True) # check this
-                       # super().mousePressEvent(mouseEvent)
-                       # return
-                    
-                    if selItem.data(KEY_ROLE) == ROLE_EDGE:
-                        if not selItem.stH:
-                            selItem.setZValue(2000) #move the edge above nodes
-                        # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
-                        #print("Setting stH", end="")
-                            if len(selItem.edgeLine._pHandles)>0:
-                                selItem.stH = selItem.edgeLine._pHandles[0]
-                                selItem.endH = selItem.edgeLine._pHandles[-1]
-                            else:
-                                print("No handles yet")
-                        self.changedByCode=True
-                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                        self.listWidget.setCurrentItem(lWItem)
-                        self.changedByCode=False
-                        # if not selItem.endH:
-                        #print(", endH")
-                        #     selItem.endH = selItem.edgeLine._pHandles[-1]
-                        # will this ever be needed?
-                        #selItem.setSelected(True) 
-                        #selItem.isOnlySelected = True
-                    #Let the scene remember, for unsetting
-                        #self.onlySelected = selItem
-                        mouseEvent.accept()
-                        return
+                            #selItem.setSelected(False)
+                            #selItem = parent
+                            #selItem.setSelected(True) # check this
+                        # super().mousePressEvent(mouseEvent)
+                        # return
+                        
+                        if selItem.data(KEY_ROLE) == ROLE_EDGE:
+                            if not selItem.stH:
+                                selItem.setZValue(2000) #move the edge above nodes
+                            # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
+                            #print("Setting stH", end="")
+                                if len(selItem.edgeLine._pHandles)>0:
+                                    selItem.stH = selItem.edgeLine._pHandles[0]
+                                    selItem.endH = selItem.edgeLine._pHandles[-1]
+                                else:
+                                    print("No handles yet")
+                            self.changedByCode=True
+                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            self.listWidget.setCurrentItem(lWItem)
+                            self.changedByCode=False
+                            # if not selItem.endH:
+                            #print(", endH")
+                            #     selItem.endH = selItem.edgeLine._pHandles[-1]
+                            # will this ever be needed?
+                            #selItem.setSelected(True) 
+                            #selItem.isOnlySelected = True
+                        #Let the scene remember, for unsetting
+                            #self.onlySelected = selItem
+                            mouseEvent.accept()
+                            return
 
         if (mouseEvent.button() == Qt.MouseButton.RightButton):
             mPos = mouseEvent.scenePos()
@@ -1546,13 +1573,14 @@ class MainWindow(QMainWindow):
         """ Code for the listWidget to tell the scene that something has changed (name)"""
         #Maybe should be updateMODELText - scene updates via the model?
 
-        #print("Update scene text")
+        #print("Upddata_blobate scene text")
         #print(f"updateSceneText id = {item.data(KEY_INDEX)} {item.text()}::{item.data(KEY_ROLE)}")
 
         iNum = item.data(KEY_INDEX)
         print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
         new_text = item.text()
-        self.model.item(iNum).setText(new_text)
+        itemModelRow=self.model.findRowByIdx(iNum)
+        self.model.item(itemModelRow).setText(new_text)
         #TODO: The list update should trigger some change flag/ be embedded 
         if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
             self.model.Gr.nodeD[iNum].metadata.update({'name':new_text})
@@ -1640,6 +1668,7 @@ class MainWindow(QMainWindow):
         #Use old yEd + load code
         nodeMetadata = {}
         nodeMetadataAttributes = {}
+        nodePorts = []
 
         #TODO: type check id
         if not newID:
@@ -1654,7 +1683,13 @@ class MainWindow(QMainWindow):
                 if geom is not None:
                     nodeX = float(geom.get("x"))
                     nodeY = float(geom.get("y"))
-                    #geometry_vars = ["height", "width", "x", "y"]
+                
+                #Get ports
+                for nextP, p in enumerate(shapeNode.iter("port")):
+                    #print(p.attrib)
+                    tmpP = port(QPointF(float(p.get("x")),float(p.get("y"))), t=float(p.get("t")), index = int(p.get("name"))  ) 
+                    nodePorts.append(tmpP)
+                #print(f"{id=},{nextP=}")
 
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
@@ -1681,7 +1716,13 @@ class MainWindow(QMainWindow):
                     nodeMetadataAttributes[metaKey] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
 
         newNode =  VisNodeItem(QPointF(nodeX,nodeY),self.model,self.ui.listWidget ,nameP=nodeName, id = id,
-                                metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes)
+                                metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes, ports=nodePorts)
+        
+        #update port  PARENTS (maybe recompute position?)
+        for p in newNode._Ports:
+            p.setParentItem(newNode)
+            #print(f"{newNode.nodeNum=},{p.index=}")
+
         return newNode
 
     def blobFromXML(self,xBlob,newID=False)->VisBlobItem:
@@ -1693,6 +1734,7 @@ class MainWindow(QMainWindow):
         #Use old yEd + load code
         blobMetadata = {}
         blobMetadataAttributes = {}
+        nodePorts = []
 
         #TODO: type check id
         if not newID:
@@ -1712,7 +1754,11 @@ class MainWindow(QMainWindow):
                     blobXRadius=float(geom.get("xRadius"))
                     blobYRadius=float(geom.get("yRadius"))
 
-                    #geometry_vars = ["height", "width", "x", "y"]
+                #Get ports
+                for nextP, p in enumerate(shapeBlob.iter("port")):
+                    tmpP = port(QPointF(float(p.get("x")),float(p.get("y"))), t=float(p.get("t")), index = int(p.get("name"))  ) 
+                    nodePorts.append(tmpP)
+                #print(f"{id=},{nextP=}")
 
                 blobLabel = shapeBlob.find("BlobLabel")
                 if blobLabel is not None:
@@ -1741,7 +1787,11 @@ class MainWindow(QMainWindow):
         newBlob =  VisBlobItem(QPointF(blobX,blobY),self.model,self.ui.listWidget, width=blobWidth,\
                                height=blobHeight, xRadius=blobXRadius, yRadius=blobYRadius,\
                                 nameP=blobName, id = id, \
-                                metadata=blobMetadata, metadataAttributes=blobMetadataAttributes)
+                                metadata=blobMetadata, metadataAttributes=blobMetadataAttributes,ports=nodePorts)
+        
+        for p in newBlob._Ports:
+            p.setParentItem(newBlob)
+
         return newBlob
     
     def edgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
@@ -1751,9 +1801,6 @@ class MainWindow(QMainWindow):
             newStartID & newEndID also must be overwritten on paste/ structure copy
             Returns VisEdgeItem
         """
-        #Use old yEd + load code
-        #print(ET.tostring(xEdge))
-        
 
         if not newID:
             #TODO: type check id/ process string IDs
@@ -1772,13 +1819,22 @@ class MainWindow(QMainWindow):
         else:
             eItemID = int(xEdge.attrib.get("target", None))
 
+        #Ports
+        srcPort = int(xEdge.attrib.get("sourceport"))
+        tgtPort = int(xEdge.attrib.get("targetport"))
+
         sItem = self.Scene.findItemByIdx(sItemID)
         eItem = self.Scene.findItemByIdx(eItemID)
         if sItem == None:
+            #TODO - this should be in a try-except, since this means the file is corrupt
             print(f"WARNING! - Start Item ID {sItemID} not found ")
         if eItem == None:
             print(f"WARNING! - End Item ID {eItemID} not found ")
-        #Find the items
+        
+        #Add the port
+        sItem = (sItem, sItem.portFromIndex(srcPort))
+        eItem = (eItem, eItem.portFromIndex(tgtPort))
+        #
 
         directed = xEdge.attrib.get("directed", '')
         edgeMetadata = {}
@@ -2017,7 +2073,7 @@ class MainWindow(QMainWindow):
 
             blobKey = ET.SubElement(graphml, "key", id="data_blob")
             blobKey.set("for", "blob")
-            blobKey.set("yfiles.type", "blobgraphics")
+            blobKey.set("higraph.type", "blobgraphics")
 
             edgeKey = ET.SubElement(graphml, "key", id="data_edge")
             edgeKey.set("for", "edge")
@@ -2187,6 +2243,7 @@ class MainWindow(QMainWindow):
 
         # Code similar to action_FileOpen. Use that as the "master" copy.
         #Positions only updated on PASTE
+        #TODO: Create a function `initialiseGraphml` with all this boilerplate
 
         graphml = ET.Element("graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
         graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
@@ -2208,7 +2265,7 @@ class MainWindow(QMainWindow):
 
         blobKey = ET.SubElement(graphml, "key", id="data_blob")
         blobKey.set("for", "blob")
-        blobKey.set("yfiles.type", "blobgraphics")
+        blobKey.set("higraph.type", "blobgraphics")
         
         edgeKey = ET.SubElement(graphml, "key", id="data_edge")
         edgeKey.set("for", "edge")
@@ -2222,7 +2279,7 @@ class MainWindow(QMainWindow):
             if sItem.data(KEY_ROLE) == ROLE_EDGE:
                 #TODO: Check the semantics here - does this make sense
                 #only copy edges if all ends are in the selection
-                if sItem.startNode in selectedItems and sItem.endNode in selectedItems:
+                if sItem.startNode[0] in selectedItems and sItem.endNode[0] in selectedItems:
                     graph.append(sItem.toXML(graph))
 
         #graphmlData = yGr.stringify_graph()
@@ -2403,6 +2460,8 @@ class MainWindow(QMainWindow):
             sItemID = int(xEdge.attrib.get("source", None))
             eItemID = int(xEdge.attrib.get("target", None))
 
+            #BUG - edges don't work on paste - ID's have changed!
+
             edgeItem = self.edgeFromXML(xEdge, newID=True, 
                                             newStartID=oldToNewID[sItemID],
                                             newEndID = oldToNewID[eItemID])
@@ -2436,6 +2495,11 @@ class MainWindow(QMainWindow):
         delItem.edgeLine._deleteHandles()
         if self.Scene.thisHandleObjectSelected==delItem.edgeLine:
             self.Scene.thisHandleObjectSelected = None
+        
+        #Del the port on the nodes
+        delItem.startNode[0].deletePort(delItem.startNode[1])
+        delItem.endNode[0].deletePort(delItem.endNode[1])
+
         self.Scene.deleteItemAndChildren(delItem)
 
         del delItem #not sure why this works JH added

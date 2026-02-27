@@ -127,7 +127,7 @@ class VisNodeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,posn,model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={}):
+                    metadata={}, metadataAttributes={},ports = []):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
@@ -155,6 +155,8 @@ class VisNodeItem(QGraphicsObject):
             self.metadataAttributes = metadataAttributes
         else:
             self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
+
+        #Update positions
 
         #add to the text list
         lWitem = QListWidgetItem(self.model.Gr.nodeD[self.nodeNum].metadata['name'])
@@ -202,8 +204,14 @@ class VisNodeItem(QGraphicsObject):
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
         #Ports where edges will connect
-        self._nextPort = 0 #Counter for port index
+        self._nextPort = -1 #Counter for port index, -1 mean none
         self._Ports = []
+        #save any ports passed in
+        # copy to _Ports
+        for p in ports:
+            if p.index > self._nextPort: self._nextPort = p.index
+            self._Ports.append(p)
+
 
         #Make nodes appear in front of edges for painting & selection
         self.setZValue(1000)
@@ -232,6 +240,9 @@ class VisNodeItem(QGraphicsObject):
         data = ET.SubElement(xmlNode, "data", key="data_node")
         shape = ET.SubElement(data, "y:" + "ShapeNode")
         ET.SubElement(shape, "y:Geometry", {'x':str(self.pos().x()), 'y':str(self.pos().y())})
+        for p in self._Ports:    
+            ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
+
         nodeLabel = ET.SubElement(shape, "y:NodeLabel")
         nodeLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
@@ -334,10 +345,13 @@ class VisNodeItem(QGraphicsObject):
             
             #Position change
             if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
-                for sEdge in self.startsEdges:
-                    sEdge.updateLine(self)
-                for eEdge in self.endsEdges:
-                    eEdge.updateLine(self)
+                for port in self._Ports:
+                    for sEdge in port.startsEdgeLines:
+                #for sEdge in self.startsEdges:
+                        sEdge.updateLine((self,port))
+                #for eEdge in self.endsEdges:
+                    for eEdge in port.endsEdgeLines:
+                        eEdge.updateLine((self, port))
 
         #note the **return**
         return super().itemChange(change,value)
@@ -391,12 +405,11 @@ class VisNodeItem(QGraphicsObject):
 
         #print(f"{t=},{portPos=}")
         #Parent to nodeShape for better geom flexibility
+        self._nextPort += 1 
         p = port(portPos, t=t, index =self._nextPort,  parent=self.nodeShape)
 
-        print(f"Port created on node{self.nodeNum}: as port{p.index} at {p.t} {len(self._Ports)=}")
-        self._Ports.append(p)
-        #TODO: How to handle nextPort when reading from a file  
-        self._nextPort += 1  
+        #print(f"Port created on node{self.nodeNum}: as port{p.index} at {p.t} {len(self._Ports)=}")
+        self._Ports.append(p) 
 
         #TODO: Should this not rather return `p`?
         return p
@@ -407,13 +420,12 @@ class VisNodeItem(QGraphicsObject):
         minD = math.inf
         for existingPort in self._Ports:
             d = QLineF(existingPort.scenePos(), screenPos).length()
-            print(f"{self.nodeNum}:{existingPort.index=} findPort: {d}")
+            #print(f"{self.nodeNum}:{existingPort.index=} findPort: {d}")
             if d <= HITSIZE:
                 if d < minD:
                     #found = existingPort.index
                     found = existingPort
                     minD = d
-        print(f"{found=}")
         return found
 
     def updatePort(self, p:port, pos:QPointF):
@@ -427,9 +439,16 @@ class VisNodeItem(QGraphicsObject):
         """Remove a port """
         #TODO: How to check there are no references to _Ports[i]
         #TODO: index is not used - delete based on ID 
-        #Assume only one edge per port
+        #Currently (02a) only one edge per port
 
         self._Ports.remove(delPort)
+
+    def portFromIndex(self, Xindex)->port:
+        """ Returns the port object corresponding to the index """
+        for p in self._Ports:
+            if p.index == Xindex:
+                return p
+        print(f"WARNING: port {Xindex} not found on node {self.nodeNum}")
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
@@ -459,12 +478,12 @@ class VisBlobItem(VisNodeItem):
     BL = 3
 
     def __init__(self,posn, model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={}, 
+                    metadata={}, metadataAttributes={}, ports = [],
                     height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
         super().__init__(posn, model,listWidget, parent=parent, nameP =nameP, id=id,
-                    metadata=metadata, metadataAttributes=metadataAttributes)
+                    metadata=metadata, metadataAttributes=metadataAttributes,ports=ports)
 
         self.suppressItemChange = True
 
@@ -507,6 +526,7 @@ class VisBlobItem(VisNodeItem):
         #Placeholder for drag handles
         self._Handles = []
 
+
         #Create a polygon version for `parameterFromPos` - also in `updateFromHandles`
         basePath = QPainterPath()
         basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
@@ -528,14 +548,17 @@ class VisBlobItem(VisNodeItem):
 
     def toXML(self, Xparent):
         
-        xmlBlob = ET.Element("blob", id=str(self.nodeNum))
+        xmlBlob = ET.Element("h:blob", id=str(self.nodeNum))
 
         data = ET.SubElement(xmlBlob, "data", key="data_blob")
         shape = ET.SubElement(data, "h:" + "ShapeBlob")
-        ET.SubElement(shape, "y:Geometry", {'x':str(self.pos().x()),\
+        ET.SubElement(shape, "h:Geometry", {'x':str(self.pos().x()),\
              'y':str(self.pos().y()), 'width':str(self._width), 'height':str(self._height), \
                 'xRadius':str(self._xRadius),'yRadius':str(self._yRadius), \
                 'radMode':str(self._radMode)})
+        for p in self._Ports:    
+            ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
+
         blobLabel = ET.SubElement(shape, "h:BlobLabel")
         blobLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
@@ -619,6 +642,40 @@ class VisBlobItem(VisNodeItem):
             pass
 
         return super().itemChange(change, value)
+    
+    def positionToParameter(self, mousePos:QPointF)->float:
+        # the path may not always be reactangular, so keep options opem
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+
+        #turn shape to polygon by letting curves be multiple short edges
+        self._polygon = self._basePath.toFillPolygon()
+        relativeMousePos = self.mapFromScene(mousePos)
+        #step through the line segments accumulating the distance before the mouse is found
+        accumulatedLength=0
+        for i in range(self._polygon.count() - 1):
+            p1 = self._polygon[i]
+            p2 = self._polygon[i + 1]
+            line = QLineF(p1, p2)
+            #pointLine=QLineF(relativeMousePos,relativeMousePos)
+            betweenx=False
+            betweeny=False
+            if (p1.x()<=relativeMousePos.x()+HITSIZE and relativeMousePos.x()-HITSIZE<=p2.x()) or\
+               (p1.x()>=relativeMousePos.x()-HITSIZE and relativeMousePos.x()+HITSIZE>=p2.x()):
+                betweenx=True
+            if (p1.y()<=relativeMousePos.y()+HITSIZE and relativeMousePos.y()-HITSIZE<=p2.y()) or\
+               (p1.y()>=relativeMousePos.y()-HITSIZE and relativeMousePos.y()+HITSIZE>=p2.y()):
+                betweeny=True
+            if betweenx and betweeny:
+                shortLine=QLineF(p1, relativeMousePos)
+                accumulatedLength+=shortLine.length()
+                break
+            else:          
+                accumulatedLength+=line.length()
+        t=accumulatedLength/totalLength
+        return(t)    
+
 
     def _closestTOnSegment(self, a: QPointF, b: QPointF, p: QPointF) -> float:
         """ Calculates the local projection parameter t for point p on segment ab """
@@ -635,7 +692,7 @@ class VisBlobItem(VisNodeItem):
         t = ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / (dx**2 + dy**2)
         return max(0.0, min(t, 1.0))
 
-    def positionToParameter(self, scenePos:QPointF)->float:
+    def xxpositionToParameter(self, scenePos:QPointF)->float:
         """ Takes a pos, and returns a value giving the position of the pos on the blobs's edge 
             Uses _polygon set in `updateFromHandles`
         """
@@ -668,7 +725,7 @@ class VisBlobItem(VisNodeItem):
             tSeg = self._closestTOnSegment(p1, p2, localPos)
             
             pointOnSeg = line.pointAt(tSeg)
-            print(f"{pointOnSeg =}")
+            #print(f"{pointOnSeg =}")
             dist = QLineF(localPos, pointOnSeg).length()
 
             # 4. Update the global bestT if this segment is closer
@@ -828,13 +885,14 @@ class VisBlobItem(VisNodeItem):
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
+        self._rect=QRectF(0,0,self._width,self._height)  #JH I hope this is right
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
 
         #Create a polygon version for `parameterFromPos`
-        basePath = QPainterPath()
-        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
-        totalLength = basePath.length()
-        self._polygon = basePath.toFillPolygon()
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+        self._polygon = self._basePath.toFillPolygon()
         #TODO: Update all `port` positions - this almost/ sometimes works
         for p in self._Ports:
             p.setPos(self.parameterToPosition(p.t))
@@ -842,10 +900,13 @@ class VisBlobItem(VisNodeItem):
         self.suppressItemChange = False
         
         #TODO this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
-        for sEdge in self.startsEdges:
-            sEdge.updateLine(self)
-        for eEdge in self.endsEdges:
-            eEdge.updateLine(self)
+        for port in self._Ports:
+            for sEdge in port.startsEdgeLines:
+        #for sEdge in self.startsEdges:
+                sEdge.updateLine((self,port))
+        #for eEdge in self.endsEdges:
+            for eEdge in port.endsEdgeLines:
+                eEdge.updateLine((self, port))
 
 
     def mousePressEvent(self, event):

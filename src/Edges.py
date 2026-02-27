@@ -186,8 +186,10 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #Link up the topology for the visual graph.
         #TODO: hypergraph - lines  can start xor end on an edge - 
         sItem[0].startsEdges.append(self)
+        sItem[1].startsEdgeLines.append(self)  #JH duplicate this for now
         self.setStart(sItem)
         eItem[0].endsEdges.append(self)
+        eItem[1].endsEdgeLines.append(self)    #JH duplicate this for now
         self.setEnd(eItem)
 
         #Selection and editing vars:
@@ -228,7 +230,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             "edge",
             id=str(self.edgeNum),
             source=str(self.startNode[0].nodeNum),
-            target=str(self.endNode.nodeNum)
+            target=str(self.endNode[0].nodeNum),
+            sourceport=str(self.startNode[1].index),
+            targetport=str(self.endNode[1].index)
         )
         if self.isDirected: 
             xmlEdge.set("directed", "true")     
@@ -476,13 +480,18 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
                 #print(f"Making Handle into a tuple")
                 source = (0,source)
         #print(f"{source=}  == {self.startNode=}")
-
-        if source == self.startNode: 
+        if source and type(source[0] )== VisBlobItem and source[0]==self.startNode[0]\
+                and source[1].t==self.startNode[1].t:
+            self.edgeLine.setP(0,source[1].scenePos())
+        elif source and type(source[0] )== VisBlobItem and source[0]==self.endNode[0]\
+                and source[1].t==self.endNode[1].t:
+            self.edgeLine.setP(-1,source[1].scenePos())
+        elif source == self.startNode:
             #Set the 0th edgeLine point to where the `source` object port (now) is. 
             #print(f"setting start from {source[0].nodeNum}, {source[1].index}")
             self.edgeLine.setP(0,source[1].scenePos())
 
-        if source == self.endNode: #endNode
+        elif source == self.endNode: #endNode
             #print(f"setting end from {source[0].nodeNum}, {source[1].index}")
             self.edgeLine.setP(-1,source[1].scenePos())
 
