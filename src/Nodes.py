@@ -30,7 +30,7 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 
 #A helper blob drawing class
 # Gemini code.
-from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem
+from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem, QGraphicsItemGroup
 from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
 
@@ -345,7 +345,7 @@ class VisNodeItem(QGraphicsObject):
             self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
             
             #Position change
-            if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
+            if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange,QGraphicsItem.ItemScenePositionHasChanged]:
                 for port in self._Ports:
                     for sEdge in port.startsEdgeLines:
                 #for sEdge in self.startsEdges:
@@ -436,6 +436,13 @@ class VisNodeItem(QGraphicsObject):
         p.setPos(self.parameterToPosition(p.t))
         #print(f"New pos = {p.pos()}")
 
+    def updatePorts(self):
+        """After any geom change, recalculate each port's pos from t """
+        
+        for p in self._Ports:
+            p.setPos(self.parameterToPosition(p.t))
+
+
     def deletePort(self, delPort:port): # delIndex:int):
         """Remove a port """
         #TODO: How to check there are no references to _Ports[i]
@@ -520,6 +527,7 @@ class VisBlobItem(VisNodeItem):
         # JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        
 
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
@@ -576,8 +584,7 @@ class VisBlobItem(VisNodeItem):
 
     def boundingRect(self):
         #TODO: Add in the displayed text
-        # Must cover both the rectangle and the text area
-        return self.nodeShape._rect.adjusted(-5, -20, 5, 5)
+        return self.nodeShape._rect.adjusted(-5, -5, 5, 5)
     
     def shape(self):
         # Combined shape: Hollow Border + Solid Text Area
@@ -634,15 +641,70 @@ class VisBlobItem(VisNodeItem):
 
         #Debug - draw the shape path
         #painter.drawPath(self.shape())
+        #painter.drawRect(self.boundingRect())
+
+    def getChildList(self, blob)->list:
+        """ Return a list of all children and childrens children etc """
+        descendants = []
+        for c in blob.children:
+            descendants.append(c)
+            descendants.extend(self.getChildList(c))
+        
+        return descendants
 
     def itemChange(self, change, value):
         if self.suppressItemChange:
             return super().itemChange(change, value)
-        #print(f"{change=} {value=}")
+        #print(f"{change=} {value=} ")
+
+        #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
+        if change == QGraphicsItem.ItemSelectedHasChanged:
+            if value == 1 and len(self.children) > 0:
+                #Make group
+                print("make group")
+                kids = self.getChildList(self)
+
+                self.childGroup = QGraphicsItemGroup(self)
+                self.scene().addItem(self.childGroup)
+
+                for item in kids: 
+                    #group doesn't change pos() offsets, parenting does. But this messes with ports!
+                    #mapFromScene and mapToScene should work, but don't
+                    #HACK: Add the parent pos() as an offset
+                    #for p in item._Ports:
+                    #    print(f"     parmToPos {p.t:1.3f} mapToScene for {self.nodeNum} was {p.pos()}", end = "")
+                    #    p.setPos(p.pos() - self.scenePos())
+
+                    self.childGroup.addToGroup(item)
+                    #print(f"itmChng item:{item.nodeNum} parent ({self.nodeNum}) is {type(self.parentItem())}, item is {type(item)}")
+                    #print(f"before update {self._Ports}")
+                    #item.updatePorts()
+
+                    #item.setParentItem(self)
+                    #print(f"Adding {item.nodeNum}, newpos = {item.pos()}")
+            else:
+                #delete group
+                if getattr(self, "childGroup" , False):
+                    #print("delete group")
+                    kids = self.getChildList(self)
+                    for item in kids: #self.children:
+                        newScenePos = item.mapToScene(0, 0)
+                        #self.childGroup.removeFromGroup(item)
+                        item.setParentItem(None)
+                        item.setPos(newScenePos)
+                        #item.updatePorts()
+
+                    #rescue any children that were excluded by a resize
+                    if getattr(self, "childGroup" , False):
+                        self.scene().destroyItemGroup(self.childGroup)
+            
+            #QTimer.singleShot(0,self.update())
+
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
             #print("blob pos change")
             #self.scene().updateBlobParenting()
+            #Update port positions
             pass
 
         return super().itemChange(change, value)
@@ -746,9 +808,17 @@ class VisBlobItem(VisNodeItem):
     def parameterToPosition(self, t:float)->QPointF:
         """ Takes a parameter, and uses nodeshape geometry to work out a pos on the nodeshape"""
 
-        #Stub
         pos = self._basePath.pointAtPercent(t)
-
+        #print(f"parmToPos for {self.nodeNum} {type(self)=}, parent {type(self.parentItem())}")
+        print(f"parmToPos for {self.nodeNum} set to {pos}") #\n {self.mapToScene(pos)=}")
+        #Handle parenting issues for coord transforms
+        #if self.parentItem():
+        #    #print(f"parmToPos parent of {self.nodeNum} is {type(self.parentItem())}")
+        #    if self.parentItem().parentItem() != None:
+        #        print(f"     parmToPos - mapToScene parent of parent {type(self.parentItem().parentItem())}")
+        #        pos = self.mapToScene(self._basePath.pointAtPercent(t))
+        #        print(f"     parmToPos mapToScene for {self.nodeNum} set to {pos}")
+            
         return pos
 
     """
@@ -813,7 +883,7 @@ class VisBlobItem(VisNodeItem):
 
         BlobPos = self.pos()
         TLx = self.pos().x()
-        TLy = self.pos().y()
+        TLy = self.pos().y()      
         BRx = self._width
         BRy = self._height
 
@@ -893,13 +963,7 @@ class VisBlobItem(VisNodeItem):
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
 
         #Create a polygon version for `parameterFromPos`
-        self._basePath = QPainterPath()
-        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
-        totalLength = self._basePath.length()
-        self._polygon = self._basePath.toFillPolygon()
-        #TODO: Update all `port` positions - this almost/ sometimes works
-        for p in self._Ports:
-            p.setPos(self.parameterToPosition(p.t))
+        self.updatePorts()
 
         self.suppressItemChange = False
         
@@ -911,6 +975,18 @@ class VisBlobItem(VisNodeItem):
         #for eEdge in self.endsEdges:
             for eEdge in port.endsEdgeLines:
                 eEdge.updateLine((self, port))
+
+    def updatePorts(self):
+        """After any geom change, recalculate each port's pos from t """
+
+        #Create a polygon version for `parameterFromPos`
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+        self._polygon = self._basePath.toFillPolygon()
+        #TODO: Update all `port` positions - this almost/ sometimes works
+        for p in self._Ports:
+            p.setPos(self.parameterToPosition(p.t))
 
 
     def mousePressEvent(self, event):

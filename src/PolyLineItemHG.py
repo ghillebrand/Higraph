@@ -277,7 +277,7 @@ class HermiteSplineItem(QGraphicsItem):
         self.linesPerSegment = 40
 
         #Tangents
-        self.scaleFactor = 40 #20 #how long the default tangents are
+        self.scaleFactor = 30 #20 #how long the default tangents are
         #Are tangents given:
         if len(t) == len(p):
             self._t = t

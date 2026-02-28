@@ -74,7 +74,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         self.startNode = sItem
         #print(f"port {sItem=}")
         
-        #TODO: Add ports to endNode
+        #Add ports to endNode
         if not type(eItem) is tuple: 
             print(f"{eItem._Ports =}")
             if len(eItem._Ports) == 0: #No ports, create one
@@ -381,7 +381,8 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #print(f"edge item change {change},{value}")
         #guard clause to trap calls from __init__
         if not self.suppressItemChange:
-            if change == QGraphicsItem.ItemSelectedHasChanged:
+            #if change == QGraphicsItem.ItemSelectedHasChanged:
+            if change in [QGraphicsItem.ItemSelectedHasChanged, QGraphicsItem.ItemScenePositionHasChanged]:
                 #print(f"Selected Edge {self.dispText} ")
                 #Select the children
                 for child in self.childItems():

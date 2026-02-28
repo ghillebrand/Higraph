@@ -912,6 +912,7 @@ class grScene(QGraphicsScene):
             #print("up node")
             #TODO: Clear selection after adding a node (or before?)
             self.clearSelection()
+            self.updateBlobParenting()
             self.mouseMode = self.POINTER
             return # Or use the eventHandled method?
         elif self.mouseMode == self.INSERTBLOB:
@@ -935,6 +936,7 @@ class grScene(QGraphicsScene):
                             height = height, width = width,
                             xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
             self.addItem(blob)
+            self.updateBlobParenting()
             self.mouseMode = self.POINTER
             mouseEvent.accept()
             return
@@ -1072,45 +1074,30 @@ class grScene(QGraphicsScene):
 
     def updateBlobParenting(self):
         """Recalculate the parents & children of the blobs and nodes in the scene"""
-        print("Updating blob parenting")
-        #print(f"{self.itemIndexMethod()=}")
 
         #Get all the blobs, to search inside of:
         blobList = []
         for sItem in self.items():
             if sItem.data(KEY_ROLE) in [ROLE_BLOB]:
                 blobList.append(sItem)
-        
-        #print(f"{[b.nodeNum for b in blobList]}")
-        
+                
         #Gemini structure
         containmentMap = {}
         for b in blobList:
-            #print(f"Blob {b.nodeNum} contains ",end = " {")
             searchArea = b.sceneBoundingRect()
             itemsInside = self.items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
-
             childBlobs = []
             for item in itemsInside:
                 if item != b and item.data(KEY_ROLE) in [ROLE_BLOB,ROLE_NODE]:
                     childBlobs.append(item.nodeNum)
-                    #print(item.nodeNum, end = ",")
-            #print("}")
             containmentMap[b.nodeNum] = childBlobs
-        #print(containmentMap)
         #Find the immediate parents.
         directChildList = self.getDirectContainmentGraph(containmentMap)
-        #print(directChildList)
-
-        #for b in directChildList:
-        #    #Reset all the parents & children, add incrementally.
-        #    self.model.Gr.nodeD[b].resetParents([])
-        #    self.findItemByIdx(b).parents = []
-        #    self.findItemByIdx(b).children = []
 
         #Reset parents & children 
         for sItem in self.items():
             if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
+                #print(f"reseting {sItem.nodeNum}")
                 sItem.parents = []
                 sItem.children = []
                 self.model.Gr.nodeD[sItem.nodeNum].resetParents([])
@@ -1118,7 +1105,6 @@ class grScene(QGraphicsScene):
         
         #Recreate lists
         for parent, children in sorted(directChildList.items()):
-            #print(f"Blob {parent} contains: {children}")
             pItem = self.findItemByIdx(parent)
             self.model.Gr.nodeD[parent].resetChildren(children)
 
@@ -1799,9 +1785,11 @@ class MainWindow(QMainWindow):
                                 metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes, ports=nodePorts)
         
         #update port  PARENTS (maybe recompute position?)
+
         for p in newNode._Ports:
             p.setParentItem(newNode)
             #print(f"{newNode.nodeNum=},{p.index=}")
+        newNode.updatePorts()
 
         return newNode
 
@@ -1870,8 +1858,14 @@ class MainWindow(QMainWindow):
                                 metadata=blobMetadata, metadataAttributes=blobMetadataAttributes,ports=nodePorts)
         
         newBlob.suppressItemChange = True
+
+        #update port  PARENTS 
         for p in newBlob._Ports:
             p.setParentItem(newBlob)
+
+        # (maybe recompute position?)
+        newBlob.updatePorts()
+ 
         newBlob.suppressItemChange = False
         return newBlob
     
@@ -2735,7 +2729,7 @@ if __name__ == "__main__":
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
     app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'qtpyGraphEdit.ico')))
     MainWin = MainWindow()
-    MainWin.resize(600, 400)
+    MainWin.resize(800, 600)
     MainWin.show()
     #cProfile.run('sys.exit(app.exec())')
     sys.exit(app.exec())
