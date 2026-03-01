@@ -368,6 +368,13 @@ class VisNodeItem(QGraphicsObject):
                     for atK,atV in self.metadataAttributes[k].items():
                         metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
 
+        #Add parents
+        if len(self.parents) > 0:
+            comment = ET.Comment("Parent nodes/ blobs included for reference. Recalculated from geometry on load")
+            xmlNode.append(comment)
+            parents = ET.SubElement(xmlNode,"h:parents")
+            parents.text = " ".join([str(p.nodeNum) for p in self.parents])
+
         return xmlNode
 
     def setMetadataDisplay(self):
@@ -701,6 +708,17 @@ class VisBlobItem(VisNodeItem):
                     metaEl  = ET.SubElement(xmlBlob, "h:metadata", {"key":k,"value":str(v)})
                     for atK,atV in self.metadataAttributes[k].items():
                         metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
+
+        if len(self.parents) > 0:
+            comment = ET.Comment("Parent nodes/ blobs included for reference. Recalculated from geometry on load")
+            xmlBlob.append(comment)
+            parents = ET.SubElement(xmlBlob,"h:parents")
+            parents.text = " ".join([str(p.nodeNum) for p in self.parents])
+        if len(self.children) > 0:
+            comment = ET.Comment("Child nodes/ blobs included for reference. Recalculated from geometry on load")
+            xmlBlob.append(comment)
+            children = ET.SubElement(xmlBlob,"h:children")
+            children.text = " ".join([str(c.nodeNum) for c in self.children])  
 
         return xmlBlob
 
