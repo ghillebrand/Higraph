@@ -64,7 +64,7 @@ class ArrowHeadItem(QGraphicsItem):
             QPointF(-size, -size / 2)
         ])
         #Transform by -NODESIZE/2 to not disappear under the node
-        self.polygon.translate(QPointF(-NODESIZE/2,0))
+        #self.polygon.translate(QPointF(-NODESIZE/2,0))
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.setZValue(0)

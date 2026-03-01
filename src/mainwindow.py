@@ -913,6 +913,7 @@ class grScene(QGraphicsScene):
             #print("up node")
             #TODO: Clear selection after adding a node (or before?)
             self.clearSelection()
+            self.updateBlobParenting()
             self.mouseMode = self.POINTER
             return # Or use the eventHandled method?
         elif self.mouseMode == self.INSERTBLOB:
@@ -936,6 +937,7 @@ class grScene(QGraphicsScene):
                             height = height, width = width,
                             xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
             self.addItem(blob)
+            self.updateBlobParenting()
             self.mouseMode = self.POINTER
             mouseEvent.accept()
             return
@@ -1007,6 +1009,9 @@ class grScene(QGraphicsScene):
                 self.changedByCode=False
             #print(f"up: DRAGGING --> POINTER")
             self.mouseMode = self.POINTER
+        
+        #Only do this on release, for performance reasons.
+        self.updateBlobParenting()
 
         super().mouseReleaseEvent(mouseEvent)  
 
@@ -1035,6 +1040,81 @@ class grScene(QGraphicsScene):
 
             mouseEvent.accept()
             #super().mouseDoubleClickEvent(mouseEvent)
+
+    def getDirectContainmentGraph(self, containmentMap):
+        """
+        Reduces a total containment map (dictionary of lists) to a direct parent-child adjacency list.
+        Input: {0: [1, 2], 1: [2], 2: []}
+        Output: {0: [1], 1: [2], 2: []}
+        Helper for `updateBlobParenting`
+        """
+        #Gemini
+        
+        directChildList = {}
+
+        for parent, descendants in containmentMap.items():
+            # Start by assuming all descendants are potential direct children
+            #TODO: Does this need to use `item` handles rather than indexes. Both work. INdexes are more human readable, `items` will avoid a lookup later
+            directChildren = set(descendants)
+            
+            # For every descendant 'a', check if it is contained by any OTHER descendant 'b'
+            for a in descendants:
+                for b in descendants:
+                    if a == b:
+                        continue
+                    
+                    # If b contains a, then a is a grandchild of 'parent', not a direct child
+                    # We check the original containmentMap to see b's full list of descendants
+                    if a in containmentMap.get(b, []):
+                        directChildren.discard(a)
+                        break 
+            
+            directChildList[parent] = list(directChildren)
+            
+        return directChildList
+
+    def updateBlobParenting(self):
+        """Recalculate the parents & children of the blobs and nodes in the scene"""
+
+        #Get all the blobs, to search inside of:
+        blobList = []
+        for sItem in self.items():
+            if sItem.data(KEY_ROLE) in [ROLE_BLOB]:
+                blobList.append(sItem)
+                
+        #Gemini structure
+        containmentMap = {}
+        for b in blobList:
+            searchArea = b.sceneBoundingRect()
+            itemsInside = self.items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
+            childBlobs = []
+            for item in itemsInside:
+                if item != b and item.data(KEY_ROLE) in [ROLE_BLOB,ROLE_NODE]:
+                    childBlobs.append(item.nodeNum)
+            containmentMap[b.nodeNum] = childBlobs
+        #Find the immediate parents.
+        directChildList = self.getDirectContainmentGraph(containmentMap)
+
+        #Reset parents & children 
+        for sItem in self.items():
+            if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
+                #print(f"reseting {sItem.nodeNum}")
+                sItem.parents = []
+                sItem.children = []
+                self.model.Gr.nodeD[sItem.nodeNum].resetParents([])
+                self.model.Gr.nodeD[sItem.nodeNum].resetChildren([])
+        
+        #Recreate lists
+        for parent, children in sorted(directChildList.items()):
+            pItem = self.findItemByIdx(parent)
+            self.model.Gr.nodeD[parent].resetChildren(children)
+
+            for c in children:
+                cItem = self.findItemByIdx(c)
+                pItem.children.append(cItem)
+                self.model.Gr.nodeD[c].addParent(parent)
+                cItem.parents.append(pItem)
+
 
     def signalTest(self):
         print("signal sent to scene successfully")
@@ -1577,7 +1657,7 @@ class MainWindow(QMainWindow):
         #print(f"updateSceneText id = {item.data(KEY_INDEX)} {item.text()}::{item.data(KEY_ROLE)}")
 
         iNum = item.data(KEY_INDEX)
-        print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
+        #print(f"{item.text()}::{item.data(KEY_INDEX)}>{item.data(KEY_ROLE)} {iNum =}")
         new_text = item.text()
         itemModelRow=self.model.findRowByIdx(iNum)
         self.model.item(itemModelRow).setText(new_text)
@@ -1719,9 +1799,11 @@ class MainWindow(QMainWindow):
                                 metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes, ports=nodePorts)
         
         #update port  PARENTS (maybe recompute position?)
+
         for p in newNode._Ports:
             p.setParentItem(newNode)
             #print(f"{newNode.nodeNum=},{p.index=}")
+        newNode.updatePorts()
 
         return newNode
 
@@ -1789,9 +1871,16 @@ class MainWindow(QMainWindow):
                                 nameP=blobName, id = id, \
                                 metadata=blobMetadata, metadataAttributes=blobMetadataAttributes,ports=nodePorts)
         
+        newBlob.suppressItemChange = True
+
+        #update port  PARENTS 
         for p in newBlob._Ports:
             p.setParentItem(newBlob)
 
+        # (maybe recompute position?)
+        newBlob.updatePorts()
+ 
+        newBlob.suppressItemChange = False
         return newBlob
     
     def edgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
@@ -2449,8 +2538,10 @@ class MainWindow(QMainWindow):
             oldToNewID[int(xBlob.attrib.get("id"))] = GItem.nodeNum
 
             #Bump the pasted items over by PASTE_OFFSET
+            GItem.suppressItemChange = True
             GItem.moveBy(PASTE_OFFSET,PASTE_OFFSET)
-            
+            GItem.suppressItemChange = False
+
             self.Scene.addItem(GItem)
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True) 
@@ -2652,7 +2743,7 @@ if __name__ == "__main__":
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
     app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'qtpyGraphEdit.ico')))
     MainWin = MainWindow()
-    MainWin.resize(600, 400)
+    MainWin.resize(800, 600)
     MainWin.show()
     #cProfile.run('sys.exit(app.exec())')
     sys.exit(app.exec())

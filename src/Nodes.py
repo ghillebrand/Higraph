@@ -30,7 +30,7 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 
 #A helper blob drawing class
 # Gemini code.
-from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem
+from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem, QGraphicsItemGroup
 from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
 
@@ -127,7 +127,7 @@ class VisNodeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,posn,model,listWidget, parent=None, nameP ="", id=None,
-                    metadata={}, metadataAttributes={},ports = []):
+                    metadata={}, metadataAttributes={},ports = [], parents=[]):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
@@ -187,6 +187,11 @@ class VisNodeItem(QGraphicsObject):
         self.setData(KEY_INDEX, self.nodeNum)
         self.setData(KEY_ROLE, ROLE_NODE)
         
+        self.parents = parents
+        #This will always be empty, but it makes the code more general
+        self.children = [] 
+
+
         #The shape of the node- rectangle
         #1st 2 parms are origin, 2nd 2 are width & height
         #Rect shape
@@ -344,7 +349,7 @@ class VisNodeItem(QGraphicsObject):
             self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
             
             #Position change
-            if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
+            if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange,QGraphicsItem.ItemScenePositionHasChanged]:
                 for port in self._Ports:
                     for sEdge in port.startsEdgeLines:
                 #for sEdge in self.startsEdges:
@@ -435,6 +440,20 @@ class VisNodeItem(QGraphicsObject):
         p.setPos(self.parameterToPosition(p.t))
         #print(f"New pos = {p.pos()}")
 
+    def updatePorts(self):
+        """After any geom change, recalculate each port's pos from t """
+        
+        for p in self._Ports:
+            p.setPos(self.parameterToPosition(p.t))
+
+    def updatePortEdges(self):
+        """ Update the edges attached to each port """
+        for port in self._Ports:
+            for sEdge in port.startsEdgeLines:
+                sEdge.updateLine((self,port))
+            for eEdge in port.endsEdgeLines:
+                eEdge.updateLine((self, port)) 
+
     def deletePort(self, delPort:port): # delIndex:int):
         """Remove a port """
         #TODO: How to check there are no references to _Ports[i]
@@ -488,9 +507,10 @@ class VisBlobItem(VisNodeItem):
         self.suppressItemChange = True
 
         #Fix Blob-Node differences
+        #TODO: Make blob names default to bnn
+
         #add to the text list
         lWitem = self.listWidget.findItemByIdx(self.nodeNum)
-        #This is not setting the role - it is still 1001 - NODE
         #TODO: Revisit the value the model adds
         self.node.setData(KEY_ROLE,ROLE_BLOB)
         lWitem.setData(KEY_ROLE,ROLE_BLOB)
@@ -522,6 +542,10 @@ class VisBlobItem(VisNodeItem):
         # JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        
+
+        #Metadata disply position
+        self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
 
         #Placeholder for drag handles
         self._Handles = []
@@ -542,7 +566,6 @@ class VisBlobItem(VisNodeItem):
     def __repr__(self):
         r = f"\noo VisBLOBItem\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n"+\
                 f"{self.startsEdges = },\n{self.endsEdges = }\n00" #\n {self.nodeShape =})"
-        r += f"\n{self.parents=}\n{self.children}"
         return r
     __str__ = __repr__
 
@@ -576,28 +599,28 @@ class VisBlobItem(VisNodeItem):
 
     def boundingRect(self):
         #TODO: Add in the displayed text
-        # Must cover both the rectangle and the text area
-        return self.nodeShape._rect.adjusted(-5, -20, 5, 5)
+        return self.nodeShape._rect.adjusted(-5, -5, 5, 5)
     
     def shape(self):
         # Combined shape: Hollow Border + Solid Text Area
         #print("Blob shape udpate")
         #path = self.nodeShape.shape() 
         path = self.mapFromItem(self.nodeShape, self.nodeShape.shape())
-        if self.metadataAttributes.get('name', {}).get('display', True):
-            #TODO: When text is rich text, this will need updating
-            tFont = QFont()
-            fm = QFontMetrics(tFont)
-            # Use same rect/logic as paint() for text hit-area
-            textRect = fm.boundingRect(self._rect.toRect(), Qt.AlignCenter, self.dispText)
-            path.addRect(QRectF(textRect))
+
+        #TODO: This does not put the textRect where paint does (FontMetrics boundrect does not see the Qt.Align flags)
+        #if self.metadataAttributes.get('name', {}).get('display', True):
+        #    #TODO: When text is rich text, this will need updating
+        #    tFont = QFont()
+        #    fm = QFontMetrics(tFont)
+        #    # Use same rect/logic as paint() for text hit-area
+        #    textRect = fm.boundingRect(self._rect.toRect(), Qt.AlignLeft | Qt.AlignCenter, self.dispText)
+        #    path.addRect(QRectF(textRect))
 
         #outlinePath = QPainterPathStroker()
         #outlinePath.setWidth(HITSIZE*2)
         #return outlinePath.createStroke(path)            
         return path
-    
-    
+     
     def hoverEnterEvent(self, event):
         self.isHovered = True
         self.update()
@@ -607,7 +630,6 @@ class VisBlobItem(VisNodeItem):
         self.isHovered = False
         self.update()
         super().hoverLeaveEvent(event)
-
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
         if self.isSelected():
@@ -628,17 +650,64 @@ class VisBlobItem(VisNodeItem):
             #r = QRectF(0,-NODESIZE,0,0) 
             #update height & width
             #r = painter.drawText(r,Qt.AlignCenter,self.dispText)
-            #painter.drawText(r, Qt.AlignCenter, self.dispText)
+            #painter.drawText(self._rect, Qt.AlignCenter | Qt.AlignTop, self.dispText)
             #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
             painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
+
+        #Debug - draw the shape path
+        #painter.drawPath(self.shape())
+        #painter.drawRect(self.boundingRect())
+
+    def getChildList(self, blob)->list:
+        """ Return a list of all children and childrens children etc """
+        descendants = []
+        for c in blob.children:
+            descendants.append(c)
+            descendants.extend(self.getChildList(c))
+        
+        return descendants
 
     def itemChange(self, change, value):
         if self.suppressItemChange:
             return super().itemChange(change, value)
-        #print(f"{change=} {value=}")
+        #print(f"{change=} {value=} ")
+
+        #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
+        if change == QGraphicsItem.ItemSelectedHasChanged:
+            kids = self.getChildList(self)
+            if value == 1 and len(self.children) > 0:
+                #Make group
+                #if not getattr(self, "childGroup" , False):
+                self.childGroup = QGraphicsItemGroup(self)
+                self.scene().addItem(self.childGroup)
+                for item in kids: 
+                    self.childGroup.addToGroup(item)
+            else:
+                #delete group
+                if getattr(self, "childGroup" , False):
+                    #print("delete group")
+                    kids = self.getChildList(self)
+                    for item in kids: #self.children:
+                        #removeFromGroup seems to bug out occasionally :/
+                        #self.childGroup.removeFromGroup(item)
+                        
+                        #This seems more reliable.
+                        newScenePos = item.mapToScene(0, 0)
+                        item.setParentItem(None)
+                        item.setPos(newScenePos)
+
+                    #rescue any children that were excluded by a resize
+                    if getattr(self, "childGroup" , False):
+                        self.scene().destroyItemGroup(self.childGroup)
+
+            
+            #Call the edge update
+            for k in kids:
+                k.updatePortEdges() 
+
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
-            #print("blob move")
+            #print("blob pos change")
             pass
 
         return super().itemChange(change, value)
@@ -742,9 +811,7 @@ class VisBlobItem(VisNodeItem):
     def parameterToPosition(self, t:float)->QPointF:
         """ Takes a parameter, and uses nodeshape geometry to work out a pos on the nodeshape"""
 
-        #Stub
         pos = self._basePath.pointAtPercent(t)
-
         return pos
 
     """
@@ -809,7 +876,7 @@ class VisBlobItem(VisNodeItem):
 
         BlobPos = self.pos()
         TLx = self.pos().x()
-        TLy = self.pos().y()
+        TLy = self.pos().y()      
         BRx = self._width
         BRy = self._height
 
@@ -889,24 +956,24 @@ class VisBlobItem(VisNodeItem):
         self.nodeShape.setRoundedRect(QRectF(0,0,self._width,self._height))
 
         #Create a polygon version for `parameterFromPos`
+        self.updatePorts()
+
+        self.suppressItemChange = False
+        
+        #this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
+        self.updatePortEdges()
+
+    def updatePorts(self):
+        """After any geom change, recalculate each port's pos from t """
+
+        #Create a polygon version for `parameterFromPos`
         self._basePath = QPainterPath()
         self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
         totalLength = self._basePath.length()
         self._polygon = self._basePath.toFillPolygon()
-        #TODO: Update all `port` positions - this almost/ sometimes works
+        #Update all `port` positions - this almost/ sometimes works
         for p in self._Ports:
             p.setPos(self.parameterToPosition(p.t))
-
-        self.suppressItemChange = False
-        
-        #TODO this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
-        for port in self._Ports:
-            for sEdge in port.startsEdgeLines:
-        #for sEdge in self.startsEdges:
-                sEdge.updateLine((self,port))
-        #for eEdge in self.endsEdges:
-            for eEdge in port.endsEdgeLines:
-                eEdge.updateLine((self, port))
 
 
     def mousePressEvent(self, event):
