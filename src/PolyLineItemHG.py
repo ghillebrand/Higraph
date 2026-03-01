@@ -56,7 +56,6 @@ class StraightLineItem(QGraphicsItem):
         super().__init__(parent)
         self.suppressItemChange = True
         self._p = p
-        self.pen = QPen(self._selectColor, 1)
         self._boundingRect = QRectF()
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
         self._path = self._createPolyPath()
@@ -68,6 +67,8 @@ class StraightLineItem(QGraphicsItem):
         self._baseColor = DRAWING_COLOUR
         self._hoverColor = HOVER_COLOUR
         self._selectColor = SELECT_COLOUR
+        self.pen = QPen(self._selectColor, 1)
+
 
     def __repr__(self):
         #tuple formatted, can't be fed into constructor, since it's a string :(
