@@ -38,7 +38,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor,
+            QPainterPath, QPainterPathStroker, QCursor, QUndoStack, QUndoCommand,
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
@@ -223,10 +223,11 @@ class grScene(QGraphicsScene):
     edgeEditRequested = Signal(object)
     nodeEditRequested = Signal(object)
 
-    def __init__(self, model,listWidget,mainwindow):
+    def __init__(self, model,listWidget,undoStack, mainwindow):
         super().__init__()
         self.model = model
         self.listWidget = listWidget
+        self.undoStack = undoStack
         self.mainwindow = mainwindow
         self.mouseMode = self.POINTER
 
@@ -371,6 +372,7 @@ class grScene(QGraphicsScene):
         scene_pos = view.mapToScene(view_pos)
         return scene_pos
         
+    # JH this doesn't work and was left in accidentally, but maybe there is a purpose in it
     def snapToShape(self, mouseEvent, selItem, pos: QPointF, size: QSizeF, hitRect=None):
         if hitRect==None:
             half_w = size.width() / 2
@@ -379,7 +381,6 @@ class grScene(QGraphicsScene):
             self.addRect(rect)
         else:
             rect=hitRect
-        print("JH mousepos going in", mouseEvent.scenePos())
         for i in range(int(pos.x()-half_w)-1, int(pos.x() + half_w)+1):
             for j in range(int(pos.y()-half_h)-1, int(pos.y() + half_h)+1):
                 if selItem in self.itemsHere(QPoint(i,j),QSize(1,1),[ROLE_BLOB, ROLE_EDGE, ROLE_NODE, ROLE_POLYLINE]):
@@ -438,12 +439,14 @@ class grScene(QGraphicsScene):
         endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
         #Create the actual edge
-        edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+        newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+        self.undoStack.push(newAction)
+        #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
         #Add to *Scene*
-        self.addItem(edgeItem)
-        edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
-        edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+        #self.addItem(edgeItem)
+        #edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
+        #edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
 
     def resetRubberLine(self):
         """ Called whether or not an edge is created """
@@ -681,13 +684,17 @@ class grScene(QGraphicsScene):
                 #Items sizes should be relative to (0,0)
                 mPos = mouseEvent.scenePos()
                 #VisNodeItem adds to the model and the  list
-                item = VisNodeItem(mPos, self.model,self.listWidget)
-                item.setPos(mPos)
+                ###item = VisNodeItem(mPos, self.model,self.listWidget)
+                ###item.setPos(mPos)
                 #Add to *Scene*
-                self.addItem(item)
+                ###self.addItem(item)
 
-                item.setFlag(QGraphicsItem.ItemIsSelectable, True)
-                item.setFlag(QGraphicsItem.ItemIsMovable, True)
+                ###item.setFlag(QGraphicsItem.ItemIsSelectable, True)
+                ###item.setFlag(QGraphicsItem.ItemIsMovable, True)
+
+                #put create node on undo stack
+                newAction=createNodeCommand(None, mPos, self, self.model, self.listWidget)
+                self.undoStack.push(newAction)
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
                 self.mouseMode = self.POINTER
@@ -1185,6 +1192,213 @@ class grScene(QGraphicsScene):
     def _on_finalize(item_repr):
         print(f"[Finalize] {item_repr} has been garbage collected.")
 
+# classes for working with undo and redo (QUndoStack)
+class createNodeCommand(QUndoCommand):
+    def __init__(self, node, posn, scene, model, listWidget):
+        super().__init__()
+        self.node = node
+        self.posn = posn
+        self.scene = scene
+        self.model = model
+        self.listWidget=listWidget
+
+        #self.new_text = new_text
+        #self.old_text = old_text
+
+    def undo(self):
+        delIdx = self.node.data(KEY_INDEX)
+        self.scene.mainwindow.delNode(delIdx)
+        #self.text_edit.setPlainText(self.old_text)
+
+    def redo(self):
+        #VisNodeItem adds to the model and the  list
+        if self.node==None:
+            newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
+            #update port  PARENTS (maybe recompute position?)
+            for p in newNode._Ports:
+                p.setParentItem(newNode)
+        else:
+            newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+                               id = self.node.nodeNum, metadata=self.node.metadata, \
+                                metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
+            """eList = self.model.edgesAtNode(self.Scene.findItemByIdx(newNode.nodeNum))
+            if eList:
+                for e in eList:
+                newEdge = VisEdgeItem(self.model,self.ui.listWidget,sItem, eItem, 
+                                directed=directed,  nameP=edgeName, id = id,
+                                polyLineType = polyLineType, points=points,tangents=tangents,
+                                metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes   )"""
+        
+        #update port  PARENTS (maybe recompute position?)
+        #for p in newNode._Ports:
+        #    p.setParentItem(newNode)
+        newNode.setPos(self.posn)
+        #Add to *Scene*
+        self.scene.addItem(newNode)
+
+        newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.node=newNode
+
+class deleteNodeCommand(QUndoCommand):
+    def __init__(self, node, posn, scene, model, listWidget):
+        super().__init__()
+        self.node = node
+        self.posn = posn
+        self.scene = scene
+        self.model = model
+        self.listWidget=listWidget
+        self.eList = self.model.edgesAtNode(self.node)
+        self.edges=[]
+        self.ports=[]
+        for port in self.node._Ports:
+            self.ports.append(port)
+
+        for e in self.eList:
+            self.points=[]
+            self.tangentPoints=[]
+            edgeItem = self.scene.findItemByIdx(e)
+            if edgeItem.edgeLine._t:
+                self.tangentPoints=edgeItem.edgeLine._t
+            else:
+                self.tangentPoints=[]
+            if edgeItem.edgeLine._p:
+                for p in edgeItem.edgeLine._p:
+                    self.points.append(p)
+            else:
+                self.points=[]
+            self.edges.append((edgeItem, self.points, self.tangentPoints))
+        #    self.points.append(edgeItem.edgeLine._p)
+        #    if edgeItem.edgeLine._t:
+        #        self.tangentPoints.append(edgeItem.edgeLine._t)
+        #    else:
+        #        self.tangentPoints.append([])
+
+    def undo(self):
+        #VisNodeItem adds to the model and the  list
+        newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+                            id = self.node.nodeNum, metadata=self.node.metadata, \
+                            metadataAttributes=self.node.metadataAttributes, ports=self.ports)
+        
+        #update port  PARENTS (maybe recompute position?)
+        #for p in newNode._Ports:
+        #    p.setParentItem(newNode)
+        newNode.setPos(self.posn)
+        #Add to *Scene*
+        self.scene.addItem(newNode)   
+        newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.node=newNode
+        #now read any edges that were deleted with the node
+        for edgeItem in self.edges:
+            if edgeItem[0].startNode[0].nodeNum==newNode.nodeNum:
+                edgeItem[0].startNode=(newNode, edgeItem[0].startNode[1])
+            else:
+                edgeItem[0].startNode=(self.scene.findItemByIdx(edgeItem[0].startNode[0].nodeNum),edgeItem[0].startNode[1])
+                edgeItem[0].startNode[0]._Ports.append(edgeItem[0].startNode[1])
+            if edgeItem[0].endNode[0].nodeNum==newNode.nodeNum:
+                edgeItem[0].endNode=(newNode, edgeItem[0].endNode[1])
+            else:
+                edgeItem[0].endNode=(self.scene.findItemByIdx(edgeItem[0].endNode[0].nodeNum),edgeItem[0].endNode[1])
+                edgeItem[0].endNode[0]._Ports.append(edgeItem[0].endNode[1])
+            newEdge = VisEdgeItem(self.model,self.listWidget,edgeItem[0].startNode, edgeItem[0].endNode, 
+                                directed=edgeItem[0].isDirected,  nameP=edgeItem[0].metadata['name'], id = edgeItem[0].edgeNum,
+                                polyLineType = edgeItem[0]._polyEdge, points=edgeItem[1][1:-1], #exclude edgepoints
+                                tangents=edgeItem[2], metadata=edgeItem[0].metadata, metadataAttributes=edgeItem[0].metadataAttributes)
+            
+            self.scene.addItem(newEdge)
+
+ 
+
+    def redo(self):
+        delIdx = self.node.data(KEY_INDEX)
+        self.scene.mainwindow.delNode(delIdx)
+        
+class createEdgeCommand(QUndoCommand):
+    def __init__(self, edge, scene, model, listWidget, startNode, endNode, parent=None):
+        super().__init__()
+        self.edge = edge
+        self.scene = scene
+        self.model = model
+        self.listWidget=listWidget
+        self.startNode=startNode
+        self.endNode=endNode
+        self.points=[]
+        self.tangentPoints=[]
+        if self.edge != None and self.edge.edgeLine._t:
+            self.tangentPoints=self.edge.edgeLine._t
+        else:
+            self.tangentPoints=[]
+        if self.edge != None and self.edge.edgeLine._p:
+            for p in self.edge.edgeLine._p:
+                self.points.append(p)
+        else:
+            self.points=[]
+
+    def undo(self):
+        delIdx = self.edge.data(KEY_INDEX)
+        self.scene.mainwindow.delEdge(delIdx)
+
+    def redo(self):
+        #VisEdgeItem adds to the model and the  list
+        if self.edge==None:
+            newEdge = VisEdgeItem(self.model,self.listWidget,self.startNode, self.endNode)                              
+        else:
+            self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
+            self.edge.endNode[0]._Ports.append(self.edge.endNode[1])
+            newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
+                                directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
+                                polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
+                                tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
+               
+
+        #Add to *Scene*
+        self.scene.addItem(newEdge)
+        newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
+        newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
+        self.edge=newEdge
+
+class deleteEdgeCommand(QUndoCommand):
+    def __init__(self, edge, scene, model, listWidget, startNode, endNode, parent=None):
+        super().__init__()
+        self.edge = edge
+        self.scene = scene
+        self.model = model
+        self.listWidget=listWidget
+        self.startNode=startNode
+        self.endNode=endNode
+        self.points=[]
+        self.tangentPoints=[]
+        if self.edge != None and self.edge.edgeLine._t:
+            self.tangentPoints=self.edge.edgeLine._t
+        else:
+            self.tangentPoints=[]
+        if self.edge != None and self.edge.edgeLine._p:
+            for p in self.edge.edgeLine._p:
+                self.points.append(p)
+        else:
+            self.points=[]
+
+    def undo(self):
+        #VisEdgeItem adds to the model and the  list
+        self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
+        self.edge.endNode[0]._Ports.append(self.edge.endNode[1])
+        newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
+                            directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
+                            polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
+                            tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
+               
+
+        #Add to *Scene*
+        self.scene.addItem(newEdge)
+        newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
+        newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
+        self.edge=newEdge
+
+    def redo(self):
+        delIdx = self.edge.data(KEY_INDEX)
+        self.scene.mainwindow.delEdge(delIdx)
+        
 
 def debug_qgraphicsitem_refs():
     """ coPilot code to track gc issues. """
@@ -1442,9 +1656,10 @@ class MainWindow(QMainWindow):
         #self.ui.listWidget.itemClicked.connect(self.listClick) # this is now called by itemSelectionChanged
         self.ui.listWidget.itemDoubleClicked.connect(self.listDblClicked)
         
+        self.undoStack=QUndoStack()
 
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
-        self.Scene = grScene(self.model,self.ui.listWidget,self)
+        self.Scene = grScene(self.model,self.ui.listWidget, self.undoStack, self)
         #self.Scene.selectionChanged.connect(self.actionSceneSelectChange)
         self.ui.listWidget.itemSelectionChanged.connect(self.actionListSelectChange)
 
@@ -1511,6 +1726,15 @@ class MainWindow(QMainWindow):
         self.ui.actionSelect_None.triggered.connect(self.action_EditSelectNone)
         self.ui.actionZoomIn.triggered.connect(self.action_EditZoomIn)
         self.ui.actionZoomOut.triggered.connect(self.action_EditZoomOut)
+
+        self.actionEditUndo = QAction("Undo", self)
+        self.ui.menuEdit.addAction(self.actionEditUndo)
+        self.actionEditRedo = QAction("Redo", self)
+        self.ui.menuEdit.addAction(self.actionEditRedo)
+        self.actionEditUndo.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+z", None))
+        self.actionEditRedo.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+y", None))
+        self.actionEditUndo.triggered.connect(self.undoStack.undo)
+        self.actionEditRedo.triggered.connect(self.undoStack.redo)
 
         #Tools & other 
         self.execCodeAction = QAction("Run Python Code", self)
@@ -2627,12 +2851,16 @@ class MainWindow(QMainWindow):
                 #print(self.model.itemName(item))
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     delIdx = item.data(KEY_INDEX)
-                    self.delEdge(delIdx)
+                    #self.delEdge(delIdx)
+                    newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.listWidget, item.startNode, item.endNode, parent=None)
+                    self.undoStack.push(newAction)
             #Node delete - 1st del any connected edges - handled by GrScene
             for item in selected_items:
                 if item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                     delIdx = item.data(KEY_INDEX)
-                    self.delNode(delIdx)
+                    #self.delNode(delIdx)
+                    newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget)
+                    self.undoStack.push(newAction)
 
         #logging.debug("about to update from action_EditDelete",stack_info=True  )
         #gc.collect() #This will crash the whole thing, with no traces

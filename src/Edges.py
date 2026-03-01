@@ -51,7 +51,6 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
         """
         super().__init__(parent)
-
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
         self.model = model
@@ -92,7 +91,6 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #defName = f"{sName}->{eName}"
         defName = "" #just the ID
         self.edge,self.edgeNum = self.model.addGMEdge(sItem[0],eItem[0],nameP = defName,id=id)
-
         #update the name with the edge ID, to help tracking
         # self.metadata is just a more elegant wrapper
         self.metadata = self.model.Gr.edgeD[self.edgeNum].metadata

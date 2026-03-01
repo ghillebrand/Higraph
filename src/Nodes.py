@@ -21,7 +21,7 @@ from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor,QColor,
+            QPainterPath, QPainterPathStroker, QCursor,QColor, QUndoStack, QUndoCommand,
             QGuiApplication, QImage, QPixmap)
 from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
@@ -33,6 +33,112 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem, QGraphicsItemGroup
 from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
+
+"""
+# classes for working with undo and redo (QUndoStack)
+class createNodeCommand(QUndoCommand):
+    def __init__(self, node, posn, scene, model, listWidget):
+        super().__init__()
+        self.node = node
+        self.posn = posn
+        self.scene = scene
+        self.model = model
+        self.listWidget=listWidget
+
+        #self.new_text = new_text
+        #self.old_text = old_text
+
+    def undo(self):
+        delIdx = self.node.data(KEY_INDEX)
+        self.scene.mainwindow.delNode(delIdx)
+        #self.text_edit.setPlainText(self.old_text)
+
+    def redo(self):
+        #VisNodeItem adds to the model and the  list
+        if self.node==None:
+            newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
+            #update port  PARENTS (maybe recompute position?)
+            for p in newNode._Ports:
+                p.setParentItem(newNode)
+        else:
+            newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+                               id = self.node.nodeNum, metadata=self.node.metadata, \
+                                metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)"""
+"""       eList = self.model.edgesAtNode(self.Scene.findItemByIdx(newNode.nodeNum))
+            if eList:
+                for e in eList:
+                newEdge = VisEdgeItem(self.model,self.ui.listWidget,sItem, eItem, 
+                                directed=directed,  nameP=edgeName, id = id,
+                                polyLineType = polyLineType, points=points,tangents=tangents,
+                                metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes   )"""
+        
+"""#update port  PARENTS (maybe recompute position?)
+        #for p in newNode._Ports:
+        #    p.setParentItem(newNode)
+        newNode.setPos(self.posn)
+        #Add to *Scene*
+        self.scene.addItem(newNode)
+
+        newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.node=newNode
+
+class deleteNodeCommand(QUndoCommand):
+    def __init__(self, node, posn, scene, model, listWidget):
+        super().__init__()
+        self.node = node
+        self.posn = posn
+        self.scene = scene
+        self.model = model
+        self.listWidget=listWidget
+        self.eList = self.model.edgesAtNode(self.node)
+        self.edges=[]
+       # self.points=[]
+       # self.tangentPoints=[]
+        for e in self.eList:
+            edgeItem = self.scene.findItemByIdx(e)
+            if edgeItem.edgeLine._t:
+                tangentPoints=edgeItem.edgeLine._t
+            else:
+                tangentPoints=[]
+            self.edges.append((edgeItem, edgeItem.edgeLine._p, tangentPoints))
+        #    self.points.append(edgeItem.edgeLine._p)
+        #    if edgeItem.edgeLine._t:
+        #        self.tangentPoints.append(edgeItem.edgeLine._t)
+        #    else:
+        #        self.tangentPoints.append([])
+
+        #self.new_text = new_text
+        #self.old_text = old_text
+
+    def undo(self):
+        #VisNodeItem adds to the model and the  list
+        newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+                            id = self.node.nodeNum, metadata=self.node.metadata, \
+                            metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
+        
+        #update port  PARENTS (maybe recompute position?)
+        #for p in newNode._Ports:
+        #    p.setParentItem(newNode)
+        newNode.setPos(self.posn)
+        #Add to *Scene*
+        self.scene.addItem(newNode)
+
+        newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
+        self.node=newNode
+        #now readd any edges that were deleted with the node
+        for edgeItem in self.edges:
+            newEdge = VisEdgeItem(self.model,self.listWidget,edgeItem[0].startNode, edgeItem[0].endNode, 
+                                directed=edgeItem[0].isDirected,  nameP=edgeItem[0].metadata['name'], id = edgeItem[0].id,
+                                polyLineType = edgeItem[0].polyLineType, points=edgeItem[1],tangents=edgeItem[2],
+                                metadata=edgeItem[0].Metadata, metadataAttributes=edgeItem[0].MetadataAttributes)
+
+    def redo(self):
+        delIdx = self.node.data(KEY_INDEX)
+        self.scene.mainwindow.delNode(delIdx)
+        
+    """
 
 class QRoundedRectItem(QGraphicsObject):
     # Custom signal emitted when the border is clicked
@@ -216,6 +322,7 @@ class VisNodeItem(QGraphicsObject):
         for p in ports:
             if p.index > self._nextPort: self._nextPort = p.index
             self._Ports.append(p)
+            p.setParentItem(self)
 
 
         #Make nodes appear in front of edges for painting & selection
