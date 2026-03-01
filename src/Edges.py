@@ -51,7 +51,6 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
         """
         super().__init__(parent)
-        print("JH init edge points", points)
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
         self.model = model
