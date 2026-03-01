@@ -673,13 +673,12 @@ class VisBlobItem(VisNodeItem):
         #print(f"{change=} {value=} ")
 
         #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
-        if change == QGraphicsItem.ItemSelectedHasChanged:
+        if change == QGraphicsItem.ItemSelectedHasChanged :
             kids = self.getChildList(self)
-            if value == 1 and len(self.children) > 0:
+            if value == 1 and len(self.children) > 0 and self.isOnlySelected:
                 #Make group
                 #if not getattr(self, "childGroup" , False):
                 self.childGroup = QGraphicsItemGroup(self)
-                self.scene().addItem(self.childGroup)
                 for item in kids: 
                     self.childGroup.addToGroup(item)
             else:
@@ -698,9 +697,9 @@ class VisBlobItem(VisNodeItem):
 
                     #rescue any children that were excluded by a resize
                     if getattr(self, "childGroup" , False):
-                        self.scene().destroyItemGroup(self.childGroup)
+                        if type(self.childGroup) == "QGraphicsItemGroup":
+                            self.scene().destroyItemGroup(self.childGroup)
 
-            
             #Call the edge update
             for k in kids:
                 k.updatePortEdges() 
@@ -744,7 +743,6 @@ class VisBlobItem(VisNodeItem):
                 accumulatedLength+=line.length()
         t=accumulatedLength/totalLength
         return(t)    
-
 
     def _closestTOnSegment(self, a: QPointF, b: QPointF, p: QPointF) -> float:
         """ Calculates the local projection parameter t for point p on segment ab """
