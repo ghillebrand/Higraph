@@ -442,6 +442,13 @@ class VisNodeItem(QGraphicsObject):
         for p in self._Ports:
             p.setPos(self.parameterToPosition(p.t))
 
+    def updatePortEdges(self):
+        """ Update the edges attached to each port """
+        for port in self._Ports:
+            for sEdge in port.startsEdgeLines:
+                sEdge.updateLine((self,port))
+            for eEdge in port.endsEdgeLines:
+                eEdge.updateLine((self, port)) 
 
     def deletePort(self, delPort:port): # delIndex:int):
         """Remove a port """
@@ -496,9 +503,10 @@ class VisBlobItem(VisNodeItem):
         self.suppressItemChange = True
 
         #Fix Blob-Node differences
+        #TODO: Make blob names default to bnn
+
         #add to the text list
         lWitem = self.listWidget.findItemByIdx(self.nodeNum)
-        #This is not setting the role - it is still 1001 - NODE
         #TODO: Revisit the value the model adds
         self.node.setData(KEY_ROLE,ROLE_BLOB)
         lWitem.setData(KEY_ROLE,ROLE_BLOB)
@@ -659,52 +667,40 @@ class VisBlobItem(VisNodeItem):
 
         #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
         if change == QGraphicsItem.ItemSelectedHasChanged:
+            kids = self.getChildList(self)
             if value == 1 and len(self.children) > 0:
                 #Make group
-                print("make group")
-                kids = self.getChildList(self)
-
+                #if not getattr(self, "childGroup" , False):
                 self.childGroup = QGraphicsItemGroup(self)
                 self.scene().addItem(self.childGroup)
-
                 for item in kids: 
-                    #group doesn't change pos() offsets, parenting does. But this messes with ports!
-                    #mapFromScene and mapToScene should work, but don't
-                    #HACK: Add the parent pos() as an offset
-                    #for p in item._Ports:
-                    #    print(f"     parmToPos {p.t:1.3f} mapToScene for {self.nodeNum} was {p.pos()}", end = "")
-                    #    p.setPos(p.pos() - self.scenePos())
-
                     self.childGroup.addToGroup(item)
-                    #print(f"itmChng item:{item.nodeNum} parent ({self.nodeNum}) is {type(self.parentItem())}, item is {type(item)}")
-                    #print(f"before update {self._Ports}")
-                    #item.updatePorts()
-
-                    #item.setParentItem(self)
-                    #print(f"Adding {item.nodeNum}, newpos = {item.pos()}")
             else:
                 #delete group
                 if getattr(self, "childGroup" , False):
                     #print("delete group")
                     kids = self.getChildList(self)
                     for item in kids: #self.children:
-                        newScenePos = item.mapToScene(0, 0)
+                        #removeFromGroup seems to bug out occasionally :/
                         #self.childGroup.removeFromGroup(item)
+                        
+                        #This seems more reliable.
+                        newScenePos = item.mapToScene(0, 0)
                         item.setParentItem(None)
                         item.setPos(newScenePos)
-                        #item.updatePorts()
 
                     #rescue any children that were excluded by a resize
                     if getattr(self, "childGroup" , False):
                         self.scene().destroyItemGroup(self.childGroup)
+
             
-            #QTimer.singleShot(0,self.update())
+            #Call the edge update
+            for k in kids:
+                k.updatePortEdges() 
 
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
             #print("blob pos change")
-            #self.scene().updateBlobParenting()
-            #Update port positions
             pass
 
         return super().itemChange(change, value)
@@ -809,16 +805,6 @@ class VisBlobItem(VisNodeItem):
         """ Takes a parameter, and uses nodeshape geometry to work out a pos on the nodeshape"""
 
         pos = self._basePath.pointAtPercent(t)
-        #print(f"parmToPos for {self.nodeNum} {type(self)=}, parent {type(self.parentItem())}")
-        print(f"parmToPos for {self.nodeNum} set to {pos}") #\n {self.mapToScene(pos)=}")
-        #Handle parenting issues for coord transforms
-        #if self.parentItem():
-        #    #print(f"parmToPos parent of {self.nodeNum} is {type(self.parentItem())}")
-        #    if self.parentItem().parentItem() != None:
-        #        print(f"     parmToPos - mapToScene parent of parent {type(self.parentItem().parentItem())}")
-        #        pos = self.mapToScene(self._basePath.pointAtPercent(t))
-        #        print(f"     parmToPos mapToScene for {self.nodeNum} set to {pos}")
-            
         return pos
 
     """
@@ -967,14 +953,8 @@ class VisBlobItem(VisNodeItem):
 
         self.suppressItemChange = False
         
-        #TODO this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
-        for port in self._Ports:
-            for sEdge in port.startsEdgeLines:
-        #for sEdge in self.startsEdges:
-                sEdge.updateLine((self,port))
-        #for eEdge in self.endsEdges:
-            for eEdge in port.endsEdgeLines:
-                eEdge.updateLine((self, port))
+        #this SHOULD be propagated via itemChange(), but that only happens at start, not end of handle move use itemChanged() (past-tense)?
+        self.updatePortEdges()
 
     def updatePorts(self):
         """After any geom change, recalculate each port's pos from t """
@@ -984,7 +964,7 @@ class VisBlobItem(VisNodeItem):
         self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
         totalLength = self._basePath.length()
         self._polygon = self._basePath.toFillPolygon()
-        #TODO: Update all `port` positions - this almost/ sometimes works
+        #Update all `port` positions - this almost/ sometimes works
         for p in self._Ports:
             p.setPos(self.parameterToPosition(p.t))
 
