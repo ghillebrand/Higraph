@@ -1160,6 +1160,8 @@ class grScene(QGraphicsScene):
             item.startNode[0].startsEdges.remove(item)
             #print(f"{item.endNode = }") #eItem
             item.endNode[0].endsEdges.remove(item)
+            item.startNode[1].startsEdgeLines.remove(item)
+            item.endNode[1].endsEdgeLines.remove(item)
             #print(f"{item.endNode.endsEdges =}")
         #print(f"{item =}")  
         #logging.debug("delItem&chld scene items, BEFORE remove")
@@ -1216,7 +1218,7 @@ class createNodeCommand(QUndoCommand):
             newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
             #update port  PARENTS (maybe recompute position?)
             for p in newNode._Ports:
-                p.setParentItem(newNode)
+                p.setParentItem(newNode.nodeShape)
         else:
             newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
                                id = self.node.nodeNum, metadata=self.node.metadata, \
@@ -1367,6 +1369,15 @@ class deleteEdgeCommand(QUndoCommand):
         self.listWidget=listWidget
         self.startNode=startNode
         self.endNode=endNode
+        #save port elements to recreate
+        self.startPortPos=self.startNode[1].scenePos()
+        self.startPortT=self.startNode[1].t
+        self.startPortIndex=self.startNode[1].index
+        self.startPortParent=self.startNode[1].parentItem()
+        self.endPortPos=self.endNode[1].scenePos()
+        self.endPortT=self.endNode[1].t
+        self.endPortIndex=self.endNode[1].index
+        self.endPortParent=self.endNode[1].parentItem()
         self.points=[]
         self.tangentPoints=[]
         if self.edge != None and self.edge.edgeLine._t:
@@ -1381,14 +1392,24 @@ class deleteEdgeCommand(QUndoCommand):
 
     def undo(self):
         #VisEdgeItem adds to the model and the  list
-        self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
-        self.edge.endNode[0]._Ports.append(self.edge.endNode[1])
+        #recreate ports
+        if not self.edge.startNode[1] or not self.edge.startNode[1].parentItem():#instead of being deleted QT removes the parent. Weird but
+            pStart= port(self.startPortPos, t=self.startPortT, index =self.startPortIndex,  parent=self.startPortParent)
+            self.edge.startNode[0]._Ports.append(pStart)
+            self.edge.startNode=(self.edge.startNode[0],pStart)
+        else:
+            self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
+        if not self.edge.endNode[1] or not self.edge.endNode[1].parentItem():
+            pEnd= port(self.endPortPos, t=self.endPortT, index =self.endPortIndex,  parent=self.endPortParent)
+            self.edge.endNode[0]._Ports.append(pEnd)
+            self.edge.endNode=(self.edge.endNode[0],pEnd)
+        else:
+            self.edge.endNode[0]._Ports.append(self.edge.endNode[1])        
         newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
                             directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
                             polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
                             tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
                
-
         #Add to *Scene*
         self.scene.addItem(newEdge)
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
@@ -2025,7 +2046,7 @@ class MainWindow(QMainWindow):
         #update port  PARENTS (maybe recompute position?)
 
         for p in newNode._Ports:
-            p.setParentItem(newNode)
+            p.setParentItem(newNode.nodeShape)
             #print(f"{newNode.nodeNum=},{p.index=}")
         newNode.updatePorts()
 
@@ -2099,7 +2120,7 @@ class MainWindow(QMainWindow):
 
         #update port  PARENTS 
         for p in newBlob._Ports:
-            p.setParentItem(newBlob)
+            p.setParentItem(newBlob)  #JH should be shape?
 
         # (maybe recompute position?)
         newBlob.updatePorts()
@@ -2796,7 +2817,6 @@ class MainWindow(QMainWindow):
 
     def delEdge(self, delIdx):
         """ all the calls to delete an edge"""
-
         #delete from model
         self.model.delEdge(delIdx)
         #Delete from LWscene updat
@@ -2817,7 +2837,7 @@ class MainWindow(QMainWindow):
 
         self.Scene.deleteItemAndChildren(delItem)
 
-        del delItem #not sure why this works JH added
+        del delItem 
 
     def delNode(self, delIdx):
         """ all the calls to delete an node"""

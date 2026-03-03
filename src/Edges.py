@@ -190,7 +190,6 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         eItem[0].endsEdges.append(self)
         eItem[1].endsEdgeLines.append(self)    #JH duplicate this for now
         self.setEnd(eItem)
-
         #Selection and editing vars:
         #edit Handles
         self.stH = None

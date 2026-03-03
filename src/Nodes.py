@@ -322,7 +322,7 @@ class VisNodeItem(QGraphicsObject):
         for p in ports:
             if p.index > self._nextPort: self._nextPort = p.index
             self._Ports.append(p)
-            p.setParentItem(self)
+            p.setParentItem(self.nodeShape)
 
 
         #Make nodes appear in front of edges for painting & selection
