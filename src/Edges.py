@@ -172,7 +172,8 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         if directed == '':
             self.isDirected = self.model.isDigraph
         else:
-            self.isDirected = directed == 'true'
+            #self.isDirected = directed == 'true'  JH
+            self.isDirected=directed
 
         if self.isDirected:
             self.endShape = ArrowHeadItem(size=NODESIZE/2, parent=self)
