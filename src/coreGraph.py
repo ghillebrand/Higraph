@@ -17,7 +17,8 @@ class Graph:
     """ a set of nodes and edges"""
     
     #A graph-global ID. Allows for hyperedges (edges start XOR end on edges)
-    nextID:int = 0
+    #nextID:int = 0 JH
+    nextID:int = 1
     #A set of used IDs. Allows loading of files with existing IDs
     #TODO: Clear on FileNew
     IDsUsed = set()
