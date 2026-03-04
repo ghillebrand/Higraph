@@ -1320,11 +1320,25 @@ class createEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, listWidget, startNode, endNode, parent=None):
         super().__init__()
         self.edge = edge
+        self.edgeNum=0 #placeholder
         self.scene = scene
         self.model = model
         self.listWidget=listWidget
+        # save node and port data
         self.startNode=startNode
+        self.startNodeNum=startNode[0].nodeNum
         self.endNode=endNode
+        self.endNodeNum=endNode[0].nodeNum
+        self.startPortPos=startNode[1].scenePos()
+        self.startPortT=self.startNode[1].t
+        self.startPortIndex=self.startNode[1].index
+        #self.startPortParent=self.startNode[1].parentItem()
+        self.endPortPos=endNode[1].scenePos()
+        self.endPortT=self.endNode[1].t
+        self.endPortIndex=self.endNode[1].index
+        print("JH not crashin in init")
+        """#self.endPortParent=self.endNode[1].parentItem()
+        # save edgepoints and tangents
         self.points=[]
         self.tangentPoints=[]
         if self.edge != None and self.edge.edgeLine._t:
@@ -1335,7 +1349,7 @@ class createEdgeCommand(QUndoCommand):
             for p in self.edge.edgeLine._p:
                 self.points.append(p)
         else:
-            self.points=[]
+            self.points=[]"""
 
     def undo(self):
         delIdx = self.edge.data(KEY_INDEX)
@@ -1344,14 +1358,33 @@ class createEdgeCommand(QUndoCommand):
     def redo(self):
         #VisEdgeItem adds to the model and the  list
         if self.edge==None:
+            print("JH creating line")
             newEdge = VisEdgeItem(self.model,self.listWidget,self.startNode, self.endNode)                              
         else:
-            self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
-            self.edge.endNode[0]._Ports.append(self.edge.endNode[1])
-            newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
-                                directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
-                                polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
-                                tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
+            # if any of the nodes have been deleted and recreated they need to be found by reference
+            startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
+            endNodeZero=self.scene.findItemByIdx(self.endNodeNum)
+            # ports WILL have been deleted, so recreate and add to node 
+            portPos = startNodeZero.parameterToPosition(self.startPortT)
+            startNodeOne=port(portPos, t=self.startPortT, index =self.startPortIndex, parent=startNodeZero.nodeShape)
+            #startNodeOne.setPos(self.startPortPos)
+            portPos = endNodeZero.parameterToPosition(self.endPortT)
+            endNodeOne=port(portPos, t=self.endPortT, index =self.endPortIndex, parent=endNodeZero.nodeShape)
+            #endNodeOne.setPos(self.endPortPos)
+            startNodeZero._Ports.append(startNodeOne)
+            endNodeZero._Ports.append(endNodeOne)
+            self.startNode=(startNodeZero, startNodeOne)
+            self.endNode=(endNodeZero, endNodeOne)
+            newEdge = VisEdgeItem(self.model,self.listWidget,self.startNode, self.endNode, 
+                                id = self.edgeNum)
+                          #      polyLineType = self.polyLineType, points=self.points[1:-1], #exclude edgepoints
+                          #      tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
+            self.edgeNum=newEdge.edgeNum  
+
+            #newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
+            #                    directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
+            #                    polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
+            #                    tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
                
 
         #Add to *Scene*
@@ -2727,13 +2760,6 @@ class MainWindow(QMainWindow):
         # The newly pasted items will be selected, to make them easy to move
 
         self.action_EditSelectNone()
-        """self.Scene.clearSelection()
-        if self.Scene.thisHandleObjectSelected:
-            print("JH yes it is")
-            self.Scene.thisHandleObjectSelected._deleteHandles()
-            self.Scene.thisHandleObjectSelected=None"""
-        #if self.Scene.onlySelected:
-        #    self.Scene.clearEdgeOnly()
 
         clipboard = QGuiApplication.clipboard()
         mimeData = clipboard.mimeData()
