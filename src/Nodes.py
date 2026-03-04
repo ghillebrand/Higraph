@@ -468,6 +468,7 @@ class VisNodeItem(QGraphicsObject):
         #Currently (02a) only one edge per port
 
         self._Ports.remove(delPort)
+        del delPort
 
     def portFromIndex(self, Xindex)->port:
         """ Returns the port object corresponding to the index """
