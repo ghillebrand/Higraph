@@ -147,10 +147,8 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #Create the graphical line
         #PointList to pass to polyLine
         if len(points) > 0:
-            #ptList = [self.startNode[1].pos()] + points + [self.endNode[1].pos()]
             ptList = [self.startNode[1].scenePos()] + points + [self.endNode[1].scenePos()]
         else: #just start with a 2-pt line
-            #ptList = [self.startNode[1].pos(),self.endNode[1].pos()]
             ptList = [self.startNode[1].scenePos(),self.endNode[1].scenePos()]
         #Track what sort of edge this one is
         self._polyEdge = polyLineType
@@ -158,6 +156,20 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         if self._polyEdge == STRAIGHT:
             self.edgeLine = StraightLineItem(ptList,parent=self)
         else: #Assume spline! Error checking later!
+            #If no tangents given, and start/end are on a blob, make tangent at right angles to blob
+            if len(tangents) == 0:
+                #Orthogonal to `nodeshape` at `point`
+                startSlope = self.startNode[1].orthogonalSlope()
+                endSlope =  self.endNode[1].orthogonalSlope()
+                #print(f"{startSlope=}, {endSlope=}")
+                tgtScaleFactor = 30 #TODO: Make this a global constant (also used in PolyLineItem)
+                tangents = [(QPointF(0,0),  
+                             QPointF(startSlope[0] * tgtScaleFactor, startSlope[1] * tgtScaleFactor))]
+
+                tangents.append((QPointF(-endSlope[0] * tgtScaleFactor,-endSlope[1] * tgtScaleFactor), 
+                                QPointF(0,0)))
+                #print(f"{tangents=}")
+
             self.edgeLine = HermiteSplineItem(p=ptList,t=tangents,parent=self)
 
         #Stop Python GC from mangling things on delete (It seems this ref is not critical)
