@@ -123,7 +123,7 @@ class BlobTextItem(QGraphicsTextItem):
 
         # 1. Enable editing and selection
         self.setTextInteractionFlags(Qt.TextEditorInteraction)
-        
+
         # 2. Appearance tweaks
         self.setDefaultTextColor(QColor("#2c3e50"))
         self.setFont(QFont("Arial", BLOB_FONT_SIZE))
@@ -159,14 +159,14 @@ class BlobTextItem(QGraphicsTextItem):
                 currentFontSize-=1
                 self.setFont(QFont("Arial",currentFontSize))
                 currentHeight=super().boundingRect().height()
-        elif currentHeight+5 < parent._height and currentFontSize<8:
-            while currentHeight+5 < parent._height and currentFontSize<8:
+        elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+            while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
                 currentFontSize+=1
                 self.setFont(QFont("Arial",currentFontSize))
                 currentHeight=super().boundingRect().height()
 
-    def mousePressEvent(self, mouseEvent):
-        if (mouseEvent.button() == Qt.MouseButton.RightButton):
+    #def mousePressEvent(self, mouseEvent):
+    #    if (mouseEvent.button() == Qt.MouseButton.RightButton):
             """cursor = self.textCursor()
             if cursor.hasSelection():
                 font=QFontDialog.getFont()
@@ -181,7 +181,7 @@ class BlobTextItem(QGraphicsTextItem):
                     fmt.setForeground(colour)
                     cursor.mergeCharFormat(fmt)
                     self.setTextCursor(cursor)"""
-            return super().mousePressEvent(mouseEvent)
+     #       return super().mousePressEvent(mouseEvent)
 
 
 class VisNodeItem(QGraphicsObject):
@@ -221,7 +221,7 @@ class VisNodeItem(QGraphicsObject):
             self.metadataAttributes = metadataAttributes
         else:
             self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
-
+        self.text=""   #needed for blobs
         #Update positions
 
         #add to the text list
@@ -344,7 +344,7 @@ class VisNodeItem(QGraphicsObject):
         #TODO: This needs to be called by itemChange somehow.
         metaStr = ''
         for k,v in self.metadata.items():
-            if k != 'name':
+            if k != 'name' and k != 'description':
                 if self.metadataAttributes[k]['display']:
                     metaStr += "\n"+k +":"+v
         self.metaDisplay.setPlainText(metaStr)
@@ -1048,6 +1048,9 @@ class VisBlobItem(VisNodeItem):
         #orders are right, transform back blob coords
         self._height = BRy
         self._width = BRx 
+
+        #resize text when blob resizes
+        self.text.setTextSize(self)
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
