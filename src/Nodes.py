@@ -15,14 +15,14 @@ from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem, QAbstractGraphicsShapeItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
-            QSlider, QLabel, QStatusBar,
+            QSlider, QLabel, QStatusBar, QColorDialog, QFontDialog,
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
             QPainterPath, QPainterPathStroker, QCursor,QColor, QUndoStack, QUndoCommand,
-            QGuiApplication, QImage, QPixmap)
+            QGuiApplication, QImage, QPixmap, QTextCharFormat)
 from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
             QMimeData, QBuffer, QByteArray, QIODevice)
@@ -116,6 +116,72 @@ class QRoundedRectItem(QGraphicsObject):
         #self.clicked.emit()
         super().mousePressEvent(event)
 
+class BlobTextItem(QGraphicsTextItem):
+    def __init__(self, text, width, parent):
+        super().__init__(text, parent)
+        #self.setPos(x, y)
+
+        # 1. Enable editing and selection
+        self.setTextInteractionFlags(Qt.TextEditorInteraction)
+        
+        # 2. Appearance tweaks
+        self.setDefaultTextColor(QColor("#2c3e50"))
+        self.setFont(QFont("Arial", BLOB_FONT_SIZE))
+        #self.setTextWidth(width)
+        self.setTextSize(parent)
+        # 3. Make the item movable within the scene
+        self.setFlag(QGraphicsTextItem.ItemIsMovable)
+        self.setFlag(QGraphicsTextItem.ItemIsSelectable)
+    
+    def boundingRect(self):
+        # Get the original rect to keep the calculated width
+        rect = super().boundingRect()
+        # Force the height to our custom value
+        return QRectF(rect.x(), rect.y(), rect.width(), min(self.parentItem()._height, rect.height()))
+
+    def paint(self, painter, option, widget):
+        # Optional: Draw a subtle background behind the text
+        painter.setClipRect(self.boundingRect())
+        painter.setBrush(QColor(240, 240, 240, 100))
+        painter.setPen(Qt.NoPen)
+        painter.drawRect(self.boundingRect())
+        
+        # Call the original paint method to draw the text itself
+        super().paint(painter, option, widget)
+
+    def setTextSize(self, parent):
+        super().setTextWidth(parent._width)
+        currentHeight=super().boundingRect().height()
+        currentFontSize=self.font().pointSize()
+        if currentHeight > parent._height and currentFontSize>6:
+
+            while currentHeight > parent._height and currentFontSize>6:
+                currentFontSize-=1
+                self.setFont(QFont("Arial",currentFontSize))
+                currentHeight=super().boundingRect().height()
+        elif currentHeight+5 < parent._height and currentFontSize<8:
+            while currentHeight+5 < parent._height and currentFontSize<8:
+                currentFontSize+=1
+                self.setFont(QFont("Arial",currentFontSize))
+                currentHeight=super().boundingRect().height()
+
+    def mousePressEvent(self, mouseEvent):
+        if (mouseEvent.button() == Qt.MouseButton.RightButton):
+            """cursor = self.textCursor()
+            if cursor.hasSelection():
+                font=QFontDialog.getFont()
+                if font.isValid():
+                    fmt= QTextCharFormat()
+                    fmt.setFont(font)
+                    cursor.mergeCharFormat(fmt)
+                    self.setTextCursor(cursor)
+                colour=QColorDialog.getColor()
+                if colour.isValid():
+                    fmt = QTextCharFormat()
+                    fmt.setForeground(colour)
+                    cursor.mergeCharFormat(fmt)
+                    self.setTextCursor(cursor)"""
+            return super().mousePressEvent(mouseEvent)
 
 
 class VisNodeItem(QGraphicsObject):
@@ -550,7 +616,21 @@ class VisBlobItem(VisNodeItem):
         # JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        
+        #blob text JH
+        if 'description' not in self.metadataAttributes:
+            self.metadataAttributes['description']={'display':DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
+            self.metadata['description']='Click to add'
+        if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
+            if 'description' in self.metadata:
+                blobText=self.metadata['description']
+            else:
+                blobText="Click to add"
+            container = BlobTextItem(blobText, width, self)
+            self.text=container
+        else:
+            container = BlobTextItem("", width, self)
+            self.text=container
+            self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
@@ -666,12 +746,14 @@ class VisBlobItem(VisNodeItem):
         #Draw the text if set to display
         if self.metadataAttributes['name']['display']:
             # Pos on top (this can be generalised to left, bottom, right, etc)
-            #r = QRectF(0,-NODESIZE,0,0) 
-            #update height & width
-            #r = painter.drawText(r,Qt.AlignCenter,self.dispText)
+            if BLOB_NAME_ON_TOP:
+                r = QRectF(0,-NODESIZE,0,0) 
+                r = painter.drawText(r,Qt.AlignCenter,self.dispText)
+                painter.drawText(r, Qt.AlignCenter, self.dispText)
+            else:
             #painter.drawText(self._rect, Qt.AlignCenter | Qt.AlignTop, self.dispText)
             #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
-            painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
+                painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
 
         #Debug - draw the shape path
         #painter.drawPath(self.shape())
