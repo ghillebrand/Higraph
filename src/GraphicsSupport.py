@@ -1,6 +1,7 @@
 
 #Global constants. 
 from  HGConstants import *
+import math
 
 from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
@@ -183,3 +184,33 @@ class port(dummyNodeItem):
         super().__init__(center, parent=parent)
         self.t = t  
         self.index = index #Index must only be used for XML. 
+
+    def orthogonalSlope(self)->tuple:
+        """ Return (dx,dy) at right angles to the `nodeshape` at `t` """
+        #Check that parent has a path
+        #print(f"{self.parentItem().parentItem().nodeNum=}", end = "")
+        if self.parentItem().parentItem().data(KEY_ROLE) == ROLE_NODE: #Node
+            dy = math.sin(2*math.pi * self.t)
+            dx = math.cos(2*math.pi * self.t)
+        elif self.parentItem().parentItem().data(KEY_ROLE) == ROLE_BLOB:  #Blob
+            #These functions produce odd results sometime - not sure why - may be a port bug?
+            #m = self.parentItem().shape().slopeAtPercent(self.t)
+            #print(f" t={self.t:1.5f} has {m:1.4f}")
+            #print(f"Angle at: {self.parentItem().shape().angleAtPercent(self.t)}")
+            #TODO: until slopeAt is working, use <= BLOB_CORNER_RADIUS, but sort out the bottom logic
+            if self.pos().x() == 0: #left
+                dy = 0
+                dx = -1
+            elif self.pos().y() == 0: #top
+                dy = -1
+                dx = 0
+            elif self.pos().x() == self.parentItem().parentItem()._width: #right
+                dy = 0
+                dx = 1
+            elif self.pos().y() == self.parentItem().parentItem()._height: #bottom
+                dy = 1
+                dx = 0
+            else: #HACK for now - refine corners
+                dy = 0.5
+                dx = 0.5
+        return (dx,dy)
