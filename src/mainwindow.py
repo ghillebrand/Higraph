@@ -1237,8 +1237,8 @@ class createNodeCommand(QUndoCommand):
         self.node=newNode   
 
 class deleteNodeCommand(QUndoCommand):
-    def __init__(self, node, posn, scene, model, listWidget):
-        super().__init__()
+    def __init__(self, node, posn, scene, model, listWidget, parent=None):
+        super().__init__(parent=parent)
         self.node = node
         self.nodeNum = self.node.nodeNum
         self.posn = posn
@@ -1313,7 +1313,7 @@ class deleteNodeCommand(QUndoCommand):
             self.scene.addItem(newEdge)
 
     def redo(self):
-        delIdx = self.node.data(KEY_INDEX)   #should use self.nodeNum
+        delIdx = self.node.data(KEY_INDEX)   
         self.scene.mainwindow.delNode(delIdx)
         
 class createEdgeCommand(QUndoCommand):
@@ -1390,7 +1390,7 @@ class createEdgeCommand(QUndoCommand):
 
 class deleteEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, listWidget, startNode, endNode, parent=None):
-        super().__init__()
+        super().__init__(parent=parent)
         self.edge = edge
         self.edgeNum=edge.edgeNum
         self.scene = scene
@@ -2915,6 +2915,7 @@ class MainWindow(QMainWindow):
         selected_items = self.Scene.selectedItems()
         self.Scene.clearSelection()
         if selected_items:
+            self.undoStack.beginMacro("Delete/Undelete")
             for item in selected_items:
                 #print(self.model.itemName(item))
                 if item.data(KEY_ROLE) == ROLE_EDGE:
@@ -2927,9 +2928,9 @@ class MainWindow(QMainWindow):
                 if item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                     delIdx = item.data(KEY_INDEX)
                     #self.delNode(delIdx)
-                    newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget)
+                    newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, parent=None)
                     self.undoStack.push(newAction)
-
+            self.undoStack.endMacro()
         #logging.debug("about to update from action_EditDelete",stack_info=True  )
         #gc.collect() #This will crash the whole thing, with no traces
         #debug_qgraphicsitem_refs()  #More coPilot code ...
