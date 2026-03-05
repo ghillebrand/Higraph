@@ -693,7 +693,7 @@ class grScene(QGraphicsScene):
                 ###item.setFlag(QGraphicsItem.ItemIsMovable, True)
 
                 #put create node on undo stack
-                newAction=createNodeCommand(None, mPos, self, self.model, self.listWidget)
+                newAction=createNodeCommand(mPos, self, self.model, self.listWidget)
                 self.undoStack.push(newAction)
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
@@ -1160,6 +1160,8 @@ class grScene(QGraphicsScene):
             item.startNode[0].startsEdges.remove(item)
             #print(f"{item.endNode = }") #eItem
             item.endNode[0].endsEdges.remove(item)
+            item.startNode[1].startsEdgeLines.remove(item)
+            item.endNode[1].endsEdgeLines.remove(item)
             #print(f"{item.endNode.endsEdges =}")
         #print(f"{item =}")  
         #logging.debug("delItem&chld scene items, BEFORE remove")
@@ -1194,41 +1196,35 @@ class grScene(QGraphicsScene):
 
 # classes for working with undo and redo (QUndoStack)
 class createNodeCommand(QUndoCommand):
-    def __init__(self, node, posn, scene, model, listWidget):
+    def __init__(self, posn, scene, model, listWidget):
         super().__init__()
-        self.node = node
+        self.node = None  
         self.posn = posn
         self.scene = scene
         self.model = model
         self.listWidget=listWidget
-
-        #self.new_text = new_text
-        #self.old_text = old_text
+        self.nodeNum = 0 #placeholder
 
     def undo(self):
-        delIdx = self.node.data(KEY_INDEX)
+        #delIdx = self.node.data(KEY_INDEX)
+        delIdx = self.nodeNum
         self.scene.mainwindow.delNode(delIdx)
-        #self.text_edit.setPlainText(self.old_text)
 
     def redo(self):
         #VisNodeItem adds to the model and the  list
-        if self.node==None:
+        if self.node==None:   # this is the first actual create of the node
             newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
+            # save the node index for recreating identically
+            self.nodeNum = newNode.nodeNum
             #update port  PARENTS (maybe recompute position?)
-            for p in newNode._Ports:
-                p.setParentItem(newNode)
-        else:
-            newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
-                               id = self.node.nodeNum, metadata=self.node.metadata, \
-                                metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
-            """eList = self.model.edgesAtNode(self.Scene.findItemByIdx(newNode.nodeNum))
-            if eList:
-                for e in eList:
-                newEdge = VisEdgeItem(self.model,self.ui.listWidget,sItem, eItem, 
-                                directed=directed,  nameP=edgeName, id = id,
-                                polyLineType = polyLineType, points=points,tangents=tangents,
-                                metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes   )"""
-        
+            #for p in newNode._Ports:
+            #    p.setParentItem(newNode.nodeShape)
+        else:   # this is creation after deleting
+            #newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+            #                   id = self.node.nodeNum, metadata=self.node.metadata, \
+            #                    metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
+            newNode =  VisNodeItem(self.posn,self.model,self.listWidget, id=self.nodeNum)
+            
         #update port  PARENTS (maybe recompute position?)
         #for p in newNode._Ports:
         #    p.setParentItem(newNode)
@@ -1238,17 +1234,21 @@ class createNodeCommand(QUndoCommand):
 
         newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
         newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.node=newNode
+        self.node=newNode   
 
 class deleteNodeCommand(QUndoCommand):
     def __init__(self, node, posn, scene, model, listWidget):
         super().__init__()
         self.node = node
+        self.nodeNum = self.node.nodeNum
         self.posn = posn
         self.scene = scene
         self.model = model
         self.listWidget=listWidget
-        self.eList = self.model.edgesAtNode(self.node)
+        self.eList=[]
+        for edge in self.model.edgesAtNode(self.node):
+            self.eList.append(edge)
+        #self.eList = self.model.edgesAtNode(self.node)
         self.edges=[]
         self.ports=[]
         for port in self.node._Ports:
@@ -1268,18 +1268,21 @@ class deleteNodeCommand(QUndoCommand):
             else:
                 self.points=[]
             self.edges.append((edgeItem, self.points, self.tangentPoints))
-        #    self.points.append(edgeItem.edgeLine._p)
-        #    if edgeItem.edgeLine._t:
-        #        self.tangentPoints.append(edgeItem.edgeLine._t)
-        #    else:
-        #        self.tangentPoints.append([])
+        self.metadata={}
+        for k,v in node.metadata.items():
+            self.metadata[k] = v
+        self.metadataAttributes={}
+        for k,v in node.metadataAttributes.items():
+            self.metadataAttributes[k] = v
 
     def undo(self):
         #VisNodeItem adds to the model and the  list
-        newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
-                            id = self.node.nodeNum, metadata=self.node.metadata, \
-                            metadataAttributes=self.node.metadataAttributes, ports=self.ports)
-        
+        #newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
+        #                    id = self.node.nodeNum, metadata=self.node.metadata, \
+        #                    metadataAttributes=self.node.metadataAttributes, ports=self.ports)
+        newNode =  VisNodeItem(self.posn,self.model,self.listWidget ,nameP=self.metadata['name'], \
+                            id = self.nodeNum, metadata=self.metadata, \
+                            metadataAttributes=self.metadataAttributes, ports=self.ports)
         #update port  PARENTS (maybe recompute position?)
         #for p in newNode._Ports:
         #    p.setParentItem(newNode)
@@ -1290,6 +1293,7 @@ class deleteNodeCommand(QUndoCommand):
         newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.node=newNode
         #now read any edges that were deleted with the node
+        #(I really don't know how it re-adds the ports so easily)
         for edgeItem in self.edges:
             if edgeItem[0].startNode[0].nodeNum==newNode.nodeNum:
                 edgeItem[0].startNode=(newNode, edgeItem[0].startNode[1])
@@ -1308,21 +1312,32 @@ class deleteNodeCommand(QUndoCommand):
             
             self.scene.addItem(newEdge)
 
- 
-
     def redo(self):
-        delIdx = self.node.data(KEY_INDEX)
+        delIdx = self.node.data(KEY_INDEX)   #should use self.nodeNum
         self.scene.mainwindow.delNode(delIdx)
         
 class createEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, listWidget, startNode, endNode, parent=None):
         super().__init__()
         self.edge = edge
+        self.edgeNum=0 #placeholder
         self.scene = scene
         self.model = model
         self.listWidget=listWidget
+        # save node and port data
         self.startNode=startNode
+        self.startNodeNum=startNode[0].nodeNum
         self.endNode=endNode
+        self.endNodeNum=endNode[0].nodeNum
+        self.startPortPos=startNode[1].scenePos()
+        self.startPortT=self.startNode[1].t
+        self.startPortIndex=self.startNode[1].index
+        #self.startPortParent=self.startNode[1].parentItem()
+        self.endPortPos=endNode[1].scenePos()
+        self.endPortT=self.endNode[1].t
+        self.endPortIndex=self.endNode[1].index
+        """#self.endPortParent=self.endNode[1].parentItem()
+        # save edgepoints and tangents
         self.points=[]
         self.tangentPoints=[]
         if self.edge != None and self.edge.edgeLine._t:
@@ -1333,10 +1348,11 @@ class createEdgeCommand(QUndoCommand):
             for p in self.edge.edgeLine._p:
                 self.points.append(p)
         else:
-            self.points=[]
+            self.points=[]"""
 
     def undo(self):
-        delIdx = self.edge.data(KEY_INDEX)
+        #delIdx = self.edge.data(KEY_INDEX) 
+        delIdx = self.edgeNum  
         self.scene.mainwindow.delEdge(delIdx)
 
     def redo(self):
@@ -1344,12 +1360,26 @@ class createEdgeCommand(QUndoCommand):
         if self.edge==None:
             newEdge = VisEdgeItem(self.model,self.listWidget,self.startNode, self.endNode)                              
         else:
-            self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
-            self.edge.endNode[0]._Ports.append(self.edge.endNode[1])
-            newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
-                                directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
-                                polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
-                                tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
+            # if any of the nodes have been deleted and recreated they need to be found by reference
+            startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
+            endNodeZero=self.scene.findItemByIdx(self.endNodeNum)
+            # ports WILL have been deleted, so recreate and add to node 
+            portPos = startNodeZero.parameterToPosition(self.startPortT)
+            startNodeOne=port(portPos, t=self.startPortT, index =self.startPortIndex, parent=startNodeZero.nodeShape)
+            portPos = endNodeZero.parameterToPosition(self.endPortT)
+            endNodeOne=port(portPos, t=self.endPortT, index =self.endPortIndex, parent=endNodeZero.nodeShape)
+            startNodeZero._Ports.append(startNodeOne)
+            endNodeZero._Ports.append(endNodeOne)
+            self.startNode=(startNodeZero, startNodeOne)
+            self.endNode=(endNodeZero, endNodeOne)
+            newEdge = VisEdgeItem(self.model,self.listWidget,self.startNode, self.endNode, 
+                                id = self.edgeNum)
+        self.edgeNum=newEdge.edgeNum  
+
+            #newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
+            #                    directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
+            #                    polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
+            #                    tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
                
 
         #Add to *Scene*
@@ -1362,11 +1392,25 @@ class deleteEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, listWidget, startNode, endNode, parent=None):
         super().__init__()
         self.edge = edge
+        self.edgeNum=edge.edgeNum
         self.scene = scene
         self.model = model
         self.listWidget=listWidget
+        self.isDirected=edge.isDirected
+        self._polyEdge=edge._polyEdge
         self.startNode=startNode
+        self.startNodeNum=startNode[0].nodeNum
         self.endNode=endNode
+        self.endNodeNum=endNode[0].nodeNum
+        #save port elements to recreate
+        self.startPortPos=self.startNode[1].scenePos()
+        self.startPortT=self.startNode[1].t
+        self.startPortIndex=self.startNode[1].index
+        #self.startPortParent=self.startNode[1].parentItem()
+        self.endPortPos=self.endNode[1].scenePos()
+        self.endPortT=self.endNode[1].t
+        self.endPortIndex=self.endNode[1].index
+        #self.endPortParent=self.endNode[1].parentItem()
         self.points=[]
         self.tangentPoints=[]
         if self.edge != None and self.edge.edgeLine._t:
@@ -1378,17 +1422,47 @@ class deleteEdgeCommand(QUndoCommand):
                 self.points.append(p)
         else:
             self.points=[]
+        self.metadata={}
+        for k,v in edge.metadata.items():
+            self.metadata[k] = v
+        self.metadataAttributes={}
+        for k,v in edge.metadataAttributes.items():
+            self.metadataAttributes[k] = v
 
     def undo(self):
-        #VisEdgeItem adds to the model and the  list
-        self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
-        self.edge.endNode[0]._Ports.append(self.edge.endNode[1])
-        newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
-                            directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
-                            polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
-                            tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
+        #if the connecting nodes have been deleted and recreated their referencing is suspect
+        startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
+        endNodeZero=self.scene.findItemByIdx(self.endNodeNum)
+        #self.edge.startNode=(self.scene.findItemByIdx(self.edge.startNode[0].nodeNum),self.edge.startNode[1])
+        #self.edge.endNode=(self.scene.findItemByIdx(self.edge.endNode[0].nodeNum),self.edge.endNode[1])
+        # ports WILL have been deleted, so recreate and add to node 
+        portPos = startNodeZero.parameterToPosition(self.startPortT)
+        startNodeOne=port(portPos, t=self.startPortT, index =self.startPortIndex, parent=startNodeZero.nodeShape)
+        portPos = endNodeZero.parameterToPosition(self.endPortT)
+        endNodeOne=port(portPos, t=self.endPortT, index =self.endPortIndex, parent=endNodeZero.nodeShape)
+        startNodeZero._Ports.append(startNodeOne)
+        endNodeZero._Ports.append(endNodeOne)
+        self.startNode=(startNodeZero, startNodeOne)
+        self.endNode=(endNodeZero, endNodeOne)
+        """#recreate ports if necessary
+        if not self.edge.startNode[1] or not self.edge.startNode[1].parentItem():#instead of being deleted QT removes the parent. Weird but
+            pStart= port(self.startPortPos, t=self.startPortT, index =self.startPortIndex, parent=self.startNode[0].nodeShape)
+            self.edge.startNode[0]._Ports.append(pStart)
+            self.edge.startNode=(self.edge.startNode[0],pStart)
+        else:
+            self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
+        if not self.edge.endNode[1] or not self.edge.endNode[1].parentItem():
+            pEnd= port(self.endPortPos, t=self.endPortT, index =self.endPortIndex, parent=self.endNode[0].nodeShape)
+            self.edge.endNode[0]._Ports.append(pEnd)
+            self.edge.endNode=(self.edge.endNode[0],pEnd)
+        else:
+            self.edge.endNode[0]._Ports.append(self.edge.endNode[1])  """
+        #VisEdgeItem adds to the model and the  list      
+        newEdge = VisEdgeItem(self.model,self.listWidget,self.startNode, self.endNode, 
+                            directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
+                            polyLineType = self._polyEdge, points=self.points[1:-1], #exclude edgepoints
+                            tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
                
-
         #Add to *Scene*
         self.scene.addItem(newEdge)
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
@@ -2025,7 +2099,7 @@ class MainWindow(QMainWindow):
         #update port  PARENTS (maybe recompute position?)
 
         for p in newNode._Ports:
-            p.setParentItem(newNode)
+            p.setParentItem(newNode.nodeShape)
             #print(f"{newNode.nodeNum=},{p.index=}")
         newNode.updatePorts()
 
@@ -2099,7 +2173,7 @@ class MainWindow(QMainWindow):
 
         #update port  PARENTS 
         for p in newBlob._Ports:
-            p.setParentItem(newBlob)
+            p.setParentItem(newBlob)  #JH should be shape?
 
         # (maybe recompute position?)
         newBlob.updatePorts()
@@ -2703,13 +2777,6 @@ class MainWindow(QMainWindow):
         # The newly pasted items will be selected, to make them easy to move
 
         self.action_EditSelectNone()
-        """self.Scene.clearSelection()
-        if self.Scene.thisHandleObjectSelected:
-            print("JH yes it is")
-            self.Scene.thisHandleObjectSelected._deleteHandles()
-            self.Scene.thisHandleObjectSelected=None"""
-        #if self.Scene.onlySelected:
-        #    self.Scene.clearEdgeOnly()
 
         clipboard = QGuiApplication.clipboard()
         mimeData = clipboard.mimeData()
@@ -2796,7 +2863,6 @@ class MainWindow(QMainWindow):
 
     def delEdge(self, delIdx):
         """ all the calls to delete an edge"""
-
         #delete from model
         self.model.delEdge(delIdx)
         #Delete from LWscene updat
@@ -2817,29 +2883,31 @@ class MainWindow(QMainWindow):
 
         self.Scene.deleteItemAndChildren(delItem)
 
-        del delItem #not sure why this works JH added
+        del delItem 
 
     def delNode(self, delIdx):
         """ all the calls to delete an node"""
-        #Check for any edges attached
         #TODO: Pop a warning dialog when deleting the edges
+
+        #Check for any edges attached and delete
         eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
         if eList:
             for e in eList:
                 self.delEdge(e)
         if self.Scene.thisHandleObjectSelected==self.Scene.findItemByIdx(delIdx):
             self.Scene.thisHandleObjectSelected = None
+
         #Delete from Scene first, since there are complex deps to other parts which get in a knot
         self.Scene.deleteItemAndChildren(self.Scene.findItemByIdx(delIdx))
+
         #delete from model
         self.model.delNode(delIdx)
+
         #Delete from LW
         delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
         delItem = self.ui.listWidget.takeItem(delRow)
         del delItem
 
-        #Delete from Scene
-        #self.Scene.deleteItemAndChildren(self.Scene.findItemByIdx(delIdx))
 
     def action_EditDelete(self):
         #print("Edit>Delete")

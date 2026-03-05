@@ -55,7 +55,6 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
 
         self.model = model
         self.listWidget = listWidget
-
         #Note: Unlike a node which is a 1-click create,
         #   an edge can only be created once the start and end nodes are known. 
         #   Thus drawing must precede the creation of the abstract edge.
@@ -152,7 +151,6 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             ptList = [self.startNode[1].scenePos(),self.endNode[1].scenePos()]
         #Track what sort of edge this one is
         self._polyEdge = polyLineType
-        
         if self._polyEdge == STRAIGHT:
             self.edgeLine = StraightLineItem(ptList,parent=self)
         else: #Assume spline! Error checking later!
@@ -202,12 +200,10 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         eItem[0].endsEdges.append(self)
         eItem[1].endsEdgeLines.append(self)    #JH duplicate this for now
         self.setEnd(eItem)
-
         #Selection and editing vars:
         #edit Handles
         self.stH = None
         self.endH = None
-
         self.setFlags(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
         #V00: Set edges to only move via nodes.
         #Needs to be selectable to edit name/ show in list.
