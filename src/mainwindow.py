@@ -631,6 +631,9 @@ class grScene(QGraphicsScene):
                 if selItem:
                     selItem = selItem[0]
                     if self.thisHandleObjectSelected:
+                        self.thisHandleObjectSelected.isOnlySelected=False
+                        if self.thisHandleObjectSelected.data(KEY_ROLE)==ROLE_POLYLINE:
+                            self.thisHandleObjectSelected.parentItem().isOnlySelected=False  #to squash tangent lines
                         self.thisHandleObjectSelected._deleteHandles()
                         self.thisHandleObjectSelected=None
                     lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
