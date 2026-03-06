@@ -853,6 +853,7 @@ class grScene(QGraphicsScene):
                     cxChoice()
 
         #pass on
+
         super().mousePressEvent(mouseEvent)
 
     def mouseMoveEvent(self, mouseEvent):
@@ -1416,7 +1417,7 @@ class deleteEdgeCommand(QUndoCommand):
         #self.endPortParent=self.endNode[1].parentItem()
         self.points=[]
         self.tangentPoints=[]
-        if self.edge != None and self.edge.edgeLine._t:
+        if self.edge != None and hasattr("self.edge.edgeLine","_t"):
             self.tangentPoints=self.edge.edgeLine._t
         else:
             self.tangentPoints=[]
