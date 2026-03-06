@@ -453,8 +453,9 @@ class HermiteSplineItem(QGraphicsItem):
                 ic, xc, yc = i,xo,yo
                 minD = newD
         #Is the click close enough to allow creating a point?
-        if minD > HITSIZE:
-            return
+        #This breaks adding points for really long lines (>450 units)
+        #if minD > HITSIZE:
+        #    return
 
         #TODO: This requires a fixed num of lines/ segment - make it a constant
         i = ic // self.linesPerSegment
