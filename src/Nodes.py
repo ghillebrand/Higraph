@@ -590,9 +590,7 @@ class VisBlobItem(VisNodeItem):
         lWitem.setData(KEY_ROLE,ROLE_BLOB)
 
         self.setData(KEY_ROLE, ROLE_BLOB)
-        #Remove the nodeShape set in the parent
-        self.nodeShape.setParentItem(None)
-        del self.nodeShape
+
         self.setAcceptHoverEvents(True)
         self.isHovered=False
         #self._hoverColor=QColor("cyan")
@@ -604,6 +602,11 @@ class VisBlobItem(VisNodeItem):
 
         #Node constructor doesn't take parents & children, so add now
 
+        #Remove the nodeShape set in the parent - first reparent ports
+        for port in self._Ports:
+            port.setParentItem(self)
+        self.nodeShape.setParentItem(None)
+        del self.nodeShape
         # make the rect
         self._rect = QRectF(0,0,width,height)
         self._width = width
@@ -616,6 +619,9 @@ class VisBlobItem(VisNodeItem):
         # JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        # give ports back to the nodeshape
+        for port in self._Ports:
+            port.setParentItem(self.nodeShape)
         #blob text JH
         if 'description' not in self.metadataAttributes:
             self.metadataAttributes['description']={'display':DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}

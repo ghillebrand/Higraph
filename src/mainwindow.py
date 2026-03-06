@@ -2173,7 +2173,7 @@ class MainWindow(QMainWindow):
 
         #update port  PARENTS 
         for p in newBlob._Ports:
-            p.setParentItem(newBlob)  #JH should be shape?
+            p.setParentItem(newBlob.nodeShape) 
 
         # (maybe recompute position?)
         newBlob.updatePorts()
