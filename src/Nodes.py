@@ -138,7 +138,7 @@ class BlobTextItem(QGraphicsTextItem):
         self.setTextSize(parent)
         # 3. Make the item movable within the scene
         self.setFlag(QGraphicsTextItem.ItemIsMovable)
-        self.setFlag(QGraphicsTextItem.ItemIsSelectable)
+        #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
     
     def boundingRect(self):
         # Get the original rect to keep the calculated width
