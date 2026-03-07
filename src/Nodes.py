@@ -693,7 +693,10 @@ class VisBlobItem(VisNodeItem):
         blobLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
-        
+        #update metadata from blobDescription
+        if 'description' in self.metadata \
+                and self.metadata['description']!=self.blobDescription.toPlainText():
+            self.metadata['description']=self.blobDescription.toPlainText()
         #add metadata other than name
         if len(self.metadata) >= 2:
             for k, v in self.metadata.items():
