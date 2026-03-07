@@ -127,7 +127,9 @@ class BlobTextItem(QGraphicsTextItem):
         #self.setPos(x, y)
 
         # 1. Enable editing and selection
-        self.setTextInteractionFlags(Qt.TextEditorInteraction)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
+        self.document().contentsChanged.connect(self.textChanged)
+        #self.setOpenExternalLinks(True)
 
         # 2. Appearance tweaks
         self.setDefaultTextColor(QColor("#2c3e50"))
@@ -171,10 +173,14 @@ class BlobTextItem(QGraphicsTextItem):
                     currentFontSize+=1
                     self.setFont(QFont("Arial",currentFontSize))
                     currentHeight=super().boundingRect().height()
+    
+    def textChanged(self):
+        self.setTextSize(self.parentItem())
+        return
 
     #def mousePressEvent(self, mouseEvent):
     #    if (mouseEvent.button() == Qt.MouseButton.RightButton):
-            """cursor = self.textCursor()
+    """cursor = self.textCursor()
             if cursor.hasSelection():
                 font=QFontDialog.getFont()
                 if font.isValid():
