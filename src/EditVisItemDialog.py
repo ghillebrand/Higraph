@@ -48,8 +48,8 @@ class EditVisNodeItemDialog(QDialog):
         #Add in the metadata
         #update metadata for description from textbox
         if 'description' in self.visNodeItem.metadata \
-                and self.visNodeItem.metadata['description']!=self.visNodeItem.text.toPlainText():
-            self.visNodeItem.metadata['description']=self.visNodeItem.text.toPlainText()
+                and self.visNodeItem.metadata['description']!=self.visNodeItem.blobDescription.toPlainText():
+            self.visNodeItem.metadata['description']=self.visNodeItem.blobDescription.toPlainText()
 
         self.nodeMetadata = self.visNodeItem.metadata
         self.nodeMetadataAttributes = self.visNodeItem.metadataAttributes
@@ -394,6 +394,6 @@ class MetadataEditorWidget(QWidget):
             display = dispItem.checkState() == Qt.Checked if dispItem else True
             visItem.metadata[key] = value
             visItem.metadataAttributes[key] = {'display':display}
-        if 'description' in visItem.metadata and visItem.metadata['description'] != visItem.text.toPlainText():
-            visItem.text.setPlainText(visItem.metadata['description'])
+        if 'description' in visItem.metadata and visItem.metadata['description'] != visItem.blobDescription.toPlainText():
+            visItem.blobDescription.setPlainText(visItem.metadata['description'])
             

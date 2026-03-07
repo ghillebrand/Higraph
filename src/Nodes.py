@@ -119,10 +119,17 @@ class QRoundedRectItem(QGraphicsObject):
 class BlobTextItem(QGraphicsTextItem):
     def __init__(self, text, width, parent):
         super().__init__(text, parent)
+        if not BLOB_NAME_ON_TOP:
+            self.yOffset=10
+        else:
+            self.yOffset=0
+        self.setPos(0, self.yOffset)
         #self.setPos(x, y)
 
         # 1. Enable editing and selection
-        self.setTextInteractionFlags(Qt.TextEditorInteraction)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
+        self.document().contentsChanged.connect(self.textChanged)
+        #self.setOpenExternalLinks(True)
 
         # 2. Appearance tweaks
         self.setDefaultTextColor(QColor("#2c3e50"))
@@ -131,43 +138,48 @@ class BlobTextItem(QGraphicsTextItem):
         self.setTextSize(parent)
         # 3. Make the item movable within the scene
         self.setFlag(QGraphicsTextItem.ItemIsMovable)
-        self.setFlag(QGraphicsTextItem.ItemIsSelectable)
+        #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
     
     def boundingRect(self):
         # Get the original rect to keep the calculated width
         rect = super().boundingRect()
         # Force the height to our custom value
-        return QRectF(rect.x(), rect.y(), rect.width(), min(self.parentItem()._height, rect.height()))
+        return QRectF(rect.x(), rect.y(), rect.width(), min(self.parentItem()._height-self.yOffset, rect.height()))
 
     def paint(self, painter, option, widget):
         # Optional: Draw a subtle background behind the text
-        painter.setClipRect(self.boundingRect())
-        painter.setBrush(QColor(240, 240, 240, 100))
-        painter.setPen(Qt.NoPen)
-        painter.drawRect(self.boundingRect())
-        
-        # Call the original paint method to draw the text itself
-        super().paint(painter, option, widget)
+        if self.parentItem().metadataAttributes['description']['display']:
+            painter.setClipRect(self.boundingRect())
+            painter.setBrush(QColor(240, 240, 240, 100))
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.boundingRect())
+            
+            # Call the original paint method to draw the text itself
+            super().paint(painter, option, widget)
 
     def setTextSize(self, parent):
         super().setTextWidth(parent._width)
-        currentHeight=super().boundingRect().height()
-        currentFontSize=self.font().pointSize()
-        if currentHeight > parent._height and currentFontSize>6:
-
-            while currentHeight > parent._height and currentFontSize>6:
-                currentFontSize-=1
-                self.setFont(QFont("Arial",currentFontSize))
-                currentHeight=super().boundingRect().height()
-        elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
-            while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
-                currentFontSize+=1
-                self.setFont(QFont("Arial",currentFontSize))
-                currentHeight=super().boundingRect().height()
+        if BLOB_FONT_IS_RESIZABLE == True:
+            currentHeight=super().boundingRect().height()
+            currentFontSize=self.font().pointSize()
+            if currentHeight > parent._height and currentFontSize>6:
+                while currentHeight > parent._height and currentFontSize>6:
+                    currentFontSize-=1
+                    self.setFont(QFont("Arial",currentFontSize))
+                    currentHeight=super().boundingRect().height()
+            elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                    currentFontSize+=1
+                    self.setFont(QFont("Arial",currentFontSize))
+                    currentHeight=super().boundingRect().height()
+    
+    def textChanged(self):
+        self.setTextSize(self.parentItem())
+        return
 
     #def mousePressEvent(self, mouseEvent):
     #    if (mouseEvent.button() == Qt.MouseButton.RightButton):
-            """cursor = self.textCursor()
+    """cursor = self.textCursor()
             if cursor.hasSelection():
                 font=QFontDialog.getFont()
                 if font.isValid():
@@ -221,7 +233,7 @@ class VisNodeItem(QGraphicsObject):
             self.metadataAttributes = metadataAttributes
         else:
             self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
-        self.text=""   #needed for blobs
+        self.blobDescription=""   #needed for blobs
         #Update positions
 
         #add to the text list
@@ -626,17 +638,18 @@ class VisBlobItem(VisNodeItem):
         if 'description' not in self.metadataAttributes:
             self.metadataAttributes['description']={'display':DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
             self.metadata['description']='Click to add'
-        if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
-            if 'description' in self.metadata:
-                blobText=self.metadata['description']
-            else:
-                blobText="Click to add"
-            container = BlobTextItem(blobText, width, self)
-            self.text=container
+       # if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
+        if 'description' in self.metadata:
+            blobText=self.metadata['description']
         else:
-            container = BlobTextItem("", width, self)
-            self.text=container
-            self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            blobText="Click to add"
+        container = BlobTextItem(blobText, width, self)
+        self.blobDescription=container
+        #else:
+        #    container = BlobTextItem("", width, self)
+        #    self.text=container
+        #    self.text.setFlag(QGraphicsItem.ItemIsVisible, False)
+        #    self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
@@ -680,7 +693,10 @@ class VisBlobItem(VisNodeItem):
         blobLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
-        
+        #update metadata from blobDescription
+        if 'description' in self.metadata \
+                and self.metadata['description']!=self.blobDescription.toPlainText():
+            self.metadata['description']=self.blobDescription.toPlainText()
         #add metadata other than name
         if len(self.metadata) >= 2:
             for k, v in self.metadata.items():
@@ -1056,7 +1072,7 @@ class VisBlobItem(VisNodeItem):
         self._width = BRx 
 
         #resize text when blob resizes
-        self.text.setTextSize(self)
+        self.blobDescription.setTextSize(self)
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
