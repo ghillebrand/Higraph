@@ -119,6 +119,11 @@ class QRoundedRectItem(QGraphicsObject):
 class BlobTextItem(QGraphicsTextItem):
     def __init__(self, text, width, parent):
         super().__init__(text, parent)
+        if not BLOB_NAME_ON_TOP:
+            self.yOffset=10
+        else:
+            self.yOffset=0
+        self.setPos(0, self.yOffset)
         #self.setPos(x, y)
 
         # 1. Enable editing and selection
@@ -137,7 +142,7 @@ class BlobTextItem(QGraphicsTextItem):
         # Get the original rect to keep the calculated width
         rect = super().boundingRect()
         # Force the height to our custom value
-        return QRectF(rect.x(), rect.y(), rect.width(), min(self.parentItem()._height, rect.height()))
+        return QRectF(rect.x(), rect.y(), rect.width(), min(self.parentItem()._height-self.yOffset, rect.height()))
 
     def paint(self, painter, option, widget):
         # Optional: Draw a subtle background behind the text
@@ -150,20 +155,21 @@ class BlobTextItem(QGraphicsTextItem):
         super().paint(painter, option, widget)
 
     def setTextSize(self, parent):
-        super().setTextWidth(parent._width)
-        currentHeight=super().boundingRect().height()
-        currentFontSize=self.font().pointSize()
-        if currentHeight > parent._height and currentFontSize>6:
+        if BLOB_FONT_IS_RESIZABLE == True:
+            super().setTextWidth(parent._width)
+            currentHeight=super().boundingRect().height()
+            currentFontSize=self.font().pointSize()
+            if currentHeight > parent._height and currentFontSize>6:
 
-            while currentHeight > parent._height and currentFontSize>6:
-                currentFontSize-=1
-                self.setFont(QFont("Arial",currentFontSize))
-                currentHeight=super().boundingRect().height()
-        elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
-            while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
-                currentFontSize+=1
-                self.setFont(QFont("Arial",currentFontSize))
-                currentHeight=super().boundingRect().height()
+                while currentHeight > parent._height and currentFontSize>6:
+                    currentFontSize-=1
+                    self.setFont(QFont("Arial",currentFontSize))
+                    currentHeight=super().boundingRect().height()
+            elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                    currentFontSize+=1
+                    self.setFont(QFont("Arial",currentFontSize))
+                    currentHeight=super().boundingRect().height()
 
     #def mousePressEvent(self, mouseEvent):
     #    if (mouseEvent.button() == Qt.MouseButton.RightButton):
@@ -636,6 +642,7 @@ class VisBlobItem(VisNodeItem):
         else:
             container = BlobTextItem("", width, self)
             self.text=container
+            self.text.setFlag(QGraphicsItem.ItemIsVisible, False)
             self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
         #Metadata disply position
