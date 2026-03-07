@@ -795,7 +795,7 @@ class VisBlobItem(VisNodeItem):
     def itemChange(self, change, value):
         if self.suppressItemChange:
             return super().itemChange(change, value)
-        #print(f"{change=} {value=} ")
+        #print(f"Blob {self.nodeNum}, {change=} {value=} ")
 
         #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
         if change == QGraphicsItem.ItemSelectedHasChanged :
@@ -808,9 +808,10 @@ class VisBlobItem(VisNodeItem):
                     self.childGroup.addToGroup(item)
             else:
                 #delete group
+                print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 if getattr(self, "childGroup" , False):
-                    #print("delete group")
                     kids = self.getChildList(self)
+                    print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
                     for item in kids: #self.children:
                         #removeFromGroup seems to bug out occasionally :/
                         #self.childGroup.removeFromGroup(item)
@@ -824,6 +825,7 @@ class VisBlobItem(VisNodeItem):
                     if getattr(self, "childGroup" , False):
                         if type(self.childGroup) == "QGraphicsItemGroup":
                             self.scene().destroyItemGroup(self.childGroup)
+                    print(f"AFTER deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
 
             #Call the edge update
             for k in kids:

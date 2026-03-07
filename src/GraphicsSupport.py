@@ -210,7 +210,10 @@ class port(dummyNodeItem):
             elif self.pos().y() == self.parentItem().parentItem()._height: #bottom
                 dy = 1
                 dx = 0
-            else: #HACK for now - refine corners
-                dy = 0.5
-                dx = 0.5
+            else: #See if the angleAtPercent helps??
+                angle = (self.parentItem().shape().angleAtPercent(self.t) ) 
+                print(angle)
+                angle *= 2 * math.pi
+                dy = math.sin(angle)
+                dx = math.cos(angle)
         return (dx,dy)

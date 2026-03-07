@@ -1115,12 +1115,17 @@ class grScene(QGraphicsScene):
         for parent, children in sorted(directChildList.items()):
             pItem = self.findItemByIdx(parent)
             self.model.Gr.nodeD[parent].resetChildren(children)
-
+            #print(f"-------------{parent=} {type(pItem)}")
             for c in children:
                 cItem = self.findItemByIdx(c)
-                pItem.children.append(cItem)
-                self.model.Gr.nodeD[c].addParent(parent)
-                cItem.parents.append(pItem)
+                #print(f"adding child {c=}, {type(cItem)}")
+
+                if not cItem is None:
+                    pItem.children.append(cItem)
+                    self.model.Gr.nodeD[c].addParent(parent)
+                    cItem.parents.append(pItem)
+                else:
+                    print(f"Warning - node {c} seems to have disappeared!")
 
 
     def signalTest(self):
