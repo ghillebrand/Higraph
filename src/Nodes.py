@@ -158,12 +158,11 @@ class BlobTextItem(QGraphicsTextItem):
             super().paint(painter, option, widget)
 
     def setTextSize(self, parent):
+        super().setTextWidth(parent._width)
         if BLOB_FONT_IS_RESIZABLE == True:
-            super().setTextWidth(parent._width)
             currentHeight=super().boundingRect().height()
             currentFontSize=self.font().pointSize()
             if currentHeight > parent._height and currentFontSize>6:
-
                 while currentHeight > parent._height and currentFontSize>6:
                     currentFontSize-=1
                     self.setFont(QFont("Arial",currentFontSize))
@@ -234,7 +233,7 @@ class VisNodeItem(QGraphicsObject):
             self.metadataAttributes = metadataAttributes
         else:
             self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
-        self.text=""   #needed for blobs
+        self.blobDescription=""   #needed for blobs
         #Update positions
 
         #add to the text list
@@ -645,7 +644,7 @@ class VisBlobItem(VisNodeItem):
         else:
             blobText="Click to add"
         container = BlobTextItem(blobText, width, self)
-        self.text=container
+        self.blobDescription=container
         #else:
         #    container = BlobTextItem("", width, self)
         #    self.text=container
@@ -1070,7 +1069,7 @@ class VisBlobItem(VisNodeItem):
         self._width = BRx 
 
         #resize text when blob resizes
-        self.text.setTextSize(self)
+        self.blobDescription.setTextSize(self)
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
