@@ -146,13 +146,14 @@ class BlobTextItem(QGraphicsTextItem):
 
     def paint(self, painter, option, widget):
         # Optional: Draw a subtle background behind the text
-        painter.setClipRect(self.boundingRect())
-        painter.setBrush(QColor(240, 240, 240, 100))
-        painter.setPen(Qt.NoPen)
-        painter.drawRect(self.boundingRect())
-        
-        # Call the original paint method to draw the text itself
-        super().paint(painter, option, widget)
+        if self.parentItem().metadataAttributes['description']['display']:
+            painter.setClipRect(self.boundingRect())
+            painter.setBrush(QColor(240, 240, 240, 100))
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.boundingRect())
+            
+            # Call the original paint method to draw the text itself
+            super().paint(painter, option, widget)
 
     def setTextSize(self, parent):
         if BLOB_FONT_IS_RESIZABLE == True:
@@ -632,18 +633,18 @@ class VisBlobItem(VisNodeItem):
         if 'description' not in self.metadataAttributes:
             self.metadataAttributes['description']={'display':DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
             self.metadata['description']='Click to add'
-        if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
-            if 'description' in self.metadata:
-                blobText=self.metadata['description']
-            else:
-                blobText="Click to add"
-            container = BlobTextItem(blobText, width, self)
-            self.text=container
+       # if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
+        if 'description' in self.metadata:
+            blobText=self.metadata['description']
         else:
-            container = BlobTextItem("", width, self)
-            self.text=container
-            self.text.setFlag(QGraphicsItem.ItemIsVisible, False)
-            self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            blobText="Click to add"
+        container = BlobTextItem(blobText, width, self)
+        self.text=container
+        #else:
+        #    container = BlobTextItem("", width, self)
+        #    self.text=container
+        #    self.text.setFlag(QGraphicsItem.ItemIsVisible, False)
+        #    self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
