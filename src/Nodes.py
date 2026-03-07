@@ -15,14 +15,14 @@ from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem, QAbstractGraphicsShapeItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
-            QSlider, QLabel, QStatusBar,
+            QSlider, QLabel, QStatusBar, QColorDialog, QFontDialog,
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
             QPainterPath, QPainterPathStroker, QCursor,QColor, QUndoStack, QUndoCommand,
-            QGuiApplication, QImage, QPixmap)
+            QGuiApplication, QImage, QPixmap, QTextCharFormat)
 from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
             QMimeData, QBuffer, QByteArray, QIODevice)
@@ -33,112 +33,6 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem, QGraphicsItemGroup
 from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
-
-"""
-# classes for working with undo and redo (QUndoStack)
-class createNodeCommand(QUndoCommand):
-    def __init__(self, node, posn, scene, model, listWidget):
-        super().__init__()
-        self.node = node
-        self.posn = posn
-        self.scene = scene
-        self.model = model
-        self.listWidget=listWidget
-
-        #self.new_text = new_text
-        #self.old_text = old_text
-
-    def undo(self):
-        delIdx = self.node.data(KEY_INDEX)
-        self.scene.mainwindow.delNode(delIdx)
-        #self.text_edit.setPlainText(self.old_text)
-
-    def redo(self):
-        #VisNodeItem adds to the model and the  list
-        if self.node==None:
-            newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
-            #update port  PARENTS (maybe recompute position?)
-            for p in newNode._Ports:
-                p.setParentItem(newNode)
-        else:
-            newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
-                               id = self.node.nodeNum, metadata=self.node.metadata, \
-                                metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)"""
-"""       eList = self.model.edgesAtNode(self.Scene.findItemByIdx(newNode.nodeNum))
-            if eList:
-                for e in eList:
-                newEdge = VisEdgeItem(self.model,self.ui.listWidget,sItem, eItem, 
-                                directed=directed,  nameP=edgeName, id = id,
-                                polyLineType = polyLineType, points=points,tangents=tangents,
-                                metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes   )"""
-        
-"""#update port  PARENTS (maybe recompute position?)
-        #for p in newNode._Ports:
-        #    p.setParentItem(newNode)
-        newNode.setPos(self.posn)
-        #Add to *Scene*
-        self.scene.addItem(newNode)
-
-        newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.node=newNode
-
-class deleteNodeCommand(QUndoCommand):
-    def __init__(self, node, posn, scene, model, listWidget):
-        super().__init__()
-        self.node = node
-        self.posn = posn
-        self.scene = scene
-        self.model = model
-        self.listWidget=listWidget
-        self.eList = self.model.edgesAtNode(self.node)
-        self.edges=[]
-       # self.points=[]
-       # self.tangentPoints=[]
-        for e in self.eList:
-            edgeItem = self.scene.findItemByIdx(e)
-            if edgeItem.edgeLine._t:
-                tangentPoints=edgeItem.edgeLine._t
-            else:
-                tangentPoints=[]
-            self.edges.append((edgeItem, edgeItem.edgeLine._p, tangentPoints))
-        #    self.points.append(edgeItem.edgeLine._p)
-        #    if edgeItem.edgeLine._t:
-        #        self.tangentPoints.append(edgeItem.edgeLine._t)
-        #    else:
-        #        self.tangentPoints.append([])
-
-        #self.new_text = new_text
-        #self.old_text = old_text
-
-    def undo(self):
-        #VisNodeItem adds to the model and the  list
-        newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
-                            id = self.node.nodeNum, metadata=self.node.metadata, \
-                            metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
-        
-        #update port  PARENTS (maybe recompute position?)
-        #for p in newNode._Ports:
-        #    p.setParentItem(newNode)
-        newNode.setPos(self.posn)
-        #Add to *Scene*
-        self.scene.addItem(newNode)
-
-        newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
-        newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.node=newNode
-        #now readd any edges that were deleted with the node
-        for edgeItem in self.edges:
-            newEdge = VisEdgeItem(self.model,self.listWidget,edgeItem[0].startNode, edgeItem[0].endNode, 
-                                directed=edgeItem[0].isDirected,  nameP=edgeItem[0].metadata['name'], id = edgeItem[0].id,
-                                polyLineType = edgeItem[0].polyLineType, points=edgeItem[1],tangents=edgeItem[2],
-                                metadata=edgeItem[0].Metadata, metadataAttributes=edgeItem[0].MetadataAttributes)
-
-    def redo(self):
-        delIdx = self.node.data(KEY_INDEX)
-        self.scene.mainwindow.delNode(delIdx)
-        
-    """
 
 class QRoundedRectItem(QGraphicsObject):
     # Custom signal emitted when the border is clicked
@@ -222,6 +116,84 @@ class QRoundedRectItem(QGraphicsObject):
         #self.clicked.emit()
         super().mousePressEvent(event)
 
+class BlobTextItem(QGraphicsTextItem):
+    def __init__(self, text, width, parent):
+        super().__init__(text, parent)
+        if not BLOB_NAME_ON_TOP:
+            self.yOffset=10
+        else:
+            self.yOffset=0
+        self.setPos(0, self.yOffset)
+        #self.setPos(x, y)
+
+        # 1. Enable editing and selection
+        self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
+        self.document().contentsChanged.connect(self.textChanged)
+        #self.setOpenExternalLinks(True)
+
+        # 2. Appearance tweaks
+        self.setDefaultTextColor(QColor("#2c3e50"))
+        self.setFont(QFont("Arial", BLOB_FONT_SIZE))
+        #self.setTextWidth(width)
+        self.setTextSize(parent)
+        # 3. Make the item movable within the scene
+        self.setFlag(QGraphicsTextItem.ItemIsMovable)
+        #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
+    
+    def boundingRect(self):
+        # Get the original rect to keep the calculated width
+        rect = super().boundingRect()
+        # Force the height to our custom value
+        return QRectF(rect.x(), rect.y(), rect.width(), min(self.parentItem()._height-self.yOffset, rect.height()))
+
+    def paint(self, painter, option, widget):
+        # Optional: Draw a subtle background behind the text
+        if self.parentItem().metadataAttributes['description']['display']:
+            painter.setClipRect(self.boundingRect())
+            painter.setBrush(QColor(240, 240, 240, 100))
+            painter.setPen(Qt.NoPen)
+            painter.drawRect(self.boundingRect())
+            
+            # Call the original paint method to draw the text itself
+            super().paint(painter, option, widget)
+
+    def setTextSize(self, parent):
+        super().setTextWidth(parent._width)
+        if BLOB_FONT_IS_RESIZABLE == True:
+            currentHeight=super().boundingRect().height()
+            currentFontSize=self.font().pointSize()
+            if currentHeight > parent._height and currentFontSize>6:
+                while currentHeight > parent._height and currentFontSize>6:
+                    currentFontSize-=1
+                    self.setFont(QFont("Arial",currentFontSize))
+                    currentHeight=super().boundingRect().height()
+            elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                    currentFontSize+=1
+                    self.setFont(QFont("Arial",currentFontSize))
+                    currentHeight=super().boundingRect().height()
+    
+    def textChanged(self):
+        self.setTextSize(self.parentItem())
+        return
+
+    #def mousePressEvent(self, mouseEvent):
+    #    if (mouseEvent.button() == Qt.MouseButton.RightButton):
+    """cursor = self.textCursor()
+            if cursor.hasSelection():
+                font=QFontDialog.getFont()
+                if font.isValid():
+                    fmt= QTextCharFormat()
+                    fmt.setFont(font)
+                    cursor.mergeCharFormat(fmt)
+                    self.setTextCursor(cursor)
+                colour=QColorDialog.getColor()
+                if colour.isValid():
+                    fmt = QTextCharFormat()
+                    fmt.setForeground(colour)
+                    cursor.mergeCharFormat(fmt)
+                    self.setTextCursor(cursor)"""
+     #       return super().mousePressEvent(mouseEvent)
 
 
 class VisNodeItem(QGraphicsObject):
@@ -261,7 +233,7 @@ class VisNodeItem(QGraphicsObject):
             self.metadataAttributes = metadataAttributes
         else:
             self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
-
+        self.blobDescription=""   #needed for blobs
         #Update positions
 
         #add to the text list
@@ -322,7 +294,7 @@ class VisNodeItem(QGraphicsObject):
         for p in ports:
             if p.index > self._nextPort: self._nextPort = p.index
             self._Ports.append(p)
-            p.setParentItem(self)
+            p.setParentItem(self.nodeShape)
 
 
         #Make nodes appear in front of edges for painting & selection
@@ -384,7 +356,7 @@ class VisNodeItem(QGraphicsObject):
         #TODO: This needs to be called by itemChange somehow.
         metaStr = ''
         for k,v in self.metadata.items():
-            if k != 'name':
+            if k != 'name' and k != 'description':
                 if self.metadataAttributes[k]['display']:
                     metaStr += "\n"+k +":"+v
         self.metaDisplay.setPlainText(metaStr)
@@ -526,7 +498,6 @@ class VisNodeItem(QGraphicsObject):
         #Parent to nodeShape for better geom flexibility
         self._nextPort += 1 
         p = port(portPos, t=t, index =self._nextPort,  parent=self.nodeShape)
-
         #print(f"Port created on node{self.nodeNum}: as port{p.index} at {p.t} {len(self._Ports)=}")
         self._Ports.append(p) 
 
@@ -575,6 +546,7 @@ class VisNodeItem(QGraphicsObject):
         #Currently (02a) only one edge per port
 
         self._Ports.remove(delPort)
+        del delPort
 
     def portFromIndex(self, Xindex)->port:
         """ Returns the port object corresponding to the index """
@@ -630,9 +602,7 @@ class VisBlobItem(VisNodeItem):
         lWitem.setData(KEY_ROLE,ROLE_BLOB)
 
         self.setData(KEY_ROLE, ROLE_BLOB)
-        #Remove the nodeShape set in the parent
-        self.nodeShape.setParentItem(None)
-        del self.nodeShape
+
         self.setAcceptHoverEvents(True)
         self.isHovered=False
         #self._hoverColor=QColor("cyan")
@@ -644,6 +614,11 @@ class VisBlobItem(VisNodeItem):
 
         #Node constructor doesn't take parents & children, so add now
 
+        #Remove the nodeShape set in the parent - first reparent ports
+        for port in self._Ports:
+            port.setParentItem(self)
+        self.nodeShape.setParentItem(None)
+        del self.nodeShape
         # make the rect
         self._rect = QRectF(0,0,width,height)
         self._width = width
@@ -656,7 +631,25 @@ class VisBlobItem(VisNodeItem):
         # JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        
+        # give ports back to the nodeshape
+        for port in self._Ports:
+            port.setParentItem(self.nodeShape)
+        #blob text JH
+        if 'description' not in self.metadataAttributes:
+            self.metadataAttributes['description']={'display':DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
+            self.metadata['description']='Click to add'
+       # if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
+        if 'description' in self.metadata:
+            blobText=self.metadata['description']
+        else:
+            blobText="Click to add"
+        container = BlobTextItem(blobText, width, self)
+        self.blobDescription=container
+        #else:
+        #    container = BlobTextItem("", width, self)
+        #    self.text=container
+        #    self.text.setFlag(QGraphicsItem.ItemIsVisible, False)
+        #    self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
@@ -700,7 +693,10 @@ class VisBlobItem(VisNodeItem):
         blobLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
-        
+        #update metadata from blobDescription
+        if 'description' in self.metadata \
+                and self.metadata['description']!=self.blobDescription.toPlainText():
+            self.metadata['description']=self.blobDescription.toPlainText()
         #add metadata other than name
         if len(self.metadata) >= 2:
             for k, v in self.metadata.items():
@@ -772,12 +768,14 @@ class VisBlobItem(VisNodeItem):
         #Draw the text if set to display
         if self.metadataAttributes['name']['display']:
             # Pos on top (this can be generalised to left, bottom, right, etc)
-            #r = QRectF(0,-NODESIZE,0,0) 
-            #update height & width
-            #r = painter.drawText(r,Qt.AlignCenter,self.dispText)
+            if BLOB_NAME_ON_TOP:
+                r = QRectF(0,-NODESIZE,0,0) 
+                r = painter.drawText(r,Qt.AlignCenter,self.dispText)
+                painter.drawText(r, Qt.AlignCenter, self.dispText)
+            else:
             #painter.drawText(self._rect, Qt.AlignCenter | Qt.AlignTop, self.dispText)
             #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
-            painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
+                painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
 
         #Debug - draw the shape path
         #painter.drawPath(self.shape())
@@ -1074,6 +1072,9 @@ class VisBlobItem(VisNodeItem):
         #orders are right, transform back blob coords
         self._height = BRy
         self._width = BRx 
+
+        #resize text when blob resizes
+        self.blobDescription.setTextSize(self)
 
         #Figure out the geometry for these lines
         self.setPos(TLx,TLy)
