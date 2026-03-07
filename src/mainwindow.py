@@ -631,6 +631,9 @@ class grScene(QGraphicsScene):
                 if selItem:
                     selItem = selItem[0]
                     if self.thisHandleObjectSelected:
+                        self.thisHandleObjectSelected.isOnlySelected=False
+                        if self.thisHandleObjectSelected.data(KEY_ROLE)==ROLE_POLYLINE:
+                            self.thisHandleObjectSelected.parentItem().isOnlySelected=False  #to squash tangent lines
                         self.thisHandleObjectSelected._deleteHandles()
                         self.thisHandleObjectSelected=None
                     lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
@@ -850,6 +853,7 @@ class grScene(QGraphicsScene):
                     cxChoice()
 
         #pass on
+
         super().mousePressEvent(mouseEvent)
 
     def mouseMoveEvent(self, mouseEvent):
@@ -1413,7 +1417,7 @@ class deleteEdgeCommand(QUndoCommand):
         #self.endPortParent=self.endNode[1].parentItem()
         self.points=[]
         self.tangentPoints=[]
-        if self.edge != None and self.edge.edgeLine._t:
+        if self.edge != None and hasattr("self.edge.edgeLine","_t"):
             self.tangentPoints=self.edge.edgeLine._t
         else:
             self.tangentPoints=[]
