@@ -659,10 +659,10 @@ class VisBlobItem(VisNodeItem):
 
 
         #Create a polygon version for `parameterFromPos` - also in `updateFromHandles`
-        basePath = QPainterPath()
-        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
-        totalLength = basePath.length()
-        self._polygon = basePath.toFillPolygon()
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = self._basePath.length()
+        self._polygon = self._basePath.toFillPolygon()
 
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation

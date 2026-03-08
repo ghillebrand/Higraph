@@ -1334,7 +1334,7 @@ class deleteNodeCommand(QUndoCommand):
         self.node=newNode
         #now read any edges that were deleted with the node
         #(I really don't know how it re-adds the ports so easily)
-        print("JH ah, it doesn't anymore")
+        #the above stopped working and this code should now be redundant (edges deleted before enetering delNode)
         for edgeItem in self.edges:
             if edgeItem[0].startNode[0].nodeNum==newNode.nodeNum:
                 edgeItem[0].startNode=(newNode, edgeItem[0].startNode[1])
