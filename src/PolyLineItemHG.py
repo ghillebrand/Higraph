@@ -12,41 +12,6 @@ from PySide6.QtWidgets import QGraphicsObject, QGraphicsItem, QGraphicsRectItem
 from  HGConstants import *
 from GraphicsSupport import *
 
-def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
-    """ Finds the closesest point between p1&p2 to point. Returns closest_point, distance
-        Helper function for StraightLineItem.addPoint() on straight lines with long segments
-    """
-
-    # Vector line
-    line_dx = p2.x() - p1.x()
-    line_dy = p2.y() - p1.y()
-
-    # Vector from p1 to point
-    pt_dx = point.x() - p1.x()
-    pt_dy = point.y() - p1.y()
-
-    # Project point onto line, normalized by line length squared
-    line_len_sq = line_dx * line_dx + line_dy * line_dy
-    if line_len_sq == 0:  # Degenerate line (length = 0)
-        return p1, math.hypot(pt_dx, pt_dy)
-
-    t = (pt_dx * line_dx + pt_dy * line_dy) / line_len_sq
-
-    # Clamp t to [0, 1] if you want closest point *on the segment*
-    # Remove clamp if infinite line is desired
-    t = max(0, min(1, t))
-
-    # Closest point
-    closest_x = p1.x() + t * line_dx
-    closest_y = p1.y() + t * line_dy
-    closest_point = QPointF(closest_x, closest_y)
-
-    # Distance
-    dx = point.x() - closest_x
-    dy = point.y() - closest_y
-    distance = math.hypot(dx, dy)
-
-    return closest_point, distance
 
 
 class StraightLineItem(QGraphicsItem):
@@ -162,7 +127,8 @@ class StraightLineItem(QGraphicsItem):
 
     def addPoint(self, point: QPointF):
         """ Add a point to the line, if close enough"""
-        #TODO: This is disabled to allow self-edges. is this a problem?
+        #TODO: This is disabled to allow self-edges. is this a problem? 
+        # It allows "non-close" clicks to add points, but seems fine
         #Close enough?
         #if not self.contains(point): 
         #    return
@@ -170,7 +136,6 @@ class StraightLineItem(QGraphicsItem):
         #Put point in at the right place
         minD = math.inf
         for i in range(self._path.elementCount()-1):
-            #xo, yo = self._path.elementAt(i).x, self._path.elementAt(i).y
             newP,newD = closestPointOnLine(QPointF(self._path.elementAt(i)),
                                             QPointF(self._path.elementAt(i+1)),point)
             if newD < minD:

@@ -4,7 +4,7 @@
 
 from  HGConstants import *
 from GraphicsSupport import *
-#from Edges import  * #Needed for type checking
+
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -33,6 +33,7 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 from PySide6.QtWidgets import QGraphicsObject, QStyleOptionGraphicsItem, QGraphicsItemGroup
 from PySide6.QtCore import QRectF, Qt, Signal
 from PySide6.QtGui import QPainter, QPainterPath, QPainterPathStroker, QPen, QBrush, QColor
+
 
 class QRoundedRectItem(QGraphicsObject):
     # Custom signal emitted when the border is clicked
@@ -72,11 +73,11 @@ class QRoundedRectItem(QGraphicsObject):
 
     def shape(self) -> QPainterPath:
         # Returns only the hollow border path
-        basePath = QPainterPath()
-        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius, self._mode)
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius, self._mode)
         stroker = QPainterPathStroker()
         stroker.setWidth(HITSIZE) # Hit-area thickness
-        return stroker.createStroke(basePath)
+        return stroker.createStroke(self._basePath)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
     #jh commented out entire function to romove local paint   
@@ -776,8 +777,10 @@ class VisBlobItem(VisNodeItem):
             #painter.drawText(self._rect, Qt.AlignCenter | Qt.AlignTop, self.dispText)
             #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
                 painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
-
         #Debug - draw the shape path
+
+        #painter.setPen(QPen(Qt.green,1))
+        #painter.drawPath(self._basePath)
         #painter.drawPath(self.shape())
         #painter.drawRect(self.boundingRect())
 
@@ -806,7 +809,7 @@ class VisBlobItem(VisNodeItem):
                     self.childGroup.addToGroup(item)
             else:
                 #delete group
-                print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
+                #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 if getattr(self, "childGroup" , False):
                     kids = self.getChildList(self)
                     print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
@@ -836,7 +839,8 @@ class VisBlobItem(VisNodeItem):
 
         return super().itemChange(change, value)
     
-    def positionToParameter(self, mousePos:QPointF)->float:
+    def XXpositionToParameter(self, mousePos:QPointF)->float:
+        #Both of these seem to work. Not sure why I wrote 2!
         # the path may not always be reactangular, so keep options opem
         self._basePath = QPainterPath()
         self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
@@ -845,13 +849,32 @@ class VisBlobItem(VisNodeItem):
         #turn shape to polygon by letting curves be multiple short edges
         self._polygon = self._basePath.toFillPolygon()
         relativeMousePos = self.mapFromScene(mousePos)
+
         #step through the line segments accumulating the distance before the mouse is found
         accumulatedLength=0
+        pCount = self._polygon.count()
+        #print(f"{pCount=}")
         for i in range(self._polygon.count() - 1):
             p1 = self._polygon[i]
             p2 = self._polygon[i + 1]
             line = QLineF(p1, p2)
+            #print(f"seg {i} is {p1} to {p2}")
+            """
             #pointLine=QLineF(relativeMousePos,relativeMousePos)
+            if p1TopLeftp2(p1,p2):
+                pRect = QRectF(p1,p2) 
+            else:
+                pRect = QRectF(p2,p1)
+            pRect = pRect.adjusted(-HITSIZE/2,-HITSIZE/2, HITSIZE/2,HITSIZE/2)
+            if pRect.contains(relativeMousePos):
+                print(f"\n{relativeMousePos} in {pRect} seg {i}/{pCount}")
+                shortLine=QLineF(p1, relativeMousePos)
+                accumulatedLength+=shortLine.length()
+                break
+            else:
+                print(f"x{i}", end =" ")
+                accumulatedLength+=line.length()
+            """
             betweenx=False
             betweeny=False
             if (p1.x()<=relativeMousePos.x()+HITSIZE and relativeMousePos.x()-HITSIZE<=p2.x()) or\
@@ -866,6 +889,7 @@ class VisBlobItem(VisNodeItem):
                 break
             else:          
                 accumulatedLength+=line.length()
+            
         t=accumulatedLength/totalLength
         return(t)    
 
@@ -884,7 +908,7 @@ class VisBlobItem(VisNodeItem):
         t = ((p.x() - a.x()) * dx + (p.y() - a.y()) * dy) / (dx**2 + dy**2)
         return max(0.0, min(t, 1.0))
 
-    def xxpositionToParameter(self, scenePos:QPointF)->float:
+    def positionToParameter(self, scenePos:QPointF)->float:
         """ Takes a pos, and returns a value giving the position of the pos on the blobs's edge 
             Uses _polygon set in `updateFromHandles`
         """
