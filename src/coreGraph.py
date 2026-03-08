@@ -140,7 +140,7 @@ class Graph:
 
     def resetIDs(self):
         """reset the Class vars. Not all new instances may want to do this """
-        Graph.nextID:int = 0
+        Graph.nextID:int = 1
         Graph.IDsUsed = set()
 
     def addNode(self,name=None, id=None)->int: 
