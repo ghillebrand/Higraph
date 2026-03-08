@@ -21,6 +21,48 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 
 #Various support classes.
 
+def p1TopLeftp2(p1:QPointF, p2:QPointF)->bool:
+    """ is p1 'left' and 'above' p2 - used to not create 'inverted' rectangles """
+    return p1.x() < p2.x() and p1.y() < p2.y()
+
+
+def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
+    """ Finds the closesest point between p1&p2 to point. Returns tuple (closest_point, distance)
+        Helper function for StraightLineItem.addPoint() on straight lines with long segments
+    """
+
+    # Vector line
+    line_dx = p2.x() - p1.x()
+    line_dy = p2.y() - p1.y()
+
+    # Vector from p1 to point
+    pt_dx = point.x() - p1.x()
+    pt_dy = point.y() - p1.y()
+
+    # Project point onto line, normalized by line length squared
+    line_len_sq = line_dx * line_dx + line_dy * line_dy
+    if line_len_sq == 0:  # Degenerate line (length = 0)
+        return p1, math.hypot(pt_dx, pt_dy)
+
+    t = (pt_dx * line_dx + pt_dy * line_dy) / line_len_sq
+
+    # Clamp t to [0, 1] if you want closest point *on the segment*
+    # Remove clamp if infinite line is desired
+    t = max(0, min(1, t))
+
+    # Closest point
+    closest_x = p1.x() + t * line_dx
+    closest_y = p1.y() + t * line_dy
+    closest_point = QPointF(closest_x, closest_y)
+
+    # Distance
+    dx = point.x() - closest_x
+    dy = point.y() - closest_y
+    distance = math.hypot(dx, dy)
+
+    return closest_point, distance
+
+
 class TransparentTextItem(QGraphicsTextItem):
     """ allows parent.shape() to select the text, rather than the textItem always grabbing the event  """
     def __init__(self, text:str, parent=None):
@@ -193,24 +235,32 @@ class port(dummyNodeItem):
             dy = math.sin(2*math.pi * self.t)
             dx = math.cos(2*math.pi * self.t)
         elif self.parentItem().parentItem().data(KEY_ROLE) == ROLE_BLOB:  #Blob
-            #These functions produce odd results sometime - not sure why - may be a port bug?
-            #m = self.parentItem().shape().slopeAtPercent(self.t)
-            #print(f" t={self.t:1.5f} has {m:1.4f}")
-            #print(f"Angle at: {self.parentItem().shape().angleAtPercent(self.t)}")
-            #TODO: until slopeAt is working, use <= BLOB_CORNER_RADIUS, but sort out the bottom logic
-            if self.pos().x() == 0: #left
-                dy = 0
-                dx = -1
-            elif self.pos().y() == 0: #top
-                dy = -1
-                dx = 0
-            elif self.pos().x() == self.parentItem().parentItem()._width: #right
-                dy = 0
-                dx = 1
-            elif self.pos().y() == self.parentItem().parentItem()._height: #bottom
-                dy = 1
-                dx = 0
-            else: #HACK for now - refine corners
-                dy = 0.5
-                dx = 0.5
+            
+            # getting angle from elements - Qt `angleAtPercent` is wonky at best
+            polygon = self.parentItem()._basePath.toFillPolygon()
+            pos = self.parentItem().parentItem().parameterToPosition(self.t)
+
+            pCount = self.parentItem().parentItem()._polygon.count()
+            #odd errors mean some t's return pos not in the segment bounding rect, so search for _closest_
+            minD = math.inf
+            for i in range( pCount - 1):
+                p1 = polygon[i]
+                p2 = polygon[i + 1]
+                #print(f"seg {i} is {p1} to {p2}")
+                newP,newD = closestPointOnLine(p1,p2,pos)
+                if newD < minD:
+                    closestP,minD,idx = newP,newD,i      
+
+            p1 = p1 = polygon[idx]
+            p2 = polygon[idx + 1]
+            dx = p2.x()-p1.x()
+            dy = p2.y()-p1.y()
+            # normalise
+            hyp = (dx**2 + dy**2)**0.5
+            dx /= hyp
+            dy /= hyp
+            #print(f"recalc angle at t={self.t:1.5f} seg {idx}/{pCount} {dy:1.5f}/{dx:1.5f}, {math.atan2(dy,dx)*180/math.pi % 360}  ")
+            #Rotate back by 90 deg
+            dx, dy = dy, -dx
+
         return (dx,dy)
