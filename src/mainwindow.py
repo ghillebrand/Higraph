@@ -204,7 +204,7 @@ class graphModel(QStandardItemModel):
         del self.Gr
         self.Gr = Graph()
         #Reset the global Gr id counter too
-        Graph.nextID = 0
+        Graph.nextID = 1
         Graph.IDsUsed = set()
         super().clear()
 

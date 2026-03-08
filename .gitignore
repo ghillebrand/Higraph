@@ -30,3 +30,6 @@ src/BlobShapePortCheckN1.graphml
 src/testfile.graphml
 src/blobParentsXML2.graphml
 src/blobParentTest2.graphml
+src/Jtest1.graphml
+src/NodeInBlobDisappearTest2.graphml
+src/NodeInBlobDisappearTest3.graphml
