@@ -314,7 +314,7 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =} Ports:{self._Ports=}\n\
+        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}, {self._Ports=}\n\
                 {self.startsEdges = },\n{self.endsEdges = }\n*<*" #\n {self.nodeShape =})"
     __str__ = __repr__
 
@@ -547,7 +547,6 @@ class VisNodeItem(QGraphicsObject):
         #Currently (02a) only one edge per port
 
         self._Ports.remove(delPort)
-        delPort.setParentItem(None)
         del delPort
 
     def portFromIndex(self, Xindex)->port:
@@ -661,10 +660,10 @@ class VisBlobItem(VisNodeItem):
 
 
         #Create a polygon version for `parameterFromPos` - also in `updateFromHandles`
-        self._basePath = QPainterPath()
-        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
-        #totalLength = self._basePath.length()
-        #self._polygon = self._basePath.toFillPolygon()
+        basePath = QPainterPath()
+        basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
+        totalLength = basePath.length()
+        self._polygon = basePath.toFillPolygon()
 
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
@@ -673,7 +672,7 @@ class VisBlobItem(VisNodeItem):
         self.suppressItemChange = False
 
     def __repr__(self):
-        r = f"\noo VisBLOBItem\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =} Ports:{self._Ports =}\n"+\
+        r = f"\noo VisBLOBItem\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =}\n"+\
                 f"{self.startsEdges = },\n{self.endsEdges = }\n00" #\n {self.nodeShape =})"
         return r
     __str__ = __repr__
