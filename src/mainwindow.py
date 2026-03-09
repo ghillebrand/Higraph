@@ -696,7 +696,7 @@ class grScene(QGraphicsScene):
                 ###item.setFlag(QGraphicsItem.ItemIsMovable, True)
 
                 #put create node on undo stack
-                newAction=createNodeCommand(mPos, self, self.model, self.listWidget)
+                newAction=createNodeCommand(mPos, self, self.model, self.listWidget, type=ROLE_NODE)
                 self.undoStack.push(newAction)
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
@@ -944,10 +944,14 @@ class grScene(QGraphicsScene):
             width = TLx - BRx
             TLx -= width
             TLy -= height
-            blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 
-                            height = height, width = width,
-                            xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
-            self.addItem(blob)
+            newAction=createNodeCommand(QPointF(TLx,TLy), self, self.model, self.listWidget, 
+                                        height = height, width = width, xRadius = BLOB_CORNER_RADIUS, 
+                                        yRadius = BLOB_CORNER_RADIUS, type=ROLE_BLOB)
+            self.undoStack.push(newAction)
+            #blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 
+            #                height = height, width = width,
+            #                xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
+            #self.addItem(blob)
             self.updateBlobParenting()
             self.mouseMode = self.POINTER
             mouseEvent.accept()
@@ -1086,7 +1090,6 @@ class grScene(QGraphicsScene):
 
     def updateBlobParenting(self):
         """Recalculate the parents & children of the blobs and nodes in the scene"""
-
         #Get all the blobs, to search inside of:
         blobList = []
         for sItem in self.items():
@@ -1130,7 +1133,6 @@ class grScene(QGraphicsScene):
                     cItem.parents.append(pItem)
                 else:
                     print(f"Warning - node {c} seems to have disappeared!")
-
 
     def signalTest(self):
         print("signal sent to scene successfully")
@@ -1205,7 +1207,7 @@ class grScene(QGraphicsScene):
 
 # classes for working with undo and redo (QUndoStack)
 class createNodeCommand(QUndoCommand):
-    def __init__(self, posn, scene, model, listWidget):
+    def __init__(self, posn, scene, model, listWidget, width=10, height=10, xRadius=10, yRadius=10,type=ROLE_NODE):
         super().__init__()
         self.node = None  
         self.posn = posn
@@ -1213,6 +1215,12 @@ class createNodeCommand(QUndoCommand):
         self.model = model
         self.listWidget=listWidget
         self.nodeNum = 0 #placeholder
+        self.type=type
+        if type==ROLE_BLOB:
+            self.width=width
+            self.height=height
+            self.xRadius=xRadius
+            self.yRadius=yRadius
 
     def undo(self):
         #delIdx = self.node.data(KEY_INDEX)
@@ -1220,10 +1228,14 @@ class createNodeCommand(QUndoCommand):
         self.scene.mainwindow.delNode(delIdx)
 
     def redo(self):
-        #VisNodeItem adds to the model and the  list
+        #VisNodeItem/ VisBlobItem adds to the model and the  list
         if self.node==None:   # this is the first actual create of the node
-            newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
-            # save the node index for recreating identically
+            if self.type == ROLE_NODE:
+                newNode =  VisNodeItem(self.posn,self.model,self.listWidget)
+                # save the node index for recreating identically
+            else:
+                newNode =  VisBlobItem(self.posn,self.model,self.listWidget, height=self.height, width=self.width, 
+                                       xRadius=self.xRadius, yRadius=self.yRadius)
             self.nodeNum = newNode.nodeNum
             #update port  PARENTS (maybe recompute position?)
             #for p in newNode._Ports:
@@ -1232,7 +1244,12 @@ class createNodeCommand(QUndoCommand):
             #newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
             #                   id = self.node.nodeNum, metadata=self.node.metadata, \
             #                    metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
-            newNode =  VisNodeItem(self.posn,self.model,self.listWidget, id=self.nodeNum)
+            if self.type == ROLE_NODE:
+                newNode =  VisNodeItem(self.posn,self.model,self.listWidget, id=self.nodeNum)
+            else:
+                newNode =  VisBlobItem(self.posn,self.model,self.listWidget, id=self.nodeNum, \
+                                       height=self.height, width=self.width, xRadius=self.xRadius,\
+                                        yRadius=self.yRadius)
             
         #update port  PARENTS (maybe recompute position?)
         #for p in newNode._Ports:
@@ -1246,7 +1263,7 @@ class createNodeCommand(QUndoCommand):
         self.node=newNode   
 
 class deleteNodeCommand(QUndoCommand):
-    def __init__(self, node, posn, scene, model, listWidget, parent=None):
+    def __init__(self, node, posn, scene, model, listWidget, type=ROLE_NODE, parent=None):
         super().__init__(parent=parent)
         self.node = node
         self.nodeNum = self.node.nodeNum
@@ -1283,18 +1300,34 @@ class deleteNodeCommand(QUndoCommand):
         self.metadataAttributes={}
         for k,v in node.metadataAttributes.items():
             self.metadataAttributes[k] = v
+        self.type=type
+        self.parents=[]
+        for parent in self.node.parents:
+            self.parents.append(parent)
+        if type==ROLE_BLOB:
+            self.width=self.node._width
+            self.height=self.node._height
+            self.xRadius=self.node._xRadius
+            self.yRadius=self.node._yRadius
+            self.children=[]
+            for child in self.node.children:
+                self.children.append(child)
 
     def undo(self):
         #VisNodeItem adds to the model and the  list
         #newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
         #                    id = self.node.nodeNum, metadata=self.node.metadata, \
         #                    metadataAttributes=self.node.metadataAttributes, ports=self.ports)
-        newNode =  VisNodeItem(self.posn,self.model,self.listWidget ,nameP=self.metadata['name'], \
-                            id = self.nodeNum, metadata=self.metadata, \
-                            metadataAttributes=self.metadataAttributes, ports=self.ports)
-        #update port  PARENTS (maybe recompute position?)
-        #for p in newNode._Ports:
-        #    p.setParentItem(newNode)
+        if self.type == ROLE_NODE:
+            newNode =  VisNodeItem(self.posn,self.model,self.listWidget ,nameP=self.metadata['name'], \
+                                id = self.nodeNum, metadata=self.metadata, \
+                                metadataAttributes=self.metadataAttributes, ports=self.ports, parents=self.parents)
+        else:
+            newNode = VisBlobItem(self.posn,self.model,self.listWidget, nameP=self.metadata['name'], \
+                                id = self.nodeNum, metadata=self.metadata, metadataAttributes=self.metadataAttributes,\
+                                      ports=self.ports, height=self.height, width=self.width, xRadius=self.xRadius,\
+                                        yRadius=self.yRadius, parents=self.parents, children=self.children)
+
         newNode.setPos(self.posn)
         #Add to *Scene*
         self.scene.addItem(newNode)   
@@ -1303,6 +1336,7 @@ class deleteNodeCommand(QUndoCommand):
         self.node=newNode
         #now read any edges that were deleted with the node
         #(I really don't know how it re-adds the ports so easily)
+        #JH the above stopped working and this code should now be redundant (edges deleted before enetering delNode)
         for edgeItem in self.edges:
             if edgeItem[0].startNode[0].nodeNum==newNode.nodeNum:
                 edgeItem[0].startNode=(newNode, edgeItem[0].startNode[1])
@@ -2899,10 +2933,12 @@ class MainWindow(QMainWindow):
         #TODO: Pop a warning dialog when deleting the edges
 
         #Check for any edges attached and delete
+        #JH this should now be redundant-edges deleted beforehand
         eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
         if eList:
             for e in eList:
                 self.delEdge(e)
+        #JH to here        
         if self.Scene.thisHandleObjectSelected==self.Scene.findItemByIdx(delIdx):
             self.Scene.thisHandleObjectSelected = None
 
@@ -2936,8 +2972,16 @@ class MainWindow(QMainWindow):
             for item in selected_items:
                 if item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                     delIdx = item.data(KEY_INDEX)
-                    #self.delNode(delIdx)
-                    newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, parent=None)
+                    #check for any unselected edges attached to node and delete
+                    eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
+                    if eList:
+                        for e in eList:
+                            edgeItem = self.Scene.findItemByIdx(e)
+                            #self.delEdge(e)
+                            if edgeItem not in selected_items:
+                                newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.listWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
+                                self.undoStack.push(newAction)
+                    newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
         #logging.debug("about to update from action_EditDelete",stack_info=True  )
@@ -2946,7 +2990,7 @@ class MainWindow(QMainWindow):
 
         #self.Scene.update()
         #Trying to get rid of the orphan lines - which go when the view changes so that scrollbars are added.
-        self.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
+        #JHself.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
         #GC takes some time (~100ms?) to finalise, so delay the repaint
      #JH   QTimer.singleShot(500, lambda: self.ui.graphicsView.viewport().repaint())
         #self.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
