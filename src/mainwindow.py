@@ -1090,7 +1090,6 @@ class grScene(QGraphicsScene):
 
     def updateBlobParenting(self):
         """Recalculate the parents & children of the blobs and nodes in the scene"""
-
         #Get all the blobs, to search inside of:
         blobList = []
         for sItem in self.items():
@@ -1129,7 +1128,6 @@ class grScene(QGraphicsScene):
                 pItem.children.append(cItem)
                 self.model.Gr.nodeD[c].addParent(parent)
                 cItem.parents.append(pItem)
-
 
     def signalTest(self):
         print("signal sent to scene successfully")
@@ -1320,12 +1318,11 @@ class deleteNodeCommand(QUndoCommand):
                                 id = self.nodeNum, metadata=self.metadata, \
                                 metadataAttributes=self.metadataAttributes, ports=self.ports, parents=self.parents)
         else:
-            newNode = VisBlobItem(self.posn,self.model,self.listWidget, id=self.nodeNum, \
-                                       height=self.height, width=self.width, xRadius=self.xRadius,\
+            newNode = VisBlobItem(self.posn,self.model,self.listWidget, nameP=self.metadata['name'], \
+                                id = self.nodeNum, metadata=self.metadata, metadataAttributes=self.metadataAttributes,\
+                                      ports=self.ports, height=self.height, width=self.width, xRadius=self.xRadius,\
                                         yRadius=self.yRadius, parents=self.parents, children=self.children)
-        #update port  PARENTS (maybe recompute position?)
-        #for p in newNode._Ports:
-        #    p.setParentItem(newNode)
+
         newNode.setPos(self.posn)
         #Add to *Scene*
         self.scene.addItem(newNode)   
@@ -1334,7 +1331,7 @@ class deleteNodeCommand(QUndoCommand):
         self.node=newNode
         #now read any edges that were deleted with the node
         #(I really don't know how it re-adds the ports so easily)
-        #the above stopped working and this code should now be redundant (edges deleted before enetering delNode)
+        #JH the above stopped working and this code should now be redundant (edges deleted before enetering delNode)
         for edgeItem in self.edges:
             if edgeItem[0].startNode[0].nodeNum==newNode.nodeNum:
                 edgeItem[0].startNode=(newNode, edgeItem[0].startNode[1])
@@ -2931,10 +2928,12 @@ class MainWindow(QMainWindow):
         #TODO: Pop a warning dialog when deleting the edges
 
         #Check for any edges attached and delete
+        #JH this should now be redundant-edges deleted beforehand
         eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
         if eList:
             for e in eList:
                 self.delEdge(e)
+        #JH to here        
         if self.Scene.thisHandleObjectSelected==self.Scene.findItemByIdx(delIdx):
             self.Scene.thisHandleObjectSelected = None
 
@@ -2974,8 +2973,9 @@ class MainWindow(QMainWindow):
                         for e in eList:
                             edgeItem = self.Scene.findItemByIdx(e)
                             #self.delEdge(e)
-                            newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.listWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
-                            self.undoStack.push(newAction)
+                            if edgeItem not in selected_items:
+                                newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.listWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
+                                self.undoStack.push(newAction)
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
@@ -2985,7 +2985,7 @@ class MainWindow(QMainWindow):
 
         #self.Scene.update()
         #Trying to get rid of the orphan lines - which go when the view changes so that scrollbars are added.
-        self.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
+        #JHself.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
         #GC takes some time (~100ms?) to finalise, so delay the repaint
      #JH   QTimer.singleShot(500, lambda: self.ui.graphicsView.viewport().repaint())
         #self.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
