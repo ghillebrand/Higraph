@@ -53,6 +53,9 @@ class QRoundedRectItem(QGraphicsObject):
         self._hoverColor = HOVER_COLOUR
         self._selectColor = SELECT_COLOUR
         self._pen = QPen(Qt.NoPen)  #QPen(self._baseColor, self._penWidth)
+
+        self._basePath = QPainterPath()
+        self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius, self._mode)
         
         # Interaction settings
         self.setAcceptHoverEvents(True)
@@ -664,7 +667,7 @@ class VisBlobItem(VisNodeItem):
         self._basePath = QPainterPath()
         self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
         #totalLength = self._basePath.length()
-        #self._polygon = self._basePath.toFillPolygon()
+        self._polygon = self._basePath.toFillPolygon()
 
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
