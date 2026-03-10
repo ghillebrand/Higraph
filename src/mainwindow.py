@@ -2079,6 +2079,8 @@ class MainWindow(QMainWindow):
         for i in self.Scene.items():
             i.suppressItemChange = True
         self.Scene.clear()
+        #clear stack
+        self.Scene.undoStack.clear()
 
     def nodeFromXML(self,xNode,newID=False)->VisNodeItem:
         """ Create a new node from an XML string
@@ -2094,6 +2096,9 @@ class MainWindow(QMainWindow):
         #TODO: type check id
         if not newID:
             id = int(xNode.attrib.get("id"))
+            #JH temp override for n0
+            if id==0:
+                id=1000
         else:
             id = ''
         for dataNode in xNode.iter("data"):
