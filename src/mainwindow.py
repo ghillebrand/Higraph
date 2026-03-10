@@ -2081,6 +2081,8 @@ class MainWindow(QMainWindow):
         self.Scene.clear()
         #clear stack
         self.Scene.undoStack.clear()
+        # Reset any existing zoom
+        self.ui.graphicsView.resetTransform()         
 
     def nodeFromXML(self,xNode,newID=False)->VisNodeItem:
         """ Create a new node from an XML string
@@ -2473,8 +2475,8 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + "[*]")
 
-        self.setZoom(100)
-        zoomToFitWithMargin(self.ui.graphicsView, margin=0.2)
+        #self.setZoom(100)
+        #zoomToFitWithMargin(self.ui.graphicsView, margin=0.2)
 
     def action_FileSave(self):
         """ 
