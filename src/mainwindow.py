@@ -31,7 +31,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
             QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
-            QSlider, QLabel, QStatusBar, QColorDialog, 
+            QSlider, QLabel, QStatusBar, QColorDialog, QMessageBox,
             QGraphicsSceneMouseEvent,
             QVBoxLayout, QHBoxLayout, QTextEdit, QPushButton)
 
@@ -2062,6 +2062,13 @@ class MainWindow(QMainWindow):
             self.Scene.onlySelected.isOnlySelected =False
         self.Scene.onlySelected = None
         self.Scene.thisHandleObjectSelected = None"""
+
+        #check for unsaved changes
+        if not self.Scene.undoStack.isClean():
+            if self.askForFileSave()=="Cancel":
+                return
+            
+
         self.action_EditSelectNone()
         
         #clear window vars
@@ -2082,7 +2089,24 @@ class MainWindow(QMainWindow):
         #clear stack
         self.Scene.undoStack.clear()
         # Reset any existing zoom
-        self.ui.graphicsView.resetTransform()         
+        self.ui.graphicsView.resetTransform()     
+
+    def askForFileSave(self):
+        reply = QMessageBox.question(
+            self,
+            "Unsaved Changes",
+            "The document has been modified.\nDo you want to save your changes?",
+            QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel,
+            QMessageBox.Save  # Default button
+            )
+
+        if reply == QMessageBox.Save:
+            self.action_FileSaveAs()
+            return("Saved")
+        elif reply == QMessageBox.Cancel:
+            return("Cancel")
+        else:
+            return("Continue")
 
     def nodeFromXML(self,xNode,newID=False)->VisNodeItem:
         """ Create a new node from an XML string
@@ -2353,6 +2377,11 @@ class MainWindow(QMainWindow):
         return newEdge
 
     def action_FileOpen(self):
+        #check for unsaved changes
+        if not self.Scene.undoStack.isClean():
+            if self.askForFileSave()=="Cancel":
+                return
+            self.undoStack.setClean()   #so that this isn't called again when the environment is cleared
         """ Read a graphml file in, create all the elements """
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
@@ -2539,6 +2568,9 @@ class MainWindow(QMainWindow):
             #TODO: Check pathing!
             with open(self.fileName, "w") as f:
                 f.write(pretty_str)
+
+            # Mark current state as saved
+            self.Scene.undoStack.setClean() 
 
         else:
             self.action_FileSaveAs()
