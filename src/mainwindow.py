@@ -2193,6 +2193,9 @@ class MainWindow(QMainWindow):
         #TODO: type check id
         if not newID:
             id = int(xBlob.attrib.get("id"))
+            #JH temp override for n0
+            if id==0:
+                id=1000
         else:
             id = ''
         for dataBlob in xBlob.iter("data"):
