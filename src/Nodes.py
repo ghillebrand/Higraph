@@ -180,6 +180,27 @@ class BlobTextItem(QGraphicsTextItem):
     def textChanged(self):
         self.setTextSize(self.parentItem())
         return
+    
+        
+    def mousePressEvent(self, event):
+        # Forward to parent
+        if self.parentItem() and self.parentItem().metadataAttributes['description']['display']==False:
+            self.parentItem().mousePressEvent(event)
+        else:
+            super().mousePressEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if self.parentItem() and self.parentItem().metadataAttributes['description']['display']==False:
+            self.parentItem().mouseReleaseEvent(event)
+        else:
+            super().mouseReleaseEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        if self.parentItem() and self.parentItem().metadataAttributes['description']['display']==False:
+            self.parentItem().mouseDoubleClickEvent(event)
+        else:
+            super().mouseDoubleClickEvent(event)
+
 
     #def mousePressEvent(self, mouseEvent):
     #    if (mouseEvent.button() == Qt.MouseButton.RightButton):
