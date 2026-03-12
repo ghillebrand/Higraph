@@ -663,12 +663,12 @@ class VisBlobItem(VisNodeItem):
         #blob text JH
         if 'description' not in self.metadataAttributes:
             self.metadataAttributes['description']={'display':DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
-            self.metadata['description']='Click to add'
+            self.metadata['description']='*'
        # if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
         if 'description' in self.metadata:
             blobText=self.metadata['description']
         else:
-            blobText="Click to add"
+            blobText="*"
         container = BlobTextItem(blobText, width, self)
         self.blobDescription=container
         #else:
