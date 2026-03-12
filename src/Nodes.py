@@ -185,19 +185,19 @@ class BlobTextItem(QGraphicsTextItem):
     def mousePressEvent(self, event):
         # Forward to parent
         if self.parentItem() and self.parentItem().metadataAttributes['description']['display']==False:
-            self.parentItem().mousePressEvent(event)
+            event.ignore()
         else:
             super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event):
         if self.parentItem() and self.parentItem().metadataAttributes['description']['display']==False:
-            self.parentItem().mouseReleaseEvent(event)
+            event.ignore()
         else:
             super().mouseReleaseEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         if self.parentItem() and self.parentItem().metadataAttributes['description']['display']==False:
-            self.parentItem().mouseDoubleClickEvent(event)
+            event.ignore()
         else:
             super().mouseDoubleClickEvent(event)
 
