@@ -2300,7 +2300,11 @@ class MainWindow(QMainWindow):
         eItem = (eItem, eItem.portFromIndex(tgtPort))
         #
 
-        directed = xEdge.attrib.get("directed", '')
+        #directed = xEdge.attrib.get("directed", '')
+        if xEdge.attrib.get("directed", '') == "true":  #xml needs string not bool
+            directed=True
+        else:
+            directed=False
         edgeMetadata = {}
         edgeMetadataAttributes = {}
 
