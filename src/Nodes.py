@@ -162,20 +162,24 @@ class BlobTextItem(QGraphicsTextItem):
             super().paint(painter, option, widget)
 
     def setTextSize(self, parent):
-        super().setTextWidth(parent._width)
-        if BLOB_FONT_IS_RESIZABLE == True:
-            currentHeight=super().boundingRect().height()
-            currentFontSize=self.font().pointSize()
-            if currentHeight > parent._height and currentFontSize>6:
-                while currentHeight > parent._height and currentFontSize>6:
-                    currentFontSize-=1
-                    self.setFont(QFont("Arial",currentFontSize))
-                    currentHeight=super().boundingRect().height()
-            elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
-                while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
-                    currentFontSize+=1
-                    self.setFont(QFont("Arial",currentFontSize))
-                    currentHeight=super().boundingRect().height()
+        if parent.metadataAttributes['description']['display']== False:
+        #if self.parentItem().Scene.optionBlobDesc == False:
+            super().setTextWidth(1)
+        else:
+            super().setTextWidth(parent._width)
+            if BLOB_FONT_IS_RESIZABLE == True:
+                currentHeight=super().boundingRect().height()
+                currentFontSize=self.font().pointSize()
+                if currentHeight > parent._height and currentFontSize>6:
+                    while currentHeight > parent._height and currentFontSize>6:
+                        currentFontSize-=1
+                        self.setFont(QFont("Arial",currentFontSize))
+                        currentHeight=super().boundingRect().height()
+                elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                    while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                        currentFontSize+=1
+                        self.setFont(QFont("Arial",currentFontSize))
+                        currentHeight=super().boundingRect().height()
     
     def textChanged(self):
         self.setTextSize(self.parentItem())
