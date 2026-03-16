@@ -557,7 +557,7 @@ class grScene(QGraphicsScene):
         
         else: # link back to old
             #print("Missed (nothing found) on relink")
-            self.handle.setPos(self.oldTermItem[1].pos())
+            self.handle.setPos(self.oldTermItem[1].scenePos())
             #TODO: Check all the linkages ()
             if self.EdgeEnd == "start":
                 edge.setStart(self.oldTermItem)
