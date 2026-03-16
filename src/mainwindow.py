@@ -1456,8 +1456,11 @@ class deleteEdgeCommand(QUndoCommand):
         #self.endPortParent=self.endNode[1].parentItem()
         self.points=[]
         self.tangentPoints=[]
-        if self.edge != None and hasattr("self.edge.edgeLine","_t"):
-            self.tangentPoints=self.edge.edgeLine._t
+        #if self.edge != None and hasattr("self.edge.edgeLine","_t"):
+        if self._polyEdge == SPLINE:
+            for t in self.edge.edgeLine._t:
+                self.tangentPoints.append(t)
+            #self.tangentPoints=self.edge.edgeLine._t
         else:
             self.tangentPoints=[]
         if self.edge != None and self.edge.edgeLine._p:
