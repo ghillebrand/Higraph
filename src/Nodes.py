@@ -297,6 +297,7 @@ class VisNodeItem(QGraphicsObject):
         self.parents = parents
         #This will always be empty, but it makes the code more general
         self.children = [] 
+        self.childGroup=None  #safest to initialise this upfront
 
 
         #The shape of the node- rectangle
@@ -823,7 +824,7 @@ class VisBlobItem(VisNodeItem):
         return descendants
     
     def removeGroup(self, groupName):
-        try:
+        try:    #if the group has been deleted it might have left a wraith
             kidsToGo=self.childGroup.childItems()
             #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
             #JH for item in kids: #self.children:
