@@ -251,6 +251,7 @@ class grScene(QGraphicsScene):
 
         #For dragging
         self._lastMousePos = QPointF(0,0)
+        self.dragEdge=None
 
         #Add axes to help see how things move & debug graphical issues.
             #TODO: THere must be a better solution!
@@ -671,6 +672,11 @@ class grScene(QGraphicsScene):
       
             if len(self.selectedItems())>1:
                 self.mouseMode=self.DRAGGING #or in the middle of a modifier selection
+                self.dragEdge=None
+                if len(self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_BLOB, ROLE_NODE]))==0:
+                    edgeItems = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE])  #find out if a line is being dragged
+                    if len(edgeItems)>0:
+                        self.dragEdge=edgeItems[0]
                 # hand over to QT? or exit?
                 super().mousePressEvent(mouseEvent)
                 return
@@ -897,6 +903,10 @@ class grScene(QGraphicsScene):
                 for item in sIlist:
                     if item.data(KEY_ROLE) == ROLE_EDGE:
                         item.edgeLine.moveMidPoints(delta)
+                        if item==self.dragEdge:
+                            for node in sIlist:
+                                if node.data(KEY_ROLE) in [ROLE_BLOB, ROLE_NODE]:
+                                    node.setPos(node.scenePos()+delta)
                         #print("e" , end ="")
             
         elif self.mouseMode == self.MOVEEDGEEND:
