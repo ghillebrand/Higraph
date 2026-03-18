@@ -821,6 +821,25 @@ class VisBlobItem(VisNodeItem):
             descendants.extend(self.getChildList(c))
         
         return descendants
+    
+    def removeGroup(self, groupName):
+        try:
+            kidsToGo=self.childGroup.childItems()
+            #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
+            #JH for item in kids: #self.children:
+            for item in kidsToGo:
+                  #removeFromGroup seems to bug out occasionally :/
+                #self.childGroup.removeFromGroup(item)
+                
+                #This seems more reliable.
+                newScenePos = item.mapToScene(0, 0)
+                item.setParentItem(self)
+                item.setPos(newScenePos)
+            self.scene().destroyItemGroup(groupName)
+        except:
+            pass
+        return()
+
 
     def itemChange(self, change, value):
         if self.suppressItemChange:
@@ -830,17 +849,22 @@ class VisBlobItem(VisNodeItem):
         #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
         if change == QGraphicsItem.ItemSelectedHasChanged :
             kids = self.getChildList(self)
-            if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
+            #print("and this is kids", kids)
+            #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
+            if value == 1 and self.isOnlySelected: #when selected
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
                 for item in kids: 
                     self.childGroup.addToGroup(item)
-            else: #unselected or no children
+            #else: #unselected or no children
+            elif value == 0: #when deselected
                 #delete group
                 #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
-                if getattr(self, "childGroup" , False):
+                #if getattr(self, "childGroup" , False):
+                self.removeGroup(self.childGroup)
                     #JH kids = self.getChildList(self)
-                    kidsToGo=self.childGroup.childItems()
+
+                """kidsToGo=self.childGroup.childItems()
                     #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
                     #JH for item in kids: #self.children:
                     for item in kidsToGo:
@@ -851,7 +875,7 @@ class VisBlobItem(VisNodeItem):
                         newScenePos = item.mapToScene(0, 0)
                         item.setParentItem(self)
                         item.setPos(newScenePos)
-                    self.scene().destroyItemGroup(self.childGroup)
+                    self.scene().destroyItemGroup(self.childGroup)"""
                     #JH rescue any children that were excluded by a resize
                     #if getattr(self, "childGroup" , False):
                     #    if type(self.childGroup) == "QGraphicsItemGroup":
