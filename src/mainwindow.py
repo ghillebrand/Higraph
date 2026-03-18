@@ -664,6 +664,7 @@ class grScene(QGraphicsScene):
                         self.mouseMode = self.MOVEHANDLE
                         if p.data(KEY_ROLE) == ROLE_BLOB:
                             selItem.setMoveCallback(p._updateFromHandles)  #JH
+                            selItem.parentItem().removeGroup("group")
                         #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
                         #mouseEvent.accept()
                         #return

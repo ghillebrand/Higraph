@@ -836,7 +836,8 @@ class VisBlobItem(VisNodeItem):
                 newScenePos = item.mapToScene(0, 0)
                 item.setParentItem(self)
                 item.setPos(newScenePos)
-            self.scene().destroyItemGroup(groupName)
+            self.scene().destroyItemGroup(self.childGroup)
+            self.childGroup=None
         except:
             pass
         return()
