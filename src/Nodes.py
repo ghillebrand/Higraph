@@ -841,21 +841,21 @@ class VisBlobItem(VisNodeItem):
                 #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 if getattr(self, "childGroup" , False):
                     kids = self.getChildList(self)
-                    print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
+                    #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
                     for item in kids: #self.children:
                         #removeFromGroup seems to bug out occasionally :/
                         #self.childGroup.removeFromGroup(item)
                         
                         #This seems more reliable.
                         newScenePos = item.mapToScene(0, 0)
-                        item.setParentItem(None)
+                        item.setParentItem(self)
                         item.setPos(newScenePos)
 
                     #rescue any children that were excluded by a resize
                     if getattr(self, "childGroup" , False):
                         if type(self.childGroup) == "QGraphicsItemGroup":
                             self.scene().destroyItemGroup(self.childGroup)
-                    print(f"AFTER deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
+                    #print(f"AFTER deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
 
             #Call the edge update
             for k in kids:
