@@ -830,19 +830,20 @@ class VisBlobItem(VisNodeItem):
         #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
         if change == QGraphicsItem.ItemSelectedHasChanged :
             kids = self.getChildList(self)
-            if value == 1 and len(self.children) > 0 and self.isOnlySelected:
+            if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
                 #Make group
-                #if not getattr(self, "childGroup" , False):
                 self.childGroup = QGraphicsItemGroup(self)
                 for item in kids: 
                     self.childGroup.addToGroup(item)
-            else:
+            else: #unselected or no children
                 #delete group
                 #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 if getattr(self, "childGroup" , False):
-                    kids = self.getChildList(self)
+                    #JH kids = self.getChildList(self)
+                    kidsToGo=self.childGroup.childItems()
                     #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
-                    for item in kids: #self.children:
+                    #JH for item in kids: #self.children:
+                    for item in kidsToGo:
                         #removeFromGroup seems to bug out occasionally :/
                         #self.childGroup.removeFromGroup(item)
                         
@@ -850,11 +851,11 @@ class VisBlobItem(VisNodeItem):
                         newScenePos = item.mapToScene(0, 0)
                         item.setParentItem(self)
                         item.setPos(newScenePos)
-
-                    #rescue any children that were excluded by a resize
-                    if getattr(self, "childGroup" , False):
-                        if type(self.childGroup) == "QGraphicsItemGroup":
-                            self.scene().destroyItemGroup(self.childGroup)
+                    self.scene().destroyItemGroup(self.childGroup)
+                    #JH rescue any children that were excluded by a resize
+                    #if getattr(self, "childGroup" , False):
+                    #    if type(self.childGroup) == "QGraphicsItemGroup":
+                    #        self.scene().destroyItemGroup(self.childGroup)
                     #print(f"AFTER deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
 
             #Call the edge update
