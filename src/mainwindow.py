@@ -664,6 +664,7 @@ class grScene(QGraphicsScene):
                         self.mouseMode = self.MOVEHANDLE
                         if p.data(KEY_ROLE) == ROLE_BLOB:
                             selItem.setMoveCallback(p._updateFromHandles)  #JH
+                            selItem.parentItem().removeGroup("group")
                         #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
                         #mouseEvent.accept()
                         #return
@@ -3043,6 +3044,7 @@ class MainWindow(QMainWindow):
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
+            self.Scene.updateBlobParenting()        #JH there must be a better way to do this
         #logging.debug("about to update from action_EditDelete",stack_info=True  )
         #gc.collect() #This will crash the whole thing, with no traces
         #debug_qgraphicsitem_refs()  #More coPilot code ...
