@@ -511,7 +511,7 @@ class grScene(QGraphicsScene):
             elif (newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
                 newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
                 print(f"Self edge {self.EdgeEnd}")
-                if len(edge.edgeLine._p) < 3:
+                if len(edge.edgeLine._p) < 3 and edge._polyEdge==STRAIGHT:
                     #add in a point on the middle for now. (only works for straight, splines are OK)
                     #TODO: Refine!!!
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
