@@ -1,0 +1,77 @@
+Regression Test
+    On open (in an empty model)
+        Create
+            2 independent blobs (no intersection)
+                1 from `b` on keyboard
+                1 from toolbar
+            2 nodes in each blob
+                1 from `n` on keyboard
+                1 from toolbar
+            Move the blobs >> nodes should follow
+            Move nodes out of blob, move blobs >> Nodes should NOT follow
+        Edit Node
+            Double click from from scene
+            Double click from List
+            Change name >> Display name changes both sides
+            Add Attribute >> `attribName:value` appears
+            Hide `name` >> `name` not displayed
+            Hide `attrib` >> not displayed
+        Add child blob between blob and node
+            Move grandparent >> child blob & grandchild node move
+            Move middle blob >> grandparent doesn't move, child blob does move
+        Add edge
+            top of blob `a` to side of blob `b` >> directed spline with orthogonal tangents drawn
+            child node to parent blob
+            child node to other (non parent) blob
+        Select edge
+            \>> line becomes blue dotted
+            \>> green port positions appear
+            \>> blue tangent handles appear
+            \>> blue dotted tangent lines appear
+            Move tangent handle >> line updates correctly
+            Move green port >> line moves, and _immediately_ updates position (tangent doe _not_ update. Should snap onto node shape line.
+            Right click on selected edge >> Menu appears with
+            - coords
+            - add point
+            - del point
+            - Edit details
+            - None
+                Add point >> green control point, with appropriate (smooth) default tangents appears
+                del point >> point nearest the click is removed
+            click away >> edge goes black, green & bloe control points, tangent lines disappear
+        Add another edge
+            select >> goes dotted blue
+            Add point >> new point appears close to click
+            double click, change to `STRAIGHT` >> straight line edge, point preserved
+            click away >> edge goes black, green control points disappear
+        Add edge, delete >> edge is cleanly and immediately removed from both list and scene
+        Add edge, delete, `<ctrl>z` >> edge restored
+        Select a node with no edges, delete
+        
+        select an edge, delete
+            `<ctrl>z` >> edge restored
+            
+            `<ctrl>z` >> node restored
+        select a node with an edge, delete
+            `>>` node and edge removed
+            `<ctrl>z` >> node _and_ edge restored
+        Create another blob. Create edges from _each side_ of the blob to other nodes/ blobs.
+        Some start, some end at new blob
+            Resize blob >> edge positions update
+            (Note - edges currently (v02) may move around corners on resize. This is a long term todo)
+        Create a new blob, `d` that partially intersects TWO other blobs `b` and `c` 
+            Put a node `e` in the intersection of `d` and `c`, and `f` in  `d` and `b`
+            Move `d` >> all complete children should move
+            Move `b` >> all complete children should move
+            move `c` >> all complete children should move
+            double click`e` >> edit should show 2 parents
+        move the start of a spline edge to the same blob as it ends on  >> self edge created
+            Test that resizing the blob updates the edge ends >> move in sync
+        move the _end_ of a spline edge to the same blob as it _starts_ on  >> self edge created
+            Test that resizing the blob updates the edge ends >> move in sync
+        Select all `<ctrl>a` >> all selected
+            Copy (`<ctrl>c`
+            Insert (`<ctrl>v`) >> elements copied with same names, graphically offset (including additional edge points)
+            Move the newly inserted items >> move cleanly, including additional edge points
+        save the model
+    Load the tested model

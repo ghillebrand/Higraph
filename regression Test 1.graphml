@@ -1,0 +1,277 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+	<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+	<key id="data_blob" for="blob" higraph.type="blobgraphics"/>
+	<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+	<graph edgedefault="directed" id="G">
+		<node id="18">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="123.76018246985988" y="-146.56239817530138"/>
+					<y:NodeLabel>
+						e
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<!--Parent nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:parents>11 17</h:parents>
+		</node>
+		<node id="19">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="138.70967741935488" y="-9.677419354838719"/>
+					<y:NodeLabel>
+						f
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<!--Parent nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:parents>2 17</h:parents>
+		</node>
+		<node id="3">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="108.64516129032259" y="-42.225806451612925"/>
+					<port name="0" t="0.0500794516378139" x="7.131766002136105" y="2.321187991261284"/>
+					<y:NodeLabel>
+						n3
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<!--Parent nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:parents>2 17</h:parents>
+		</node>
+		<h:blob id="17">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="76.12903225806454" y="-194.8387096774194" width="107.74193548387096" height="249.67741935483872" xRadius="10" yRadius="10" radMode="SizeMode.AbsoluteSize"/>
+					<h:BlobLabel>
+						d
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+			<!--Child nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:children>3 18 19</h:children>
+		</h:blob>
+		<node id="4">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-130.83313420947826" y="-14.402230187176428"/>
+					<port name="0" t="0.3389038422446764" x="-3.9749920500238494" y="6.35998728003816"/>
+					<y:NodeLabel>
+						n4
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<!--Parent nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:parents>6</h:parents>
+		</node>
+		<h:blob id="6">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-159.83313420947826" y="-40.40223018717643" width="53.0" height="52.0" xRadius="10" yRadius="10" radMode="SizeMode.AbsoluteSize"/>
+					<h:BlobLabel>
+						n6
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+			<!--Parent nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:parents>1</h:parents>
+			<!--Child nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:children>4</h:children>
+		</h:blob>
+		<h:blob id="10">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-26.451612903225808" y="-182.5806451612903" width="0.0" height="1.290322580645153" xRadius="10" yRadius="10" radMode="SizeMode.AbsoluteSize"/>
+					<h:BlobLabel>
+						n10
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+		</h:blob>
+		<h:blob id="11">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-108.08080808080808" y="-176.88497882046263" width="284.7442163571196" height="66.78396871945253" xRadius="10" yRadius="10" radMode="SizeMode.AbsoluteSize"/>
+					<port name="0" t="0.7874093678684293" x="93.31736460980684" y="66.78396871945253"/>
+					<port name="3" t="0.21697566971032514" x="143.10946123727138" y="0.0"/>
+					<port name="5" t="0.5646842637261833" x="246.10638626637171" y="66.78396871945253"/>
+					<port name="7" t="0.9554658705703512" x="0.0" y="40.55033285128568"/>
+					<port name="8" t="0.9926858113167186" x="0.0" y="15.017520307977268"/>
+					<h:BlobLabel>
+						c
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+			<!--Child nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:children>18</h:children>
+		</h:blob>
+		<h:blob id="2">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="47.93548387096773" y="-86.51612903225805" width="119.0" height="115.0" xRadius="10" yRadius="10" radMode="SizeMode.AbsoluteSize"/>
+					<port name="1" t="0.9593923723561824" x="0.0" y="28.311678119674525"/>
+					<port name="0" t="0.6617441061335324" x="51.79827471878814" y="115.0"/>
+					<port name="4" t="0.393490889956489" x="119.0" y="56.97058648594309"/>
+					<h:BlobLabel>
+						b
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+			<!--Child nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:children>3 19</h:children>
+		</h:blob>
+		<h:blob id="1">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-175.83313420947826" y="-66.40223018717643" width="92.0" height="98.0" xRadius="10" yRadius="10" radMode="SizeMode.AbsoluteSize"/>
+					<port name="4" t="0.1852879206875678" x="61.51327919568867" y="0.0"/>
+					<port name="3" t="0.5610802166892289" x="75.56689279923414" y="97.99999999999999"/>
+					<port name="2" t="0.6359902168781739" x="48.378919880078485" y="98.0"/>
+					<port name="5" t="0.09996366495374469" x="30.54553726020478" y="0.0"/>
+					<h:BlobLabel>
+						a
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+			<!--Child nodes/ blobs included for reference. Recalculated from geometry on load-->
+			<h:children>6</h:children>
+		</h:blob>
+		<edge id="16" source="11" target="11" sourceport="7" targetport="8" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="-30.0" y="-0.0"/>
+						<h:EndTangent x="65.16129032258064" y="-6.057173017330456"/>
+					</y:Path>
+					<y:EdgeLabel>
+						16 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="15" source="11" target="2" sourceport="3" targetport="4" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<y:Point x="221.29032258064515" y="-207.09677419354838">
+							<h:Tangent leftx="29.032258064516128" lefty="25.80645161290323" rightx="29.032258064516128" righty="25.80645161290323"/>
+						</y:Point>
+						<h:StartTangent x="73.5408769021459" y="-54.19354838709677"/>
+						<h:EndTangent x="-50.63135713174324" y="4.9332029977192065"/>
+					</y:Path>
+					<y:EdgeLabel>
+						15 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="14" source="3" target="11" sourceport="0" targetport="5" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="28.52706400854442" y="9.284751965045135"/>
+						<h:EndTangent x="23.225806451612897" y="-25.806451612903217"/>
+					</y:Path>
+					<y:EdgeLabel>
+						14 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="12" source="11" target="1" sourceport="0" targetport="5" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="0.0" y="30.0"/>
+						<h:EndTangent x="-0.0" y="30.0"/>
+					</y:Path>
+					<y:EdgeLabel>
+						12 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="7" source="4" target="1" sourceport="0" targetport="2" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="-15.899968200095397" y="25.43994912015264"/>
+						<h:EndTangent x="-0.0" y="-30.0"/>
+					</y:Path>
+					<y:EdgeLabel>
+						7 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+		<edge id="8" source="2" target="1" sourceport="0" targetport="3" directed="true">
+			<data key="data_edge">
+				<y:PolyLineEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<y:Point x="-3.870967741935484" y="125.80645161290322"/>
+					</y:Path>
+					<y:EdgeLabel>
+						8 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:PolyLineEdge>
+			</data>
+		</edge>
+		<edge id="9" source="1" target="2" sourceport="4" targetport="1" directed="true">
+			<data key="data_edge">
+				<y:QuadCurveEdge>
+					<y:Arrows source="none" target="standard"/>
+					<y:Path>
+						<h:StartTangent x="0.0" y="-30.0"/>
+						<h:EndTangent x="30.0" y="0.0"/>
+					</y:Path>
+					<y:EdgeLabel>
+						9 
+						<h:metadataAttribute key="display" value="True"/>
+					</y:EdgeLabel>
+				</y:QuadCurveEdge>
+			</data>
+		</edge>
+	</graph>
+</graphml>
