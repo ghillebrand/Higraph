@@ -2362,7 +2362,11 @@ class MainWindow(QMainWindow):
                     if pathPoints is not None:
                         points = []
                         for pt in pathPoints:
-                            points.append( QPointF(float(pt.attrib.get("x")),
+                            if newID:  #if this is a paste, offset any points
+                                points.append( QPointF(float(pt.attrib.get("x"))+PASTE_OFFSET,
+                                            float(pt.attrib.get("y"))+PASTE_OFFSET) )  
+                            else: 
+                                points.append( QPointF(float(pt.attrib.get("x")),
                                             float(pt.attrib.get("y"))) )
                             #if QuadCurve, #get tangents
                             if polyLineType == SPLINE:
@@ -2965,9 +2969,9 @@ class MainWindow(QMainWindow):
             edgeItem = self.edgeFromXML(xEdge, newID=True, 
                                             newStartID=oldToNewID[sItemID],
                                             newEndID = oldToNewID[eItemID])
-            #Bump any polyline points over
-            for pt in edgeItem.edgeLine._p:
-                pt += QPointF(PASTE_OFFSET,PASTE_OFFSET)
+            #Bump any polyline points over -  now done in edgefromXML
+            #for pt in edgeItem.edgeLine._p:
+            #    pt += QPointF(PASTE_OFFSET,PASTE_OFFSET)
 
             #Add to Scene
             self.Scene.addItem(edgeItem)
