@@ -1911,6 +1911,11 @@ class MainWindow(QMainWindow):
 
     def actionNewNode(self):
         #Set the mouseMode to node
+        if self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
+            self.Scene.onlySelected=None
+        self.Scene.clearSelection()
         self.Scene.mouseMode = grScene.INSERTNODE
         #self.actionPointer.setChecked(False)
         self.statusBar().showMessage("Insert Node",3000)
@@ -1927,11 +1932,21 @@ class MainWindow(QMainWindow):
         """
 
     def actionNewBlob(self):
+        if self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
+            self.Scene.onlySelected=None
+        self.Scene.clearSelection()
         self.Scene.mouseMode = grScene.INSERTBLOB
         #self.actionPointer.setChecked(False)
         self.statusBar().showMessage("Insert Blob",3000)
 
     def actionNewEdge(self):
+        if self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
+            self.Scene.onlySelected=None
+        self.Scene.clearSelection()
         self.statusBar().showMessage("Insert Edge",3000)
         #print("Add an edge")
         self.Scene.mouseMode = grScene.INSERTEDGE
