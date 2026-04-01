@@ -209,7 +209,6 @@ class dummyNodeItem(QGraphicsItem):
         #self.setData(KEY_ROLE, ROLE_DUMMYNODE)
         self.setPos(center)
         #Note - since this is a purely geometric construct, these are called `EdgeLines``, not `Edges`
-        #Not used for ports
         self.startsEdgeLines = []
         self.endsEdgeLines = []
 
@@ -217,7 +216,7 @@ class dummyNodeItem(QGraphicsItem):
         return QRect(self.x(), self.y(), self.x()+1, self.y()+1)
     
     def paint(self, painter: QPainter, option, widget=None):
-        """ This object is only visable via a handle, but paint is required by Qt """
+        """ This object is only visible via a handle, but paint is required by Qt """
         pass
 
 class port(dummyNodeItem):

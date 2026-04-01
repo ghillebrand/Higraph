@@ -468,9 +468,7 @@ class VisNodeItem(QGraphicsObject):
             if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange,QGraphicsItem.ItemScenePositionHasChanged]:
                 for port in self._Ports:
                     for sEdge in port.startsEdgeLines:
-                #for sEdge in self.startsEdges:
                         sEdge.updateLine((self,port))
-                #for eEdge in self.endsEdges:
                     for eEdge in port.endsEdgeLines:
                         eEdge.updateLine((self, port))
 
@@ -829,12 +827,15 @@ class VisBlobItem(VisNodeItem):
             #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
             #JH for item in kids: #self.children:
             for item in kidsToGo:
-                  #removeFromGroup seems to bug out occasionally :/
+                #removeFromGroup seems to bug out occasionally - coords mangled (pos vs scenePos) :/
+                #
                 #self.childGroup.removeFromGroup(item)
                 
                 #This seems more reliable.
                 newScenePos = item.mapToScene(0, 0)
-                item.setParentItem(self)
+                #TODO: setting to `None` occasionally makes this disappear from the scene. `self` breaks the `pos`/ `scenePos` coords
+                item.setParentItem(None)  #self)
+                #item.setParentItem(self.scene())
                 item.setPos(newScenePos)
             self.scene().destroyItemGroup(self.childGroup)
             self.childGroup=None

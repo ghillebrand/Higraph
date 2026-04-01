@@ -216,7 +216,7 @@ class grScene(QGraphicsScene):
     #Mouse state enum
     # INSERTEDGE2CLICK for handling choice of item in ambiguous cases, which requires a click to choose, 
     # and thus the end is selected on a Press, not a release.
-    INSERTNODE, INSERTBLOB, INSERTEDGE, POINTER, INSERTEDGE2CLICK, MOVEEDGEEND, MOVEHANDLE, DOUBLECLICK, DRAGGING = range(9)
+    INSERTNODE, INSERTBLOB, INSERTEDGE, POINTER, INSERTEDGE2CLICK, MOVEEDGEEND, MOVEHANDLE, DOUBLECLICK, DRAGGING, INSERTHYPEREDGE = range(10)
     mouseModeDic={INSERTNODE:"INSERTNODE", INSERTBLOB:"INSERTBLOB", INSERTEDGE:"INSERTEDGE", POINTER:"POINTER", INSERTEDGE2CLICK:"INSERTEDGE2CLICK",\
                    MOVEEDGEEND:"MOVEEDGEEND", MOVEHANDLE:"MOVEHANDLE", DOUBLECLICK:"DOUBLECLICK", DRAGGING:"DRAGGING"}
     #TO pass edit requests to mainwindow. Signal must be class, not instance variables.
@@ -440,14 +440,16 @@ class grScene(QGraphicsScene):
         endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
         #Create the actual edge
-        newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-        self.undoStack.push(newAction)
+        #newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+        #self.undoStack.push(newAction)
         #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+        edgeItem = VisHyperEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
+        #Commented out because now done in createEdgeCommand
         #Add to *Scene*
-        #self.addItem(edgeItem)
-        #edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
-        #edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+        self.addItem(edgeItem)
+        edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
+        edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
 
     def resetRubberLine(self):
         """ Called whether or not an edge is created """
@@ -783,6 +785,7 @@ class grScene(QGraphicsScene):
                             parent = selItem.parentItem()
                             parent.setSelected(True)
                             parent.isOnlySelected = True
+                            #Hyperedge - create handles on all the edgeLines
                             selItem._createHandles()
 
                             #selItem.setSelected(False)
@@ -1936,6 +1939,11 @@ class MainWindow(QMainWindow):
         #print("Add an edge")
         self.Scene.mouseMode = grScene.INSERTEDGE
 
+    def actionNewHyperEdge(self):
+        self.statusBar().showMessage("Insert Hyperedge",3000)
+        #print("Add an edge")
+        self.Scene.mouseMode = grScene.INSERTHYPEREDGE
+
     def actionPointer(self):
         self.statusBar().showMessage("Select Mode",3000)
         self.Scene.mouseMode = grScene.POINTER
@@ -1962,6 +1970,7 @@ class MainWindow(QMainWindow):
                         self.Scene.onlySelected=sItem.edgeLine
                         sItem.edgeLine.setSelected(True)
                         sItem.isOnlySelected=True
+                        #Hyperedge - create handles on all the edgeLines
                         sItem.edgeLine._createHandles()
                         if not sItem.stH:
                             sItem.setZValue(2000) #move the edge above nodes
