@@ -830,11 +830,12 @@ class VisBlobItem(VisNodeItem):
             #JH for item in kids: #self.children:
             for item in kidsToGo:
                   #removeFromGroup seems to bug out occasionally :/
-                #self.childGroup.removeFromGroup(item)
+                self.childGroup.removeFromGroup(item)
                 
                 #This seems more reliable.
                 newScenePos = item.mapToScene(0, 0)
-                item.setParentItem(self)
+                item.setParentItem(None)
+                item.scene().update()
                 item.setPos(newScenePos)
             self.scene().destroyItemGroup(self.childGroup)
             self.childGroup=None
@@ -850,13 +851,19 @@ class VisBlobItem(VisNodeItem):
 
         #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
         if change == QGraphicsItem.ItemSelectedHasChanged :
-            kids = self.getChildList(self)
+            #kids = self.getChildList(self)
+            kidsIdx=self.scene().getDirectContainmentGraph(self.scene().getContainmentMap(self))[self.data(KEY_INDEX)]
+            kids=[]
+            for k in kidsIdx:
+                kids.append(self.scene().findItemByIdx(k))
+            #print("checking kids", kidsIdx)
             #print("and this is kids", kids)
             #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
-            if value == 1 and self.isOnlySelected: #when selected
+            #if value == 1 and self.isOnlySelected: #when selected
+            if value == 1 and len(self.scene().selectedItems())==1:
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
-                for item in kids: 
+                for item in kids:
                     self.childGroup.addToGroup(item)
             #else: #unselected or no children
             elif value == 0: #when deselected

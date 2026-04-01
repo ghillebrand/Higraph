@@ -935,7 +935,7 @@ class grScene(QGraphicsScene):
             #print("up node")
             #TODO: Clear selection after adding a node (or before?)
             self.clearSelection()
-            self.updateBlobParenting()
+            ##self.updateBlobParenting()
             self.mouseMode = self.POINTER
             return # Or use the eventHandled method?
         elif self.mouseMode == self.INSERTBLOB:
@@ -963,7 +963,7 @@ class grScene(QGraphicsScene):
             #                height = height, width = width,
             #                xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
             #self.addItem(blob)
-            self.updateBlobParenting()
+            ##self.updateBlobParenting()
             self.mouseMode = self.POINTER
             mouseEvent.accept()
             return
@@ -1037,7 +1037,7 @@ class grScene(QGraphicsScene):
             self.mouseMode = self.POINTER
         
         #Only do this on release, for performance reasons.
-        self.updateBlobParenting()
+        ##self.updateBlobParenting()
 
         super().mouseReleaseEvent(mouseEvent)  
 
@@ -1098,6 +1098,18 @@ class grScene(QGraphicsScene):
             directChildList[parent] = list(directChildren)
             
         return directChildList
+
+    def getContainmentMap(self, blob):
+        containmentMap = {}
+        searchArea = blob.sceneBoundingRect()
+        itemsInside = self.items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
+        childBlobs = []
+        for item in itemsInside:
+            if item != blob and item.data(KEY_ROLE) in [ROLE_BLOB,ROLE_NODE]:
+                childBlobs.append(item.nodeNum)
+        containmentMap[blob.nodeNum] = childBlobs
+        #Find the immediate parents.
+        return(containmentMap)
 
     def updateBlobParenting(self):
         """Recalculate the parents & children of the blobs and nodes in the scene"""
@@ -3063,7 +3075,7 @@ class MainWindow(QMainWindow):
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
-            self.Scene.updateBlobParenting()        #JH there must be a better way to do this
+            ##self.Scene.updateBlobParenting()        #JH there must be a better way to do this
         #logging.debug("about to update from action_EditDelete",stack_info=True  )
         #gc.collect() #This will crash the whole thing, with no traces
         #debug_qgraphicsitem_refs()  #More coPilot code ...
