@@ -830,11 +830,12 @@ class VisBlobItem(VisNodeItem):
             #JH for item in kids: #self.children:
             for item in kidsToGo:
                   #removeFromGroup seems to bug out occasionally :/
-                #self.childGroup.removeFromGroup(item)
+                self.childGroup.removeFromGroup(item)
                 
                 #This seems more reliable.
                 newScenePos = item.mapToScene(0, 0)
-                item.setParentItem(self)
+                item.setParentItem(None)
+                item.scene().update()
                 item.setPos(newScenePos)
             self.scene().destroyItemGroup(self.childGroup)
             self.childGroup=None
