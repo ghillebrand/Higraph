@@ -935,7 +935,7 @@ class grScene(QGraphicsScene):
             #print("up node")
             #TODO: Clear selection after adding a node (or before?)
             self.clearSelection()
-            ##self.updateBlobParenting()
+            self.updateBlobParenting()
             self.mouseMode = self.POINTER
             return # Or use the eventHandled method?
         elif self.mouseMode == self.INSERTBLOB:
@@ -963,7 +963,7 @@ class grScene(QGraphicsScene):
             #                height = height, width = width,
             #                xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
             #self.addItem(blob)
-            ##self.updateBlobParenting()
+            self.updateBlobParenting()
             self.mouseMode = self.POINTER
             mouseEvent.accept()
             return
@@ -1037,7 +1037,7 @@ class grScene(QGraphicsScene):
             self.mouseMode = self.POINTER
         
         #Only do this on release, for performance reasons.
-        ##self.updateBlobParenting()
+        self.updateBlobParenting()
 
         super().mouseReleaseEvent(mouseEvent)  
 
@@ -1136,26 +1136,26 @@ class grScene(QGraphicsScene):
         for sItem in self.items():
             if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                 #print(f"reseting {sItem.nodeNum}")
-                sItem.parents = []
-                sItem.children = []
+                ##sItem.parents = [] JH
+                ##sItem.children = [] JH
                 self.model.Gr.nodeD[sItem.nodeNum].resetParents([])
                 self.model.Gr.nodeD[sItem.nodeNum].resetChildren([])
         
         #Recreate lists
         for parent, children in sorted(directChildList.items()):
-            pItem = self.findItemByIdx(parent)
+            ##pItem = self.findItemByIdx(parent) JH
             self.model.Gr.nodeD[parent].resetChildren(children)
             #print(f"-------------{parent=} {type(pItem)}")
             for c in children:
-                cItem = self.findItemByIdx(c)
+                ##cItem = self.findItemByIdx(c) JH
                 #print(f"adding child {c=}, {type(cItem)}")
 
-                if not cItem is None:
-                    pItem.children.append(cItem)
-                    self.model.Gr.nodeD[c].addParent(parent)
-                    cItem.parents.append(pItem)
-                else:
-                    print(f"Warning - node {c} seems to have disappeared!")
+                ##if not cItem is None: JH
+                    ## pItem.children.append(cItem) JH
+                self.model.Gr.nodeD[c].addParent(parent)
+                    ##cItem.parents.append(pItem) JH
+                ##else:  JH
+                    ## print(f"Warning - node {c} seems to have disappeared!") JH
 
     def signalTest(self):
         print("signal sent to scene successfully")
@@ -3075,7 +3075,7 @@ class MainWindow(QMainWindow):
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
-            ##self.Scene.updateBlobParenting()        #JH there must be a better way to do this
+            self.Scene.updateBlobParenting()        #JH there must be a better way to do this
         #logging.debug("about to update from action_EditDelete",stack_info=True  )
         #gc.collect() #This will crash the whole thing, with no traces
         #debug_qgraphicsitem_refs()  #More coPilot code ...

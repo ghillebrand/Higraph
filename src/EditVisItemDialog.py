@@ -29,8 +29,10 @@ class EditVisNodeItemDialog(QDialog):
         form.addRow("node ID", self.nodeNumLabel)
 
         #Display parents and children
-        parents = ",".join([str(p.nodeNum) for p in visNodeItem.parents])
-        children = ",".join([str(c.nodeNum) for c in visNodeItem.children])
+        parents=",".join([str(p) for p in visNodeItem.model.Gr.nodeD[visNodeItem.nodeNum].parents])
+        #parents = ",".join([str(p.nodeNum) for p in visNodeItem.parents]) JH
+        children=",".join([str(c) for c in visNodeItem.model.Gr.nodeD[visNodeItem.nodeNum].children])
+        #children = ",".join([str(c.nodeNum) for c in visNodeItem.children]) JH
         self.parentsLabel = QLabel(parents)
         self.childrenLabel = QLabel(children)
         form.addRow("Parents:", self.parentsLabel)

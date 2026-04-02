@@ -859,8 +859,8 @@ class VisBlobItem(VisNodeItem):
             #print("checking kids", kidsIdx)
             #print("and this is kids", kids)
             #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
-            #if value == 1 and self.isOnlySelected: #when selected
-            if value == 1 and len(self.scene().selectedItems())==1:
+            if value == 1 and self.isOnlySelected: #when selected
+            #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
                 for item in kids:
