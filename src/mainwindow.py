@@ -456,14 +456,30 @@ class grScene(QGraphicsScene):
                 edgeLine = itms[0]
             else:
                 print("Node-> error finding edgeLine in {itms}")
+            #Guard clause: nodes may only start/ end the same edge once.
+            #Is there a guard condition for edges?
+            #TODO: Move the guard close from `addSegment`
+
             #split it at the given point, update hyperedge geometry
-            self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", startPt = self.startPoint, splitPoint=self.endPoint )
+            self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint )
             #update the model.
             #Best way to find the edge? Using edgeLine.parentItem
             self.model.Gr.addEdge( self.tmpEdgeSt.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )
+
         elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_EDGE] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
             print("edge->node")
-        
+            #Find the segment
+            itms = self.itemsHere( self.startPoint, QSize(1,1), [ROLE_POLYLINE])
+            if len(itms) == 1 and itms[0].data(KEY_ROLE) == ROLE_POLYLINE:
+                edgeLine = itms[0]
+            else:
+                print(f"Node-> error finding edgeLine in {itms}")        
+            #split it at the given point, update hyperedge geometry
+            self.tmpEdgeSt.addSegment(edgeLine, self.tmpEdgeEnd, start="Edge", nodePt = self.endPoint, splitPoint=self.startPoint )
+            #update the model.
+            #Best way to find the edge? Using edgeLine.parentItem
+            self.model.Gr.addEdge( edgeLine.parentItem().data(KEY_INDEX), self.tmpEdgeEnd.data(KEY_INDEX) )
+
 
     def resetRubberLine(self):
         """ Called whether or not an edge is created """
@@ -816,8 +832,8 @@ class grScene(QGraphicsScene):
                         if selItem.data(KEY_ROLE) == ROLE_EDGE:
                             if not selItem.stH:
                                 selItem.setZValue(2000) #move the edge above nodes
-                            # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
-                            #print("Setting stH", end="")
+                                # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
+                                print(" Setting stH", end="")
                                 if len(selItem.edgeLine._pHandles)>0:
                                     selItem.stH = selItem.edgeLine._pHandles[0]
                                     selItem.endH = selItem.edgeLine._pHandles[-1]

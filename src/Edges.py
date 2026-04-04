@@ -1019,7 +1019,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             #self.edgeLines[0].setP(0,source[1].scenePos())
             edgeLine.setP(0,source[1].scenePos())
         elif source in self.endNodes: #endNode
-            print(f"updateLine: setting end from node {source[0].nodeNum}, port {source[1].index} with endLines {[eL.lineNum for eL in source[1].endsEdgeLines]}")
+            print(f"updateLine: setting end from node {source[0].nodeNum}, port {source[1].nodeNum} with endLines {[eL.lineNum for eL in source[1].endsEdgeLines]}")
             #self.edgeLines[0].setP(-1,source[1].scenePos())
             edgeLine.setP(-1,source[1].scenePos())
 
@@ -1041,24 +1041,59 @@ class VisHyperEdgeItem(QGraphicsObject):
         #self.edgeLines[0].updatePath()
         edgeLine.updatePath()
 
-    def addSegment(self, edgeLine, newNode, start, startPt, splitPoint:QPointF ):
+    def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):
         """ Adds another segment to a hyperedge, between `newNode` and the segment `edgeLine`, 
             with `start` being the "Node" or the "Edge"
-            Splits the `edgeLine`, adding a dummyNode at that point
+            `nodePt` is where to put the port on `newNode`
+            Splits the `edgeLine`, adding a dummyNode at that splitPoint
             Adds a new Polyline in the correct direction
             updates self.edgeLines[], self.dummyNodes[], self.hyperEdgeGraph[]
             >>updates the node reverse pointers via updateLine()
             Also updates self.model 
         """
+        print(f"\n+++  addseg to {edgeLine.lineNum=} +++")
+        print(f" st nodes/port {[(stNd[0].nodeNum, stNd[1].nodeNum) for stNd in self.startNodes]} ")
+        print(f" end nodes/port {[(enNd[0].nodeNum,enNd[1].nodeNum) for enNd in self.endNodes]} ")
+        print(f" dummy nodes/port {[(enNd[0].nodeNum,enNd[1].nodeNum) for enNd in self.dummyNodes]} ")
+        
+        #store the start & end nodes (or dummyNodes) before any changes
+        #Note: The guard clause included in this loop should be applied in the scene
+        #TODO: Move the guard clause from here once everything is stable    
+        stN = None
+        for sN in self.startNodes:
+            if newNode == sN[0]:
+                #TODO" THis should be a popup, with names, as well as numbers
+                print(f"Error - node {newNode.nodeNum} already starts edge {self.edgeNum}")
+                return
+            if edgeLine in sN[1].startsEdgeLines:
+                stN = sN
+        if stN == None: # check for dummyNode
+            for dN in self.dummyNodes:
+                if edgeLine in dN[1].startsEdgeLines:
+                    stN = dN
+        endN = None       
+        for eN in self.endNodes:
+            if newNode == eN[0]:
+                #TODO" THis should be a popup, with names, as well as numbers
+                print(f"Error - node {newNode.nodeNum} already ends edge {self.edgeNum}")
+                return            
+            if edgeLine in eN[1].endsEdgeLines:
+                endN = eN
+        if endN: 
+            print(f"  add seg {endN[0].nodeNum=} ")
+        if endN == None: # check for dummyNode
+            for dN in self.dummyNodes:
+                if edgeLine in dN[1].endsEdgeLines:
+                    endN = dN
+        print(f"addSeg Start node = {stN[0].nodeNum}, end node = {endN[0].nodeNum}")
 
         #Add a dummyNode at splitPoint, also its own "port", to make it shape consistent with stored nodes
         dN = dummyNodeItem(splitPoint, parent=self) #Parenting to VisEdge - should help movement?
-        #HACK ?? dN is it's own node and port, used for handles too.
+        # dN is it's own node and port, used for handles too.
         dN = (dN,dN)  
         self.dummyNodes.append(dN)
 
         splitLine = edgeLine.split(dN[0].scenePos()) #self now ends just before splitPoint
-        print(f"line split, = {splitLine}")
         splitLine.setData(KEY_ROLE,ROLE_POLYLINE)
         splitLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.bRect = self.bRect.united(splitLine.boundingRect())
@@ -1066,69 +1101,36 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.edgeLines.append(splitLine)
         dN[0].endsEdgeLines.append(edgeLine)
         dN[0].startsEdgeLines.append(splitLine)
-        print(f"addSeg has edgeLines : {[el.lineNum for el in self.edgeLines]}")
+        print(f"addSeg {self.edgeNum=} has edgeLines : {[el.lineNum for el in self.edgeLines]}")
         #Record the split in the local graph AND the start & end Node Edgeline port pointers
         #Note that the Node.startsEdge pointer does _not_ change.
         #lines here are strictly binary
-        stN, endN = None,None
-        #Find start node
-        #print(f"{len(self.hyperEdgeGraph)=}")
+        
         print(f"\n addSeg: hyperEdgeGraph =  {[ (e[0][0].nodeNum,e[1][0].nodeNum) for e in self.hyperEdgeGraph] }")
-        print(f" addSeg startNodes = {[n[0].nodeNum for n in self.startNodes]}")
-        print(f" addSeg endNodes = {[n[0].nodeNum for n in self.endNodes]}")
         if start == "Node":
-            #Check through hyperEdgeG edge start & end (node,port) pairs until we get a match
-            ### DummyNode not sufficiently like real nodes!
-            for e in self.hyperEdgeGraph:
-                print(f" checking e= {e[0][0].nodeNum}\n addSeg edge: {e[0][1].startsEdgeLines[0].lineNum } ")
-                #This (below) is the index in startNodes to update!
-                #print(f"   index of e in startnodes: { self.startNodes.index(e[0]) }")
-
-                #TODO: check this once we can add the 1st segment
-                if e[0] in self.startNodes:
-                    print(f" e  = {e[0][0].nodeNum} found in startNodes")
-                    #self.startNodes.index(e[0])
-                    stN = e[0]
-                    #Tell the NODE Port that the edge has changed. 
-                    #    What about dummyNodes?
-
-                    #print(f" addSeg start Old node {stN[0].nodeNum} startlist index {stN[0].startsEdges.index(self) }" )
-                if e[1] in self.endNodes: 
-                    print(f" e = {e[1][0].nodeNum} found in endNodes ")
-                    endN = e[1]
-                    #print(f" addSeg end Old node {stN[0].nodeNum} endlist index {endN[0].endsEdges.index(self) }" )
-
             #New end of old line
             #Remove the old NODE startsEdgeLines & endsEdgeLines settings
-            #endN[1].endsEdgeLines.remove(edgeLine)
-            #endN[1].endsEdgeLines.append(splitLine)
-            print(f"addSeg {splitLine.lineNum =}")
+            endN[1].endsEdgeLines.remove(edgeLine)
+            endN[1].endsEdgeLines.append(splitLine)
+            print(f"addSeg {splitLine.lineNum =} endNode has lines {[l.lineNum for l in endN[1].endsEdgeLines]}")
 
             self.setEnd(endN,splitLine)
-            print(f"addSeg after setEnd for {endN[0].nodeNum}, endLines =  ",
-                        f"{[eL.lineNum for eL in endN[1].endsEdgeLines]}")
-            #self.updateLine(endN,splitLine)
+            print(f"addSeg after setEnd for {endN[0].nodeNum}, endLines = {[eL.lineNum for eL in endN[1].endsEdgeLines]}")
+        elif start == "Edge":
+            #New end of old line
+            #Remove the old NODE startsEdgeLines & endsEdgeLines settings
+            endN[1].endsEdgeLines.remove(edgeLine)
+            endN[1].endsEdgeLines.append(splitLine)
+            print(f"addSeg {splitLine.lineNum =} endNode has lines {[l.lineNum for l in endN[1].endsEdgeLines]}")
 
-        #This is true for all splits
-        #if (stN,endN) in self.hyperEdgeGraph:
+            self.setEnd(endN,splitLine)            
         print(f" addSeg {stN[0].nodeNum} ,{endN[0].nodeNum}" )
         if stN and endN:
             #Fix the local version
             self.hyperEdgeGraph.remove((stN, endN))
             self.hyperEdgeGraph.append((stN,dN))
             self.hyperEdgeGraph.append((dN,endN))
-            #
-            #update the node reverse pointers for the edgeLine (NOT edge) (see finishMovingEdgeEnd for pattern)
-            #remove old Port
-            portPos = endN[1].scenePos()
-            endN[0].deletePort(endN[1])
-            #Add new
-            endN = (endN[0],endN[0].createPort(portPos))
-            endN[1].endsEdgeLines.append(splitLine)
-            #setEnd->updateLine will update positioning
-            self.setEnd(endN,splitLine)
 
-        #elif one end is a dummyNode
         else:
             #TODO: Raise an exception?
             print(f"Error in hyperedge consistency for edge {self.edgeNum} during addSegment")
@@ -1136,34 +1138,49 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #Now create the new, third edge. from `Node` to the dummyNode
         if start == "Node":  #node --> edge
-            #TODO: Update the start/ end Nodes to point to the correct segment
-            #old endNode -> split Same problem as populating hyperEdgeGraph
-            
             #newNode needs another port
-            startPort = newNode.createPort(startPt)    
+            nPort = newNode.createPort(nodePt)    
             #give the edgeLine the new endpoint 
-            pts = [startPort.scenePos(),dN[0].scenePos()]
+            pts = [nPort.scenePos(),dN[0].scenePos()]
             tgts = [] #TODO: figure something elegant (orthog start, directed parallel to existing t's at end? - steal from oldLine dN end tangent)
             newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
 
             #Add this to startNodes
-            newNP = (newNode,startPort)
+            newNP = (newNode,nPort)
             newNP[0].startsEdges.append(self)
             newNP[1].startsEdgeLines.append(newEdge)
 
+            self.edgeLines.append(newEdge)
             self.startNodes.append(newNP)
-            self.setStart(newNP,newEdge) #setstart needs a PolyLine param
+            self.setStart(newNP,newEdge) 
+
+            #update the GraphModel is done in Scene.
+            #update the hyperedge geometry (is this ever used?)
+            self.hyperEdgeGraph.append(((newNode,nPort),dN))
+
+        else: #edge -> node
+            print("addSegment : edge->Node")
+            #newNode needs another port
+            nPort = newNode.createPort(nodePt)    
+            #give the edgeLine the new endpoint 
+            pts = [dN[0].scenePos(), nPort.scenePos()]
+            tgts = [] #TODO: figure something elegant (orthog start, directed parallel to existing t's at end? - steal from oldLine dN end tangent)
+            newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+
+            #Add this to startNodes
+            newNP = (newNode,nPort)
+            newNP[0].endsEdges.append(self)
+            newNP[1].endsEdgeLines.append(newEdge)
+
+            self.edgeLines.append(newEdge)
+            self.endNodes.append(newNP)
+            self.setEnd(newNP,newEdge) 
 
             #update the GraphModel is done in Scene.
             
             #update the hyperedge geometry
-            self.hyperEdgeGraph.append(((newNode,startPort),dN))
+            self.hyperEdgeGraph.append((dN, (newNode,nPort)))
 
-        else: #edge -> node
-            print("addSegment : edge->Node")
-
-        #TODO: Update self.model
-        #Does this not belong in scene?
 
             
         
