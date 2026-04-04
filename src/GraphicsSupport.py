@@ -203,6 +203,7 @@ class HandleItem(QGraphicsRectItem):
 
 class dummyNodeItem(QGraphicsItem):
     """ a graphics-only node-like object to manage joins for hyperedges, ports for nodes """
+    dummyNodeIndex = 1000
     def __init__(self,center: QPointF,  parent=None):
         super().__init__(parent=parent)
         #This might be resolved by the starts end finishEdges code 
@@ -212,11 +213,17 @@ class dummyNodeItem(QGraphicsItem):
         self.startsEdgeLines = []
         self.endsEdgeLines = []
 
+        #To make debugging possible
+        self.nodeNum = dummyNodeItem.dummyNodeIndex
+        dummyNodeItem.dummyNodeIndex += 1
+
     def boundingRect(self):
         return QRect(self.x(), self.y(), self.x()+1, self.y()+1)
     
     def paint(self, painter: QPainter, option, widget=None):
         """ This object is only visible via a handle, but paint is required by Qt """
+        #Debugging
+        painter.drawRect(QRectF(0,0,1,1))
         pass
 
 class port(dummyNodeItem):

@@ -406,7 +406,7 @@ class grScene(QGraphicsScene):
         self.endPoint = self.getSceneMousePos()
 
         #Create the rubberBand line (actual edge is created on mouseRelease)
-        ###polyline
+        #polyline
         #self.rubberLine = StraightLineItem([self.startPoint, self.endPoint])
         self.rubberLine = QLineF(self.startPoint, self.endPoint)
 
@@ -416,7 +416,7 @@ class grScene(QGraphicsScene):
     def stretchRubberLine(self,mPos):
         """ called from INSERTEDGE: mouseMove """
         self.endPoint = mPos # mouseEvent.scenePos()
-        ###
+        #
         self.rubberLine.setP2(self.endPoint)
         #self.rubberLine.setP(-1,self.endPoint)
         #self.rubberLine.updatePath()
@@ -427,29 +427,43 @@ class grScene(QGraphicsScene):
          from INSERTEDGE mouseRelease or INSERTEDGE2CLICK mousePress """
         #TODO: How does this relate to finishMovingEdgeEnd?
 
-        #TODO: Create the ports on the nodes
-        #Start port
-        #TODO: Sharing ports makes moving complex. The need for shared ports points to using hyperedges rather
-        #startPort = self.tmpEdgeSt.findPort(self.startPoint)
-        #if startPort != None:
-        startPort = self.tmpEdgeSt.createPort(self.startPoint)
-        #print(f"{startPort=}")
+        #If both ends are node-like, then this is a new edge.
+        if self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+            #Each edge gets it's own port:Start port
+            startPort = self.tmpEdgeSt.createPort(self.startPoint)
 
-        #endPort = self.tmpEdgeEnd.findPort(self.endPoint)
-        #if endPort !- None:
-        endPort = self.tmpEdgeEnd.createPort(self.endPoint)
+            endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
-        #Create the actual edge
-        #newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-        #self.undoStack.push(newAction)
-        #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-        edgeItem = VisHyperEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            #Create the actual edge
+            #newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            #self.undoStack.push(newAction)
+            #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            edgeItem = VisHyperEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
-        #Commented out because now done in createEdgeCommand
-        #Add to *Scene*
-        self.addItem(edgeItem)
-        edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
-        edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+            #Commented out because now done in createEdgeCommand
+            #Add to *Scene*
+            #TODO: fix this for UNDO (sort out createEdgeCommand, add an addEdgeSegmentCommand)
+            self.addItem(edgeItem)
+            edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            #can't select a node to move it due to drawing order
+            edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+        # Otherwise, add a segment to the edge, forming a hyperedge
+        elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_EDGE]:
+            print("Node -> edge")
+            #Find the segment
+            itms = self.itemsHere( self.endPoint, QSize(1,1), [ROLE_POLYLINE])
+            if len(itms) == 1 and itms[0].data(KEY_ROLE) == ROLE_POLYLINE:
+                edgeLine = itms[0]
+            else:
+                print("Node-> error finding edgeLine in {itms}")
+            #split it at the given point, update hyperedge geometry
+            self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", startPt = self.startPoint, splitPoint=self.endPoint )
+            #update the model.
+            #Best way to find the edge? Using edgeLine.parentItem
+            self.model.Gr.addEdge( self.tmpEdgeSt.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )
+        elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_EDGE] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+            print("edge->node")
+        
 
     def resetRubberLine(self):
         """ Called whether or not an edge is created """
@@ -542,17 +556,22 @@ class grScene(QGraphicsScene):
             
             if self.EdgeEnd == "end":
                 #TODO: The port code is true for either end - review flow of function and tidy up
+                #Note: Deleting requires context which means this can't easily be wrapped in a function
                 # Delete the old port
-                oldP = self.oldTermItem[1]   #.index
-                #print(oldP)
+                oldP = self.oldTermItem[1] 
                 self.oldTermItem[0].deletePort(oldP)
                 #Move the reverse pointer from the oldTermItem to the new:
                 self.oldTermItem[0].endsEdges.remove(edge)
+                #TODO: Will have to remove edgeLine[x]
+                ###??? Why does this next line work - oldTermItem[1] is the now deleted port!!!
                 self.oldTermItem[1].endsEdgeLines.remove(edge)
+
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
                 newTermItem = (newTermItem, p)
+                #TODO: Will need the edgeline as param.
                 edge.setEnd(newTermItem)
+
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
                 
                 newTermItem[0].endsEdges.append(edge)
@@ -719,7 +738,7 @@ class grScene(QGraphicsScene):
                 
             #
             if self.mouseMode == self.INSERTEDGE:
-                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB]) #,ROLE_EDGE
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB, ROLE_EDGE]) #
                 if itm:
                     self.tmpEdgeSt = itm
                     self.startRubberLine(mPos)
@@ -730,7 +749,7 @@ class grScene(QGraphicsScene):
             #
             #This is the end of a 2-click-insert (via pickItem) -  means END the rubberBanding, create the edge 
             if self.mouseMode == self.INSERTEDGE2CLICK: 
-                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB]) #,ROLE_EDGE
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE, ROLE_BLOB, ROLE_EDGE]) #
                 if itm:
                     self.tmpEdgeEnd = itm 
                     self.endPoint = mPos
@@ -874,7 +893,7 @@ class grScene(QGraphicsScene):
 
         #Hovering would be nice, but this gets the job done.
         #Just filter for valid items:
-        items=self.itemsHere(mPos, QSize(HITSIZE,HITSIZE), [ROLE_NODE, ROLE_BLOB])
+        items=self.itemsHere(mPos, QSize(HITSIZE,HITSIZE), [ROLE_NODE, ROLE_BLOB, ROLE_EDGE])
         #if len(items)>=1: print(f"{[type(_) for _ in items]=}")
         if items != [] and (self.mouseMode in (self.INSERTEDGE, self.INSERTEDGE2CLICK, self.MOVEEDGEEND)):
             self.views()[0].setCursor(Qt.CrossCursor)
@@ -975,7 +994,7 @@ class grScene(QGraphicsScene):
             #CreateEdge code 
             #TODO: Put this in its own function
             if self.tmpEdgeSt:
-                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE,ROLE_BLOB]) # add ,ROLE_EDGE to the list for multigraphs
+                itm = self.pickItemAt(mouseEvent,QSizeF(10,10),[ROLE_NODE,ROLE_BLOB, ROLE_EDGE])
                 if itm:
                     #For now, disallow self edges/ loops
                     #TODO: When they are allowed, note that tangent calc breaks.
