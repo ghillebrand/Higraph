@@ -605,7 +605,8 @@ class grScene(QGraphicsScene):
         self.handle = None
 
     def clearEdgeOnly(self, edge):
-        """ Remove the controlboxes from an edge and deselect."""
+        """ No longer used
+            Remove the controlboxes from an edge and deselect."""
         #TODO: Generalise to items, for blob handles
 
         #For edges, was there only one selected? Clear.
@@ -781,7 +782,7 @@ class grScene(QGraphicsScene):
                 if selItem:
                     selItem = selItem[0]
                 #else:
-                #    selItem = None
+                    #selItem = None
                     if selItem.isHovered:   #This stops it selecting just out of reach of the border line
                         if selItem.data(KEY_ROLE) == ROLE_NODE:
                             self.changedByCode=True

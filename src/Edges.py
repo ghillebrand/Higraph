@@ -226,9 +226,9 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n>> VisEdgeItem {super().__repr__()}\n {self.textItem.toPlainText() =}\n{self.edgeLine =}\n" + \
-                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} s:({self.startNode[0].data(KEY_INDEX)}, {self.startNode[1].index})" + \
-                        f" e:({self.endNode[0].data(KEY_INDEX)}, {self.endNode[1].index})) <<"
+        return f"\n>> VisEdgeItem {super().__repr__()}\n {self.textItem.toPlainText() =}\n edgeLines {[(eL.lineNum,hex(id(eL))) for eL in self.edgeLines] }\n" + \
+                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} s:({[(sN[0].data(KEY_INDEX),sN[1].index) for sN in self.startNodes]})" + \
+                        f" e:({[(sN[0].data(KEY_INDEX),sN[1].index) for sN in self.endNodes]}))\n<<"
 
     def toXML(self,Xparent):
         """ add an Element Tree node to the XML parent node with the Edge Data 
@@ -671,11 +671,12 @@ class VisHyperEdgeItem(QGraphicsObject):
         else:
             self.isDirected=directed
 
+        #Every endNode end will need an arrowhead
+        self.endShape = []
         if self.isDirected:
-            #TODO: Every endNode end will need an arrowhead
-            self.endShape = ArrowHeadItem(size=NODESIZE/2, parent=self)
-        else:
-            self.endShape = None
+            #pos & details are set in `updateLine`. Additional endShapes created in addSegment
+            self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
+
 
         #Link up the topology for the visual graph - tell the start & end nodes about the edge
         for stN in self.startNodes:
@@ -719,10 +720,11 @@ class VisHyperEdgeItem(QGraphicsObject):
 
     def __repr__(self):
         #TODO: fix for hyperedges
-        return f"\n>> VisHyperEdgeItem {super().__repr__()}\n {self.textItem.toPlainText() =}\n{self.edgeLines =}\n" + \
-                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} s:({self.startNodes[0][0].data(KEY_INDEX)}, {self.startNodes[0][1].index})" + \
-                        f" e:({self.endNodes[0][0].data(KEY_INDEX)}, {self.endNodes[0][1].index})) <<"
-
+        #return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\nID: {self.edgeNum} text:{self.textItem.toPlainText()} edgelines = {[e.lineNum for e in self.edgeLines]}\ns:({self.startNodes[0][0].data(KEY_INDEX)}, {self.startNodes[0][1].index})" + \
+        #        f" e:({self.endNodes[0][0].data(KEY_INDEX)}, {self.endNodes[0][1].index})\ndummyNodes = {[d.nodeNum for d in self.dummyNodes[0]]}\n <<"
+        return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\n {self.textItem.toPlainText() =}\n edgeLines {[(eL.lineNum,hex(id(eL))) for eL in self.edgeLines] }\n" + \
+                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} s:({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})" + \
+                        f" e:({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[d[0].nodeNum for d in self.dummyNodes]}\nhyperEdgeGraph: {[(h[0][0].nodeNum,h[1][0].nodeNum) for h in self.hyperEdgeGraph]}\n<<"
     def toXML(self,Xparent):
         """ add an Element Tree node to the XML parent node with the Edge Data 
             This uses the yEd names for line types for compatibility
@@ -928,16 +930,19 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.updateLine()
 
     def setDirected(self, isDirected:bool):
-        """ set is driected, add/ remove arrow"""
+        """ set isDirected, add/ remove arrows """
     
         if self.isDirected != isDirected:
             self.isDirected = isDirected
             if isDirected:  #restore the arrow
-                self.endShape = ArrowHeadItem(size=NODESIZE/2, parent=self)
+                for e in self.endNodes:
+                    if e[0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]: #Not on dummyNodes
+                        self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
             else:
                 #Note, previous endShape dereference should delete it
-                self.scene().removeItem(self.endShape)
-                self.endShape = None
+                for i in range(len(self.endShape)):
+                    self.scene().removeItem(self.endShape[i])
+                self.endShape.clear()
             self.updateLine()
                 
 
@@ -984,6 +989,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #This is for backwards compatibility with simple edges - check later
         if not edgeLine:
             print("**********updateLine - setting edgeLine to [0]")
+            #print(traceback.print_stack())
             edgeLine = self.edgeLines[0]
         print(f" updateLine: {edgeLine.lineNum=}")
 
@@ -1029,13 +1035,23 @@ class VisHyperEdgeItem(QGraphicsObject):
             print("Dummynode")
         #Draw the arrow/ end shape
         #TODO: Draw the arrow at all the endNodes. Each ending of the edge will need its own endShape
-        if self.endShape:
-            self.endShape.prepareGeometryChange()
-            # Compute rotation angle
-            #HACK: This works for single segments only
-            angleDeg = self.edgeLines[0].endAngle()
-            self.endShape.setRotation(angleDeg)
-            self.endShape.setPos(self.edgeLines[0]._p[-1])
+        #Currently, endshapes have no managed relationship to the end nodes - they are just allocated out
+        if len(self.endShape) > 0:
+            arrowCount = 0
+            for eN in self.endNodes:
+                if eN[0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
+                    #During init, endsEdgeLines may not yet be populated.
+                    if len(eN[1].endsEdgeLines) > 0 and arrowCount < len(self.endShape): 
+                        eS = self.endShape[arrowCount]
+                        eS.prepareGeometryChange()
+                        # Compute rotation angle
+                        #port is eN[1]
+                        # there is only ever 1 line per port.
+                        angleDeg = eN[1].endsEdgeLines[0].endAngle()
+                        eS.setRotation(angleDeg)
+                        eS.setPos(eN[1].endsEdgeLines[0]._p[-1])
+                        arrowCount += 1
+
         #If needed move all the polyline points - updatePath handles this.
         #HACK: single segment
         #self.edgeLines[0].updatePath()
@@ -1101,29 +1117,34 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.edgeLines.append(splitLine)
         dN[0].endsEdgeLines.append(edgeLine)
         dN[0].startsEdgeLines.append(splitLine)
-        print(f"addSeg {self.edgeNum=} has edgeLines : {[el.lineNum for el in self.edgeLines]}")
+        #Remove the old NODE startsEdgeLines & endsEdgeLines settings
+        endN[1].endsEdgeLines.remove(edgeLine)
+        endN[1].endsEdgeLines.append(splitLine)
+        self.setEnd(endN,splitLine)
+
+        print(f"addSeg after split {self.edgeNum=} has edgeLines : {[el.lineNum for el in self.edgeLines]}")
+        
         #Record the split in the local graph AND the start & end Node Edgeline port pointers
         #Note that the Node.startsEdge pointer does _not_ change.
         #lines here are strictly binary
         
         print(f"\n addSeg: hyperEdgeGraph =  {[ (e[0][0].nodeNum,e[1][0].nodeNum) for e in self.hyperEdgeGraph] }")
+        """
         if start == "Node":
             #New end of old line
-            #Remove the old NODE startsEdgeLines & endsEdgeLines settings
-            endN[1].endsEdgeLines.remove(edgeLine)
-            endN[1].endsEdgeLines.append(splitLine)
             print(f"addSeg {splitLine.lineNum =} endNode has lines {[l.lineNum for l in endN[1].endsEdgeLines]}")
 
-            self.setEnd(endN,splitLine)
+            
             print(f"addSeg after setEnd for {endN[0].nodeNum}, endLines = {[eL.lineNum for eL in endN[1].endsEdgeLines]}")
+
         elif start == "Edge":
             #New end of old line
             #Remove the old NODE startsEdgeLines & endsEdgeLines settings
-            endN[1].endsEdgeLines.remove(edgeLine)
-            endN[1].endsEdgeLines.append(splitLine)
+
             print(f"addSeg {splitLine.lineNum =} endNode has lines {[l.lineNum for l in endN[1].endsEdgeLines]}")
 
-            self.setEnd(endN,splitLine)            
+            self.setEnd(endN,splitLine)    
+        """        
         print(f" addSeg {stN[0].nodeNum} ,{endN[0].nodeNum}" )
         if stN and endN:
             #Fix the local version
@@ -1180,6 +1201,11 @@ class VisHyperEdgeItem(QGraphicsObject):
             
             #update the hyperedge geometry
             self.hyperEdgeGraph.append((dN, (newNode,nPort)))
+        
+        #Tidy up all the end arrows by toggling isDirected (remove and then add back)
+        self.setDirected(not self.isDirected)
+        self.setDirected(not self.isDirected)
+
 
 
             
