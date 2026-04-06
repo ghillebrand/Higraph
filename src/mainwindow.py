@@ -458,7 +458,7 @@ class grScene(QGraphicsScene):
                 print("Node-> error finding edgeLine in {itms}")
             #Guard clause: nodes may only start/ end the same edge once.
             #Is there a guard condition for edges?
-            #TODO: Move the guard close from `addSegment`
+            #TODO: Move the guard clause from `addSegment`
 
             #split it at the given point, update hyperedge geometry
             self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint )
@@ -501,10 +501,26 @@ class grScene(QGraphicsScene):
         #print(f"StartMovingEdge {edge.metadata['name']}")
         self.handle = handle #Store the box for the Move/ Finish functions
         #is handle at start or end?
-        if self.handle.pos() == edge.startNode[1].scenePos():
+        #if self.handle.pos() == edge.startNode[1].scenePos():
+        
+        #Hyperedges have a number of possible starts
+        #Which point the handles comes from
+        # handle.parentItem is polyLine, which has a list of points, _p. _p[0] is start, _p[-1] end.
+        edgeLine = handle.parentItem() 
+        startPt = edgeLine._pHandles.index(handle)
+        #print(f"SMEE {type(startPt)} value {startPt=}")
+        if startPt == 0: 
             # NOTE: Node relinking is only done on successful finish, so track the old Terminator item
             self.EdgeEnd = "start"
-            self.oldTermItem = edge.startNode
+            #Work out which startNode
+            #Step through the (node,port)s until we match the polyLine
+            
+            for NP in edge.startNodes:
+                if edgeLine in NP[1].startsEdgeLines:
+                    self.oldTermItem = NP
+                    print(f"SMEE start oldTermItem = {NP[0].nodeNum}")
+                    break
+            #self.oldTermItem = edge.startNode
             #print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
 
             #link edge to handle to move
@@ -512,7 +528,15 @@ class grScene(QGraphicsScene):
         else:
             self.EdgeEnd = "end"
             # NOTE: Node relinking is only done on successful finish
-            self.oldTermItem = edge.endNode
+            #self.oldTermItem = edge.endNode
+            #Work out which startNode
+            #Step through the (node,port)s until we match the polyLine
+            
+            for NP in edge.endNodes:
+                if edgeLine in NP[1].endsEdgeLines:
+                    self.oldTermItem = NP
+                    print(f"SMEE end oldTermItem = {NP[0].nodeNum}")
+                    break
             edge.setEnd((handle,handle))
 
         handle.setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -540,6 +564,7 @@ class grScene(QGraphicsScene):
                 #return
             #Check for a self-edge: newTerm == startE and we were moving `end` or the other end is now looped back
             #  if so, make sure there is a mid point in the  polyline line
+            #TODO: Generalise from ...Node[0]
             elif (newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
                 newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
                 print(f"Self edge {self.EdgeEnd}")
@@ -667,6 +692,7 @@ class grScene(QGraphicsScene):
             if mouseEvent.modifiers() and Qt.ControlModifier and \
                     self.mouseMode==self.POINTER and len(self.selectedItems())>0:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
+                print(f"scene MPE first if {selItem}")
                 if selItem:
                     selItem = selItem[0]
                     if self.thisHandleObjectSelected:
@@ -779,6 +805,7 @@ class grScene(QGraphicsScene):
             # Now process item selection
             if self.mouseMode == self.POINTER:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE,ROLE_BLOB, ROLE_POLYLINE])
+                print(f"scene MPE pointer selItem {[type(se) for se in selItem]}" )
                 if selItem:
                     selItem = selItem[0]
                 #else:
@@ -814,15 +841,20 @@ class grScene(QGraphicsScene):
                             # accept? return?
 
                         if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
+                            print(f"scene mousePress Polyline {selItem.lineNum}")
                             # save handleobject and create handles
                             self.thisHandleObjectSelected=selItem
                             self.onlySelected=selItem
                             selItem.setSelected(True)
-                            parent = selItem.parentItem()
-                            parent.setSelected(True)
+                            parent = selItem.parentItem() 
+                            parent.setSelected(True) #Select the Edge
                             parent.isOnlySelected = True
-                            #Hyperedge - create handles on all the edgeLines
+                            #TODO: Hyperedge - create handles on all the edgeLines
                             selItem._createHandles()
+                            #This code leaves a lot of orphans, but is the ultimate goal
+                            #for eL in parent.edgeLines:
+                            #    eL._createHandles()
+                            #Temp fix for hyperedges
 
                             #selItem.setSelected(False)
                             #selItem = parent
@@ -835,9 +867,12 @@ class grScene(QGraphicsScene):
                                 selItem.setZValue(2000) #move the edge above nodes
                                 # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
                                 print(" Setting stH", end="")
-                                if len(selItem.edgeLine._pHandles)>0:
-                                    selItem.stH = selItem.edgeLine._pHandles[0]
-                                    selItem.endH = selItem.edgeLine._pHandles[-1]
+                                print(f" clicked on {selItem.edgeLineAt(mPos)._pHandles}")
+                                #Which edgeLine?
+                                #if len(selItem.edgeLine._pHandles)>0:
+                                if len(selItem.edgeLineAt(mPos)._pHandles)>0:
+                                    selItem.stH = selItem.edgeLineAt(mPos)._pHandles[0]
+                                    selItem.endH = selItem.edgeLineAt(mPos)._pHandles[-1]
                                 else:
                                     print("No handles yet")
                             self.changedByCode=True
@@ -2007,12 +2042,12 @@ class MainWindow(QMainWindow):
                         sItem.edgeLine.setSelected(True)
                         sItem.isOnlySelected=True
                         #Hyperedge - create handles on all the edgeLines
-                        sItem.edgeLine._createHandles()
+                        sItem.edgeLineAt(mPos)._createHandles()
                         if not sItem.stH:
                             sItem.setZValue(2000) #move the edge above nodes
-                            if len(sItem.edgeLine._pHandles)>0:
-                                sItem.stH = sItem.edgeLine._pHandles[0]
-                                sItem.endH = sItem.edgeLine._pHandles[-1]
+                            if len(sItem.edgeLineAt(mPos)._pHandles)>0:
+                                sItem.stH = sItem.edgeLineAt(mPos)._pHandles[0]
+                                sItem.endH = sItem.edgeLineAt(mPos)._pHandles[-1]
                             else:
                                 print("No handles yet")
                     elif sItem.data(KEY_ROLE) in [ROLE_BLOB]:

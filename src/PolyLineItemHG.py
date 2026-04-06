@@ -251,10 +251,10 @@ class HermiteSplineItem(QGraphicsItem):
         HermiteSplineItem.lineCount +=  1
 
         self.suppressItemChange = True
-        #deepcopy
 
         self._p = p
-        
+        self._pHandles = []        
+        self._tHandles = []
         #How many lines per segment
         #TODO: Put this in HGConstants
         self.linesPerSegment = 40
@@ -575,7 +575,7 @@ class HermiteSplineItem(QGraphicsItem):
 
         #Start and end points always present p0, pn (or p-1)
         #have a list of point and tgnt handles
-        # print("createHandles")
+        print(f"createHandles for {self.lineNum}")
         self.parentItem().setZValue(3000)
         self._pHandles = []
         for pi in self._p: 

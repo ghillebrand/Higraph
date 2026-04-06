@@ -215,7 +215,7 @@ class dummyNodeItem(QGraphicsItem):
     def paint(self, painter: QPainter, option, widget=None):
         """ This object is only visible via a handle, but paint is required by Qt """
         #Debugging
-        painter.drawRect(QRectF(0,0,1,1))
+        #painter.drawRect(QRectF(0,0,1,1))
         pass
 
 class port(dummyNodeItem):
