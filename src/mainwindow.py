@@ -409,8 +409,6 @@ class grScene(QGraphicsScene):
         #polyline
         #self.rubberLine = StraightLineItem([self.startPoint, self.endPoint])
         self.rubberLine = QLineF(self.startPoint, self.endPoint)
-
-        #self.GrRubberLine = self.addItem(self.rubberLine)
         self.GrRubberLine = self.addLine(self.rubberLine)
         
     def stretchRubberLine(self,mPos):
@@ -502,11 +500,12 @@ class grScene(QGraphicsScene):
         self.handle = handle #Store the box for the Move/ Finish functions
         #is handle at start or end?
         #if self.handle.pos() == edge.startNode[1].scenePos():
-        
+
         #Hyperedges have a number of possible starts
         #Which point the handles comes from
         # handle.parentItem is polyLine, which has a list of points, _p. _p[0] is start, _p[-1] end.
         edgeLine = handle.parentItem() 
+        print(f" SMME edgeLine = {edgeLine.lineNum}")
         startPt = edgeLine._pHandles.index(handle)
         #print(f"SMEE {type(startPt)} value {startPt=}")
         if startPt == 0: 
@@ -524,7 +523,7 @@ class grScene(QGraphicsScene):
             #print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
 
             #link edge to handle to move
-            edge.setStart((handle,handle)) #Handles are dummy nodes _and_ ports
+            edge.setStart((handle,handle),edgeLine) #Handles are dummy nodes _and_ ports
         else:
             self.EdgeEnd = "end"
             # NOTE: Node relinking is only done on successful finish
@@ -537,12 +536,12 @@ class grScene(QGraphicsScene):
                     self.oldTermItem = NP
                     print(f"SMEE end oldTermItem = {NP[0].nodeNum}")
                     break
-            edge.setEnd((handle,handle))
+            edge.setEnd((handle,handle),edgeLine)
 
         handle.setFlag(QGraphicsItem.ItemIsMovable, True)
 
     def MoveEdgeEnd(self,edge,mPos):
-        """edge is a VisEdgeItem, that has been set up for moving (cBs in place) """
+        """edge is a VisEdgeItem, that has been set up for moving (handles in place) """
         self.handle.setPos(mPos) 
         edge.updateLine(self.handle)
         
@@ -550,9 +549,9 @@ class grScene(QGraphicsScene):
         """ note pickItemAt needs the full mouseEvent (screenPos) """
         #Check that this is on a valid node/ Termination pt
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
-
         if newTermItem != None:
             #print(f"finMovEdge {newTermItem.metadata['name']} {mPos=}")
+            #Node the same, only move the port
             if newTermItem == self.oldTermItem[0]: #Just reposition the port
                 #print(f"finMove - updating port {self.oldTermItem[1].index} ")
                 self.oldTermItem[0].updatePort(self.oldTermItem[1],mPos)
@@ -562,61 +561,79 @@ class grScene(QGraphicsScene):
                 else:  #end
                     edge.setEnd(self.oldTermItem)
                 #return
+
             #Check for a self-edge: newTerm == startE and we were moving `end` or the other end is now looped back
             #  if so, make sure there is a mid point in the  polyline line
             #TODO: Generalise from ...Node[0]
-            elif (newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
-                newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
+            elif False: ###*****###(newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
+                #newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
                 print(f"Self edge {self.EdgeEnd}")
                 if len(edge.edgeLine._p) < 3 and edge._polyEdge==STRAIGHT:
                     #add in a point on the middle for now. (only works for straight, splines are OK)
                     #TODO: Refine!!!
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
 
+            #Find the edgeLine involved. 
+            #TODO: Check what happens if you try to drag a `dummyNode` handle onto a real node!
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
             #TODO **Crashes on "move back" - port counting mangled**
             if self.EdgeEnd == "start":
-                # Delete the old port
-                oldP = self.oldTermItem[1]  #.index
-                #print(oldP)
-                self.oldTermItem[0].deletePort(oldP)
+                print( f" FMEE trying to find edgeLine in  {[e.lineNum for e in self.oldTermItem[1].startsEdgeLines]}")
+                #Grab the line from the old Port's list of edgeLines:
+                edgeLine = self.oldTermItem[1].startsEdgeLines[0]
+
+
                 #Unlink from the old node
                 self.oldTermItem[0].startsEdges.remove(edge)
-                self.oldTermItem[1].startsEdgeLines.remove(edge)
-
+                self.oldTermItem[1].startsEdgeLines.remove(edgeLine)
+                # Delete the old port
+                oldP = self.oldTermItem[1]  #.index
+                self.oldTermItem[0].deletePort(oldP)
+                
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
                 newTermItem = (newTermItem, p)
-                edge.setStart(newTermItem)
+                edge.startNodes.remove(self.oldTermItem)
+                #clear the old handle ending
+                edge.startNodes.remove((self.handle,self.handle))
+                edge.setStart(newTermItem,edgeLine)
                 #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
+
+                #TODO: change the edge.hyperEdgeGraph  (is it ever used? - No - commented out)
                 #Relink to new node
                 newTermItem[0].startsEdges.append(edge)
-                newTermItem[1].startsEdgeLines.append(edge)
+                newTermItem[1].startsEdgeLines.append(edgeLine)
             
             if self.EdgeEnd == "end":
+                print( f" FMEE trying to find end edgeLine in {[e.lineNum for e in self.oldTermItem[1].startsEdgeLines]}")
+                
+                edgeLine = self.oldTermItem[1].endsEdgeLines[0]
                 #TODO: The port code is true for either end - review flow of function and tidy up
-                #Note: Deleting requires context which means this can't easily be wrapped in a function
+                
+                #Move the reverse pointer from the oldTermItem to the new:
+                self.oldTermItem[0].endsEdges.remove(edge)
+                self.oldTermItem[1].endsEdgeLines.remove(edgeLine)
                 # Delete the old port
                 oldP = self.oldTermItem[1] 
                 self.oldTermItem[0].deletePort(oldP)
-                #Move the reverse pointer from the oldTermItem to the new:
-                self.oldTermItem[0].endsEdges.remove(edge)
-                #TODO: Will have to remove edgeLine[x]
-                ###??? Why does this next line work - oldTermItem[1] is the now deleted port!!!
-                self.oldTermItem[1].endsEdgeLines.remove(edge)
 
                 # Add a port at mPos
                 p = newTermItem.createPort(mPos)
                 newTermItem = (newTermItem, p)
-                #TODO: Will need the edgeline as param.
-                edge.setEnd(newTermItem)
-
+                # Where is edge.endNodes updated??? (old (node,port) removed, new added <<<<
+                edge.endNodes.remove(self.oldTermItem)
+                #clear the old handle ending
+                edge.endNodes.remove((self.handle,self.handle))
+                #set the new one
+                edge.setEnd(newTermItem,edgeLine)
+                #print(f"fmme after setEnd edge endNodes are {[type(n[0]) for n in edge.endNodes]}")
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
                 
                 newTermItem[0].endsEdges.append(edge)
-                newTermItem[1].endsEdgeLines.append(edge)
+                newTermItem[1].endsEdgeLines.append(edgeLine)
+                print(f"FMME at end: {edge}")
         
         else: # link back to old
             #print("Missed (nothing found) on relink")
