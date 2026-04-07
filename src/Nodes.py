@@ -345,7 +345,8 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =} Ports:{[p.index for p in self._Ports]}\nstartsEdges {[(e.edgeNum, hex(id(e))) for e in self.startsEdges]},  endsEdges {[(e.edgeNum, hex(id(e))) for e in self.endsEdges]}, {hex(id(self.nodeShape)) =})*<*"
+        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =} Ports:{[p.index for p in self._Ports]}\nstartsEdges {[(e.edgeNum, hex(id(e))) for e in self.startsEdges]},  endsEdges {[(e.edgeNum, hex(id(e))) for e in self.endsEdges]}*<*"
+        # , {hex(id(self.nodeShape)) =}
     __str__ = __repr__
 
     def toXML(self,Xparent):

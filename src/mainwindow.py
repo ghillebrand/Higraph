@@ -67,7 +67,7 @@ from Nodes import *
 from Edges import *
 
 #cGPT edit code
-from EditVisItemDialog import EditVisEdgeItemDialog, EditVisNodeItemDialog
+from EditVisItemDialog import *  #EditVisEdgeItemDialog, EditVisNodeItemDialog
 
 
 
@@ -884,7 +884,7 @@ class grScene(QGraphicsScene):
                                 selItem.setZValue(2000) #move the edge above nodes
                                 # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
                                 print(" Setting stH", end="")
-                                print(f" clicked on {selItem.edgeLineAt(mPos)._pHandles}")
+                                #print(f" clicked on {selItem.edgeLineAt(mPos)._pHandles}")
                                 #Which edgeLine?
                                 #if len(selItem.edgeLine._pHandles)>0:
                                 if len(selItem.edgeLineAt(mPos)._pHandles)>0:
@@ -3206,7 +3206,8 @@ class MainWindow(QMainWindow):
         """
         copilot Show the EditVisEdgeItemDialog for the given VisEdgeItem and apply changes.
         """
-        dlg = EditVisEdgeItemDialog(visEdgeItem, parent=self)
+        #dlg = EditVisEdgeItemDialog(visEdgeItem, parent=self)
+        dlg = EditVisHyperEdgeItemDialog(visEdgeItem, parent=self)
         if dlg.exec() == dlg.accepted:
             # Attributes are already updated by the dialog's accept method
             self.Scene.update()

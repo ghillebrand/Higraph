@@ -719,7 +719,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #TODO: fix for hyperedges
         #return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\nID: {self.edgeNum} text:{self.textItem.toPlainText()} edgelines = {[e.lineNum for e in self.edgeLines]}\ns:({self.startNodes[0][0].data(KEY_INDEX)}, {self.startNodes[0][1].index})" + \
         #        f" e:({self.endNodes[0][0].data(KEY_INDEX)}, {self.endNodes[0][1].index})\ndummyNodes = {[d.nodeNum for d in self.dummyNodes[0]]}\n <<"
-        return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\n {self.textItem.toPlainText() =}\n edgeLines {[(eL.lineNum,hex(id(eL))) for eL in self.edgeLines] }\n" + \
+        return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\n {self.textItem.toPlainText() =}\n edgeLines {[eL.lineNum for eL in self.edgeLines] }\n" + \
                         f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} startNodes (node,port):({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})" + \
                         f" endNodes (node,port):({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[d[0].nodeNum for d in self.dummyNodes]}\n<<"
                 #hyperEdgeGraph: {[(h[0][0].nodeNum,h[1][0].nodeNum) for h in self.hyperEdgeGraph]
@@ -1100,7 +1100,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             for dN in self.dummyNodes:
                 if edgeLine in dN[1].endsEdgeLines:
                     endN = dN
-        print(f"addSeg Start node = {stN[0].nodeNum}, end node = {endN[0].nodeNum}")
+        print(f"addSeg segment Start node = {stN[0].nodeNum}, seg end node = {endN[0].nodeNum}")
 
         #Add a dummyNode at splitPoint, also its own "port", to make it shape consistent with stored nodes
         dN = dummyNodeItem(splitPoint, parent=self) #Parenting to VisEdge - consistent with rest of design.
@@ -1121,16 +1121,15 @@ class VisHyperEdgeItem(QGraphicsObject):
         endN[1].endsEdgeLines.remove(edgeLine)
         endN[1].endsEdgeLines.append(splitLine)
 
-        print(f"addSeg split: {self.endNodes.index(endN)=} {[e[0].nodeNum for e in self.endNodes]}")
-        #Tell the polyline end point about its new value.
-        self.setEnd(endN,splitLine)
+        #BUG: When a splitLine is split again, the 1st splitLine endN becomes a full node
+        #print(f"addSeg split: {self.endNodes.index(endN)=} {[e[0].nodeNum for e in self.endNodes]}")
+        #Tell the polyline end point about its new value, if it is a real node, not a dummy node
+        if endN[0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]: 
+            self.setEnd(endN,splitLine)
 
         #print(f"addSeg after split {self.edgeNum=} has edgeLines : {[el.lineNum for el in self.edgeLines]}")
         
         #Record the split in the local graph AND the start & end Node Edgeline port pointers
-        #Note that the Node.startsEdge pointer does _not_ change.
-        #lines here are strictly binary
-        
         #print(f"\n addSeg: hyperEdgeGraph =  {[ (e[0][0].nodeNum,e[1][0].nodeNum) for e in self.hyperEdgeGraph] }")
     
         #print(f" addSeg {stN[0].nodeNum} ,{endN[0].nodeNum}" )
@@ -1186,7 +1185,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
 
-            #Add this to startNodes
+            #Add this to endNodes
             newNP = (newNode,nPort)
             newNP[0].endsEdges.append(self)
             newNP[1].endsEdgeLines.append(newEdge)
