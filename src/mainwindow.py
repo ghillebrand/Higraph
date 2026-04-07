@@ -1099,6 +1099,18 @@ class grScene(QGraphicsScene):
             
         return directChildList
 
+    def getContainmentMap(self, blob):
+        containmentMap = {}
+        searchArea = blob.sceneBoundingRect()
+        itemsInside = self.items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
+        childBlobs = []
+        for item in itemsInside:
+            if item != blob and item.data(KEY_ROLE) in [ROLE_BLOB,ROLE_NODE]:
+                childBlobs.append(item.nodeNum)
+        containmentMap[blob.nodeNum] = childBlobs
+        #Find the immediate parents.
+        return(containmentMap)
+
     def updateBlobParenting(self):
         """Recalculate the parents & children of the blobs and nodes in the scene"""
         #Get all the blobs, to search inside of:
@@ -1124,26 +1136,26 @@ class grScene(QGraphicsScene):
         for sItem in self.items():
             if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                 #print(f"reseting {sItem.nodeNum}")
-                sItem.parents = []
-                sItem.children = []
+                ##sItem.parents = [] JH
+                ##sItem.children = [] JH
                 self.model.Gr.nodeD[sItem.nodeNum].resetParents([])
                 self.model.Gr.nodeD[sItem.nodeNum].resetChildren([])
         
         #Recreate lists
         for parent, children in sorted(directChildList.items()):
-            pItem = self.findItemByIdx(parent)
+            ##pItem = self.findItemByIdx(parent) JH
             self.model.Gr.nodeD[parent].resetChildren(children)
             #print(f"-------------{parent=} {type(pItem)}")
             for c in children:
-                cItem = self.findItemByIdx(c)
+                ##cItem = self.findItemByIdx(c) JH
                 #print(f"adding child {c=}, {type(cItem)}")
 
-                if not cItem is None:
-                    pItem.children.append(cItem)
-                    self.model.Gr.nodeD[c].addParent(parent)
-                    cItem.parents.append(pItem)
-                else:
-                    print(f"Warning - node {c} seems to have disappeared!")
+                ##if not cItem is None: JH
+                    ## pItem.children.append(cItem) JH
+                self.model.Gr.nodeD[c].addParent(parent)
+                    ##cItem.parents.append(pItem) JH
+                ##else:  JH
+                    ## print(f"Warning - node {c} seems to have disappeared!") JH
 
     def signalTest(self):
         print("signal sent to scene successfully")
