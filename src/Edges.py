@@ -719,9 +719,16 @@ class VisHyperEdgeItem(QGraphicsObject):
         #TODO: fix for hyperedges
         #return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\nID: {self.edgeNum} text:{self.textItem.toPlainText()} edgelines = {[e.lineNum for e in self.edgeLines]}\ns:({self.startNodes[0][0].data(KEY_INDEX)}, {self.startNodes[0][1].index})" + \
         #        f" e:({self.endNodes[0][0].data(KEY_INDEX)}, {self.endNodes[0][1].index})\ndummyNodes = {[d.nodeNum for d in self.dummyNodes[0]]}\n <<"
+        dummyNodeEdgeLines = ["S:"]
+        for dN in self.dummyNodes:
+            for e in dN[0].startsEdgeLines:
+                dummyNodeEdgeLines.append(e.lineNum)
+            dummyNodeEdgeLines.append("  E:")
+            for e in dN[0].endsEdgeLines:
+                dummyNodeEdgeLines.append(e.lineNum)
+
         return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\n {self.textItem.toPlainText() =}\n edgeLines {[eL.lineNum for eL in self.edgeLines] }\n" + \
-                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} startNodes (node,port):({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})" + \
-                        f" endNodes (node,port):({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[d[0].nodeNum for d in self.dummyNodes]}\n<<"
+                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} startNodes (node,port):({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})\n endNodes (node,port):({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[d[0].nodeNum for d in self.dummyNodes]} {dummyNodeEdgeLines=}\n<<"
                 #hyperEdgeGraph: {[(h[0][0].nodeNum,h[1][0].nodeNum) for h in self.hyperEdgeGraph]
     def toXML(self,Xparent):
         """ add an Element Tree node to the XML parent node with the Edge Data 
@@ -889,8 +896,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         #print(f"edge item change {change},{value}")
         #guard clause to trap calls from __init__
         if not self.suppressItemChange:
-            #if change == QGraphicsItem.ItemSelectedHasChanged:
-            if change in [QGraphicsItem.ItemSelectedHasChanged, QGraphicsItem.ItemScenePositionHasChanged]:
+            if change == QGraphicsItem.ItemSelectedHasChanged:
+            #if change in [QGraphicsItem.ItemSelectedHasChanged, QGraphicsItem.ItemScenePositionHasChanged]:
                 #print(f"Selected Edge {self.dispText} ")
                 #Select the children
                 for child in self.childItems():
@@ -1018,7 +1025,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             if  type(source) is HandleItem:
                 #print(f"Making Handle into a tuple")
-                source = (0,source)
+                source = (source,source)
         #print(f"{source=}  == {self.startNode=}")
 
         if source in self.startNodes:
@@ -1168,6 +1175,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.startNodes.append(newNP)
             self.setStart(newNP,newEdge) 
 
+            #Update the dummyNode as end
+            dN[0].endsEdgeLines.append(newEdge)
+
             #update the GraphModel is done in Scene.
             #update the hyperedge geometry (is this ever used?)
             #self.hyperEdgeGraph.append(((newNode,nPort),dN))
@@ -1193,6 +1203,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.edgeLines.append(newEdge)
             self.endNodes.append(newNP)
             self.setEnd(newNP,newEdge) 
+
+            #Update the dummyNode as start
+            dN[0].startsEdgeLines.append(newEdge)
 
             #update the GraphModel is done in Scene.
             

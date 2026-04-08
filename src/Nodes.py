@@ -576,7 +576,7 @@ class VisNodeItem(QGraphicsObject):
         for port in self._Ports:
             for sEdgeLine in port.startsEdgeLines:
                 #sEdge.updateLine((self,port),sEdgeline)
-                sEdgeLine.parentItem().updateLine((self,port),sEdgeline)
+                sEdgeLine.parentItem().updateLine((self,port),sEdgeLine)
             for eEdgeLine in port.endsEdgeLines:
                 eEdgeLine.parentItem().updateLine((self, port),eEdgeLine) 
 

@@ -192,12 +192,12 @@ class HandleItem(QGraphicsRectItem):
         painter.restore()
         
 
-
 class dummyNodeItem(QGraphicsItem):
     """ a graphics-only node-like object to manage joins for hyperedges, ports for nodes """
     dummyNodeIndex = 1000
     def __init__(self,center: QPointF,  parent=None):
         super().__init__(parent=parent)
+        self.suppressItemChange = False
         #This might be resolved by the starts end finishEdges code 
         #self.setData(KEY_ROLE, ROLE_DUMMYNODE)
         self.setPos(center)
@@ -210,7 +210,8 @@ class dummyNodeItem(QGraphicsItem):
         dummyNodeItem.dummyNodeIndex += 1
 
     def boundingRect(self):
-        return QRect(self.x(), self.y(), self.x()+1, self.y()+1)
+        bRect = QRect(self.x(), self.y(), self.x()+1, self.y()+1)
+        return bRect
     
     def paint(self, painter: QPainter, option, widget=None):
         """ This object is only visible via a handle, but paint is required by Qt """

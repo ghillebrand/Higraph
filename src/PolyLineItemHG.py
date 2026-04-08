@@ -200,9 +200,7 @@ class StraightLineItem(QGraphicsItem):
         self._pHandles.clear()
         self.parentItem().setZValue(3000)
         # Add new handles
-        #TODO: is idx used?
-
-        for idx, pt in enumerate(self._p):
+        for pt in self._p:
             handle = HandleItem(pt, color=EDGE_HANDLE_COLOUR,parent=self)
             handle.setMoveCallback(self._updateFromHandles)
             self._pHandles.append(handle)
@@ -457,7 +455,7 @@ class HermiteSplineItem(QGraphicsItem):
 
     def split(self,newP:QPointF):
         """ splits the spline at newP, updating the point list of self and return a new HS"""
-        
+        #Based on `addPoint` code
         #There shouldn't be any handles, but just in case
         self._deleteHandles()
 

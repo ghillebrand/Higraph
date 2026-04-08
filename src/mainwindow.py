@@ -69,8 +69,6 @@ from Edges import *
 #cGPT edit code
 from EditVisItemDialog import *  #EditVisEdgeItemDialog, EditVisNodeItemDialog
 
-
-
 class graphModel(QStandardItemModel):
     """ Hold the visual details for the nodes and edges of the graph (x,y, size)
         V0: Nodes: nodeID FK from Graph, x,y
@@ -456,7 +454,7 @@ class grScene(QGraphicsScene):
                 print("Node-> error finding edgeLine in {itms}")
             #Guard clause: nodes may only start/ end the same edge once.
             #Is there a guard condition for edges?
-            #TODO: Move the guard clause from `addSegment`
+            #TODO: Move the guard clause here from `addSegment`
 
             #split it at the given point, update hyperedge geometry
             self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint )
@@ -505,7 +503,7 @@ class grScene(QGraphicsScene):
         #Which point the handles comes from
         # handle.parentItem is polyLine, which has a list of points, _p. _p[0] is start, _p[-1] end.
         edgeLine = handle.parentItem() 
-        print(f" SMME edgeLine = {edgeLine.lineNum}")
+        print(f"StMME edgeLine = {edgeLine.lineNum}")    
         startPt = edgeLine._pHandles.index(handle)
         #print(f"SMEE {type(startPt)} value {startPt=}")
         if startPt == 0: 
@@ -887,11 +885,14 @@ class grScene(QGraphicsScene):
                                 #print(f" clicked on {selItem.edgeLineAt(mPos)._pHandles}")
                                 #Which edgeLine?
                                 #if len(selItem.edgeLine._pHandles)>0:
-                                if len(selItem.edgeLineAt(mPos)._pHandles)>0:
-                                    selItem.stH = selItem.edgeLineAt(mPos)._pHandles[0]
-                                    selItem.endH = selItem.edgeLineAt(mPos)._pHandles[-1]
+                                if getattr(selItem.edgeLineAt(mPos),'_pHandles',False):
+                                    if len(selItem.edgeLineAt(mPos)._pHandles)>0:
+                                        selItem.stH = selItem.edgeLineAt(mPos)._pHandles[0]
+                                        selItem.endH = selItem.edgeLineAt(mPos)._pHandles[-1]
+                                    else:
+                                        print("No handles yet")
                                 else:
-                                    print("No handles yet")
+                                        print("No handles yet - _pHandle not defined")
                             self.changedByCode=True
                             lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                             self.listWidget.setCurrentItem(lWItem)
@@ -939,12 +940,13 @@ class grScene(QGraphicsScene):
 
                 #Adding & deleting points impacts selection, so deal with carefully
                 if cxChoice == "addPt":
-                    item.edgeLine._deleteHandles()
-                    item.edgeLine.addPoint(mPos)
-                    item.edgeLine.setSelected(True)
+                    edgeLine = item.edgeLineAt(mPos)
+                    edgeLine._deleteHandles()
+                    edgeLine.addPoint(mPos)
+                    edgeLine.setSelected(True)
 
                 elif cxChoice == "delPt":
-                    item.edgeLine.deletePoint(mPos)
+                    item.edgeLineAt(mPos).deletePoint(mPos)
 
                 #if a lambda, run it
                 if callable(cxChoice):
@@ -994,12 +996,18 @@ class grScene(QGraphicsScene):
             if len(sIlist) > 2: #high probability of an edge in the mix
                 for item in sIlist:
                     if item.data(KEY_ROLE) == ROLE_EDGE:
-                        item.edgeLine.moveMidPoints(delta)
+                        for eL in item.edgeLines:
+                            eL.moveMidPoints(delta)
+                            pass
                         if item==self.dragEdge:
                             for node in sIlist:
                                 if node.data(KEY_ROLE) in [ROLE_BLOB, ROLE_NODE]:
                                     node.setPos(node.scenePos()+delta)
                         #print("e" , end ="")
+                        #move hyperEdge dummyNodes if they exist
+                        for dN in item.dummyNodes:
+                            print(f"dN {dN[1].nodeNum} @{dN[1].scenePos()} move)")
+                            dN[0].setPos(dN[0].scenePos() + delta)
             
         elif self.mouseMode == self.MOVEEDGEEND:
             self.MoveEdgeEnd(self.onlySelected.parentItem(),mPos)
