@@ -427,7 +427,6 @@ class grScene(QGraphicsScene):
         if self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
             #Each edge gets it's own port:Start port
             startPort = self.tmpEdgeSt.createPort(self.startPoint)
-
             endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
             #Create the actual edge
@@ -452,15 +451,16 @@ class grScene(QGraphicsScene):
                 edgeLine = itms[0]
             else:
                 print("Node-> error finding edgeLine in {itms}")
+                return
             #Guard clause: nodes may only start/ end the same edge once.
             #Is there a guard condition for edges?
             #TODO: Move the guard clause here from `addSegment`
 
             #split it at the given point, update hyperedge geometry
-            self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint )
-            #update the model.
-            #Best way to find the edge? Using edgeLine.parentItem
-            self.model.Gr.addEdge( self.tmpEdgeSt.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )
+            if self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint ):
+                # On success, update the model
+                #Best way to find the edge? Using edgeLine.parentItem
+                self.model.Gr.addEdge( self.tmpEdgeSt.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )
 
         elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_EDGE] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
             print("edge->node")
@@ -469,12 +469,13 @@ class grScene(QGraphicsScene):
             if len(itms) == 1 and itms[0].data(KEY_ROLE) == ROLE_POLYLINE:
                 edgeLine = itms[0]
             else:
-                print(f"Node-> error finding edgeLine in {itms}")        
+                print("Node-> error finding edgeLine in {itms}")
+                return      
             #split it at the given point, update hyperedge geometry
-            self.tmpEdgeSt.addSegment(edgeLine, self.tmpEdgeEnd, start="Edge", nodePt = self.endPoint, splitPoint=self.startPoint )
-            #update the model.
-            #Best way to find the edge? Using edgeLine.parentItem
-            self.model.Gr.addEdge( edgeLine.parentItem().data(KEY_INDEX), self.tmpEdgeEnd.data(KEY_INDEX) )
+            if self.tmpEdgeSt.addSegment(edgeLine, self.tmpEdgeEnd, start="Edge", nodePt = self.endPoint, splitPoint=self.startPoint ):
+                #update the model.
+                #Best way to find the edge? Using edgeLine.parentItem
+                self.model.Gr.addEdge( edgeLine.parentItem().data(KEY_INDEX), self.tmpEdgeEnd.data(KEY_INDEX) )
 
 
     def resetRubberLine(self):
@@ -555,9 +556,11 @@ class grScene(QGraphicsScene):
                 self.oldTermItem[0].updatePort(self.oldTermItem[1],mPos)
                 #TODO: Check this for flow with rest of func!
                 if self.EdgeEnd == "start":
-                    edge.setStart(self.oldTermItem)
+                    edgeLine = self.oldTermItem[1].startsEdgeLines[0]
+                    edge.setStart(self.oldTermItem,edgeLine)
                 else:  #end
-                    edge.setEnd(self.oldTermItem)
+                    edgeLine = self.oldTermItem[1].endsEdgeLines[0]
+                    edge.setEnd(self.oldTermItem,edgeLine)
                 #return
 
             #Check for a self-edge: newTerm == startE and we were moving `end` or the other end is now looped back
@@ -636,11 +639,14 @@ class grScene(QGraphicsScene):
         else: # link back to old
             #print("Missed (nothing found) on relink")
             self.handle.setPos(self.oldTermItem[1].scenePos())
+            
             #TODO: Check all the linkages ()
             if self.EdgeEnd == "start":
-                edge.setStart(self.oldTermItem)
+                edgeLine = self.oldTermItem[1].startsEdgeLines[0]
+                edge.setStart(self.oldTermItem,edgeLine)
             else:  #end
-                edge.setEnd(self.oldTermItem)
+                edgeLine = self.oldTermItem[1].endsEdgeLines[0]
+                edge.setEnd(self.oldTermItem,edgeLine)
 
         self.handle = None
 
@@ -996,18 +1002,22 @@ class grScene(QGraphicsScene):
             if len(sIlist) > 2: #high probability of an edge in the mix
                 for item in sIlist:
                     if item.data(KEY_ROLE) == ROLE_EDGE:
+                        #move hyperEdge dummyNodes if they exist, before the `updatePath()`
+                        for dN in item.dummyNodes:
+                            #print(f"dN {dN[0].nodeNum} sPos{dN[0].pos()} + d {delta} = {dN[0].pos() + delta} move)")
+                            dN[0].setPos(dN[0].pos() + delta)
+                            #print(f" {item.edgeLines[0]._p[-1]=} "
+                            pass
+                        
                         for eL in item.edgeLines:
                             eL.moveMidPoints(delta)
+                            eL.updatePath()
                             pass
                         if item==self.dragEdge:
                             for node in sIlist:
                                 if node.data(KEY_ROLE) in [ROLE_BLOB, ROLE_NODE]:
                                     node.setPos(node.scenePos()+delta)
-                        #print("e" , end ="")
-                        #move hyperEdge dummyNodes if they exist
-                        for dN in item.dummyNodes:
-                            print(f"dN {dN[1].nodeNum} @{dN[1].scenePos()} move)")
-                            dN[0].setPos(dN[0].scenePos() + delta)
+
             
         elif self.mouseMode == self.MOVEEDGEEND:
             self.MoveEdgeEnd(self.onlySelected.parentItem(),mPos)

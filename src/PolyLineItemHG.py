@@ -2,6 +2,8 @@
 
 import math
 from typing import List
+#For debugging: (stack traces)
+import traceback
 
 from PySide6.QtCore import QRectF, QPointF, Qt, QLineF
 from PySide6.QtGui import QPen, QBrush, QPainter, QPainterPath, QPainterPathStroker,\
@@ -296,7 +298,7 @@ class HermiteSplineItem(QGraphicsItem):
 
         
         self._boundingRect = QRectF()
-        #self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #For graph drawing, splines will only ever move via nodes moving, so this is not needed
         #In the general case of free-standing splines, this would need more careful handling.
         #self.setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -557,6 +559,8 @@ class HermiteSplineItem(QGraphicsItem):
 
     def updatePath(self):
         """ Allow the calling of the recalculation independently of handle updates"""
+        #print(f"u",end="",flush=True)
+        #traceback.print_stack(limit=3)
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
         self.update()    

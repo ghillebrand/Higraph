@@ -192,15 +192,17 @@ class HandleItem(QGraphicsRectItem):
         painter.restore()
         
 
-class dummyNodeItem(QGraphicsItem):
-    """ a graphics-only node-like object to manage joins for hyperedges, ports for nodes """
+class dummyNodeRoot(QGraphicsItem):
+    """ an almost-abstract graphics-only node-like object to manage joins for hyperedges, ports for nodes """
     dummyNodeIndex = 1000
     def __init__(self,center: QPointF,  parent=None):
         super().__init__(parent=parent)
-        self.suppressItemChange = False
+        self.suppressItemChange = True
         #This might be resolved by the starts end finishEdges code 
         #self.setData(KEY_ROLE, ROLE_DUMMYNODE)
         self.setPos(center)
+        #self.setFlag(QGraphicsItem.ItemIsMovable, True)
+ 
         #Note - since this is a purely geometric construct, these are called `EdgeLines``, not `Edges`
         self.startsEdgeLines = []
         self.endsEdgeLines = []
@@ -208,6 +210,7 @@ class dummyNodeItem(QGraphicsItem):
         #To make debugging possible
         self.nodeNum = dummyNodeItem.dummyNodeIndex
         dummyNodeItem.dummyNodeIndex += 1
+        self.suppressItemChange = False
 
     def boundingRect(self):
         bRect = QRect(self.x(), self.y(), self.x()+1, self.y()+1)
@@ -216,10 +219,35 @@ class dummyNodeItem(QGraphicsItem):
     def paint(self, painter: QPainter, option, widget=None):
         """ This object is only visible via a handle, but paint is required by Qt """
         #Debugging
-        #painter.drawRect(QRectF(0,0,1,1))
+        #painter.drawRect(QRectF(-5,-5,10,10))
         pass
 
-class port(dummyNodeItem):
+class dummyNodeItem(dummyNodeRoot):
+    """ true dummyNodes need an `itemchange()` method, which breaks `port`s"""
+    def __init__(self,center: QPointF,  parent=None):
+        super().__init__(center, parent=parent)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,True)
+        self.setFlag(QGraphicsItem.ItemIsSelectable,False)
+
+    def itemChange(self, change, value):
+        if self.suppressItemChange:
+            return super().itemChange(change, value)
+        
+        if change in [QGraphicsItem.ItemPositionHasChanged]:
+            #print(f"itm change dN {self.nodeNum} ", end = ",  ")
+            #print(f".", end = "",flush=True)
+            #update attached points
+            for eL in self.startsEdgeLines:
+                #print(f"start {eL.lineNum=} ", end = ",  ", flush=True)
+                eL._p[0] = self.pos()
+            
+            for eL in self.endsEdgeLines:
+                #print(f"end {eL.lineNum=} ",end = ",  ", flush=True)
+                eL._p[-1] = self.pos()
+
+        return super().itemChange(change, value)
+
+class port(dummyNodeRoot):
     """ a port for nodes to give edges a spot to connect. `t` is where on the perimeter the point is"""
     def __init__(self,center: QPointF, t:float = 0, index:int = -1, parent=None):
         super().__init__(center, parent=parent)
@@ -263,3 +291,12 @@ class port(dummyNodeItem):
             dx, dy = dy, -dx
 
         return (dx,dy)
+    
+    #Used for debugging
+    def XXitemChange(self, change, value):
+        if self.suppressItemChange:
+            return super().itemChange(change, value)
+        
+        if change in [QGraphicsItem.ItemPositionHasChanged]:
+            #print(f"itm change dN {self.nodeNum} ", end = ",  ")
+            print(f"*", end = "",flush=True)
