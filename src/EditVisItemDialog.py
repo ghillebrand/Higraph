@@ -97,6 +97,10 @@ class EditVisNodeItemDialog(QDialog):
                 lwItem = listWidget.findItemByIdx(nodeNum)
                 if lwItem:
                     lwItem.setText(newName)
+            # Update treeWidget
+            treeWidget = getattr(self.visNodeItem, "treeWidget", None)
+            twItem=treeWidget.findItemByIdx(nodeNum)
+            twItem.setText(1,newName)
 
 
         self.visNodeItem.update()
@@ -220,6 +224,10 @@ class EditVisEdgeItemDialog(QDialog):
                 lwItem = listWidget.findItemByIdx(edgeNum)
                 if lwItem:
                     lwItem.setText(newName)
+                        # Update treeWidget
+            treeWidget = getattr(self.visEdgeItem, "treeWidget", None)
+            twItem=treeWidget.findItemByIdx(edgeNum)
+            twItem.setText(1,newName)
 
         # Directed
         isDirected = self.directedCheckbox.isChecked()
@@ -237,6 +245,7 @@ class EditVisEdgeItemDialog(QDialog):
             parentWin.Scene.update()
         if parentWin and hasattr(parentWin.ui, "listWidget"):
             parentWin.ui.listWidget.repaint()
+            parentWin.ui.treeWidget.repaint()
         
         self.visEdgeItem.setMetadataDisplay()
         super().accept()
