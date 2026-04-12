@@ -99,8 +99,9 @@ class EditVisNodeItemDialog(QDialog):
                     lwItem.setText(newName)
             # Update treeWidget
             treeWidget = getattr(self.visNodeItem, "treeWidget", None)
-            twItem=treeWidget.findItemByIdx(nodeNum)
-            twItem.setText(1,newName)
+            twItems=treeWidget.findItems(str(nodeNum), Qt.MatchRecursive, 1)
+            for twItem in twItems:
+                twItem.setText(0,newName)
 
 
         self.visNodeItem.update()

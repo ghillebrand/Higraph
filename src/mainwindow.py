@@ -654,7 +654,8 @@ class grScene(QGraphicsScene):
                     self.changedByCode=True
                     self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Toggle)
                     self.changedByCode=True
-                    self.treeWidget.setCurrentItem(tWItem, 0, QItemSelectionModel.SelectionFlag.Toggle)
+                    #self.treeWidget.setCurrentItem(tWItem, 0, QItemSelectionModel.SelectionFlag.Toggle)
+                    self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Toggle)
                     self.changedByCode=False
                     super().mousePressEvent(mouseEvent)
                     return
@@ -766,13 +767,14 @@ class grScene(QGraphicsScene):
                             self.changedByCode=True
                             lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                             self.listWidget.setCurrentItem(lWItem)
-                            tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                            self.treeWidget.setCurrentItem(tWItem)
+                            self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)
+                            #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            #self.treeWidget.setCurrentItem(tWItem)
                             self.changedByCode=False
                             selItem.isOnlySelected = True
                             selItem.setSelected(True)
-                            super().mousePressEvent(mouseEvent)
-                            return
+                            #super().mousePressEvent(mouseEvent) JH commented out
+                            #return JH commented out APril 11 2026
                         #immediately hand off for Qt to move
                         #BUG:Dragging With these on, DRAGGING doesn't happen, off, a single node select doesn't clear selection
                         #Solution: Move `isSelected` to mouseRelease, to allow for movement
@@ -790,8 +792,9 @@ class grScene(QGraphicsScene):
                             self.changedByCode=True
                             lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                             self.listWidget.setCurrentItem(lWItem)
-                            tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                            self.treeWidget.setCurrentItem(tWItem)
+                            self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)
+                            #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            #self.treeWidget.setCurrentItem(tWItem)
                             self.changedByCode=False
                             # accept? return?
 
@@ -1023,8 +1026,9 @@ class grScene(QGraphicsScene):
                     for selItem in self.selectedItems():
                         lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
                         self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
-                        tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))  
-                        self.treeWidget.setCurrentItem(tWItem,0,QItemSelectionModel.SelectionFlag.Select)
+                        #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                        #self.treeWidget.setCurrentItem(tWItem,0,QItemSelectionModel.SelectionFlag.Select)
+                        self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                          
                     self.changedByCode=False
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
@@ -1055,8 +1059,9 @@ class grScene(QGraphicsScene):
                 self.listWidget.clearSelection()
                 self.changedByCode=True
                 for selItem in self.selectedItems():
-                    lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
-                    self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
+                    self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                           
+                    #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                    #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
                 self.changedByCode=False
             if self.qtListToListOfIdxs(self.selectedItems()) != self.qtTreeToListOfIdxs(self.treeWidget.selectedItems()):
                 #update treeview
@@ -1388,7 +1393,8 @@ class createNodeCommand(QUndoCommand):
         self.scene.addItem(newNode)
 
         # Now that it is added to scene parents can be found and treewidget updated
-        directChildDic=self.scene.getDirectChildDic()   #this is basically the updateblobparenting code
+        self.scene.mainwindow.addTreeNode(newNode, self.type)
+        """"directChildDic=self.scene.getDirectChildDic()   #this is basically the updateblobparenting code
         c=[]    #children
         p=[]    #parents
         for k,v in directChildDic.items():
@@ -1397,6 +1403,7 @@ class createNodeCommand(QUndoCommand):
             elif k==newNode.nodeNum:
                 for eachV in v:
                     c.append(eachV)
+        print("parents and children", p, c)
         if p==[]:  #toplevel item
             tWitem = QTreeWidgetItem([self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
             tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
@@ -1404,38 +1411,45 @@ class createNodeCommand(QUndoCommand):
             self.treeWidget.addTopLevelItem(tWitem)
         else:
             for eachP in p:
-                eachPItem=self.treeWidget.findItemByIdx(eachP)
-                tWitem = QTreeWidgetItem([ self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
-                tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
-                tWitem.setData(0, KEY_ROLE,self.type)
-                eachPItem.addChild(tWitem) 
+                #eachPItem=self.treeWidget.findItemByIdx(eachP)  # this is defective JH
+                eachPItemList=self.treeWidget.findItems(str(eachP), Qt.MatchRecursive, 1)
+                for eachPItem in eachPItemList:
+                    tWitem = QTreeWidgetItem([self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
+                    tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
+                    tWitem.setData(0, KEY_ROLE,self.type)
+                    eachPItem.addChild(tWitem) 
                 self.model.Gr.nodeD[eachP].addChild(newNode.nodeNum)
             self.model.Gr.nodeD[newNode.nodeNum].resetParents(p)
         if c!=[]:  #only a blob can have children, these may need to be reparented
             for eachC in c:
-                cParents=copy.deepcopy(self.model.Gr.nodeD[eachC].parents) #is this used?
-                eachCItemList=self.treeWidget.findItems(str(eachC), Qt.MatchRecursive, 1) #also worry about rest of list
-                for eachCItem in eachCItemList:
-                    if cParents != []:
-                        for eachCParent in cParents:
-                            if eachCParent in p: #this child's parent is the blob's parent
-                                eachCParentItem=self.treeWidget.findItemByIdx(eachCParent)
+                cParents=copy.deepcopy(self.model.Gr.nodeD[eachC].parents) #deepcopy no longer needed JH
+                eachCItemList=self.treeWidget.findItems(str(eachC), Qt.MatchRecursive, 1)
+                eachCItem=eachCItemList[0]  #will use the parent list to iterate, not the the item list
+                #for eachCItem in eachCItemList:
+                if cParents != []:
+                    for eachCParent in cParents:
+                        if eachCParent in p: #this child's parent is the blob's parent
+                            #eachCParentItem=self.treeWidget.findItemByIdx(eachCParent) #this is suspect JH
+                            eachCParentItems=self.treeWidget.findItems(str(eachCParent), Qt.MatchRecursive, 1)
+                            for eachCParentItem in eachCParentItems:
                                 tWitem.addChild(eachCParentItem.takeChild(eachCParentItem.indexOfChild(eachCItem)))
-                                self.model.Gr.nodeD[eachC].delParent(eachCParent)
-                                self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
-                                self.model.Gr.nodeD[eachCParent].delChild(eachC)
-                                self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
-                            else:   # this is adding the child to an additional parent                
+                            self.model.Gr.nodeD[eachC].delParent(eachCParent)
+                            self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
+                            self.model.Gr.nodeD[eachCParent].delChild(eachC)
+                            self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
+                        else:   # this is adding the child to an additional parent 
+                            if eachC not in self.model.Gr.nodeD[newNode.nodeNum].children: #check not already added
+                                print("cloning . . .", eachCParent, eachC)              
                                 newChildClone=QTreeWidgetItem.clone(eachCItem)
-                                tWitem.addChild(newChildClone)
-                                self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
+                                tWitem.addChild(newChildClone)   
                                 self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
-                    else: #unparented
-                        itemIdx=self.treeWidget.indexOfTopLevelItem(eachCItem)
-                        removedItem=self.treeWidget.takeTopLevelItem(itemIdx)
-                        tWitem.addChild(removedItem)
-                        self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
-                        self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
+                            self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
+                else: #unparented
+                    itemIdx=self.treeWidget.indexOfTopLevelItem(eachCItem)
+                    removedItem=self.treeWidget.takeTopLevelItem(itemIdx)
+                    tWitem.addChild(removedItem)
+                    self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
+                    self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)"""
 
         newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
         newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -1515,9 +1529,10 @@ class deleteNodeCommand(QUndoCommand):
         newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.node=newNode
 
-        #Exact copy of createcommand code
+        #Exact copy of createcommand code (no more code changed)
         # Now that it is added to scene parents can be found and treewidget updated
-        directChildDic=self.scene.getDirectChildDic()   #this is basically the updateblobparenting code
+        self.scene.mainwindow.addTreeNode(newNode, self.type)
+        """directChildDic=self.scene.getDirectChildDic()   #this is basically the updateblobparenting code
         c=[]    #children
         p=[]    #parents
         for k,v in directChildDic.items():
@@ -1564,7 +1579,7 @@ class deleteNodeCommand(QUndoCommand):
                         removedItem=self.treeWidget.takeTopLevelItem(itemIdx)
                         tWitem.addChild(removedItem)
                         self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
-                        self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
+                        self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)"""
 
 
 
@@ -2050,7 +2065,7 @@ class MainWindow(QMainWindow):
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
         self.Scene = grScene(self.model,self.ui.listWidget, self.ui.treeWidget, self.undoStack, self)
         #self.Scene.selectionChanged.connect(self.actionSceneSelectChange)
-        self.ui.listWidget.itemSelectionChanged.connect(self.actionListSelectChange)
+        #self.ui.listWidget.itemSelectionChanged.connect(self.actionListSelectChange)
         self.ui.treeWidget.itemSelectionChanged.connect(self.actionListSelectChange)
 
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
@@ -2175,6 +2190,8 @@ class MainWindow(QMainWindow):
             self.Scene.thisHandleObjectSelected=None
             self.Scene.onlySelected=None
         self.Scene.clearSelection()
+        self.ui.listWidget.clearSelection()
+        self.ui.treeWidget.clearSelection()
         self.Scene.mouseMode = grScene.INSERTNODE
         #self.actionPointer.setChecked(False)
         self.statusBar().showMessage("Insert Node",3000)
@@ -2196,6 +2213,7 @@ class MainWindow(QMainWindow):
             self.Scene.thisHandleObjectSelected=None
             self.Scene.onlySelected=None
         self.Scene.clearSelection()
+        self.ui.treeWidget.clearSelection()
         self.Scene.mouseMode = grScene.INSERTBLOB
         #self.actionPointer.setChecked(False)
         self.statusBar().showMessage("Insert Blob",3000)
@@ -2206,6 +2224,7 @@ class MainWindow(QMainWindow):
             self.Scene.thisHandleObjectSelected=None
             self.Scene.onlySelected=None
         self.Scene.clearSelection()
+        self.ui.treeWidget.clearSelection()
         self.statusBar().showMessage("Insert Edge",3000)
         #print("Add an edge")
         self.Scene.mouseMode = grScene.INSERTEDGE
@@ -2227,7 +2246,7 @@ class MainWindow(QMainWindow):
 
         #select the *graphics* view of the clicked item as well
         idx = item.data(0,KEY_INDEX)
-        for sItem in self.Scene.items():
+        for sItem in self.Scene.items():  #this should probably be using finditembyidx JH
             if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
                 if sItem.data(KEY_INDEX) == idx: # iNum:
                     sItem.setSelected(True)
@@ -2254,6 +2273,13 @@ class MainWindow(QMainWindow):
 
                     #print(idx)
                     #break
+        # check for additional entry in treewidget
+        twItems=self.ui.treeWidget.findItems(str(idx), Qt.MatchRecursive, 1)
+        if len(twItems)>1:
+            self.Scene.changedByCode=True
+            for twItem in twItems:
+                self.ui.treeWidget.setCurrentItem(twItem,0,QItemSelectionModel.SelectionFlag.Select)
+            self.Scene.changedByCode=False
 
     def listDblClicked(self,item):
         #print("listDblClicked", item.text(), item.index())
@@ -2310,7 +2336,7 @@ class MainWindow(QMainWindow):
         self.ui.listWidget.repaint()
         self.ui.treeWidget.repaint()
 
-    def actionListSelectChange(self): ## List Tree need to update this still
+    def actionListSelectChange(self):
         if not self.Scene.changedByCode:
             selected_items = self.ui.treeWidget.selectedItems()
             if len(selected_items)>1:
@@ -2325,9 +2351,29 @@ class MainWindow(QMainWindow):
                         if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
                             if sItem.data(KEY_INDEX) == idx: # iNum:
                                 sItem.setSelected(True)
+                    # check for additional entry in treewidget
+                    self.Scene.changedByCode=True
+                    self.setCurrentTreeItems(idx, QItemSelectionModel.SelectionFlag.Select)
+                    self.Scene.changedByCode=False
+                    """twItems=self.ui.treeWidget.findItems(str(idx), Qt.MatchRecursive, 1)
+                    if len(twItems)>1:
+                        self.Scene.changedByCode=True
+                        for twItem in twItems:
+                            self.ui.treeWidget.setCurrentItem(twItem,0,QItemSelectionModel.SelectionFlag.Select)
+                        self.Scene.changedByCode=False"""
             else:
                 if len(selected_items)!=0:
                     self.listClick(selected_items[0])
+
+    def setCurrentTreeItems(self, idx, flag):
+        twItems=self.ui.treeWidget.findItems(str(idx), Qt.MatchRecursive, 1)
+        if len(twItems)>0:
+            #self.Scene.changedByCode=True
+            for twItem in twItems:
+                self.ui.treeWidget.setCurrentItem(twItem,0,flag)
+                #self.ui.treeWidget.twItem.setSelected(True)
+           # self.Scene.changedByCode=False
+
 
     """def actionSceneSelectChange(self):  Endless loop with listchange!
         selected_items = self.Scene.selectedItems()
@@ -2340,6 +2386,62 @@ class MainWindow(QMainWindow):
                     #if sItem.data(KEY_INDEX) == idx: # iNum:
                     self.Scene.listWidget.setCurrentItem(sItem)"""
 
+    def addTreeNode(self, newNode, nodeType):
+        #this code still has bugs on very complex blob nesting structures
+        directChildDic=self.Scene.getDirectChildDic()   #this is basically the updateblobparenting code
+        c=[]    #children
+        p=[]    #parents
+        for k,v in directChildDic.items():
+            if newNode.nodeNum in v:
+                p.append(k)
+            elif k==newNode.nodeNum:
+                for eachV in v:
+                    c.append(eachV)
+        if p==[]:  #toplevel item
+            tWitem = QTreeWidgetItem([self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
+            tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
+            tWitem.setData(0, KEY_ROLE, nodeType)
+            self.ui.treeWidget.addTopLevelItem(tWitem)
+        else:
+            for eachP in p:
+                #eachPItem=self.ui.treeWidget.findItemByIdx(eachP)  # this is defective JH
+                eachPItemList=self.ui.treeWidget.findItems(str(eachP), Qt.MatchRecursive, 1)
+                for eachPItem in eachPItemList:
+                    tWitem = QTreeWidgetItem([self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
+                    tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
+                    tWitem.setData(0, KEY_ROLE,nodeType)
+                    eachPItem.addChild(tWitem) 
+                self.model.Gr.nodeD[eachP].addChild(newNode.nodeNum)
+            self.model.Gr.nodeD[newNode.nodeNum].resetParents(p)
+        if c!=[]:  #only a blob can have children, these may need to be reparented
+            for eachC in c:
+                cParents=copy.deepcopy(self.model.Gr.nodeD[eachC].parents) #deepcopy no longer needed JH
+                eachCItemList=self.ui.treeWidget.findItems(str(eachC), Qt.MatchRecursive, 1)
+                eachCItem=eachCItemList[0]  #will use the parent list to iterate, not the the item list
+                #for eachCItem in eachCItemList:
+                if cParents != []:
+                    for eachCParent in cParents:
+                        if eachCParent in p: #this child's parent is the blob's parent
+                            #eachCParentItem=self.ui.treeWidget.findItemByIdx(eachCParent) #this is suspect JH
+                            eachCParentItems=self.ui.treeWidget.findItems(str(eachCParent), Qt.MatchRecursive, 1)
+                            for eachCParentItem in eachCParentItems:
+                                tWitem.addChild(eachCParentItem.takeChild(eachCParentItem.indexOfChild(eachCItem)))
+                            self.model.Gr.nodeD[eachC].delParent(eachCParent)
+                            self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
+                            self.model.Gr.nodeD[eachCParent].delChild(eachC)
+                            self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
+                        else:   # this is adding the child to an additional parent 
+                            if eachC not in self.model.Gr.nodeD[newNode.nodeNum].children: #check not already added         
+                                newChildClone=QTreeWidgetItem.clone(eachCItem)
+                                tWitem.addChild(newChildClone)   
+                                self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
+                            self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
+                else: #unparented
+                    itemIdx=self.ui.treeWidget.indexOfTopLevelItem(eachCItem)
+                    removedItem=self.ui.treeWidget.takeTopLevelItem(itemIdx)
+                    tWitem.addChild(removedItem)
+                    self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
+                    self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
 
 
     #Menu-like Actions
@@ -3084,6 +3186,7 @@ class MainWindow(QMainWindow):
             self.Scene.thisHandleObjectSelected._deleteHandles()
 
         self.Scene.clearSelection()
+        self.ui.treeWidget.clearSelection()
 
         # Render the selected items
         painter = QPainter(image)
@@ -3316,7 +3419,12 @@ class MainWindow(QMainWindow):
         #print("Edit>Delete")
         #Edge Delete (must delete edges 1st)
         selected_items = self.Scene.selectedItems()
+        if len(self.Scene.selectedItems())==1 and self.Scene.thisHandleObjectSelected:
+            self.Scene.thisHandleObjectSelected._deleteHandles()
+            self.Scene.thisHandleObjectSelected=None
         self.Scene.clearSelection()
+        self.ui.treeWidget.clearSelection()
+ 
         if selected_items:
             self.undoStack.beginMacro("Delete/Undelete")
             for item in selected_items:
@@ -3367,8 +3475,9 @@ class MainWindow(QMainWindow):
                 item.setSelected(True)
                 lWItem = self.Scene.listWidget.findItemByIdx(item.data(KEY_INDEX))
                 self.Scene.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)   
-                tWItem = self.Scene.treeWidget.findItemByIdx(item.data(KEY_INDEX))
-                self.Scene.treeWidget.setCurrentItem(tWItem,0,QItemSelectionModel.SelectionFlag.Select)                   
+                #tWItem = self.Scene.treeWidget.findItemByIdx(item.data(KEY_INDEX))
+                self.setCurrentTreeItems(item.data(KEY_INDEX), QItemSelectionModel.SelectionFlag.Select)
+                #self.Scene.treeWidget.setCurrentItem(tWItem,0,QItemSelectionModel.SelectionFlag.Select)                   
             if self.Scene.thisHandleObjectSelected:  
                 self.Scene.thisHandleObjectSelected._deleteHandles()
                 self.Scene.thisHandleObjectSelected=None

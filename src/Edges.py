@@ -21,7 +21,7 @@ import xml.etree.ElementTree as ET
 from xml.dom import minidom
 
 from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
-            QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
+            QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem, QTreeWidget, QTreeWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
             QSlider, QLabel, QStatusBar,
@@ -45,7 +45,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,model,listWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
+    def __init__(self,model,listWidget,treeWidget, sItem, eItem, directed='', parent=None, nameP="", id=None,
                     polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
         """ Create a visual edge, using the pos of the st and end, which are tuples of (Node,Port)
         points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
@@ -55,6 +55,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
 
         self.model = model
         self.listWidget = listWidget
+        self.treeWidget = treeWidget
         #Note: Unlike a node which is a 1-click create,
         #   an edge can only be created once the start and end nodes are known. 
         #   Thus drawing must precede the creation of the abstract edge.
@@ -115,6 +116,11 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         lWitem.setData(KEY_INDEX,self.edgeNum)
         lWitem.setData(KEY_ROLE,ROLE_EDGE)
         self.listWidget.addItem(lWitem)
+        #add to tree
+        tWitem = QTreeWidgetItem([str(self.edgeNum),self.model.Gr.edgeD[self.edgeNum].metadata['name']])
+        tWitem.setData(0, KEY_INDEX,self.edgeNum)
+        tWitem.setData(0, KEY_ROLE,ROLE_EDGE)
+        self.treeWidget.addTopLevelItem(tWitem)
 
         # Create a text item to hold & show the ID number
         #self.textItem = QGraphicsTextItem(f"{self.edgeNum}", self)
