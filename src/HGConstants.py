@@ -27,7 +27,7 @@ APP_NAME = "qtPyGraphEdit V02.0"
 
 # Indices for Qt Item metadata tags 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QListWidgetItem
+from PySide6.QtWidgets import QListWidgetItem, QTreeWidgetItem
 from PySide6.QtGui import QColor
 
 #index data: item Num from Graph
@@ -38,15 +38,15 @@ KEY_ROLE = Qt.UserRole + 2
 # To let Qt know what are nodes and what are edges
 #TODO: Can ListWidgets take any type for roles? (Items can)
 # The order here is used for the sort in the listWidget
-ROLE_NODE = QListWidgetItem.ItemType.UserType + 1
-ROLE_BLOB = QListWidgetItem.ItemType.UserType + 2
-ROLE_EDGE = QListWidgetItem.ItemType.UserType + 3
-ROLE_HYPEREDGE = QListWidgetItem.ItemType.UserType + 4
+ROLE_NODE = QTreeWidgetItem.ItemType.UserType + 1
+ROLE_BLOB = QTreeWidgetItem.ItemType.UserType + 2
+ROLE_EDGE = QTreeWidgetItem.ItemType.UserType + 3
+ROLE_HYPEREDGE = QTreeWidgetItem.ItemType.UserType + 4
 
 #Handles for connecting/ moving - don't appear in the model dict
-ROLE_HANDLE = QListWidgetItem.ItemType.UserType + 10
-ROLE_POLYLINE = QListWidgetItem.ItemType.UserType + 11
-ROLE_DUMMYNODE = QListWidgetItem.ItemType.UserType + 12
+ROLE_HANDLE = QTreeWidgetItem.ItemType.UserType + 10
+ROLE_POLYLINE = QTreeWidgetItem.ItemType.UserType + 11
+ROLE_DUMMYNODE = QTreeWidgetItem.ItemType.UserType + 12
 
 roleDic={ROLE_NODE: "ROLE_NODE",
         ROLE_EDGE:"ROLE_EDGE", 

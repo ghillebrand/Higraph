@@ -233,14 +233,14 @@ class VisNodeItem(QGraphicsObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,posn,model,listWidget, treeWidget, parent=None, nameP ="", id=None,
+    def __init__(self,posn,model, treeWidget, parent=None, nameP ="", id=None,
                     metadata={}, metadataAttributes={},ports = [], parents=[]):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
         
         self.model = model
-        self.listWidget = listWidget
+        #self.listWidget = listWidget
         self.treeWidget = treeWidget
         #Store the edges that start/ end at this node
         self.startsEdges = []  
@@ -266,16 +266,10 @@ class VisNodeItem(QGraphicsObject):
         self.blobDescription=""   #needed for blobs
         #Update positions
         #add to the text list
-        lWitem = QListWidgetItem(self.model.Gr.nodeD[self.nodeNum].metadata['name'])
-        lWitem.setData(KEY_INDEX,self.nodeNum)
-        lWitem.setData(KEY_ROLE,ROLE_NODE)
-        self.listWidget.addItem(lWitem)
-        # add to side tree, check for parenting - but not added to the scene yet, hmm
-        #tWitem = QTreeWidgetItem([str(self.nodeNum),self.model.Gr.nodeD[self.nodeNum].metadata['name']])
-        #tWitem.setData(0, KEY_INDEX,self.nodeNum)
-        #tWitem.setData(0, KEY_ROLE,ROLE_NODE)
-        #self.treeWidget.addTopLevelItem(tWitem)
-
+        #lWitem = QListWidgetItem(self.model.Gr.nodeD[self.nodeNum].metadata['name'])
+        #lWitem.setData(KEY_INDEX,self.nodeNum)
+        #lWitem.setData(KEY_ROLE,ROLE_NODE)
+        #self.listWidget.addItem(lWitem)
 
         # Create a text item to hold & show the ID number
         # Not needed with KEY_INDEX role
@@ -619,12 +613,12 @@ class VisBlobItem(VisNodeItem):
     BR = 2
     BL = 3
 
-    def __init__(self,posn, model,listWidget, treeWidget, parent=None, nameP ="", id=None,
+    def __init__(self,posn, model, treeWidget, parent=None, nameP ="", id=None,
                     metadata={}, metadataAttributes={}, ports = [],
                     height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
-        super().__init__(posn, model,listWidget, treeWidget, parent=parent, nameP =nameP, id=id,
+        super().__init__(posn, model, treeWidget, parent=parent, nameP =nameP, id=id,
                     metadata=metadata, metadataAttributes=metadataAttributes,ports=ports)
 
         self.suppressItemChange = True
@@ -633,13 +627,11 @@ class VisBlobItem(VisNodeItem):
         #TODO: Make blob names default to bnn
 
         #add to the text list
-        lWitem = self.listWidget.findItemByIdx(self.nodeNum)
+        #lWitem = self.listWidget.findItemByIdx(self.nodeNum)
         #TODO: Revisit the value the model adds
         self.node.setData(KEY_ROLE,ROLE_BLOB)
-        lWitem.setData(KEY_ROLE,ROLE_BLOB)
+        #lWitem.setData(KEY_ROLE,ROLE_BLOB)
 
-       # tWitem = self.treeWidget.findItemByIdx(self.nodeNum)
-        #tWitem.setData(0, KEY_ROLE,ROLE_BLOB)
 
         self.setData(KEY_ROLE, ROLE_BLOB)
 

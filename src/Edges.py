@@ -45,7 +45,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,model,listWidget,treeWidget, sItem, eItem, directed='', parent=None, nameP="", id=None,
+    def __init__(self,model,treeWidget, sItem, eItem, directed='', parent=None, nameP="", id=None,
                     polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
         """ Create a visual edge, using the pos of the st and end, which are tuples of (Node,Port)
         points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
@@ -54,7 +54,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
         self.model = model
-        self.listWidget = listWidget
+        #self.listWidget = listWidget
         self.treeWidget = treeWidget
         #Note: Unlike a node which is a 1-click create,
         #   an edge can only be created once the start and end nodes are known. 
@@ -112,12 +112,12 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
                 
         #add to the text list
         #TODO: Should this not be driven from the model?
-        lWitem = QListWidgetItem(self.metadata['name'])
-        lWitem.setData(KEY_INDEX,self.edgeNum)
-        lWitem.setData(KEY_ROLE,ROLE_EDGE)
-        self.listWidget.addItem(lWitem)
+        #lWitem = QListWidgetItem(self.metadata['name'])
+        #lWitem.setData(KEY_INDEX,self.edgeNum)
+        #lWitem.setData(KEY_ROLE,ROLE_EDGE)
+        #self.listWidget.addItem(lWitem)
         #add to tree
-        tWitem = QTreeWidgetItem([str(self.edgeNum),self.model.Gr.edgeD[self.edgeNum].metadata['name']])
+        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum)])
         tWitem.setData(0, KEY_INDEX,self.edgeNum)
         tWitem.setData(0, KEY_ROLE,ROLE_EDGE)
         self.treeWidget.addTopLevelItem(tWitem)

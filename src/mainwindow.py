@@ -47,7 +47,7 @@ from PySide6.QtSvg import QSvgGenerator
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 #from PySide6.Qtcore import QItemSelectionModel
 
-from formTreeList import Ui_MainWindow
+from ui_formTree import Ui_MainWindow
 from ui_Credits import Ui_dlgCredits
 from Ui_HelpAbout import Ui_dlgAbout
 
@@ -223,10 +223,10 @@ class grScene(QGraphicsScene):
     edgeEditRequested = Signal(object)
     nodeEditRequested = Signal(object)
 
-    def __init__(self, model,listWidget,treeWidget, undoStack, mainwindow):
+    def __init__(self, model,treeWidget, undoStack, mainwindow):
         super().__init__()
         self.model = model
-        self.listWidget = listWidget
+        #self.listWidget = listWidget
         self.treeWidget = treeWidget
         self.undoStack = undoStack
         self.mainwindow = mainwindow
@@ -240,7 +240,7 @@ class grScene(QGraphicsScene):
         self.rubberLine = None
         self.GrRubberLine =None
 
-        # For ListWidget
+        # For TreeWidget
         self.changedByCode=False
 
         #Handle hovering
@@ -441,7 +441,7 @@ class grScene(QGraphicsScene):
         endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
         #Create the actual edge
-        newAction=createEdgeCommand(None, self, self.model,self.listWidget, self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+        newAction=createEdgeCommand(None, self, self.model, self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
         self.undoStack.push(newAction)
         #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
@@ -649,10 +649,10 @@ class grScene(QGraphicsScene):
                             self.thisHandleObjectSelected.parentItem().isOnlySelected=False  #to squash tangent lines
                         self.thisHandleObjectSelected._deleteHandles()
                         self.thisHandleObjectSelected=None
-                    lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                    #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
                     tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
                     self.changedByCode=True
-                    self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Toggle)
+                    #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Toggle)
                     self.changedByCode=True
                     #self.treeWidget.setCurrentItem(tWItem, 0, QItemSelectionModel.SelectionFlag.Toggle)
                     self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Toggle)
@@ -699,7 +699,7 @@ class grScene(QGraphicsScene):
                 return
             # in all other cases clear selection
             self.clearSelection()
-            self.listWidget.clearSelection()
+            #self.listWidget.clearSelection()
             self.treeWidget.clearSelection()
             if self.thisHandleObjectSelected:
                 self.thisHandleObjectSelected._deleteHandles()
@@ -720,7 +720,7 @@ class grScene(QGraphicsScene):
                 ###item.setFlag(QGraphicsItem.ItemIsMovable, True)
 
                 #put create node on undo stack
-                newAction=createNodeCommand(mPos, self, self.model, self.listWidget, self.treeWidget, type=ROLE_NODE)
+                newAction=createNodeCommand(mPos, self, self.model, self.treeWidget, type=ROLE_NODE)
                 self.undoStack.push(newAction)
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
@@ -765,11 +765,9 @@ class grScene(QGraphicsScene):
                     if selItem.isHovered:   #This stops it selecting just out of reach of the border line
                         if selItem.data(KEY_ROLE) == ROLE_NODE:
                             self.changedByCode=True
-                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                            self.listWidget.setCurrentItem(lWItem)
+                            #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            #self.listWidget.setCurrentItem(lWItem)
                             self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)
-                            #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                            #self.treeWidget.setCurrentItem(tWItem)
                             self.changedByCode=False
                             selItem.isOnlySelected = True
                             selItem.setSelected(True)
@@ -790,11 +788,9 @@ class grScene(QGraphicsScene):
                             selItem.setSelected(True)
                             selItem._createHandles() #JH
                             self.changedByCode=True
-                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                            self.listWidget.setCurrentItem(lWItem)
+                            #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            #self.listWidget.setCurrentItem(lWItem)
                             self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)
-                            #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                            #self.treeWidget.setCurrentItem(tWItem)
                             self.changedByCode=False
                             # accept? return?
 
@@ -825,8 +821,8 @@ class grScene(QGraphicsScene):
                                 else:
                                     print("No handles yet")
                             self.changedByCode=True
-                            lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                            self.listWidget.setCurrentItem(lWItem)
+                            #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                            #self.listWidget.setCurrentItem(lWItem)
                             tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
                             self.treeWidget.setCurrentItem(tWItem)
                             self.changedByCode=False
@@ -980,7 +976,7 @@ class grScene(QGraphicsScene):
             width = TLx - BRx
             TLx -= width
             TLy -= height
-            newAction=createNodeCommand(QPointF(TLx,TLy), self, self.model, self.listWidget, self.treeWidget, 
+            newAction=createNodeCommand(QPointF(TLx,TLy), self, self.model, self.treeWidget, 
                                         height = height, width = width, xRadius = BLOB_CORNER_RADIUS, 
                                         yRadius = BLOB_CORNER_RADIUS, type=ROLE_BLOB)
             self.undoStack.push(newAction)
@@ -1020,14 +1016,12 @@ class grScene(QGraphicsScene):
         elif self.mouseMode == self.POINTER:
             if len(self.selectedItems()) > 0:
                 if not(mouseEvent.modifiers() and Qt.ControlModifier):
-                    self.listWidget.clearSelection()
+                    #self.listWidget.clearSelection()
                     self.treeWidget.clearSelection()
                     self.changedByCode=True
                     for selItem in self.selectedItems():
-                        lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
-                        self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
-                        #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))  
-                        #self.treeWidget.setCurrentItem(tWItem,0,QItemSelectionModel.SelectionFlag.Select)
+                        #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
+                        #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
                         self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                          
                     self.changedByCode=False
                 # print("up select at", mouseEvent.scenePos())
@@ -1054,7 +1048,7 @@ class grScene(QGraphicsScene):
             #print("End move handle")
             self.mouseMode = self.POINTER
         elif self.mouseMode == self.DRAGGING:
-            if self.qtListToListOfIdxs(self.selectedItems()) != self.qtListToListOfIdxs(self.listWidget.selectedItems()):
+            """if self.qtListToListOfIdxs(self.selectedItems()) != self.qtListToListOfIdxs(self.listWidget.selectedItems()):
                 #update listview
                 self.listWidget.clearSelection()
                 self.changedByCode=True
@@ -1062,7 +1056,7 @@ class grScene(QGraphicsScene):
                     self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                           
                     #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
                     #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
-                self.changedByCode=False
+                self.changedByCode=False"""
             if self.qtListToListOfIdxs(self.selectedItems()) != self.qtTreeToListOfIdxs(self.treeWidget.selectedItems()):
                 #update treeview
                 self.treeWidget.clearSelection()
@@ -1233,7 +1227,7 @@ class grScene(QGraphicsScene):
         if topLevelSet != parentSet:
             #add any missing top level items
             for z in parentSet-topLevelSet:
-                tWitem = QTreeWidgetItem([str(z), self.model.Gr.nodeD[z].metadata['name']])
+                tWitem = QTreeWidgetItem([self.model.Gr.nodeD[z].metadata['name'],str(z)])
                 tWitem.setData(0, KEY_INDEX,z)
                 tWitem.setData(0, KEY_ROLE,ROLE_NODE)
                 self.treeWidget.addTopLevelItem(tWitem)
@@ -1339,13 +1333,13 @@ class grScene(QGraphicsScene):
 
 # classes for working with undo and redo (QUndoStack)
 class createNodeCommand(QUndoCommand):
-    def __init__(self, posn, scene, model, listWidget, treeWidget, width=10, height=10, xRadius=10, yRadius=10,type=ROLE_NODE):
+    def __init__(self, posn, scene, model, treeWidget, width=10, height=10, xRadius=10, yRadius=10,type=ROLE_NODE):
         super().__init__()
         self.node = None  
         self.posn = posn
         self.scene = scene
         self.model = model
-        self.listWidget=listWidget
+        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.nodeNum = 0 #placeholder
         self.type=type
@@ -1365,10 +1359,10 @@ class createNodeCommand(QUndoCommand):
         #VisNodeItem/ VisBlobItem adds to the model and the  list
         if self.node==None:   # this is the first actual create of the node
             if self.type == ROLE_NODE:
-                newNode =  VisNodeItem(self.posn,self.model,self.listWidget, self.treeWidget)
+                newNode =  VisNodeItem(self.posn,self.model, self.treeWidget)
                 # save the node index for recreating identically
             else:
-                newNode =  VisBlobItem(self.posn,self.model,self.listWidget, self.treeWidget, height=self.height, width=self.width, 
+                newNode =  VisBlobItem(self.posn,self.model, self.treeWidget, height=self.height, width=self.width, 
                                        xRadius=self.xRadius, yRadius=self.yRadius)
             self.nodeNum = newNode.nodeNum
             #update port  PARENTS (maybe recompute position?)
@@ -1379,9 +1373,9 @@ class createNodeCommand(QUndoCommand):
             #                   id = self.node.nodeNum, metadata=self.node.metadata, \
             #                    metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
             if self.type == ROLE_NODE:
-                newNode =  VisNodeItem(self.posn,self.model,self.listWidget, self.treeWidget, id=self.nodeNum)
+                newNode =  VisNodeItem(self.posn,self.model, self.treeWidget, id=self.nodeNum)
             else:
-                newNode =  VisBlobItem(self.posn,self.model,self.listWidget, self.treeWidget, id=self.nodeNum, \
+                newNode =  VisBlobItem(self.posn,self.model, self.treeWidget, id=self.nodeNum, \
                                        height=self.height, width=self.width, xRadius=self.xRadius,\
                                         yRadius=self.yRadius)
             
@@ -1456,14 +1450,14 @@ class createNodeCommand(QUndoCommand):
         self.node=newNode   
 
 class deleteNodeCommand(QUndoCommand):
-    def __init__(self, node, posn, scene, model, listWidget, treeWidget, type=ROLE_NODE, parent=None):
+    def __init__(self, node, posn, scene, model, treeWidget, type=ROLE_NODE, parent=None):
         super().__init__(parent=parent)
         self.node = node
         self.nodeNum = self.node.nodeNum
         self.posn = posn
         self.scene = scene
         self.model = model
-        self.listWidget=listWidget
+        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.eList=[]
         for edge in self.model.edgesAtNode(self.node):
@@ -1513,11 +1507,11 @@ class deleteNodeCommand(QUndoCommand):
         #                    id = self.node.nodeNum, metadata=self.node.metadata, \
         #                    metadataAttributes=self.node.metadataAttributes, ports=self.ports)
         if self.type == ROLE_NODE:
-            newNode =  VisNodeItem(self.posn,self.model,self.listWidget ,self.treeWidget, nameP=self.metadata['name'], \
+            newNode =  VisNodeItem(self.posn,self.model,self.treeWidget, nameP=self.metadata['name'], \
                                 id = self.nodeNum, metadata=self.metadata, \
                                 metadataAttributes=self.metadataAttributes, ports=self.ports, parents=self.parents)
         else:
-            newNode = VisBlobItem(self.posn,self.model,self.listWidget, self.treeWidget, nameP=self.metadata['name'], \
+            newNode = VisBlobItem(self.posn,self.model, self.treeWidget, nameP=self.metadata['name'], \
                                 id = self.nodeNum, metadata=self.metadata, metadataAttributes=self.metadataAttributes,\
                                       ports=self.ports, height=self.height, width=self.width, xRadius=self.xRadius,\
                                         yRadius=self.yRadius, parents=self.parents, children=self.children)
@@ -1597,7 +1591,7 @@ class deleteNodeCommand(QUndoCommand):
             else:
                 edgeItem[0].endNode=(self.scene.findItemByIdx(edgeItem[0].endNode[0].nodeNum),edgeItem[0].endNode[1])
                 edgeItem[0].endNode[0]._Ports.append(edgeItem[0].endNode[1])
-            newEdge = VisEdgeItem(self.model,self.listWidget,self.treeWidget, edgeItem[0].startNode, edgeItem[0].endNode, 
+            newEdge = VisEdgeItem(self.model,self.treeWidget, edgeItem[0].startNode, edgeItem[0].endNode, 
                                 directed=edgeItem[0].isDirected,  nameP=edgeItem[0].metadata['name'], id = edgeItem[0].edgeNum,
                                 polyLineType = edgeItem[0]._polyEdge, points=edgeItem[1][1:-1], #exclude edgepoints
                                 tangents=edgeItem[2], metadata=edgeItem[0].metadata, metadataAttributes=edgeItem[0].metadataAttributes)
@@ -1610,13 +1604,13 @@ class deleteNodeCommand(QUndoCommand):
         self.scene.mainwindow.delNode(delIdx)
         
 class createEdgeCommand(QUndoCommand):
-    def __init__(self, edge, scene, model, listWidget, treeWidget, startNode, endNode, parent=None):
+    def __init__(self, edge, scene, model, treeWidget, startNode, endNode, parent=None):
         super().__init__()
         self.edge = edge
         self.edgeNum=0 #placeholder
         self.scene = scene
         self.model = model
-        self.listWidget=listWidget
+        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         # save node and port data
         self.startNode=startNode
@@ -1652,7 +1646,7 @@ class createEdgeCommand(QUndoCommand):
     def redo(self):
         #VisEdgeItem adds to the model and the  list
         if self.edge==None:
-            newEdge = VisEdgeItem(self.model,self.listWidget,self.treeWidget, self.startNode, self.endNode)                              
+            newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode)                              
         else:
             # if any of the nodes have been deleted and recreated they need to be found by reference
             startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
@@ -1666,7 +1660,7 @@ class createEdgeCommand(QUndoCommand):
             endNodeZero._Ports.append(endNodeOne)
             self.startNode=(startNodeZero, startNodeOne)
             self.endNode=(endNodeZero, endNodeOne)
-            newEdge = VisEdgeItem(self.model,self.listWidget,self.treeWidget, self.startNode, self.endNode, 
+            newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
                                 id = self.edgeNum)
         self.edgeNum=newEdge.edgeNum  
 
@@ -1683,13 +1677,13 @@ class createEdgeCommand(QUndoCommand):
         self.edge=newEdge
 
 class deleteEdgeCommand(QUndoCommand):
-    def __init__(self, edge, scene, model, listWidget, treeWidget, startNode, endNode, parent=None):
+    def __init__(self, edge, scene, model, treeWidget, startNode, endNode, parent=None):
         super().__init__(parent=parent)
         self.edge = edge
         self.edgeNum=edge.edgeNum
         self.scene = scene
         self.model = model
-        self.listWidget=listWidget
+        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.isDirected=edge.isDirected
         self._polyEdge=edge._polyEdge
@@ -1756,7 +1750,7 @@ class deleteEdgeCommand(QUndoCommand):
         else:
             self.edge.endNode[0]._Ports.append(self.edge.endNode[1])  """
         #VisEdgeItem adds to the model and the  list      
-        newEdge = VisEdgeItem(self.model,self.listWidget,self.treeWidget, self.startNode, self.endNode, 
+        newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
                             directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
                             polyLineType = self._polyEdge, points=self.points[1:-1], #exclude edgepoints
                             tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
@@ -2039,7 +2033,7 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.setColumnHidden(1,True)
         self.ui.treeWidget.setHeaderLabels(["Name", "Index"])
         self.ui.treeWidget.setSortingEnabled(True)
-        self.ui.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        #self.ui.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.ui.treeWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.ui.actionZoomIn.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl++", None))
         self.ui.actionZoomOut.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+-", None))
@@ -2053,7 +2047,7 @@ class MainWindow(QMainWindow):
         #Display List
         #self.ui.listWidget.setModel(self.model)
         #setup the list to sort by TYPE then ID (using patched function above)
-        self.ui.listWidget.setSortRoles( (KEY_ROLE,KEY_INDEX) )
+        #self.ui.listWidget.setSortRoles( (KEY_ROLE,KEY_INDEX) )
         #self.ui.listWidget.itemChanged.connect(self.updateSceneText)
         self.ui.treeWidget.itemChanged.connect(self.updateSceneText)
         #self.ui.listWidget.itemClicked.connect(self.listClick) # this is now called by itemSelectionChanged
@@ -2063,7 +2057,7 @@ class MainWindow(QMainWindow):
         self.undoStack=QUndoStack()
 
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
-        self.Scene = grScene(self.model,self.ui.listWidget, self.ui.treeWidget, self.undoStack, self)
+        self.Scene = grScene(self.model, self.ui.treeWidget, self.undoStack, self)
         #self.Scene.selectionChanged.connect(self.actionSceneSelectChange)
         #self.ui.listWidget.itemSelectionChanged.connect(self.actionListSelectChange)
         self.ui.treeWidget.itemSelectionChanged.connect(self.actionListSelectChange)
@@ -2190,7 +2184,7 @@ class MainWindow(QMainWindow):
             self.Scene.thisHandleObjectSelected=None
             self.Scene.onlySelected=None
         self.Scene.clearSelection()
-        self.ui.listWidget.clearSelection()
+        #self.ui.listWidget.clearSelection()
         self.ui.treeWidget.clearSelection()
         self.Scene.mouseMode = grScene.INSERTNODE
         #self.actionPointer.setChecked(False)
@@ -2300,7 +2294,7 @@ class MainWindow(QMainWindow):
                 self.showEditNodeDialog(nodeItem)
         else: #Not called anymore?
             item.setFlags(item.flags() | Qt.ItemIsEditable)
-            self.ui.listWidget.editItem(item)
+            #self.ui.listWidget.editItem(item)
 
         self.updateSceneText(item)
 
@@ -2333,7 +2327,7 @@ class MainWindow(QMainWindow):
             #self.model.dataChanged.emit(sIDX, sIDX)
 
         self.Scene.update()
-        self.ui.listWidget.repaint()
+        #self.ui.listWidget.repaint()
         self.ui.treeWidget.repaint()
 
     def actionListSelectChange(self):
@@ -2469,7 +2463,7 @@ class MainWindow(QMainWindow):
         #clear model
         self.model.clear()
         #clear ListW
-        self.ui.listWidget.clear()
+        #self.ui.listWidget.clear()
         self.ui.treeWidget.clear()
         #Clear Scene
         #TODO: Reset the temp vars for odd reloads
@@ -2559,7 +2553,7 @@ class MainWindow(QMainWindow):
                 else:
                     nodeMetadataAttributes[metaKey] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
 
-        newNode =  VisNodeItem(QPointF(nodeX,nodeY),self.model,self.ui.listWidget ,self.ui.treeWidget, nameP=nodeName, id = id,
+        newNode =  VisNodeItem(QPointF(nodeX,nodeY),self.model,self.ui.treeWidget, nameP=nodeName, id = id,
                                 metadata=nodeMetadata, metadataAttributes=nodeMetadataAttributes, ports=nodePorts)
         
         #update port  PARENTS (maybe recompute position?)
@@ -2633,7 +2627,7 @@ class MainWindow(QMainWindow):
                 else:
                     blobMetadataAttributes[metaKey] = {blobNameAttribs.attrib.get("key"): blobNameAttribs.attrib.get("value")}
 
-        newBlob =  VisBlobItem(QPointF(blobX,blobY),self.model,self.ui.listWidget, self.ui.treeWidget, width=blobWidth,\
+        newBlob =  VisBlobItem(QPointF(blobX,blobY),self.model, self.ui.treeWidget, width=blobWidth,\
                                height=blobHeight, xRadius=blobXRadius, yRadius=blobYRadius,\
                                 nameP=blobName, id = id, \
                                 metadata=blobMetadata, metadataAttributes=blobMetadataAttributes,ports=nodePorts)
@@ -2772,7 +2766,7 @@ class MainWindow(QMainWindow):
                     edgeMetadataAttributes[metaKey] = {edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")}
 
         #All the data read, create the edge
-        newEdge = VisEdgeItem(self.model,self.ui.listWidget,self.ui.treeWidget, sItem, eItem, 
+        newEdge = VisEdgeItem(self.model,self.ui.treeWidget, sItem, eItem, 
                                 directed=directed,  nameP=edgeName, id = id,
                                 polyLineType = polyLineType, points=points,tangents=tangents,
                                 metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes   )
@@ -2857,6 +2851,7 @@ class MainWindow(QMainWindow):
             #    print(f"WARNING: node id {fileID=} changed on load")
             
             self.Scene.addItem(GItem)
+            self.addTreeNode(GItem, ROLE_NODE)
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
 
@@ -2879,6 +2874,7 @@ class MainWindow(QMainWindow):
             #    print(f"WARNING: node id {fileID=} changed on load")
             
             self.Scene.addItem(GItem)
+            self.addTreeNode(GItem, ROLE_BLOB)
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
 
@@ -3043,20 +3039,20 @@ class MainWindow(QMainWindow):
             print("core Graph Model\n",self.model.Gr)
             print("model items \n",self.model.getModelItems())
             #print(f"{self.model =}")
-            print("\nListView items:\n",
+            """print("\nListView items:\n",
                "\n".join([self.ui.listWidget.item(x).text()+ \
                 " ID:"+str(self.ui.listWidget.item(x).data(KEY_INDEX))+ \
                 " type:"+str(self.ui.listWidget.item(x).data(KEY_ROLE)) \
-                    for x in range(self.ui.listWidget.count())]))
+                    for x in range(self.ui.listWidget.count())]))"""
             #graphics View ~= scene
             print("\nui.graphicsView items:\n","\n   ".join([str(itm) \
                 for itm in self.ui.graphicsView.items()]))
             
             lstr = "core Graph Model\n"+ str(self.model.Gr)
             lstr += f"model items {self.model.getModelItems()} \n"
-            lstr += "\nListView items:\n"
+            """lstr += "\nListView items:\n"
             lstr += "\n".join([self.ui.listWidget.item(x).text()+ " ID:"+str(self.ui.listWidget.item(x).data(KEY_INDEX))+ \
-                " type:"+str(self.ui.listWidget.item(x).data(KEY_ROLE)) for x in range(self.ui.listWidget.count())])
+                " type:"+str(self.ui.listWidget.item(x).data(KEY_ROLE)) for x in range(self.ui.listWidget.count())])"""
             lstr += "\nui.graphicsView items:\n"
             lstr += "\n   ".join([str(itm) for itm in self.ui.graphicsView.items()])
             #logging.debug(lstr)
@@ -3352,10 +3348,11 @@ class MainWindow(QMainWindow):
         #delete from model
         self.model.delEdge(delIdx)
         #Delete from LWscene updat
-        delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
-        delItem = self.ui.listWidget.takeItem(delRow)
-        delRow = self.ui.treeWidget.findItemRowByIdx(delIdx)
-        delItem = self.ui.treeWidget.takeItem(delRow)
+        #delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
+        #delItem = self.ui.listWidget.takeItem(delRow)
+        itemsToBeDeleted = self.ui.treeWidget.findItems(str(delIdx), Qt.MatchRecursive, 1)
+        for item in itemsToBeDeleted:
+            self.ui.treeWidget.takeTopLevelItem(self.ui.treeWidget.indexOfTopLevelItem(item))
         #del delItem
         #Delete from Scene
         delItem = self.Scene.findItemByIdx(delIdx)
@@ -3392,8 +3389,8 @@ class MainWindow(QMainWindow):
         nodeParents=copy.deepcopy(self.model.Gr.nodeD[delIdx].parents)
         self.model.delNode(delIdx)
         #Delete from LW
-        delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
-        delItem = self.ui.listWidget.takeItem(delRow)
+        #delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
+        #delItem = self.ui.listWidget.takeItem(delRow)
         #del delItem
         #Delete from Treewidget and reparent any children
         itemsToBeDeleted=self.ui.treeWidget.findItems(str(delIdx), Qt.MatchRecursive, 1)
@@ -3432,7 +3429,7 @@ class MainWindow(QMainWindow):
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     delIdx = item.data(KEY_INDEX)
                     #self.delEdge(delIdx)
-                    newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.listWidget, self.ui.treeWidget, item.startNode, item.endNode, parent=None)
+                    newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.treeWidget, item.startNode, item.endNode, parent=None)
                     self.undoStack.push(newAction)
             #Node delete - 1st del any connected edges - handled by GrScene
             for item in selected_items:
@@ -3445,9 +3442,9 @@ class MainWindow(QMainWindow):
                             edgeItem = self.Scene.findItemByIdx(e)
                             #self.delEdge(e)
                             if edgeItem not in selected_items:
-                                newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.listWidget, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
+                                newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
                                 self.undoStack.push(newAction)
-                    newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.listWidget, self.ui.treeWidget, type=item.data(KEY_ROLE), parent=None)
+                    newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.treeWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
             #self.Scene.updateBlobParenting()        #JH there must be a better way to do this
@@ -3473,11 +3470,9 @@ class MainWindow(QMainWindow):
             if item.GraphicsItemFlag.ItemIsSelectable:
                 item.isOnlySelected=False  
                 item.setSelected(True)
-                lWItem = self.Scene.listWidget.findItemByIdx(item.data(KEY_INDEX))
-                self.Scene.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)   
-                #tWItem = self.Scene.treeWidget.findItemByIdx(item.data(KEY_INDEX))
-                self.setCurrentTreeItems(item.data(KEY_INDEX), QItemSelectionModel.SelectionFlag.Select)
-                #self.Scene.treeWidget.setCurrentItem(tWItem,0,QItemSelectionModel.SelectionFlag.Select)                   
+                #lWItem = self.Scene.listWidget.findItemByIdx(item.data(KEY_INDEX))
+                #self.Scene.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)   
+                self.setCurrentTreeItems(item.data(KEY_INDEX), QItemSelectionModel.SelectionFlag.Select)                
             if self.Scene.thisHandleObjectSelected:  
                 self.Scene.thisHandleObjectSelected._deleteHandles()
                 self.Scene.thisHandleObjectSelected=None
@@ -3491,7 +3486,7 @@ class MainWindow(QMainWindow):
         #if self.Scene.onlySelected: 
         #    self.Scene.clearEdgeOnly(self.Scene.onlySelected)
         self.Scene.clearSelection()
-        self.Scene.listWidget.clearSelection()
+        #self.Scene.listWidget.clearSelection()
         self.Scene.treeWidget.clearSelection()
 
     def action_EditZoomIn(self):
@@ -3523,7 +3518,7 @@ class MainWindow(QMainWindow):
         if dlg.exec() == dlg.accepted:
             # Attributes are already updated by the dialog's accept method
             self.Scene.update()
-            self.ui.listWidget.repaint()
+            #self.ui.listWidget.repaint()
             self.ui.treeWidget.repaint()
 
     def showEditNodeDialog(self, visNodeItem):
@@ -3531,7 +3526,7 @@ class MainWindow(QMainWindow):
         if dlg.exec() == dlg.accepted:
             # Attributes are already updated by the dialog's accept method
             self.Scene.update()
-            self.ui.listWidget.repaint()
+            #self.ui.listWidget.repaint()
             self.ui.treeWidget.repaint()
 
 

@@ -92,11 +92,11 @@ class EditVisNodeItemDialog(QDialog):
                 modelItem.setText(newName)
 
             # Update the corresponding list widget item if necessary
-            listWidget = getattr(self.visNodeItem, "listWidget", None)
-            if listWidget:
-                lwItem = listWidget.findItemByIdx(nodeNum)
-                if lwItem:
-                    lwItem.setText(newName)
+            #listWidget = getattr(self.visNodeItem, "listWidget", None)
+            #if listWidget:
+            #    lwItem = listWidget.findItemByIdx(nodeNum)
+            #    if lwItem:
+            #        lwItem.setText(newName)
             # Update treeWidget
             treeWidget = getattr(self.visNodeItem, "treeWidget", None)
             twItems=treeWidget.findItems(str(nodeNum), Qt.MatchRecursive, 1)
@@ -109,7 +109,7 @@ class EditVisNodeItemDialog(QDialog):
         # update the scene and list widget visually
         parentWin = self.parent()
         parentWin.Scene.update()
-        parentWin.ui.listWidget.repaint()
+        #parentWin.ui.listWidget.repaint()
         self.visNodeItem.setMetadataDisplay()
         super().accept()
 
@@ -220,12 +220,12 @@ class EditVisEdgeItemDialog(QDialog):
                 modelItem.setText(newName)
 
             # Update the corresponding list widget item if necessary
-            listWidget = getattr(self.visEdgeItem, "listWidget", None)
-            if listWidget:
-                lwItem = listWidget.findItemByIdx(edgeNum)
-                if lwItem:
-                    lwItem.setText(newName)
-                        # Update treeWidget
+            #listWidget = getattr(self.visEdgeItem, "listWidget", None)
+            #if listWidget:
+            #    lwItem = listWidget.findItemByIdx(edgeNum)
+            #    if lwItem:
+            #        lwItem.setText(newName)
+            # Update treeWidget
             treeWidget = getattr(self.visEdgeItem, "treeWidget", None)
             twItem=treeWidget.findItemByIdx(edgeNum)
             twItem.setText(1,newName)
@@ -244,8 +244,8 @@ class EditVisEdgeItemDialog(QDialog):
         parentWin = self.parent()
         if parentWin and hasattr(parentWin, "Scene"):
             parentWin.Scene.update()
-        if parentWin and hasattr(parentWin.ui, "listWidget"):
-            parentWin.ui.listWidget.repaint()
+        if parentWin and hasattr(parentWin.ui, "treeWidget"):
+            #parentWin.ui.listWidget.repaint()
             parentWin.ui.treeWidget.repaint()
         
         self.visEdgeItem.setMetadataDisplay()
