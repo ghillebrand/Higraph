@@ -322,7 +322,9 @@ class VisNodeItem(QGraphicsObject):
         #save any ports passed in
         # copy to _Ports
         for p in ports:
-            if p.index > self._nextPort: self._nextPort = p.index
+            #Deal with gaps in saved port numbers due to previous deletions
+            if p.index > self._nextPort:
+                self._nextPort = p.index
             self._Ports.append(p)
             p.setParentItem(self.nodeShape)
 
@@ -343,8 +345,8 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = False  # enable itemChange normally
 
     def __repr__(self):
-        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =} Ports:{self._Ports=}\n\
-                {self.startsEdges = },\n{self.endsEdges = }\n*<*" #\n {self.nodeShape =})"
+        return f"\n*>* VisNodeItem {super().__repr__()}\nIndex:{self.data(KEY_INDEX) }  Role:{self.data(KEY_ROLE) =} @ {self.pos() =} Ports:{[p.index for p in self._Ports]}\nstartsEdges {[(e.edgeNum, hex(id(e))) for e in self.startsEdges]},  endsEdges {[(e.edgeNum, hex(id(e))) for e in self.endsEdges]}*<*"
+        # , {hex(id(self.nodeShape)) =}
     __str__ = __repr__
 
     def toXML(self,Xparent):
@@ -466,13 +468,15 @@ class VisNodeItem(QGraphicsObject):
             
             #Position change
             if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange,QGraphicsItem.ItemScenePositionHasChanged]:
+                #BUG: When >=2 end nodes are present, the move is doubled. Even if there are >=3 nodes, and 2 are selected.
+                #  Note: Multiple STARTS are fine!
+                #  This somehow requires knowing if 1 node or >1 node is moving.
                 for port in self._Ports:
-                    for sEdge in port.startsEdgeLines:
-                #for sEdge in self.startsEdges:
-                        sEdge.updateLine((self,port))
-                #for eEdge in self.endsEdges:
-                    for eEdge in port.endsEdgeLines:
-                        eEdge.updateLine((self, port))
+                    for sEdgeLine in port.startsEdgeLines:
+                        sEdgeLine.parentItem().updateLine((self,port),sEdgeLine)
+                    for eEdgeLine in port.endsEdgeLines:
+                        #eEdge.updateLine((self, port),eEdgeLine)
+                        eEdgeLine.parentItem().updateLine((self, port),eEdgeLine)
 
         #note the **return**
         return super().itemChange(change,value)
@@ -513,10 +517,11 @@ class VisNodeItem(QGraphicsObject):
         return pos
 
     def createPort(self,screenPos)->int:
-        """ Create a port at `pos` for an edge to connect on, return the int index for reference"""
-        #TODO: Return a tuple (index, object) ??
+        """ Create a port at `pos` for an edge to connect on, return the new port"""
 
-        #cycle the point through the param calc 1. to get the para for future use, 2. to get the exact shape fit for 'close' clicks
+        #cycle the point through the param calc 
+        # 1. to get the para for future use, 
+        # 2. to get the exact shape fit for 'close' clicks
         #find the param position
         t = self.positionToParameter(screenPos)
 
@@ -531,7 +536,7 @@ class VisNodeItem(QGraphicsObject):
         #print(f"Port created on node{self.nodeNum}: as port{p.index} at {p.t} {len(self._Ports)=}")
         self._Ports.append(p) 
 
-        #TODO: Should this not rather return `p`?
+        # return the Port created
         return p
 
     def findPort(self,screenPos)->int:
@@ -563,17 +568,26 @@ class VisNodeItem(QGraphicsObject):
 
     def updatePortEdges(self):
         """ Update the edges attached to each port """
+        #for port in self._Ports:
+        #    for sEdge in port.startsEdgeLines:
+        #        sEdge.updateLine((self,port))
+        #    for eEdge in port.endsEdgeLines:
+        #        eEdge.updateLine((self, port)) 
+
+        #Update to use edgeLines. Each port only has 1 edgeLine attached
+        #TODO: CHeck how efficient this is at scale???
         for port in self._Ports:
-            for sEdge in port.startsEdgeLines:
-                sEdge.updateLine((self,port))
-            for eEdge in port.endsEdgeLines:
-                eEdge.updateLine((self, port)) 
+            for sEdgeLine in port.startsEdgeLines:
+                #sEdge.updateLine((self,port),sEdgeline)
+                sEdgeLine.parentItem().updateLine((self,port),sEdgeLine)
+            for eEdgeLine in port.endsEdgeLines:
+                eEdgeLine.parentItem().updateLine((self, port),eEdgeLine) 
 
     def deletePort(self, delPort:port): # delIndex:int):
         """Remove a port """
         #TODO: How to check there are no references to _Ports[i]
         #TODO: index is not used - delete based on ID 
-        #Currently (02a) only one edge per port
+        #Currently (02a) only one edge per port. This is critical for hyperedges
 
         self._Ports.remove(delPort)
         delPort.setParentItem(None)

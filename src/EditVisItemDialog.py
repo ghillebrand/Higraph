@@ -252,6 +252,151 @@ class EditVisEdgeItemDialog(QDialog):
         super().accept()
 
 
+class EditVisHyperEdgeItemDialog(QDialog):
+    """
+    Dialog to edit all attributes of a VisHyperEdgeItem.
+    Modded from VisEdgeItem
+    Pass an instance of VisEdgeItem to the constructor.
+    When accepted, updates the attributes of the original object.
+    original code from chatGPT, modified
+    """
+
+    def __init__(self, visEdgeItem, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(f"Edit edge [{visEdgeItem.metadata['name']}] ")
+        self.visEdgeItem = visEdgeItem
+        graphModel = getattr(visEdgeItem, "model", None)
+
+        # --- Gather initial values ---
+        edgeNum = getattr(visEdgeItem, "edgeNum", "")
+        #dispText = getattr(visEdgeItem, "dispText", "")
+        #Hyper edge Update
+        startNodeIdx = []
+        startNodeName = []
+        for n in visEdgeItem.startNodes:
+            startNodeIdx.append(n[0].nodeNum)
+            startNodeName.append(graphModel.Gr.nodeD[n[0].nodeNum].metadata["name"])
+
+        endNodeIdx = []
+        endNodeName = []
+        for n in visEdgeItem.endNodes:
+            endNodeIdx.append(n[0].nodeNum)
+            endNodeName.append(graphModel.Gr.nodeD[n[0].nodeNum].metadata["name"])
+
+        polyEdge = visEdgeItem._polyEdge
+        isDirected = getattr(visEdgeItem, "isDirected", None)
+
+        # Attributes from the model
+        #self.edgeMetadata = graphModel.Gr.edgeD[edgeNum].metadata if graphModel else {}
+        self.edgeMetadata = self.visEdgeItem.metadata
+        self.edgeMetadataAttributes = self.visEdgeItem.metadataAttributes
+
+        edgeName = self.visEdgeItem.metadata.get("name", self.visEdgeItem.textItem.toPlainText())
+
+        # --- Dialog Layout ---
+        layout = QVBoxLayout(self)
+
+        form = QFormLayout()
+        # Edge Number (read-only)
+        self.edgeNumLabel = QLabel(f"{edgeNum}")
+        form.addRow("Edge ID", self.edgeNumLabel)
+
+        # Start Node Index (read-only)
+        #self.startNodeLabel = QLabel(str(startNodeIdx) +": "+ startNodeName)
+        self.startNodeLabel = QLabel(", ".join( [f"{n[0]}: {n[1]}" for n in zip(startNodeIdx,startNodeName)] ))
+        form.addRow("Start Node", self.startNodeLabel)
+
+        # End Node Index (read-only)
+        #self.endNodeLabel = QLabel(str(endNodeIdx)+": "+ endNodeName)
+        self.endNodeLabel = QLabel(", ".join( [f"{n[0]}: {n[1]}" for n in zip(endNodeIdx,endNodeName)] ))
+        form.addRow("End Node", self.endNodeLabel)
+
+        # Directed?
+        self.directedCheckbox = QCheckBox("Directed")
+        if isDirected is not None:
+            self.directedCheckbox.setChecked(isDirected)
+        form.addRow("Is Directed", self.directedCheckbox)
+
+        #Edge type        
+        self.edgeTypeCombo = QComboBox()
+        self.edgeTypeCombo.addItems(['Straight', 'Spline'])
+        #choose the right type (Straight = default)
+        if polyEdge == SPLINE:
+            self.edgeTypeCombo.setCurrentIndex(1)     
+        form.addRow("Edge drawing type",self.edgeTypeCombo)
+
+        #Metadata edit
+
+        self.metadataWidget = MetadataEditorWidget(self.visEdgeItem.metadata,
+                                                    self.visEdgeItem.metadataAttributes, self)
+        form.addRow("Metadata:", self.metadataWidget)
+
+        layout.addLayout(form)
+        #Make it wider
+        self.setMinimumWidth(500)
+        self.setMinimumHeight(400)
+
+        # Dialog buttons
+        self.buttonBox = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.buttonBox.accepted.connect(self.accept)
+        self.buttonBox.rejected.connect(self.reject)
+        layout.addWidget(self.buttonBox)
+
+    def accept(self):
+        #print("Edit VisEdge Accept")
+        # Update metadata (which includes name)
+        #update metadata
+        #self.edgeMetadata.clear()
+        #self.edgeMetadata.update(self.metadataWidget.setMetadataAndAttributes())
+        self.metadataWidget.setMetadataAndAttributes(self.visEdgeItem)
+
+        # --- Update VisEdgeItem attributes ---
+        #newName = self.nameEdit.text()
+        newName = self.edgeMetadata["name"]
+        if hasattr(self.visEdgeItem, "textItem"):
+            self.visEdgeItem.textItem.setPlainText(newName)
+
+        graphModel = getattr(self.visEdgeItem, "model", None)
+        edgeNum = self.visEdgeItem.edgeNum
+
+        # Update abstract graph metadata and model
+        if graphModel:
+            graphModel.Gr.edgeD[edgeNum].metadata['name'] = newName
+
+            # Also update model item text if available
+            modelItem = graphModel.findItemByIdx(edgeNum)
+            if modelItem:
+                modelItem.setText(newName)
+
+            # Update the corresponding list widget item if necessary
+            listWidget = getattr(self.visEdgeItem, "listWidget", None)
+            if listWidget:
+                lwItem = listWidget.findItemByIdx(edgeNum)
+                if lwItem:
+                    lwItem.setText(newName)
+
+        # Directed
+        isDirected = self.directedCheckbox.isChecked()
+        self.visEdgeItem.setDirected(isDirected)
+
+        #Linetype - index matches STRAIGHT==0 and SPLINE==1
+        lineType = self.edgeTypeCombo.currentIndex()
+        self.visEdgeItem.setPolylineType(lineType)
+
+        self.visEdgeItem.update()
+
+        # update the scene and list widget visually
+        parentWin = self.parent()
+        if parentWin and hasattr(parentWin, "Scene"):
+            parentWin.Scene.update()
+        if parentWin and hasattr(parentWin.ui, "listWidget"):
+            parentWin.ui.listWidget.repaint()
+        
+        self.visEdgeItem.setMetadataDisplay()
+        super().accept()
+
+
+
 class MetadataEditorWidget(QWidget):
     def __init__(self, metadata: dict, metadataAttributes:dict, parent=None):
         super().__init__(parent)

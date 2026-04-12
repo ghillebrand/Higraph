@@ -50,6 +50,7 @@ class Graph:
             return f"nodeID:{self.nodeID},metadata:{self.metadata},startsEdges:{self.startsEdges},"\
                     f"endsEdges:{self.endsEdges}, parents:{self.parents}, children:{self.children}\n"
 
+        #TODO Make a better str function
         __str__ = __repr__
         
         def addStarts(self,edge):
@@ -156,7 +157,6 @@ class Graph:
             e = self.edge(start,end,{"name":name},id=id)
             
             #Tell the nodes they have new edges
-            #TODO: `nodeD` is a misnomer, since edges can be start/ end items too.
             self.nodeD[start].startsEdges.append(e.edgeID)
             self.nodeD[end].endsEdges.append(e.edgeID)
             
@@ -172,6 +172,7 @@ class Graph:
         #    and update metadata
         #In the editor, this will require adding an additional arc to the edge at (segment:proportion)
         #TODO: should this not be a separate method addToEdge(), since the edge itself already exists?
+        #   This is easier? No additional logic required?
         
         # edge -> node
         if start in self.edgeD and end in self.nodeD:

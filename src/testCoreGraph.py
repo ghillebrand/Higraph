@@ -154,11 +154,13 @@ edges:
     return g
 
 
-def test2():
+def test2Hyperedges():
     """
         https://en.wikipedia.org/wiki/Hypergraph
+        Implements the tricky parts of https://en.wikipedia.org/wiki/File:Directed_hypergraph_example.svg
+        
     """
-    print("\n\nTest2")
+    print("\n\nTest2-Hyperedges")
     g2:Graph = Graph()
     for i in range(1,7):
         print(g2.addNode(str(i)))
@@ -166,7 +168,9 @@ def test2():
     a2 = g2.addEdge(1,2,'a2')
     a3 = g2.addEdge(2,0,'a3')
     a4 = g2.addEdge(1,3,'a4')
-    g2.addEdge(2,a4)
+    #node -> edge
+    g2.addEdge(2,a4) #Note that this will merge the new edge into a hyperedge
+    #edge -> node
     g2.addEdge(a4,4)
     a5 = g2.addEdge(2,5,'a5')
     g2.addEdge(4,a5)
@@ -338,7 +342,7 @@ edges:
 
 print("="*50)
 
-test7_BasicBlobs()
+#test7_BasicBlobs()
 
 #test63_MultiEdge1NodeENDDeleteEdge()
 #test62_MultiEdge1NodeStartDeleteEdge()
@@ -348,8 +352,8 @@ test7_BasicBlobs()
 #test41_MultiEdgeNodesStarts()
 #test42_MultiEdgeNodesEnds()
 #test3Update() 
-#test2()
-test1()
+test2Hyperedges()
+#test1()
 
 
 

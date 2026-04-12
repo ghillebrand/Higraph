@@ -132,14 +132,6 @@ class ArrowHeadItem(QGraphicsItem):
                 painter.setBrush(QBrush(Qt.black))
                 painter.setPen(QPen(Qt.black))
 
-        """if self.isSelected():
-            #TODO: Arrow is never selected!
-            #print("Arrow Paint SELECTED")
-            painter.setBrush(QBrush(Qt.blue))
-            painter.setPen(QPen(Qt.blue,1,Qt.DashLine)) 
-        else:
-            painter.setBrush(QBrush(Qt.black))
-            painter.setPen(QPen(Qt.black))"""
         painter.drawPolygon(self.polygon)
         painter.restore()
 
@@ -200,27 +192,82 @@ class HandleItem(QGraphicsRectItem):
         painter.restore()
         
 
-
-class dummyNodeItem(QGraphicsItem):
-    """ a graphics-only node-like object to manage joins for hyperedges, ports for nodes """
+class dummyNodeRoot(QGraphicsItem):
+    """ an almost-abstract graphics-only node-like object to manage joins for hyperedges, ports for nodes """
+    dummyNodeIndex = 1000
     def __init__(self,center: QPointF,  parent=None):
         super().__init__(parent=parent)
+        self.suppressItemChange = True
         #This might be resolved by the starts end finishEdges code 
         #self.setData(KEY_ROLE, ROLE_DUMMYNODE)
         self.setPos(center)
+        #self.setFlag(QGraphicsItem.ItemIsMovable, True)
+ 
         #Note - since this is a purely geometric construct, these are called `EdgeLines``, not `Edges`
-        #Not used for ports
         self.startsEdgeLines = []
         self.endsEdgeLines = []
 
+        #To make debugging possible
+        self.nodeNum = dummyNodeItem.dummyNodeIndex
+        dummyNodeItem.dummyNodeIndex += 1
+        self.suppressItemChange = False
+
     def boundingRect(self):
-        return QRect(self.x(), self.y(), self.x()+1, self.y()+1)
+        bRect = QRect(self.x(), self.y(), self.x()+1, self.y()+1)
+        return bRect
     
     def paint(self, painter: QPainter, option, widget=None):
-        """ This object is only visable via a handle, but paint is required by Qt """
+        """ This object is only visible via a handle, but paint is required by Qt """
+        #Debugging
+        #painter.drawRect(QRectF(-5,-5,10,10))
         pass
 
-class port(dummyNodeItem):
+class dummyNodeItem(dummyNodeRoot):
+    """ true dummyNodes need an `itemchange()` method, which breaks `port`s"""
+    def __init__(self,center: QPointF,  parent=None):
+        super().__init__(center, parent=parent)
+        self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,True)
+        self.setFlag(QGraphicsItem.ItemIsSelectable,False)
+
+    def itemChange(self, change, value):
+        if self.suppressItemChange:
+            return super().itemChange(change, value)
+        
+        if change in [QGraphicsItem.ItemPositionHasChanged]:
+            #print(f"itm change dN {self.nodeNum} ", end = ",  ")
+            #print(f".", end = "",flush=True)
+            #update attached points
+            for eL in self.startsEdgeLines:
+                #print(f"start {eL.lineNum=} ", end = ",  ", flush=True)
+                eL._p[0] = self.pos()
+            
+            for eL in self.endsEdgeLines:
+                #print(f"end {eL.lineNum=} ",end = ",  ", flush=True)
+                eL._p[-1] = self.pos()
+
+        return super().itemChange(change, value)
+
+    def _updateFromHandles(self,pos):
+        
+        #if self.suppressItemChange == True:
+        #    return
+        #self.suppressItemChange = True
+
+        self.prepareGeometryChange()
+        #print(">", end = "", flush=True)
+        self.setPos(pos)
+        for eL in self.startsEdgeLines:
+            eL._p[0] = self.pos()
+            eL.updatePath()
+        
+        for eL in self.endsEdgeLines:
+            eL._p[-1] = self.pos()
+            eL.updatePath()
+        #Tell the edge to update
+        #edge = self.startsEdgeLines[0].parentItem()
+        #edge.updateLine()
+
+class port(dummyNodeRoot):
     """ a port for nodes to give edges a spot to connect. `t` is where on the perimeter the point is"""
     def __init__(self,center: QPointF, t:float = 0, index:int = -1, parent=None):
         super().__init__(center, parent=parent)
@@ -264,3 +311,12 @@ class port(dummyNodeItem):
             dx, dy = dy, -dx
 
         return (dx,dy)
+    
+    #Used for debugging
+    def XXitemChange(self, change, value):
+        if self.suppressItemChange:
+            return super().itemChange(change, value)
+        
+        if change in [QGraphicsItem.ItemPositionHasChanged]:
+            #print(f"itm change dN {self.nodeNum} ", end = ",  ")
+            print(f"*", end = "",flush=True)

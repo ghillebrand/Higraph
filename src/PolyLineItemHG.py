@@ -1,7 +1,9 @@
-"""HG version has hacks for higraph  """
+"""HG version has modifications for higraph  """
 
 import math
 from typing import List
+#For debugging: (stack traces)
+import traceback
 
 from PySide6.QtCore import QRectF, QPointF, Qt, QLineF
 from PySide6.QtGui import QPen, QBrush, QPainter, QPainterPath, QPainterPathStroker,\
@@ -15,10 +17,15 @@ from GraphicsSupport import *
 
 
 class StraightLineItem(QGraphicsItem):
-
+    lineCount  = 3000
     def __init__(self, p: List[QPointF], parent=None):
         """Create a polyline with a list of points (QPointFs)."""
         super().__init__(parent)
+
+        #id to make debuging easier
+        self.lineNum = StraightLineItem.lineCount
+        StraightLineItem.lineCount +=  1
+
         self.suppressItemChange = True
         self._p = p
         self._boundingRect = QRectF()
@@ -147,6 +154,9 @@ class StraightLineItem(QGraphicsItem):
         self._createHandles()
         self.updatePath()
 
+    def split(self,newP:QPointF):
+        print("Add in split for straight lines!!!!")
+
     def deletePoint(self, point: QPointF):
         # Remove nearest point within HITSIZE
         min_dist = math.inf
@@ -192,9 +202,7 @@ class StraightLineItem(QGraphicsItem):
         self._pHandles.clear()
         self.parentItem().setZValue(3000)
         # Add new handles
-        #TODO: is idx used?
-
-        for idx, pt in enumerate(self._p):
+        for pt in self._p:
             handle = HandleItem(pt, color=EDGE_HANDLE_COLOUR,parent=self)
             handle.setMoveCallback(self._updateFromHandles)
             self._pHandles.append(handle)
@@ -231,21 +239,28 @@ class StraightLineItem(QGraphicsItem):
         return path
  
 class HermiteSplineItem(QGraphicsItem):
-
+    lineCount = 2000
     def __init__(self, p:List, t:List=[], parent=None):
         """ create a hermite (cubic) spline with a list of points (QPointFs) and an optional, matching list of 2-tuples of tangents (QPointFs). 
             Tangent coordinates are relative to their parent point. 
             First tangent tuple is (0,QPointF), and last is (QPointF,0)
         """
         super().__init__(parent)
+        #id to make debuging easier
+        self.lineNum = HermiteSplineItem.lineCount
+        HermiteSplineItem.lineCount +=  1
+
         self.suppressItemChange = True
+
         self._p = p
-        
+        self._pHandles = []        
+        self._tHandles = []
         #How many lines per segment
-        #TODO: Put this in HGConstants
+        #TODO: Put 40 in HGConstants. Still allow it to vary within each HS
         self.linesPerSegment = 40
 
         #Tangents
+        #TODO: Put this in HGConstants
         self.scaleFactor = 30 #20 #how long the default tangents are
         #Are tangents given:
         if len(t) == len(p):
@@ -283,7 +298,7 @@ class HermiteSplineItem(QGraphicsItem):
 
         
         self._boundingRect = QRectF()
-        #self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #For graph drawing, splines will only ever move via nodes moving, so this is not needed
         #In the general case of free-standing splines, this would need more careful handling.
         #self.setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -306,9 +321,9 @@ class HermiteSplineItem(QGraphicsItem):
 
     def __repr__(self):
         #tuple formatted, can be fed into constructor
-        return str(f"({self._p},\n{self._t})")
+        #return str(f"({self._p},\n{self._t})")
         #return str(f"(p_ids:{[hex(id(pp)) for pp in self._p]},\n{self._t})")
-        #return super().__repr__()
+        return super().__repr__()
 
     def boundingRect(self) -> QRectF:
         adjust = 2
@@ -440,6 +455,54 @@ class HermiteSplineItem(QGraphicsItem):
         self._createHandles()
         self.update()
 
+    def split(self,newP:QPointF):
+        """ splits the spline at newP, updating the point list of self and return a new HS"""
+        #Based on `addPoint` code
+        #There shouldn't be any handles, but just in case
+        self._deleteHandles()
+
+        #Find which path points it's between. 
+        # Just uses the start point of each element, since they're short
+        minD = math.inf 
+        ic, xc, yc = 0,0,0  #These are path element, element x,y start
+        for i in range(self._path.elementCount()):
+            xo, yo = self._path.elementAt(i).x, self._path.elementAt(i).y
+            newD = math.sqrt((newP.x() - xo)**2+ (newP.y() - yo)**2)
+            if newD < minD:
+                ic, xc, yc = i,xo,yo
+                minD = newD
+
+        #TODO: This requires a fixed num of lines/ segment - make it a constant
+        #i is the start of the segment we're on.
+        i = ic // self.linesPerSegment
+
+        #Calc the tangents using the previous and next segment points (not spline knots)
+        xl = self._path.elementAt(ic-1).x
+        yl = self._path.elementAt(ic-1).y
+        xr = self._path.elementAt(ic+1).x
+        yr = self._path.elementAt(ic+1).y
+        hyp = math.sqrt((xr-xl)**2 + (yr-yl)**2 )
+        dx = (xr-xl)/hyp * self.scaleFactor
+        dy = (yr-yl)/hyp * self.scaleFactor
+
+        #keep the remnant points for the new segment
+        newPts = self._p[i+1:]
+        newTgts = self._t[i+1:]
+
+        #truncate self after i, at newP
+        self._p = self._p[:i+1] + [newP]        
+        self._t = self._t[:i+1] + [(QPointF(dx,dy),QPointF(0,0))]
+        self.updatePath()
+
+        #start newSpline at newPoint, just before i+1
+        newPts = [newP] + newPts
+        #print(f"HS split: {newPts=}")
+        newTgts = [(QPointF(0,0),QPointF(dx,dy)) ] + newTgts
+
+        newSeg = HermiteSplineItem(newPts, newTgts, parent=self.parentItem())
+
+        return newSeg
+
     def deletePoint(self,delP:QPointF):
         """Delete the control point nearest delP"""
         if len(self._p)>2:  # can't delete start or end points
@@ -496,6 +559,8 @@ class HermiteSplineItem(QGraphicsItem):
 
     def updatePath(self):
         """ Allow the calling of the recalculation independently of handle updates"""
+        #print(f"u",end="",flush=True)
+        #traceback.print_stack(limit=3)
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
         self.update()    
@@ -512,7 +577,7 @@ class HermiteSplineItem(QGraphicsItem):
 
         #Start and end points always present p0, pn (or p-1)
         #have a list of point and tgnt handles
-        # print("createHandles")
+        #print(f"createHandles for {self.lineNum}")
         self.parentItem().setZValue(3000)
         self._pHandles = []
         for pi in self._p: 
