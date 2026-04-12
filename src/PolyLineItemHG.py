@@ -256,7 +256,7 @@ class HermiteSplineItem(QGraphicsItem):
         self._pHandles = []        
         self._tHandles = []
         #How many lines per segment
-        #TODO: Put this in HGConstants
+        #TODO: Put 40 in HGConstants. Still allow it to vary within each HS
         self.linesPerSegment = 40
 
         #Tangents
@@ -577,7 +577,7 @@ class HermiteSplineItem(QGraphicsItem):
 
         #Start and end points always present p0, pn (or p-1)
         #have a list of point and tgnt handles
-        print(f"createHandles for {self.lineNum}")
+        #print(f"createHandles for {self.lineNum}")
         self.parentItem().setZValue(3000)
         self._pHandles = []
         for pi in self._p: 

@@ -247,6 +247,26 @@ class dummyNodeItem(dummyNodeRoot):
 
         return super().itemChange(change, value)
 
+    def _updateFromHandles(self,pos):
+        
+        #if self.suppressItemChange == True:
+        #    return
+        #self.suppressItemChange = True
+
+        self.prepareGeometryChange()
+        #print(">", end = "", flush=True)
+        self.setPos(pos)
+        for eL in self.startsEdgeLines:
+            eL._p[0] = self.pos()
+            eL.updatePath()
+        
+        for eL in self.endsEdgeLines:
+            eL._p[-1] = self.pos()
+            eL.updatePath()
+        #Tell the edge to update
+        #edge = self.startsEdgeLines[0].parentItem()
+        #edge.updateLine()
+
 class port(dummyNodeRoot):
     """ a port for nodes to give edges a spot to connect. `t` is where on the perimeter the point is"""
     def __init__(self,center: QPointF, t:float = 0, index:int = -1, parent=None):

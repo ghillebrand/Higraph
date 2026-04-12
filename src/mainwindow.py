@@ -302,7 +302,9 @@ class grScene(QGraphicsScene):
             # standalone popup context menu
             menu = QMenu()
             actions = [] #menuActions equate to selectable items.
-            
+            act = QAction("Pick an item:", menu)
+            menu.addAction(act)
+            actions.append((act, None))
             for itm in items:
                 if itm.data(KEY_ROLE) == ROLE_EDGE:
                     iType = "Edge"
@@ -444,7 +446,7 @@ class grScene(QGraphicsScene):
             edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
         # Otherwise, add a segment to the edge, forming a hyperedge
         elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_EDGE]:
-            print("Node -> edge")
+            #"Node -> edge"
             #Find the segment
             itms = self.itemsHere( self.endPoint, QSize(1,1), [ROLE_POLYLINE])
             if len(itms) == 1 and itms[0].data(KEY_ROLE) == ROLE_POLYLINE:
@@ -463,7 +465,7 @@ class grScene(QGraphicsScene):
                 self.model.Gr.addEdge( self.tmpEdgeSt.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )
 
         elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_EDGE] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
-            print("edge->node")
+            #edge->node
             #Find the segment
             itms = self.itemsHere( self.startPoint, QSize(1,1), [ROLE_POLYLINE])
             if len(itms) == 1 and itms[0].data(KEY_ROLE) == ROLE_POLYLINE:
@@ -495,18 +497,33 @@ class grScene(QGraphicsScene):
     def startMovingEdgeEnd(self,edge, handle):
         """ relink edge, using handle as the floating end point
         similar to rubberLine, but we now have a line to work with"""
+
+
+        #Hyperedges have a number of possible starts
+        """
+        #Only invoke `MovingEdgeEnd` if this is an edge-node cxn, not a edge-dummyNode
+        #Which point the handles comes from
+        # handle.parentItem is polyLine, which has a list of points, _p. _p[0] is start, _p[-1] end.
+        edgeLine = handle.parentItem() 
+        startPt = edgeLine._pHandles.index(handle)
+        #if the "port" is a dummyNode, don't treat as an edgeEnd move
+        print(f" {edgeLine._p[startPt]=}")
+        for d in edge.dummyNodes:
+            if d[0].pos() == edgeLine._p[startPt]:
+                print("dummyStart")
+                return
+        """
+
         #print(f"StartMovingEdge {edge.metadata['name']}")
         self.handle = handle #Store the box for the Move/ Finish functions
         #is handle at start or end?
         #if self.handle.pos() == edge.startNode[1].scenePos():
-
-        #Hyperedges have a number of possible starts
         #Which point the handles comes from
         # handle.parentItem is polyLine, which has a list of points, _p. _p[0] is start, _p[-1] end.
         edgeLine = handle.parentItem() 
-        print(f"StMME edgeLine = {edgeLine.lineNum}")    
         startPt = edgeLine._pHandles.index(handle)
         #print(f"SMEE {type(startPt)} value {startPt=}")
+        #print(f"StMME edgeLine = {edgeLine.lineNum}")    
         if startPt == 0: 
             # NOTE: Node relinking is only done on successful finish, so track the old Terminator item
             self.EdgeEnd = "start"
@@ -516,7 +533,7 @@ class grScene(QGraphicsScene):
             for NP in edge.startNodes:
                 if edgeLine in NP[1].startsEdgeLines:
                     self.oldTermItem = NP
-                    print(f"SMEE start oldTermItem = {NP[0].nodeNum}")
+                    #print(f"SMEE start oldTermItem = {NP[0].nodeNum}")
                     break
             #self.oldTermItem = edge.startNode
             #print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
@@ -533,7 +550,7 @@ class grScene(QGraphicsScene):
             for NP in edge.endNodes:
                 if edgeLine in NP[1].endsEdgeLines:
                     self.oldTermItem = NP
-                    print(f"SMEE end oldTermItem = {NP[0].nodeNum}")
+                    #print(f"SMEE end oldTermItem = {NP[0].nodeNum}")
                     break
             edge.setEnd((handle,handle),edgeLine)
 
@@ -566,6 +583,7 @@ class grScene(QGraphicsScene):
             #Check for a self-edge: newTerm == startE and we were moving `end` or the other end is now looped back
             #  if so, make sure there is a mid point in the  polyline line
             #TODO: Generalise from ...Node[0]
+            #HACK: Just disabled self-edges totally during build of hyperedges
             elif False: ###*****###(newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
                 #newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
                 print(f"Self edge {self.EdgeEnd}")
@@ -577,9 +595,7 @@ class grScene(QGraphicsScene):
             #Find the edgeLine involved. 
             #TODO: Check what happens if you try to drag a `dummyNode` handle onto a real node!
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
-            #TODO **Crashes on "move back" - port counting mangled**
             if self.EdgeEnd == "start":
-                print( f" FMEE trying to find edgeLine in  {[e.lineNum for e in self.oldTermItem[1].startsEdgeLines]}")
                 #Grab the line from the old Port's list of edgeLines:
                 edgeLine = self.oldTermItem[1].startsEdgeLines[0]
 
@@ -607,9 +623,7 @@ class grScene(QGraphicsScene):
                 newTermItem[0].startsEdges.append(edge)
                 newTermItem[1].startsEdgeLines.append(edgeLine)
             
-            if self.EdgeEnd == "end":
-                print( f" FMEE trying to find end edgeLine in {[e.lineNum for e in self.oldTermItem[1].startsEdgeLines]}")
-                
+            if self.EdgeEnd == "end":                
                 edgeLine = self.oldTermItem[1].endsEdgeLines[0]
                 #TODO: The port code is true for either end - review flow of function and tidy up
                 
@@ -633,9 +647,7 @@ class grScene(QGraphicsScene):
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
                 
                 newTermItem[0].endsEdges.append(edge)
-                newTermItem[1].endsEdgeLines.append(edgeLine)
-                print(f"FMME at end: {edge}")
-        
+                newTermItem[1].endsEdgeLines.append(edgeLine)        
         else: # link back to old
             #print("Missed (nothing found) on relink")
             self.handle.setPos(self.oldTermItem[1].scenePos())
@@ -713,7 +725,7 @@ class grScene(QGraphicsScene):
             if mouseEvent.modifiers() and Qt.ControlModifier and \
                     self.mouseMode==self.POINTER and len(self.selectedItems())>0:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
-                print(f"scene MPE first if {selItem}")
+                #print(f"scene MPE first if {selItem}")
                 if selItem:
                     selItem = selItem[0]
                     if self.thisHandleObjectSelected:
@@ -733,17 +745,40 @@ class grScene(QGraphicsScene):
                 selItems = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_HANDLE])
                 if len(selItems) > 0:
                     selItem=selItems[0]
-                    #it's a handle, process
-                    #selItem.setSelected(True)   JH Handles aren't selectable
                     p = selItem.parentItem()
+                    #it's a handle, process
+
+                    #selItem.setSelected(True)   JH Handles aren't selectable
+                    # p = selItem.parentItem() #GH - moved to top
                     #p.setSelected(True)  JH should already be selected
                     #p._createHandles()   #JH to figure out blobs testing
                     # p.parentItem.setSelected(True)
                     if p.data(KEY_ROLE) == ROLE_POLYLINE and (selItem == p._pHandles[0] or selItem == p._pHandles[-1]):
-                        self.mouseMode = self.MOVEEDGEEND
-                        #Start move
-                        #selHandles  _Must_ be a handle, and parent must be a visEdge - deal with the polyline inbetween
-                        self.startMovingEdgeEnd(selItem.parentItem().parentItem(), selItem)
+                        
+                        #Is it a dummyNode?
+                        #Only invoke `MovingEdgeEnd` if this is an edge-node cxn, not a edge-dummyNode
+                        #Which point the handles comes from
+                        # handle.parentItem is polyLine, which has a list of points, _p. _p[0] is start, _p[-1] end.
+                        handle = selItem  #local
+                        edge = selItem.parentItem().parentItem()#p has to be an edge at this point
+                        edgeLine = selItem.parentItem() 
+                        startPt = edgeLine._pHandles.index(selItem) #handle)
+                        isDummyNode = False
+                        for d in edge.dummyNodes: 
+                            if d[0].pos() == edgeLine._p[startPt]: #Note: dummyNodes will start AND end
+                                dummyNode = d[0]
+                                isDummyNode = True
+                                break
+                        if isDummyNode:
+                            self.handle = handle
+                            self.mouseMode = self.MOVEHANDLE
+                            handle.setMoveCallback(dummyNode._updateFromHandles)
+                            
+                        else: #We have a normal handle to process
+                            self.mouseMode = self.MOVEEDGEEND
+                            #Start move
+                            #selHandles  _Must_ be a handle, and parent must be a visEdge - deal with the polyline inbetween
+                            self.startMovingEdgeEnd(selItem.parentItem().parentItem(), selItem)
                     else: #tangent or Mid point, or Blob corner to move
                         self.handle = selItem
                         self.mouseMode = self.MOVEHANDLE
@@ -826,7 +861,6 @@ class grScene(QGraphicsScene):
             # Now process item selection
             if self.mouseMode == self.POINTER:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE,ROLE_BLOB, ROLE_POLYLINE])
-                print(f"scene MPE pointer selItem {[type(se) for se in selItem]}" )
                 if selItem:
                     selItem = selItem[0]
                 #else:
@@ -873,9 +907,9 @@ class grScene(QGraphicsScene):
                             #TODO: Hyperedge - create handles on all the edgeLines
                             selItem._createHandles()
                             #This code leaves a lot of orphans, but is the ultimate goal
+                            #Temp fix for hyperedges
                             #for eL in parent.edgeLines:
                             #    eL._createHandles()
-                            #Temp fix for hyperedges
 
                             #selItem.setSelected(False)
                             #selItem = parent
@@ -2650,7 +2684,7 @@ class MainWindow(QMainWindow):
         """
         if self.fileName:
 
-                #Generate the graph header info
+            #Generate the graph header info
             # Creating XML structure in Graphml format
             # Reference: yEdxFileOnly: construct_graphml
             # xml = ET.Element("?xml", version="1.0", encoding="UTF-8", standalone="no")

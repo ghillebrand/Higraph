@@ -66,7 +66,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #startNode must be a tuple (node,port). convert if not
         #TODO: Was this only needed during construction - all `sItems` seem to be tuples now.
         if not type(sItem) is tuple: 
-            print(f"{sItem._Ports =}")
+            #print(f"{sItem._Ports =}")
             if len(sItem._Ports) == 0: #No ports, create one
                 spID = sItem.createPort(self.startNode.pos())
             sItem = (sItem,sItem._Ports[spID])
@@ -75,7 +75,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         
         #Add ports to endNode
         if not type(eItem) is tuple: 
-            print(f"{eItem._Ports =}")
+            #print(f"{eItem._Ports =}")
             if len(eItem._Ports) == 0: #No ports, create one
                 epID = eItem.createPort(self.endNode.pos())
             eItem = (eItem,eItem._Ports[epID])
@@ -483,17 +483,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             if  type(source) is HandleItem:
                 #print(f"Making Handle into a tuple")
                 source = (0,source)
-        #print(f"{source=}  == {self.startNode=}")
-        #Checking the .t value is not needed now that there is only 1 edge per port.
         
-        #TODO: Is this even needed???!!! I don't think so. Clean out permanently once fully tested.
-        #if source and type(source[0] )== VisBlobItem and source[0]==self.startNode[0] and source[1].t==self.startNode[1].t:
-        #    self.edgeLine.setP(0,source[1].scenePos())
-        #    print("updateLine start with t")
-        #elif source and type(source[0] )== VisBlobItem and source[0]==self.endNode[0] and source[1].t==self.endNode[1].t:
-        #    self.edgeLine.setP(-1,source[1].scenePos())
-        #    print("updateLine end with t")
-        #el
         if source == self.startNode:
             #Set the 0th edgeLine point to where the `source` object port (now) is. 
             #print(f"setting start from {source[0].nodeNum}, {source[1].index}")
@@ -974,8 +964,9 @@ class VisHyperEdgeItem(QGraphicsObject):
 
     def setEnd(self, end, edgeLine = None):
         """ Set the end of self to end, a (Node,Port) tuple. Also update model, for edits""" 
-
-        if not edgeLine and end[0] != end[1]:  #old call, not a handle 
+         
+         # call from old code, not a handle
+        if not edgeLine and end[0].data(ROLE_KEY) not in [ROLE_NODE,ROLE_BLOB, ROLE_HANDLE]: #HACK: end[0] != end[1]:  
             print("setEnd: Setting edgeLine to [0]")
             traceback.print_stack(limit=3)
             edgeLine = self.edgeLines[0]
@@ -1032,15 +1023,12 @@ class VisHyperEdgeItem(QGraphicsObject):
         #print(f"{source=}  == {self.startNode=}")
 
         if source in self.startNodes:
-            #self.edgeLines[0].setP(0,source[1].scenePos())
             edgeLine.setP(0,source[1].scenePos())
         elif source in self.endNodes: #endNode
             #print(f"updateLine: setting end from node {source[0].nodeNum}, port {source[1].nodeNum} with endLines {[eL.lineNum for eL in source[1].endsEdgeLines]}")
-            #self.edgeLines[0].setP(-1,source[1].scenePos())
             edgeLine.setP(-1,source[1].scenePos())
 
-        #DummyNodes???? start & ending???
-        # Check for a match in dN.starts/endsEdgeLines ??        
+        #DummyNodes are handled in the callback, I _think_    
         elif type(source) == dummyNodeItem:
             print("Dummynode")
         #Draw the arrow/ end shape
@@ -1074,11 +1062,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             >>updates the node reverse pointers via updateLine()
             Returns False if guard clauses not met, else false.
         """
-        #print(f"\n+++  addseg to {edgeLine.lineNum=} +++")
-        #print(f" st nodes/port {[(stNd[0].nodeNum, stNd[1].nodeNum) for stNd in self.startNodes]} ")
-        #print(f" end nodes/port {[(enNd[0].nodeNum,enNd[1].nodeNum) for enNd in self.endNodes]} ")
-        #print(f" dummy nodes/port {[(enNd[0].nodeNum,enNd[1].nodeNum) for enNd in self.dummyNodes]} ")
-        
         #store the start & end nodes (or dummyNodes) before any changes
         #Note: The guard clause included in this loop should be applied in the scene
         #TODO: Move the guard clause from here once everything is stable    
@@ -1103,7 +1086,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             if edgeLine in eN[1].endsEdgeLines:
                 endN = eN
         #if endN: 
-        #    print(f"  add seg {endN[0].nodeNum=} ")
         if endN == None: # check for dummyNode
             for dN in self.dummyNodes:
                 if edgeLine in dN[1].endsEdgeLines:
@@ -1139,14 +1121,11 @@ class VisHyperEdgeItem(QGraphicsObject):
         if endN[0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]: 
             self.setEnd(endN,splitLine)
 
-        #print(f"addSeg after split {self.edgeNum=} has edgeLines : {[el.lineNum for el in self.edgeLines]}")
-
         #Now create the new, third edge. from `Node` to the dummyNode
         if start == "Node":  #node --> edge
             #newNode needs another port
             nPort = newNode.createPort(nodePt)    
             #give the edgeLine the new endpoint 
-            #pts = [nPort.scenePos(),dN[0].scenePos()]
             pts = [nPort.pos(),dN[0].pos()]
             #Make pretty tangents
             tgts = []        
@@ -1175,7 +1154,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             #newNode needs another port
             nPort = newNode.createPort(nodePt)    
             #give the edgeLine the new endpoint 
-            #pts = [dN[1].scenePos(), nPort.scenePos()]
             pts = [dN[1].pos(), nPort.pos()]
             #Make pretty tangents
             #Use the start tangent of the split line
@@ -1186,7 +1164,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
 
             newNP = (newNode,nPort)
-            #print(f"addSeg newNode endsE {[e.edgeNum for e in newNP[0].endsEdges]}")
             #Tell the node & port it has an extra edge ending at it.
             newNP[0].endsEdges.append(self)
             newNP[1].endsEdgeLines.append(newEdge)
@@ -1199,8 +1176,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             #Update the dummyNode as start
             dN[0].startsEdgeLines.append(newEdge)
         
-        print(f" addSeg at end {dN[0].pos()=}")
-
         #Tidy up all the end arrows by toggling isDirected (remove and then add back)
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
