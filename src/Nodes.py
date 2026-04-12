@@ -12,7 +12,7 @@ from xml.dom import minidom
 import math
 
 from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
-            QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem,
+            QGraphicsScene, QGraphicsView, QListWidget, QListWidgetItem, QTreeWidget, QTreeWidgetItem,
             QGraphicsEllipseItem, QGraphicsItem, QGraphicsRectItem, QGraphicsTextItem, QGraphicsLineItem, QAbstractGraphicsShapeItem,
             QLineEdit, QInputDialog, QMenu, QFileDialog, QStyleOptionGraphicsItem, QGraphicsObject,
             QSlider, QLabel, QStatusBar, QColorDialog, QFontDialog,
@@ -233,14 +233,15 @@ class VisNodeItem(QGraphicsObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,posn,model,listWidget, parent=None, nameP ="", id=None,
+    def __init__(self,posn,model, treeWidget, parent=None, nameP ="", id=None,
                     metadata={}, metadataAttributes={},ports = [], parents=[]):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
         
         self.model = model
-        self.listWidget = listWidget
+        #self.listWidget = listWidget
+        self.treeWidget = treeWidget
         #Store the edges that start/ end at this node
         self.startsEdges = []  
         self.endsEdges = []  
@@ -264,12 +265,11 @@ class VisNodeItem(QGraphicsObject):
             self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
         self.blobDescription=""   #needed for blobs
         #Update positions
-
         #add to the text list
-        lWitem = QListWidgetItem(self.model.Gr.nodeD[self.nodeNum].metadata['name'])
-        lWitem.setData(KEY_INDEX,self.nodeNum)
-        lWitem.setData(KEY_ROLE,ROLE_NODE)
-        self.listWidget.addItem(lWitem)
+        #lWitem = QListWidgetItem(self.model.Gr.nodeD[self.nodeNum].metadata['name'])
+        #lWitem.setData(KEY_INDEX,self.nodeNum)
+        #lWitem.setData(KEY_ROLE,ROLE_NODE)
+        #self.listWidget.addItem(lWitem)
 
         # Create a text item to hold & show the ID number
         # Not needed with KEY_INDEX role
@@ -627,12 +627,12 @@ class VisBlobItem(VisNodeItem):
     BR = 2
     BL = 3
 
-    def __init__(self,posn, model,listWidget, parent=None, nameP ="", id=None,
+    def __init__(self,posn, model, treeWidget, parent=None, nameP ="", id=None,
                     metadata={}, metadataAttributes={}, ports = [],
                     height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
-        super().__init__(posn, model,listWidget, parent=parent, nameP =nameP, id=id,
+        super().__init__(posn, model, treeWidget, parent=parent, nameP =nameP, id=id,
                     metadata=metadata, metadataAttributes=metadataAttributes,ports=ports)
 
         self.suppressItemChange = True
@@ -641,10 +641,11 @@ class VisBlobItem(VisNodeItem):
         #TODO: Make blob names default to bnn
 
         #add to the text list
-        lWitem = self.listWidget.findItemByIdx(self.nodeNum)
+        #lWitem = self.listWidget.findItemByIdx(self.nodeNum)
         #TODO: Revisit the value the model adds
         self.node.setData(KEY_ROLE,ROLE_BLOB)
-        lWitem.setData(KEY_ROLE,ROLE_BLOB)
+        #lWitem.setData(KEY_ROLE,ROLE_BLOB)
+
 
         self.setData(KEY_ROLE, ROLE_BLOB)
 
@@ -843,15 +844,13 @@ class VisBlobItem(VisNodeItem):
             #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
             #JH for item in kids: #self.children:
             for item in kidsToGo:
-                #removeFromGroup seems to bug out occasionally - coords mangled (pos vs scenePos) :/
-                #
-                #self.childGroup.removeFromGroup(item)
+                  #removeFromGroup seems to bug out occasionally :/
+                self.childGroup.removeFromGroup(item)
                 
                 #This seems more reliable.
                 newScenePos = item.mapToScene(0, 0)
-                #TODO: setting to `None` occasionally makes this disappear from the scene. `self` breaks the `pos`/ `scenePos` coords
-                item.setParentItem(None)  #self)
-                #item.setParentItem(self.scene())
+                item.setParentItem(None)
+                item.scene().update()
                 item.setPos(newScenePos)
             self.scene().destroyItemGroup(self.childGroup)
             self.childGroup=None
@@ -867,13 +866,19 @@ class VisBlobItem(VisNodeItem):
 
         #On ItemSelectedHasChanged, create a temp group of contained BLOBS and NODES. Delete on deselect
         if change == QGraphicsItem.ItemSelectedHasChanged :
-            kids = self.getChildList(self)
+            #kids = self.getChildList(self)
+            kidsIdx=self.scene().getDirectContainmentGraph(self.scene().getContainmentMap(self))[self.data(KEY_INDEX)]
+            kids=[]
+            for k in kidsIdx:
+                kids.append(self.scene().findItemByIdx(k))
+            #print("checking kids", kidsIdx)
             #print("and this is kids", kids)
             #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
             if value == 1 and self.isOnlySelected: #when selected
+            #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
-                for item in kids: 
+                for item in kids:
                     self.childGroup.addToGroup(item)
             #else: #unselected or no children
             elif value == 0: #when deselected
