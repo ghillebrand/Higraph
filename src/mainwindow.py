@@ -436,7 +436,7 @@ class grScene(QGraphicsScene):
             #newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
             #self.undoStack.push(newAction)
             #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-            edgeItem = VisHyperEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            edgeItem = VisHyperEdgeItem(self.model,self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
             #Commented out because now done in createEdgeCommand
             #Add to *Scene*

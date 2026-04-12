@@ -520,7 +520,7 @@ class VisHyperEdgeItem(QGraphicsObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,model,listWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
+    def __init__(self,model,treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
                     polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
 
         """ Create a visual edge, using the pos of the st and end items, which are tuples of (Node,Port)
@@ -530,7 +530,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
         self.model = model
-        self.listWidget = listWidget
+        self.treeWidget = treeWidget
 
         #A hyperedge may have _many_ start and end nodes, or just 1 of each - normalise to lists here.
         #Hyper Step 1: just make this work with 1 elt lists of start/ end
@@ -585,10 +585,14 @@ class VisHyperEdgeItem(QGraphicsObject):
                 
         #add to the text list
         #TODO: Should this not be driven from the model?
-        lWitem = QListWidgetItem(self.metadata['name'])
-        lWitem.setData(KEY_INDEX,self.edgeNum)
-        lWitem.setData(KEY_ROLE,ROLE_EDGE)
-        self.listWidget.addItem(lWitem)
+        #lWitem = QListWidgetItem(self.metadata['name'])
+        #lWitem.setData(KEY_INDEX,self.edgeNum)
+        #lWitem.setData(KEY_ROLE,ROLE_EDGE)
+        #self.listWidget.addItem(lWitem)
+        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum)])
+        tWitem.setData(0, KEY_INDEX,self.edgeNum)
+        tWitem.setData(0, KEY_ROLE,ROLE_EDGE)
+        self.treeWidget.addTopLevelItem(tWitem)
 
         #Used to switch off built in drawing
         noPen = QPen(Qt.NoPen)
