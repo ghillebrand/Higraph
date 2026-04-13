@@ -709,6 +709,34 @@ class grScene(QGraphicsScene):
                 pass
         outlist.sort()
         return(outlist)
+    
+    def savePosition(self, selection):
+        infoList=[]
+        for item in selection:
+            if item.data(KEY_ROLE)==ROLE_NODE:
+                saveItem=[item.data(KEY_INDEX), item.data(KEY_ROLE), item.scenePos()]
+                infoList.append(saveItem)
+            elif item.data(KEY_ROLE)==ROLE_BLOB:
+                saveItem=[item.data(KEY_INDEX), item.data(KEY_ROLE), item.scenePos(), (item._width, item._height)]
+                infoList.append(saveItem)
+        return(infoList)
+    
+    def rePosition(self, infoList):
+        #NB the port update code comes from node itemchange
+        for itemInfo in infoList:
+            item=self.findItemByIdx(itemInfo[0])
+            if item.scenePos()==itemInfo[2]: #if it hasn't moved just leave it
+                return
+            else:
+                item.setPos(itemInfo[2])
+                for port in item._Ports:
+                    for sEdgeLine in port.startsEdgeLines:
+                        sEdgeLine.parentItem().updateLine((self,port),sEdgeLine)
+                    for eEdgeLine in port.endsEdgeLines:
+                        #eEdge.updateLine((self, port),eEdgeLine)
+                        eEdgeLine.parentItem().updateLine((self, port),eEdgeLine)
+        return
+
 
     def clearSelection(self):
         for item in self.selectedItems():
@@ -716,7 +744,7 @@ class grScene(QGraphicsScene):
         return super().clearSelection()
         
     def mousePressEvent(self, mouseEvent):
-        
+        self.savedPositionList=[]
         mPos = mouseEvent.scenePos()
         #Track the last mouse position for Pointer moves
         self._lastMousePos = mPos
@@ -815,6 +843,8 @@ class grScene(QGraphicsScene):
                     if len(edgeItems)>0:
                         self.dragEdge=edgeItems[0]
                 # hand over to QT? or exit?
+                #save current position for undo
+                self.savedPositionList=self.savePosition(self.selectedItems())
                 super().mousePressEvent(mouseEvent)
                 return
             # in all other cases clear selection
@@ -891,6 +921,7 @@ class grScene(QGraphicsScene):
                             self.changedByCode=False
                             selItem.isOnlySelected = True
                             selItem.setSelected(True)
+                            self.savedPositionList=self.savePosition([selItem])
                             #super().mousePressEvent(mouseEvent) JH commented out
                             #return JH commented out APril 11 2026
                         #immediately hand off for Qt to move
@@ -912,6 +943,7 @@ class grScene(QGraphicsScene):
                             #self.listWidget.setCurrentItem(lWItem)
                             self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)
                             self.changedByCode=False
+                            self.savedPositionList=self.savePosition([selItem])
                             # accept? return?
 
                         if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
@@ -1167,6 +1199,9 @@ class grScene(QGraphicsScene):
                         #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
                         self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                          
                     self.changedByCode=False
+                    newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
+                    self.undoStack.push(newAction)
+                    #self.rePosition(self.savedPositionList)
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
                 #    for s in self.selectedItems():
@@ -1191,15 +1226,6 @@ class grScene(QGraphicsScene):
             #print("End move handle")
             self.mouseMode = self.POINTER
         elif self.mouseMode == self.DRAGGING:
-            """if self.qtListToListOfIdxs(self.selectedItems()) != self.qtListToListOfIdxs(self.listWidget.selectedItems()):
-                #update listview
-                self.listWidget.clearSelection()
-                self.changedByCode=True
-                for selItem in self.selectedItems():
-                    self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                           
-                    #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
-                    #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
-                self.changedByCode=False"""
             if self.qtListToListOfIdxs(self.selectedItems()) != self.qtTreeToListOfIdxs(self.treeWidget.selectedItems()):
                 #update treeview
                 self.treeWidget.clearSelection()
@@ -1210,7 +1236,9 @@ class grScene(QGraphicsScene):
                 self.changedByCode=False
             #print(f"up: DRAGGING --> POINTER")
             self.mouseMode = self.POINTER
-        
+            newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
+            self.undoStack.push(newAction)
+            #self.rePosition(self.savedPositionList)
         #Only do this on release, for performance reasons.
         #self.updateBlobParenting()
 
@@ -1907,6 +1935,23 @@ class deleteEdgeCommand(QUndoCommand):
     def redo(self):
         delIdx = self.edge.data(KEY_INDEX)
         self.scene.mainwindow.delEdge(delIdx)
+
+class moveNodeCommand(QUndoCommand):
+    def __init__(self, lastPosition, currentPosition, scene, model, treeWidget):
+        super().__init__()
+        self.currentPosition=copy.deepcopy(currentPosition) 
+        self.lastPosition=copy.deepcopy(lastPosition)
+        self.scene = scene
+        self.model = model
+        self.treeWidget=treeWidget
+
+    def undo(self):
+        self.scene.rePosition(self.lastPosition)
+
+    def redo(self):
+        #reposition to current position
+        self.scene.rePosition(self.currentPosition)
+        
         
 
 def debug_qgraphicsitem_refs():
