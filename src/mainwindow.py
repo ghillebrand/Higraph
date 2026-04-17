@@ -247,6 +247,7 @@ class grScene(QGraphicsScene):
         #Track single item selection (for edges)
         self.onlySelected = None
         self.thisHandleObjectSelected = None
+        self.groupedItems = []  #when grouped items aren't selected
 
         #For dragging
         self._lastMousePos = QPointF(0,0)
@@ -753,7 +754,6 @@ class grScene(QGraphicsScene):
                     self.model.Gr.nodeD[itemInfo[0]].resetParents(directParentDic[itemInfo[0]])
                     parentsToAdd=list(newParents-oldParents)
                     for p in parentsToAdd:
-                        print(p, itemInfo[0])
                         #find parent in tree
                         parentsInTree=self.treeWidget.findItems(str(p), Qt.MatchRecursive, 1)
                         for parentInTree in parentsInTree:

@@ -878,14 +878,18 @@ class VisBlobItem(VisNodeItem):
             #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
+                #self.scene().groupedItems=[]
                 for item in kids:
                     self.childGroup.addToGroup(item)
+                    #if item not in self.scene().selectedItems():
+                        #self.scene().groupedItems.append(item)
             #else: #unselected or no children
             elif value == 0: #when deselected
                 #delete group
                 #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 #if getattr(self, "childGroup" , False):
                 self.removeGroup(self.childGroup)
+                #self.scene().groupedItems=[]
                     #JH kids = self.getChildList(self)
 
                 """kidsToGo=self.childGroup.childItems()
