@@ -1146,6 +1146,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             # directed parallel to existing t's at end - steal from edgeLine
             tgts.append( edgeLine._t[-1] )
             newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            newEdge.setData(KEY_ROLE,ROLE_POLYLINE)
 
             #Add this to startNodes
             newNP = (newNode,nPort)
@@ -1172,6 +1173,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             tgts.append( (QPointF(newSlope[0] * -self.tgtScaleFactor, newSlope[1] * -self.tgtScaleFactor),QPointF(0,0))  )
 
             newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            newEdge.setData(KEY_ROLE,ROLE_POLYLINE)
 
             newNP = (newNode,nPort)
             #Tell the node & port it has an extra edge ending at it.
