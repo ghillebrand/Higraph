@@ -1012,7 +1012,6 @@ class grScene(QGraphicsScene):
                             #selItem.setSelected(True) # check this
                         # super().mousePressEvent(mouseEvent)
                         # return
-                        
                         if selItem.data(KEY_ROLE) == ROLE_EDGE:
                             if not selItem.stH:
                                 selItem.setZValue(2000) #move the edge above nodes
@@ -1165,12 +1164,7 @@ class grScene(QGraphicsScene):
     def mouseReleaseEvent(self, mouseEvent):
         mPos = mouseEvent.scenePos()
         #print(f"release {self.mouseMode =}")
-        if (mouseEvent.button() == Qt.MouseButton.RightButton) and\
-                mouseEvent.modifiers() and Qt.ControlModifier: 
-            screamText=self.addText("Screams")
-            screamText.deleteLater
-            #self.posnLabel.deleteLater
-            #self.update()
+
         if self.mouseMode == self.INSERTNODE:
             #print("Node release at :",mouseEvent.scenePos())
             #print("up node")
@@ -1244,8 +1238,9 @@ class grScene(QGraphicsScene):
                         #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
                         self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                          
                     self.changedByCode=False
-                    newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
-                    self.undoStack.push(newAction)
+                    if self.savedPositionList != []:
+                        newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
+                        self.undoStack.push(newAction)
                     #self.rePosition(self.savedPositionList)
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
@@ -1281,8 +1276,9 @@ class grScene(QGraphicsScene):
                 self.changedByCode=False
             #print(f"up: DRAGGING --> POINTER")
             self.mouseMode = self.POINTER
-            newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
-            self.undoStack.push(newAction)
+            if self.savedPositionList != []:
+                newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
+                self.undoStack.push(newAction)
             #self.rePosition(self.savedPositionList)
         #Only do this on release, for performance reasons.
         #self.updateBlobParenting()
