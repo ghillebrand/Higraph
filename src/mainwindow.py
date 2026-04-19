@@ -1200,6 +1200,8 @@ class grScene(QGraphicsScene):
             #self.addItem(blob)
             #self.updateBlobParenting()
             self.mouseMode = self.POINTER
+            #creating a blob accidentally does a rubber band selection, so clear that
+            self.clearSelection()
             mouseEvent.accept()
             return
         elif self.mouseMode == self.INSERTEDGE:
