@@ -20,7 +20,8 @@ from PySide6.QtWidgets import (QApplication, QGraphicsView, QHBoxLayout, QHeader
     QMainWindow, QMenu, QMenuBar, QSizePolicy,
     QSplitter, QStatusBar, QToolBar, QTreeWidget,
     QTreeWidgetItem, QWidget)
-
+import os
+basedir = os.path.dirname(__file__)
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -75,9 +76,9 @@ class Ui_MainWindow(object):
         self.actionSelect_None.setObjectName(u"actionSelect_None")
         self.actionNewNode = QAction(MainWindow)
         self.actionNewNode.setObjectName(u"actionNewNode")
-        icon8 = QIcon()
-        icon8.addFile(u"src/icons/node.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.actionNewNode.setIcon(icon8)
+        self.icon8 = QIcon()
+        self.icon8.addFile(os.path.join(basedir,"icons/node.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionNewNode.setIcon(self.icon8)
         self.actionNewNode.setMenuRole(QAction.MenuRole.NoRole)
         self.actionZoomIn = QAction(MainWindow)
         self.actionZoomIn.setObjectName(u"actionZoomIn")
@@ -85,20 +86,20 @@ class Ui_MainWindow(object):
         self.actionZoomOut.setObjectName(u"actionZoomOut")
         self.actionNewEdge = QAction(MainWindow)
         self.actionNewEdge.setObjectName(u"actionNewEdge")
-        icon9 = QIcon()
-        icon9.addFile(u"src/icons/icons8-double-path-50e.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.actionNewEdge.setIcon(icon9)
+        self.icon9 = QIcon()
+        self.icon9.addFile(os.path.join(basedir,"icons/icons8-double-path-50e.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionNewEdge.setIcon(self.icon9)
         self.actionPointer = QAction(MainWindow)
         self.actionPointer.setObjectName(u"actionPointer")
         icon10 = QIcon()
-        icon10.addFile(u"src/icons/cursor.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon10.addFile(os.path.join(basedir,"icons/cursor.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.actionPointer.setIcon(icon10)
         self.actionPointer.setMenuRole(QAction.MenuRole.NoRole)
         self.actionNewBlob = QAction(MainWindow)
         self.actionNewBlob.setObjectName(u"actionNewBlob")
-        icon11 = QIcon()
-        icon11.addFile(u"src/icons/blob.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.actionNewBlob.setIcon(icon11)
+        self.icon11 = QIcon()
+        self.icon11.addFile(os.path.join(basedir,"icons/blob.png"), QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.actionNewBlob.setIcon(self.icon11)
         self.actionsdsd = QAction(MainWindow)
         self.actionsdsd.setObjectName(u"actionsdsd")
         self.centralwidget = QWidget(MainWindow)
