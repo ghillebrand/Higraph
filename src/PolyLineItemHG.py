@@ -351,12 +351,16 @@ class HermiteSplineItem(QGraphicsItem):
     
     def hoverEnterEvent(self, event):
         self.isHovered = True
+        self.parentItem().isHovered = True
         self.update()
+        self.parentItem().update()
         #super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event):
         self.isHovered = False
+        self.parentItem().isHovered = False
         self.update()
+        self.parentItem().update()
         #super().hoverLeaveEvent(event)
 
 

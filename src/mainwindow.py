@@ -1027,7 +1027,7 @@ class grScene(QGraphicsScene):
             #
             # Now process item selection
             if self.mouseMode == self.POINTER:
-                selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE,ROLE_BLOB, ROLE_POLYLINE])
+                selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_HANDLE,ROLE_NODE,ROLE_BLOB])
                 if selItem:
                     selItem = selItem[0]
                 #else:
@@ -1088,6 +1088,16 @@ class grScene(QGraphicsScene):
                         # super().mousePressEvent(mouseEvent)
                         # return
                         if selItem.data(KEY_ROLE) == ROLE_EDGE:
+                            self.thisHandleObjectSelected=selItem
+                            self.onlySelected=selItem
+                            selItem.setSelected(True)
+                            selItem.isOnlySelected=True
+                            #parent = selItem.parentItem() 
+                            #parent.setSelected(True) #Select the Edge
+                            #parent.isOnlySelected = True
+                            #TODO: Hyperedge - create handles on all the edgeLines
+                            #print("running create")
+                            selItem._createHandles()
                             if not selItem.stH:
                                 selItem.setZValue(2000) #move the edge above nodes
                                 # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
@@ -1226,7 +1236,8 @@ class grScene(QGraphicsScene):
 
             
         elif self.mouseMode == self.MOVEEDGEEND:
-            self.MoveEdgeEnd(self.onlySelected.parentItem(),mPos)
+            #self.MoveEdgeEnd(self.onlySelected.parentItem(),mPos)
+            self.MoveEdgeEnd(self.thisHandleObjectSelected,mPos)
             mouseEvent.accept()
             
         elif self.mouseMode == self.MOVEHANDLE:
@@ -1333,7 +1344,8 @@ class grScene(QGraphicsScene):
             #MainWindow.actionSceneSelectChange(MainWindow.Scene)
         elif self.mouseMode == self.MOVEEDGEEND:
             #print("Finish moveEdgeEnd")
-            self.finishMovingEdgeEnd(self.onlySelected.parentItem(), mPos,mouseEvent)
+            #self.finishMovingEdgeEnd(self.onlySelected.parentItem(), mPos,mouseEvent)
+            self.finishMovingEdgeEnd(self.thisHandleObjectSelected, mPos,mouseEvent)
             self.mouseMode = self.POINTER
             self.views()[0].setCursor(Qt.ArrowCursor)
             mouseEvent.accept()

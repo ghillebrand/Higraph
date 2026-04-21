@@ -863,7 +863,17 @@ class VisHyperEdgeItem(QGraphicsObject):
         outlinePath = QPainterPathStroker()
         outlinePath.setWidth(HITSIZE*2)
         return outlinePath.createStroke(path)
+    
+    def _createHandles(self):
+        for line in self.edgeLines:
+            line._createHandles()
+        return
 
+    def _deleteHandles(self):
+        for line in self.edgeLines:
+            line._deleteHandles()
+        return
+    
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
 
