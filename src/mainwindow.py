@@ -758,6 +758,7 @@ class grScene(QGraphicsScene):
         #update treewidget
         directParentDic=self.getDirectParentDic()   
         for itemInfo in infoList:
+            item=self.findItemByIdx(itemInfo[0])
             oldParents=set(self.model.Gr.nodeD[itemInfo[0]].parents)
             if itemInfo[0] in directParentDic:
                 newParents=set(directParentDic[itemInfo[0]])
@@ -782,7 +783,7 @@ class grScene(QGraphicsScene):
                 if oldParents==set([]):
                     itemExact=self.treeWidget.findItems(str(itemInfo[0]), Qt.MatchExactly, 1)
                     itemIdx=self.treeWidget.indexOfTopLevelItem(itemExact[0])
-                    item=self.treeWidget.takeTopLevelItem(itemIdx)
+                    itemTaken=self.treeWidget.takeTopLevelItem(itemIdx)
                 else:
                     parentsToRemove=list(oldParents-newParents)
                     for p in parentsToRemove:
@@ -796,10 +797,64 @@ class grScene(QGraphicsScene):
                             parentInTree.addChildren(removedChildren)
                             #parentInTree.takeChild(parentInTree.indexOfChild(itemsInTree[0]))  #check that this removes correctly
                         self.model.Gr.nodeD[p].delChild(itemInfo[0])
+            #check for any children that have not been picked up already
+            newKidsIdx=set(self.getDirectContainmentGraph(self.getContainmentMap(item))[itemInfo[0]])
+            oldKidsIdx=set(self.model.Gr.getDescendents(itemInfo[0]))
+            #if newKidsIdx==set([]) and oldKidsIdx==set([]):
+               # kidsToDo=[]
+           # else:
+            kidsToDo=list(newKidsIdx|oldKidsIdx)
+            for kid in kidsToDo:
+                if kid not in directParentDic:
+                    directParentDic[kid]=[]
+                if directParentDic[kid]!= self.model.Gr.nodeD[kid].parents:
+                    oldParents=set(self.model.Gr.nodeD[kid].parents)
+                    if kid in directParentDic:
+                        newParents=set(directParentDic[kid])
+                    else:
+                        newParents=set([])
+                    if oldParents != newParents:
+                        itemsInTree=self.treeWidget.findItems(str(kid), Qt.MatchRecursive, 1)
+                        itemInTree=itemsInTree[0]       
+                        if newParents==set([]):
+                            self.model.Gr.nodeD[kid].resetParents([])
+                            self.treeWidget.addTopLevelItem(QTreeWidgetItem.clone(itemsInTree[0]))
+                        else:
+                            self.model.Gr.nodeD[kid].resetParents(directParentDic[kid])
+                            parentsToAdd=list(newParents-oldParents)
+                            for p in parentsToAdd:
+                                #find parent in tree
+                                parentsInTree=self.treeWidget.findItems(str(p), Qt.MatchRecursive, 1)
+                                for parentInTree in parentsInTree:
+                                    newChildClone=QTreeWidgetItem.clone(itemInTree)
+                                    parentInTree.addChild(newChildClone)
+                                self.model.Gr.nodeD[p].addChild(kid)
+                        if oldParents==set([]):
+                            itemExact=self.treeWidget.findItems(str(kid), Qt.MatchExactly, 1)
+                            itemIdx=self.treeWidget.indexOfTopLevelItem(itemExact[0])
+                            itemTaken=self.treeWidget.takeTopLevelItem(itemIdx)
+                        else:
+                            parentsToRemove=list(oldParents-newParents)
+                            for p in parentsToRemove:
+                                #find parent in tree
+                                parentsInTree=self.treeWidget.findItems(str(p), Qt.MatchRecursive, 1)
+                                for parentInTree in parentsInTree:
+                                    removedChildren=parentInTree.takeChildren()
+                                    for i in itemsInTree:
+                                        if i in removedChildren:
+                                            removedChildren.remove(i)
+                                    parentInTree.addChildren(removedChildren)
+                                    #parentInTree.takeChild(parentInTree.indexOfChild(itemsInTree[0]))  #check that this removes correctly
+                                self.model.Gr.nodeD[p].delChild(kid)
+
+            #kids=[]
+            #for k in kidsIdx:
+            #    kids.append(self.findItemByIdx(k))
+            
+            
                 
         return
-
-
+    
     def clearSelection(self):
         for item in self.selectedItems():
             item.isOnlySelected=False

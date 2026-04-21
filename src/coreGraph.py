@@ -305,3 +305,12 @@ class Graph:
 
     def addNodeChild(self,nodeID:int, childID:int):
         self.nodeD[nodeID].addChild(childID)
+
+    def getDescendents(self, nodeID):
+            #gets children and subsequent generations
+            """ Return a list of all children and childrens children etc """
+            descendants = []
+            for c in self.nodeD[nodeID].children:
+                descendants.append(c)
+                descendants.extend(self.getDescendents(c))
+            return descendants
