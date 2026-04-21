@@ -725,11 +725,30 @@ class grScene(QGraphicsScene):
     def rePosition(self, infoList):
         #NB the port update code comes from node itemchange
         item=self.findItemByIdx(infoList[0][0])
-        if item.scenePos()!=infoList[0][2]: #unless this is a redo, the move has already happene   
+        if item.scenePos()!=infoList[0][2] or (item.data(KEY_ROLE)==ROLE_BLOB and infoList[0][3]!=(item._width, item._height)): 
+        #unless this is a redo, the move/resize has already happened   
         #update position
             for itemInfo in infoList:
                 item=self.findItemByIdx(itemInfo[0])
                 item.setPos(itemInfo[2])
+                if item.data(KEY_ROLE)==ROLE_BLOB and itemInfo[3]!=(item._width, item._height):
+                    #NB this code comes from _updatefromhandles (modified)
+                    item.suppressItemChange = True
+                    item.prepareGeometryChange()
+                    item._width=itemInfo[3][0]
+                    item._height=itemInfo[3][1]
+                    item._Handles[VisBlobItem.TL].setPos(0,0)
+                    item._Handles[VisBlobItem.TR].setPos(item._width, 0)
+                    item._Handles[VisBlobItem.BR].setPos(item._width, item._height)
+                    item._Handles[VisBlobItem.BL].setPos(0, item._height)
+                    #resize text when blob resizes
+                    item.blobDescription.setTextSize(item)
+                    #Figure out the geometry for these lines
+                    item._rect=QRectF(0,0,item._width,item._height)
+                    item.nodeShape.setRoundedRect(QRectF(0,0,item._width,item._height))
+                    #Create a polygon version for `parameterFromPos`
+                    item.updatePorts()
+                    item.suppressItemChange = False
                 for port in item._Ports:
                     for sEdgeLine in port.startsEdgeLines:
                         sEdgeLine.parentItem().updateLine((self,port),sEdgeLine)
@@ -870,7 +889,8 @@ class grScene(QGraphicsScene):
                         self.handle = selItem
                         self.mouseMode = self.MOVEHANDLE
                         if p.data(KEY_ROLE) == ROLE_BLOB:
-                            selItem.setMoveCallback(p._updateFromHandles)  #JH
+                            self.savedPositionList=self.savePosition([p])
+                            selItem.setMoveCallback(p._updateFromHandles)  
                             selItem.parentItem().removeGroup("group")
                         #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
                         #mouseEvent.accept()
@@ -1266,6 +1286,9 @@ class grScene(QGraphicsScene):
         elif self.mouseMode == self.MOVEHANDLE:
             #SHOULD all be handled by Qt? or callback?
             #print("End move handle")
+            if self.savedPositionList != []:
+                newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
+                self.undoStack.push(newAction)
             self.mouseMode = self.POINTER
         elif self.mouseMode == self.DRAGGING:
             if self.qtListToListOfIdxs(self.selectedItems()) != self.qtTreeToListOfIdxs(self.treeWidget.selectedItems()):
@@ -1491,7 +1514,8 @@ class grScene(QGraphicsScene):
         if topLevelSet != parentSet:
             #add any missing top level items
             for z in parentSet-topLevelSet:
-                tWitem = QTreeWidgetItem([self.model.Gr.nodeD[z].metadata['name'],str(z)])
+                tWitem = QTreeWidgetItem([self.model.Gr.nodeD[z].metadata['name'],str(z), ROLE_NODE])
+                tWitem.setIcon(2,self.Scene.mainwindow.NODE_ICON)
                 tWitem.setData(0, KEY_INDEX,z)
                 tWitem.setData(0, KEY_ROLE,ROLE_NODE)
                 self.treeWidget.addTopLevelItem(tWitem)
@@ -2202,10 +2226,10 @@ class MainWindow(QMainWindow):
         super().__init__(parent)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.treeWidget.setColumnCount(2)
+        self.ui.treeWidget.setColumnCount(3)
         self.ui.treeWidget.setIndentation(15)
         self.ui.treeWidget.setColumnHidden(1,True)
-        self.ui.treeWidget.setHeaderLabels(["Name", "Index"])
+        self.ui.treeWidget.setHeaderLabels(["Name", "Index", "Type"])
         self.ui.treeWidget.setSortingEnabled(True)
         #self.ui.listWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.ui.treeWidget.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -2252,6 +2276,11 @@ class MainWindow(QMainWindow):
         # Create a status bar
         status_bar = QStatusBar()
         self.setStatusBar(status_bar)
+     
+        # Create search bar
+        self.searchbar = QLineEdit(placeholderText="Search ...")
+        self.searchbar.textChanged.connect(self.search)
+        status_bar.addPermanentWidget(self.searchbar)
 
         # Create a slider
         self.zoom_slider = QSlider(Qt.Horizontal)
@@ -2270,6 +2299,7 @@ class MainWindow(QMainWindow):
 
         # Connect the slider to the zoom handler
         self.zoom_slider.valueChanged.connect(self.setZoom)
+
 
         #deal with deletions not updating - doesn't help - issue is with object persistence
         #self.ui.graphicsView.setViewportUpdateMode(QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
@@ -2323,6 +2353,9 @@ class MainWindow(QMainWindow):
         #Help
         self.ui.action_About.triggered.connect(self.action_HelpAbout)
         self.ui.action_Credits.triggered.connect(self.action_HelpCredits)
+        self.NODE_ICON=self.ui.icon8
+        self.BLOB_ICON=self.ui.icon11
+        self.EDGE_ICON=self.ui.icon9
 
     #GraphicsView/ scene handling
     def setZoom(self, value):
@@ -2334,6 +2367,16 @@ class MainWindow(QMainWindow):
         self.ui.graphicsView.resetTransform()          # Reset any existing zoom
         self.ui.graphicsView.scale(scale, scale)       # Apply new zoom
         self.zoom_label.setText(f"Zoom: {value}%")
+
+    def search(self, text):
+        searchText = text.strip().casefold()
+        items=self.ui.treeWidget.findItems(searchText, Qt.MatchStartsWith|Qt.MatchRecursive)
+        if len(items) !=0:
+            self.ui.treeWidget.clearSelection()
+            items[0].setSelected(True)
+            #self.setCurrentTreeItems(items[0].data(0,KEY_INDEX), QItemSelectionModel.SelectionFlag.Select)
+            #self.listClick(items[0])
+
 
     #Action Code
 
@@ -2573,6 +2616,10 @@ class MainWindow(QMainWindow):
                     c.append(eachV)
         if p==[]:  #toplevel item
             tWitem = QTreeWidgetItem([self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
+            if nodeType==ROLE_NODE:
+                tWitem.setIcon(2,self.Scene.mainwindow.NODE_ICON)
+            else:
+                tWitem.setIcon(2,self.Scene.mainwindow.BLOB_ICON)
             tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
             tWitem.setData(0, KEY_ROLE, nodeType)
             self.ui.treeWidget.addTopLevelItem(tWitem)
@@ -2582,6 +2629,10 @@ class MainWindow(QMainWindow):
                 eachPItemList=self.ui.treeWidget.findItems(str(eachP), Qt.MatchRecursive, 1)
                 for eachPItem in eachPItemList:
                     tWitem = QTreeWidgetItem([self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
+                    if nodeType==ROLE_NODE:
+                        tWitem.setIcon(2,self.Scene.mainwindow.NODE_ICON)
+                    else:
+                        tWitem.setIcon(2,self.Scene.mainwindow.BLOB_ICON)
                     tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
                     tWitem.setData(0, KEY_ROLE,nodeType)
                     eachPItem.addChild(tWitem) 

@@ -118,7 +118,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #lWitem.setData(KEY_ROLE,ROLE_EDGE)
         #self.listWidget.addItem(lWitem)
         #add to tree
-        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum)])
+        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum), "edge"])
         tWitem.setData(0, KEY_INDEX,self.edgeNum)
         tWitem.setData(0, KEY_ROLE,ROLE_EDGE)
         self.treeWidget.addTopLevelItem(tWitem)
@@ -560,6 +560,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Create an abstract edge, and keep the index as well
         #Simple edge
         if len(self.startNodes) == 1 and len(self.endNodes) == 1:
+            #these should have two indices one for list one for tuple  JH (maybe procedure sorts it out?). ok
+            #but for now it is not a list, so it's ok
             self.edge,self.edgeNum = self.model.addGMEdge(sItem[0],eItem[0],nameP = defName,id=id)
         else:
             #deal with creation of hyperedge from passed in lists.
@@ -589,7 +591,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #lWitem.setData(KEY_INDEX,self.edgeNum)
         #lWitem.setData(KEY_ROLE,ROLE_EDGE)
         #self.listWidget.addItem(lWitem)
-        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum)])
+        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum), "edge"])
         tWitem.setData(0, KEY_INDEX,self.edgeNum)
         tWitem.setData(0, KEY_ROLE,ROLE_EDGE)
         self.treeWidget.addTopLevelItem(tWitem)
@@ -1031,6 +1033,24 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #source = (source,source) #>> Don't do this - endNodes end up being set in odd places.
                 source = (0,source)
         #print(f"{source=}  == {self.startNode=}")
+
+        #############
+        """if source and type(source[0] )== VisBlobItem and source[0]==self.startNode[0]\
+                and source[1].t==self.startNode[1].t:
+            self.edgeLine.setP(0,source[1].scenePos())
+        elif source and type(source[0] )== VisBlobItem and source[0]==self.endNode[0]\
+                and source[1].t==self.endNode[1].t:
+            self.edgeLine.setP(-1,source[1].scenePos())
+        elif source == self.startNode:
+            #Set the 0th edgeLine point to where the `source` object port (now) is. 
+            #print(f"setting start from {source[0].nodeNum}, {source[1].index}")
+            self.edgeLine.setP(0,source[1].scenePos())
+
+        elif source == self.endNode: #endNode
+            #print(f"setting end from {source[0].nodeNum}, {source[1].index}")
+            self.edgeLine.setP(-1,source[1].scenePos())"""
+
+        ###########
 
         if source in self.startNodes:
             edgeLine.setP(0,source[1].scenePos())
