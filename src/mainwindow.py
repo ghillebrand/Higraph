@@ -437,7 +437,7 @@ class grScene(QGraphicsScene):
             #newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
             #self.undoStack.push(newAction)
             #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-            edgeItem = VisHyperEdgeItem(self.model,self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            edgeItem = VisHyperEdgeItem(self.model, self, self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
             #Commented out because now done in createEdgeCommand
             #Add to *Scene*
@@ -732,6 +732,11 @@ class grScene(QGraphicsScene):
                 item=self.findItemByIdx(itemInfo[0])
                 item.setPos(itemInfo[2])
                 if item.data(KEY_ROLE)==ROLE_BLOB and itemInfo[3]!=(item._width, item._height):
+                    if len(item._Handles)==0:
+                        item._createHandles() 
+                        handlesMade=True
+                    else:
+                        handlesMade=False                       
                     #NB this code comes from _updatefromhandles (modified)
                     item.suppressItemChange = True
                     item.prepareGeometryChange()
@@ -749,6 +754,8 @@ class grScene(QGraphicsScene):
                     #Create a polygon version for `parameterFromPos`
                     item.updatePorts()
                     item.suppressItemChange = False
+                    if handlesMade:
+                        item._deleteHandles()
                 for port in item._Ports:
                     for sEdgeLine in port.startsEdgeLines:
                         sEdgeLine.parentItem().updateLine((self,port),sEdgeLine)
