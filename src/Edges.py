@@ -520,7 +520,7 @@ class VisHyperEdgeItem(QGraphicsObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,model,treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
+    def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
                     polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
 
         """ Create a visual edge, using the pos of the st and end items, which are tuples of (Node,Port)
@@ -591,7 +591,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         #lWitem.setData(KEY_INDEX,self.edgeNum)
         #lWitem.setData(KEY_ROLE,ROLE_EDGE)
         #self.listWidget.addItem(lWitem)
-        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum), "edge"])
+        tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum)])
+        tWitem.setIcon(2, Scene.mainwindow.EDGE_ICON)
         tWitem.setData(0, KEY_INDEX,self.edgeNum)
         tWitem.setData(0, KEY_ROLE,ROLE_EDGE)
         self.treeWidget.addTopLevelItem(tWitem)
