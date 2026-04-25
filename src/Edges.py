@@ -736,67 +736,93 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #hyperEdgeGraph: {[(h[0][0].nodeNum,h[1][0].nodeNum) for h in self.hyperEdgeGraph]
     
     def toXML(self,Xparent):
-        """ add an Element Tree node to the XML parent node with the Edge Data 
-            This uses the yEd names for line types for compatibility
+        """ add an Element Tree node to the XML parent node with the Edge Data
         """
         xmlEdge = ET.Element(
-            "edge",
-            id=str(self.edgeNum),
-            source=str(self.startNode[0].nodeNum),
-            target=str(self.endNode[0].nodeNum),
-            sourceport=str(self.startNode[1].index),
-            targetport=str(self.endNode[1].index)
-        )
+            "hyperedge",
+            id=str(self.edgeNum)   )
+        
         if self.isDirected: 
             xmlEdge.set("directed", "true")     
         else:
             xmlEdge.set("directed", "false") 
+        if self.isDirected: #subelement or just a property? 
+            ET.SubElement(xmlEdge, "y:Arrows", {'source':"none", 'target':"standard"})  
 
-        data = ET.SubElement(xmlEdge, "data", key="data_edge")
         if self._polyEdge == STRAIGHT:
-            pl = ET.SubElement(data, "y:PolyLineEdge")
+            xmlEdge.set("lineType", "Straight")
         else:
-            pl = ET.SubElement(data, "y:QuadCurveEdge")
+            xmlEdge.set("lineType", "Spline")
 
-        if self.isDirected: 
-            ET.SubElement(pl, "y:Arrows", {'source':"none", 'target':"standard"})  
+        #Build  edgeLine:start and edgeEdline:end dictionaries for saving edge start/ ends
+        hStarts = {} # dict 
+        hEnds = {} # dict
+        nL = ET.SubElement(xmlEdge,"h:nodeList")
+        for n in self.startNodes:
+            ET.SubElement(nL,"start" , 
+                 source= str(n[0].nodeNum),
+                 sourceport=str(n[1].index)  )
+            #store the start (node,port) for the edgeLine (end is not yet defined)
+            hStarts.update({n[1].startsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
 
-        #Add in the points   
-        points = self.edgeLine._p
-        if len(points) > 0:
-            path = ET.SubElement(pl,"y:Path ") #No ports yet
-            pathElts = []
-            for p in points[1:-1]:
-                pathElts.append(ET.SubElement(path, "y:Point", {"x":str(p.x()),"y":str(p.y())}))
-            #Tangents 
-            if self._polyEdge == SPLINE:
-                tangents = self.edgeLine._t
+        for n in self.endNodes:
+            ET.SubElement(nL,"end",
+                 target = str(n[0].nodeNum),
+                 targetport=str(n[1].index) )
+            #Update the 'end' tuple
+            hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
+        
+        dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
+        for n in self.dummyNodes:
+            #Currently (Apr 2026) dummyNodes don't have ports dN[0] = dN[1]
+            ET.SubElement(dL,"dummyNode", id=str(n[0].nodeNum), x=str(n[0].pos().x()),y=str(n[0].pos().y()) )
+            for eL in n[0].startsEdgeLines:
+                hStarts.update({eL.lineNum : (n[0].nodeNum, n[1].nodeNum)})
+            for eL in n[0].endsEdgeLines:
+                hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
+        
+        #Add the edgelines
+        eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
 
-                if len(tangents) > 0:
-                    ET.SubElement(path,"h:StartTangent", {"x":str(tangents[0][1].x()),
-                                                          "y":str(tangents[0][1].y())})
-                    for i,pElt in enumerate(pathElts):
-                        ET.SubElement(pElt,"h:Tangent",
-                                            {"leftx":str(tangents[i+1][0].x()), "lefty":str(tangents[i+1][0].y()), 
-                                             "rightx":str(tangents[i+1][1].x()),"righty":str(tangents[i+1][1].y())})
+        for eL in self.edgeLines:
+            #edgeLine id=<eLineID> source=<nID> sourceport=<portID> target=<nID> targetport=<portID>
+            eLelt =  ET.SubElement(eLL,"edgeLine", id=str(eL.lineNum), 
+                                source=str(hStarts[eL.lineNum][0]), sourceport=str(hStarts[eL.lineNum][1]), 
+                                target=str(hEnds[eL.lineNum][0]), targetport=str(hEnds[eL.lineNum][1])  )
+            #Add in the points   
+            points = eL._p
+            if len(points) > 0:
+                path = ET.SubElement(eLelt,"y:Path ") #No ports yet
+                pathElts = []
+                for p in points[1:-1]:
+                    pathElts.append(ET.SubElement(path, "y:Point", {"x":str(p.x()),"y":str(p.y())}))
+                #Tangents 
+                if self._polyEdge == SPLINE:
+                    tangents = eL._t
 
-                    ET.SubElement(path,"h:EndTangent", {"x":str(tangents[-1][0].x()),"y":str(tangents[-1][0].y())})
+                    if len(tangents) > 0:
+                        ET.SubElement(path,"h:StartTangent", {"x":str(tangents[0][1].x()),
+                                                            "y":str(tangents[0][1].y())})
+                        for i,pElt in enumerate(pathElts):
+                            ET.SubElement(pElt,"h:Tangent",
+                                                {"leftx":str(tangents[i+1][0].x()), "lefty":str(tangents[i+1][0].y()), 
+                                                "rightx":str(tangents[i+1][1].x()),"righty":str(tangents[i+1][1].y())})
+
+                        ET.SubElement(path,"h:EndTangent", {"x":str(tangents[-1][0].x()),"y":str(tangents[-1][0].y())})
 
 
         #TODO: Refactor edge save/ load code to not use edgeLabel as `name` - do it all in metadata
-        label = ET.SubElement(pl, "y:EdgeLabel")
-        label.text = self.metadata['name']
-        for atK,atV in self.metadataAttributes['name'].items():
-            metaAtt = ET.SubElement(label, "h:metadataAttribute", {"key":atK,"value":str(atV)})
+        #label = ET.SubElement(pl, "y:EdgeLabel")
+        #label.text = self.metadata['name']
+        #for atK,atV in self.metadataAttributes['name'].items():
+        #    metaAtt = ET.SubElement(label, "h:metadataAttribute", {"key":atK,"value":str(atV)})
 
-        #add metadata other than name
-        if len(self.metadata) >= 2:
+        #add metadata (including than name)
+        if len(self.metadata) >= 1:
             for k, v in self.metadata.items():
-                if k != "name":
-                    metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":k,"value":str(v)})
-                    for atK,atV in self.metadataAttributes[k].items():
-                        metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
-
+                metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":k,"value":str(v)})
+                for atK,atV in self.metadataAttributes[k].items():
+                    metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
 
         return xmlEdge
         

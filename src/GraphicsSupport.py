@@ -207,7 +207,7 @@ class dummyNodeRoot(QGraphicsItem):
         self.startsEdgeLines = []
         self.endsEdgeLines = []
 
-        #To make debugging possible
+        #To make debugging possible (and saving)
         self.nodeNum = dummyNodeItem.dummyNodeIndex
         dummyNodeItem.dummyNodeIndex += 1
         self.suppressItemChange = False
