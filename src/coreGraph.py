@@ -91,8 +91,7 @@ class Graph:
             """new edge, must have start = nodeID or tuple, end = nodeID, optional metadata   """
             #TODO: For re-creating from file/ paste, ID will need to be a param?
              #Check for unique ID
-            if id:
-                if not id in Graph.IDsUsed:
+            if id and not id in Graph.IDsUsed:
                     self.edgeID = id
                     Graph.IDsUsed.add(id)
             else:

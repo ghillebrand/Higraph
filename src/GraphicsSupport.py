@@ -194,8 +194,10 @@ class HandleItem(QGraphicsRectItem):
 
 class dummyNodeRoot(QGraphicsItem):
     """ an almost-abstract graphics-only node-like object to manage joins for hyperedges, ports for nodes """
-    dummyNodeIndex = 1000
-    def __init__(self,center: QPointF,  parent=None):
+    nextID = 1000
+    IDsUsed = set()
+
+    def __init__(self,center: QPointF,  parent=None, id=None):
         super().__init__(parent=parent)
         self.suppressItemChange = True
         #This might be resolved by the starts end finishEdges code 
@@ -207,9 +209,18 @@ class dummyNodeRoot(QGraphicsItem):
         self.startsEdgeLines = []
         self.endsEdgeLines = []
 
-        #To make debugging possible (and saving)
-        self.nodeNum = dummyNodeItem.dummyNodeIndex
-        dummyNodeItem.dummyNodeIndex += 1
+        #ID for saving, and debugging 
+        #Check for unique ID
+        if id and not id in dummyNodeRoot.IDsUsed:
+                self.nodeNum = id
+                dummyNodeRoot.IDsUsed.add(id)
+        else:
+            while dummyNodeRoot.nextID in dummyNodeRoot.IDsUsed:
+                dummyNodeRoot.nextID += 1
+            self.nodeNum = dummyNodeRoot.nextID
+            dummyNodeRoot.IDsUsed.add(self.nodeNum)
+            dummyNodeRoot.nextID += 1   
+
         self.suppressItemChange = False
 
     def boundingRect(self):
@@ -224,8 +235,8 @@ class dummyNodeRoot(QGraphicsItem):
 
 class dummyNodeItem(dummyNodeRoot):
     """ true dummyNodes need an `itemchange()` method, which breaks `port`s"""
-    def __init__(self,center: QPointF,  parent=None):
-        super().__init__(center, parent=parent)
+    def __init__(self,center: QPointF,  parent=None, id=None):
+        super().__init__(center, parent=parent, id=id)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,True)
         self.setFlag(QGraphicsItem.ItemIsSelectable,False)
 

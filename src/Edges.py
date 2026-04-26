@@ -521,11 +521,13 @@ class VisHyperEdgeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
-                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
+                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={},dummnyNodes=[],edgeLines=[]):
 
         """ Create a visual edge, using the pos of the st and end items, which are tuples of (Node,Port)
-        points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
+            points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
+            When created from XML, points will be empty (should?), dummyNodes & edgeLines pre-populated for linking up.
         """
+        #TODO: Check - points may be redundant with hyperEdges
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
@@ -544,7 +546,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         else:
             self.endNodes = [eItem]
 
-        #Store the edgeLines (>1 for hyperEdges) aka segments
+        #Store the edgeLines aka segments (>1 for hyperEdges) 
         self.edgeLines = [] 
         #List of the intermediate, dummy nodes needed to graphical contruct the hyper edge 
         self.dummyNodes = []
@@ -609,8 +611,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         #self.textItem = QGraphicsTextItem(self.model.Gr.edgeD[self.edgeNum].metadata['name'], parent=self)
         # chatGPT's suggestion to avoid shape() not selecting it - TransparentTextItem
         self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
-        #Stop Python GC from mangling things on delete. This ref is critical?? - Python crashes on delete without it.?
-        self.textItem.my_parent_item = self
 
         self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
@@ -644,7 +644,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.edgeLines.append(StraightLineItem(ptList,parent=self))
         else: #Assume spline! Error checking later!
             #If no tangents given, and start/end are on a blob, make tangent at right angles to blob
-            #The spline constructor default doesn't (can't) do the orthogonal tangents.
+            #The spline constructor default doesn't (can't) do the orthogonal tangents. Do them here.
             if len(tangents) == 0:
                 #Orthogonal to `nodeshape` at `point`
                 startSlope = self.startNodes[0][1].orthogonalSlope()
@@ -664,33 +664,30 @@ class VisHyperEdgeItem(QGraphicsObject):
             edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
             self.bRect = self.bRect.united(edgeLine.boundingRect())
 
-        #Add in the arrowhead for digraph
+        #directed edge?
         if directed == '':
             self.isDirected = self.model.isDigraph
         else:
             self.isDirected=directed
-
+        
+        #Add in the arrowhead for digraph
         #Every endNode end will need an arrowhead
         self.endShape = []
         if self.isDirected:
             #pos & details are set in `updateLine`. Additional endShapes created in addSegment
             self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
 
-
         #Link up the topology for the visual graph - tell the start & end nodes about the edge
         #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
         for stN in self.startNodes:
             stN[0].startsEdges.append(self) #NODE
             #Tell the Port too.
-            #TODO: Check if this is edge or edgeLine. Currently same
-            #stN[1].startsEdgeLines.append(self)  #JH duplicate this for now
             #TODO: How to map the right port to the right endLine? dummyNodeIndex is unique...            
             stN[1].startsEdgeLines.append(self.edgeLines[0]) 
             self.setStart(stN, self.edgeLines[0])
         for endN in self.endNodes:
             endN[0].endsEdges.append(self) #NODE
             #Port
-            #endN[1].endsEdgeLines.append(self)    #JH duplicate this for now
             #TODO: How to map the right port to the right endLine? dummyNodeIndex is unique...
             #  Initially, there is only 1 segment, edgeLines[0]. fromXML will be different.
             endN[1].endsEdgeLines.append(self.edgeLines[0]) 
@@ -781,6 +778,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             for eL in n[0].endsEdgeLines:
                 hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
         
+        #the hyperEdge graph - needed for reconstruction too?
+        print(f"hyperEdge {self.edgeNum} subgraph = {zip(hStarts,hEnds)}")
+
         #Add the edgelines
         eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
 
