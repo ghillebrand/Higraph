@@ -484,7 +484,7 @@ class grScene(QGraphicsScene):
 
     def resetRubberLine(self):
         """ Called whether or not an edge is created """
-        if self.tmpEdgeSt:
+        if self.tmpEdgeSt and self.tmpEdgeSt.data(KEY_ROLE) != ROLE_EDGE:
             self.tmpEdgeSt.setFlag(self.tmpEdgeSt.GraphicsItemFlag.ItemIsMovable, True)
         if self.GrRubberLine:
             self.removeItem(self.GrRubberLine)
