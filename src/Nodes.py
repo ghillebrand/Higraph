@@ -152,7 +152,8 @@ class BlobTextItem(QGraphicsTextItem):
 
     def paint(self, painter, option, widget):
         # Optional: Draw a subtle background behind the text
-        if self.parentItem().metadataAttributes['description']['display']:
+        if 'description' in self.parentItem().metadataAttributes and \
+                self.parentItem().metadataAttributes['description']['display']:
             painter.setClipRect(self.boundingRect())
             painter.setBrush(QColor(240, 240, 240, 100))
             painter.setPen(Qt.NoPen)

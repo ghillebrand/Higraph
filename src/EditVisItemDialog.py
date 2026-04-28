@@ -228,7 +228,7 @@ class EditVisEdgeItemDialog(QDialog):
             # Update treeWidget
             treeWidget = getattr(self.visEdgeItem, "treeWidget", None)
             twItem=treeWidget.findItemByIdx(edgeNum)
-            twItem.setText(1,newName)
+            twItem.setText(0,newName)
 
         # Directed
         isDirected = self.directedCheckbox.isChecked()
@@ -369,11 +369,14 @@ class EditVisHyperEdgeItemDialog(QDialog):
                 modelItem.setText(newName)
 
             # Update the corresponding list widget item if necessary
-            listWidget = getattr(self.visEdgeItem, "listWidget", None)
+            """listWidget = getattr(self.visEdgeItem, "listWidget", None)
             if listWidget:
                 lwItem = listWidget.findItemByIdx(edgeNum)
                 if lwItem:
-                    lwItem.setText(newName)
+                    lwItem.setText(newName)"""
+            treeWidget = getattr(self.visEdgeItem, "treeWidget", None)
+            twItem=treeWidget.findItemByIdx(edgeNum)
+            twItem.setText(0, newName)
 
         # Directed
         isDirected = self.directedCheckbox.isChecked()
@@ -389,8 +392,8 @@ class EditVisHyperEdgeItemDialog(QDialog):
         parentWin = self.parent()
         if parentWin and hasattr(parentWin, "Scene"):
             parentWin.Scene.update()
-        if parentWin and hasattr(parentWin.ui, "listWidget"):
-            parentWin.ui.listWidget.repaint()
+        if parentWin and hasattr(parentWin.ui, "treeWidget"):
+            parentWin.ui.treeWidget.repaint()
         
         self.visEdgeItem.setMetadataDisplay()
         super().accept()
@@ -517,6 +520,7 @@ class MetadataEditorWidget(QWidget):
             return
 
         if event.key() in (Qt.Key_Delete, Qt.Key_Backspace):
+            row = self.table.currentRow()
             if row >= 0 and not self._isProtectedRow(row):
                 self.removeSelectedRow()
             event.accept()
