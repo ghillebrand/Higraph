@@ -2444,12 +2444,17 @@ class MainWindow(QMainWindow):
 
     def search(self, text):
         searchText = text.strip().casefold()
-        items=self.ui.treeWidget.findItems(searchText, Qt.MatchStartsWith|Qt.MatchRecursive)
+        items=self.ui.treeWidget.findItems(searchText, Qt.MatchRecursive)
         if len(items) !=0:
             self.ui.treeWidget.clearSelection()
             items[0].setSelected(True)
-            #self.setCurrentTreeItems(items[0].data(0,KEY_INDEX), QItemSelectionModel.SelectionFlag.Select)
-            #self.listClick(items[0])
+        else:
+            items=self.ui.treeWidget.findItems(searchText, Qt.MatchStartsWith|Qt.MatchRecursive)
+            if len(items) !=0:
+                self.ui.treeWidget.clearSelection()
+                items[0].setSelected(True)
+                #self.setCurrentTreeItems(items[0].data(0,KEY_INDEX), QItemSelectionModel.SelectionFlag.Select)
+                #self.listClick(items[0])
 
 
     #Action Code
