@@ -2536,34 +2536,35 @@ class MainWindow(QMainWindow):
 
         #select the *graphics* view of the clicked item as well
         idx = item.data(0,KEY_INDEX)
-        for sItem in self.Scene.items():  #this should probably be using finditembyidx JH
-            if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
-                if sItem.data(KEY_INDEX) == idx: # iNum:
-                    sItem.setSelected(True)
-                    if sItem.data(KEY_ROLE) in [ROLE_EDGE]:
-                        self.Scene.thisHandleObjectSelected=sItem.edgeLine
-                        self.Scene.onlySelected=sItem.edgeLine
-                        sItem.edgeLine.setSelected(True)
-                        sItem.isOnlySelected=True
-                        #Hyperedge - create handles on all the edgeLines
-                        sItem.edgeLineAt(mPos)._createHandles()
-                        if not sItem.stH:
-                            sItem.setZValue(2000) #move the edge above nodes
-                            if len(sItem.edgeLineAt(mPos)._pHandles)>0:
-                                sItem.stH = sItem.edgeLineAt(mPos)._pHandles[0]
-                                sItem.endH = sItem.edgeLineAt(mPos)._pHandles[-1]
-                            else:
-                                print("No handles yet")
-                    elif sItem.data(KEY_ROLE) in [ROLE_BLOB]:
-                        self.Scene.thisHandleObjectSelected=sItem
-                        self.Scene.onlySelected=sItem
-                        sItem.setSelected(True)
-                        sItem.isOnlySelected=True
-                        sItem._createHandles() #JH
-                    # sItem.edgeLine._createHandles()
+        sItem=self.Scene.findItemByIdx(idx)
+        #for sItem in self.Scene.items():  #this should probably be using finditembyidx JH
+        if sItem.data(KEY_ROLE) in [ROLE_NODE, ROLE_EDGE,ROLE_BLOB]:
+            #if sItem.data(KEY_INDEX) == idx: # iNum:
+            sItem.setSelected(True)
+            if sItem.data(KEY_ROLE) in [ROLE_EDGE, ROLE_BLOB]:
+                self.Scene.thisHandleObjectSelected=sItem
+                self.Scene.onlySelected=sItem
+                sItem.setSelected(True)
+                sItem.isOnlySelected=True
+                #Hyperedge - create handles on all the edgeLines
+                sItem._createHandles()
+            if sItem.data(KEY_ROLE) in [ROLE_EDGE]:
+                if not sItem.stH:  #copied from mousepressevent
+                    sItem.setZValue(2000) #move the edge above nodes
+                    if getattr(sItem.edgeLines[0],'_pHandles',False):
+                        if len(sItem.edgeLines[0]._pHandles)>0:
+                            sItem.stH = sItem.edgeLines[0]._pHandles[0]
+                            sItem.endH = sItem.edgeLines[0]._pHandles[-1]
+                        else:
+                            print("No handles yet")
+                    else:
+                            print("No handles yet - _pHandle not defined")
+                    """if len(sItem._pHandles)>0:
+                        sItem.stH = sItem._pHandles[0]
+                        sItem.endH = sItem._pHandles[-1]
+                    else:
+                        print("No handles yet")"""
 
-                    #print(idx)
-                    #break
         # check for additional entry in treewidget
         twItems=self.ui.treeWidget.findItems(str(idx), Qt.MatchRecursive, 1)
         if len(twItems)>1:
