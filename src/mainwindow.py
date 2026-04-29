@@ -886,25 +886,54 @@ class grScene(QGraphicsScene):
             return
 
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
-            if mouseEvent.modifiers() and Qt.ControlModifier and \
+            if mouseEvent.modifiers() and Qt.ControlModifier and not Qt.AltModifier and\
                     self.mouseMode==self.POINTER and len(self.selectedItems())>0:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
                 #print(f"scene MPE first if {selItem}")
                 if selItem:
                     selItem = selItem[0]
+                    selItem.setSelected(True)
                     if self.thisHandleObjectSelected:
                         self.thisHandleObjectSelected.isOnlySelected=False
                         if self.thisHandleObjectSelected.data(KEY_ROLE)==ROLE_POLYLINE:
                             self.thisHandleObjectSelected.parentItem().isOnlySelected=False  #to squash tangent lines
                         self.thisHandleObjectSelected._deleteHandles()
                         self.thisHandleObjectSelected=None
-                    #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))
-                    tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                    #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
                     self.changedByCode=True
-                    #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Toggle)
-                    self.changedByCode=True
-                    #self.treeWidget.setCurrentItem(tWItem, 0, QItemSelectionModel.SelectionFlag.Toggle)
                     self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Toggle)
+                    self.changedByCode=False
+                    super().mousePressEvent(mouseEvent)
+                    return
+                
+            if mouseEvent.modifiers() and Qt.AltModifier and\
+                    self.mouseMode==self.POINTER:  #select blob and children
+                selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_BLOB])
+                #print(f"scene MPE first if {selItem}")
+                if selItem:
+                    selItem = selItem[0]
+                    self.clearSelection()
+                    self.treeWidget.clearSelection()
+                    if self.thisHandleObjectSelected:
+                        self.thisHandleObjectSelected.isOnlySelected=False
+                        self.thisHandleObjectSelected._deleteHandles()
+                        self.thisHandleObjectSelected=None  
+                    selItem.setSelected(True)              
+                    #tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
+                    self.changedByCode=True
+                    self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Toggle)
+                    self.changedByCode=False
+                    kidsIdx=(self.getContainmentMap(selItem))[selItem.data(KEY_INDEX)]
+                    insideItems=[]
+                    for k in kidsIdx:
+                        insideItems.append(self.findItemByIdx(k))
+                    #insideItems=self.itemsHere(mPos,QSize(selItem._width, selItem._height),[ROLE_BLOB, ROLE_NODE])
+                    self.changedByCode=True
+                    for insideItem in insideItems:
+                        if insideItem != selItem:
+                            insideItem.setSelected(True)
+                            #tWItem = self.treeWidget.findItemByIdx(insideItem.data(KEY_INDEX))
+                            self.mainwindow.setCurrentTreeItems(insideItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Toggle)
                     self.changedByCode=False
                     super().mousePressEvent(mouseEvent)
                     return
@@ -959,7 +988,6 @@ class grScene(QGraphicsScene):
                         #return
                     mouseEvent.accept()
                     return
-      
             if len(self.selectedItems())>1:
                 self.mouseMode=self.DRAGGING #or in the middle of a modifier selection
                 self.dragEdge=None
@@ -1324,18 +1352,18 @@ class grScene(QGraphicsScene):
 
         elif self.mouseMode == self.POINTER:
             if len(self.selectedItems()) > 0:
-                if not(mouseEvent.modifiers() and Qt.ControlModifier):
+                if not(mouseEvent.modifiers() and (Qt.ControlModifier|Qt.AltModifier)):
                     #self.listWidget.clearSelection()
                     self.treeWidget.clearSelection()
                     self.changedByCode=True
                     for selItem in self.selectedItems():
-                        #lWItem = self.listWidget.findItemByIdx(selItem.data(KEY_INDEX))  
-                        #self.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)
                         self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                          
                     self.changedByCode=False
                     if self.savedPositionList != []:
                         newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
                         self.undoStack.push(newAction)
+                elif (mouseEvent.modifiers() and Qt.AltModifier):
+                    return
                     #self.rePosition(self.savedPositionList)
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
@@ -1381,6 +1409,7 @@ class grScene(QGraphicsScene):
             #self.rePosition(self.savedPositionList)
         #Only do this on release, for performance reasons.
         #self.updateBlobParenting()
+
         super().mouseReleaseEvent(mouseEvent)  
 
     def mouseDoubleClickEvent(self, mouseEvent: QGraphicsSceneMouseEvent) -> None:
