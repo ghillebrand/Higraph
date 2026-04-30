@@ -884,10 +884,11 @@ class grScene(QGraphicsScene):
             self.mouseMode = self.POINTER
             mouseEvent.accept()
             return
-
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
-            if mouseEvent.modifiers() and Qt.ControlModifier and not Qt.AltModifier and\
+            if mouseEvent.modifiers() == Qt.KeyboardModifier.ControlModifier and \
                     self.mouseMode==self.POINTER and len(self.selectedItems())>0:
+            #if Qt.ControlModifier and\
+            #        self.mouseMode==self.POINTER and len(self.selectedItems())>0:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
                 #print(f"scene MPE first if {selItem}")
                 if selItem:
@@ -906,7 +907,7 @@ class grScene(QGraphicsScene):
                     super().mousePressEvent(mouseEvent)
                     return
                 
-            if mouseEvent.modifiers() and Qt.AltModifier and\
+            if mouseEvent.modifiers() == Qt.KeyboardModifier.AltModifier and\
                     self.mouseMode==self.POINTER:  #select blob and children
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_BLOB])
                 #print(f"scene MPE first if {selItem}")
@@ -1352,18 +1353,17 @@ class grScene(QGraphicsScene):
 
         elif self.mouseMode == self.POINTER:
             if len(self.selectedItems()) > 0:
-                if not(mouseEvent.modifiers() and (Qt.ControlModifier|Qt.AltModifier)):
-                    #self.listWidget.clearSelection()
-                    self.treeWidget.clearSelection()
-                    self.changedByCode=True
-                    for selItem in self.selectedItems():
-                        self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                          
-                    self.changedByCode=False
-                    if self.savedPositionList != []:
-                        newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
-                        self.undoStack.push(newAction)
-                elif (mouseEvent.modifiers() and Qt.AltModifier):
+                if mouseEvent.modifiers():
                     return
+                self.treeWidget.clearSelection()
+                self.changedByCode=True
+                for selItem in self.selectedItems():
+                    self.mainwindow.setCurrentTreeItems(selItem.data(KEY_INDEX),QItemSelectionModel.SelectionFlag.Select)                          
+                self.changedByCode=False
+                if self.savedPositionList != []:
+                    newAction=moveNodeCommand(self.savedPositionList, self.savePosition(self.selectedItems()), self, self.model, self.treeWidget)
+                    self.undoStack.push(newAction)
+
                     #self.rePosition(self.savedPositionList)
                 # print("up select at", mouseEvent.scenePos())
                 #if len(self.selectedItems()) == 2:
