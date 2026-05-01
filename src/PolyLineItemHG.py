@@ -17,14 +17,15 @@ from GraphicsSupport import *
 
 
 class StraightLineItem(QGraphicsItem):
-    lineCount  = 3000
+    nextID = 3000 #Note that the start value doesn't matter, since these are local to SLI, and clashes with HS can't happen.
+    IDsUsed = set()
     def __init__(self, p: List[QPointF], parent=None):
         """Create a polyline with a list of points (QPointFs)."""
         super().__init__(parent)
 
         #id to make debuging easier
-        self.lineNum = StraightLineItem.lineCount
-        StraightLineItem.lineCount +=  1
+        self.lineNum = StraightLineItem.nextID
+        StraightLineItem.nextID +=  1
 
         self.suppressItemChange = True
         self._p = p
@@ -239,7 +240,8 @@ class StraightLineItem(QGraphicsItem):
         return path
  
 class HermiteSplineItem(QGraphicsItem):
-    lineCount = 2000
+    nextID = 2000 #Note that the start value doesn't matter, since these are local to SLI, and clashes with HS can't happen.
+    IDsUsed = set()    
     def __init__(self, p:List, t:List=[], parent=None):
         """ create a hermite (cubic) spline with a list of points (QPointFs) and an optional, matching list of 2-tuples of tangents (QPointFs). 
             Tangent coordinates are relative to their parent point. 
@@ -247,8 +249,9 @@ class HermiteSplineItem(QGraphicsItem):
         """
         super().__init__(parent)
         #id to make debuging easier
-        self.lineNum = HermiteSplineItem.lineCount
-        HermiteSplineItem.lineCount +=  1
+        #TODO: include dealing with `id` as a parameter
+        self.lineNum = HermiteSplineItem.nextID
+        HermiteSplineItem.nextID +=  1
 
         self.suppressItemChange = True
 

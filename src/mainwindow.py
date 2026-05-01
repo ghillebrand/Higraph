@@ -3094,7 +3094,7 @@ class MainWindow(QMainWindow):
         if not newID:
             #TODO: type check id/ process string IDs
             id = int(xEdge.attrib.get("id"))
-            print(f"HyperEdge {id} being read")
+            #print(f"HyperEdge {id} being read")
         else: 
             id = '' #let the model assign an ID
 
@@ -3134,6 +3134,7 @@ class MainWindow(QMainWindow):
                     print(f"ERROR: can't find source in {aNode}")
                     return None
                 #TODO: refactor `oldToNewID` to work purely on int's!
+                #print(f"Start node {s} --> {self.oldToNewID[str(s)]}")
                 s = self.oldToNewID[str(s)]  
                 sItm = self.Scene.findItemByIdx(s)
                 #Track real nodes to differentiate from dummys later
@@ -3148,6 +3149,7 @@ class MainWindow(QMainWindow):
                 if not e:
                     print(f"ERROR: can't find target in {aNode}")
                     return None
+                #print(f"end node {e} --> {self.oldToNewID[str(e)]}")
                 e = self.oldToNewID[str(e)]
                 eItm = self.Scene.findItemByIdx(e)
                 #Track real nodes
@@ -3161,7 +3163,6 @@ class MainWindow(QMainWindow):
         dNList = []
         oldToNewdN = {}  #Track any dummyNodeID changes
         for dNode in xEdge.find("dummyNodeList"):
-            print(f"{dNode.attrib=}")
             dNID = int(dNode.attrib.get("id",0))
             dNx = float(dNode.attrib.get("x"))
             dNy = float(dNode.attrib.get("y"))
@@ -3171,16 +3172,16 @@ class MainWindow(QMainWindow):
             dN = dummyNodeItem(QPointF(dNx,dNy),id=dNID)
             dNList.append(dN)
             #Track the dNID in case it was changed on create
-            print(f"{dNID=}, {dN.nodeNum}")
+            #print(f"{dNID=} --> {dN.nodeNum}")
             oldToNewdN[dNID] = dN.nodeNum
             
-        #>>> Debugged to here (more or less) <<<
         #edgeLines - read and instantiate
 
-        #Note that if edgeLine ID's change, nodes will auto-update during creation. I think.
+        #Note that if edgeLine ID's change, nodes will auto-update them during creation. I think.
         edgeLineList = []
 
-        for eL in xEdge.iter("edgeLineList"):
+        for eL in xEdge.find("edgeLineList"):
+            #print(f"edgeLine: {eL.attrib}")
             points=[]
             tangents = []
             #Note: dN edgeID are prefixed with a "d" (Real nodes could go beyond 1000 ...)
@@ -3189,20 +3190,40 @@ class MainWindow(QMainWindow):
             if newID : #create a newID
                 eLID = 0
 
-            eLStart = int(aNode.attrib.get("source", 0))
+            #TODO: Get elStart, then check if it's a node or a dummyNode (and for end)
+            sItm,pItm = None,None
+            eLStart = int(eL.attrib.get("source", 0))
             if eLStart in sNodes: #real, not dummy
-                sItm = self.Scene.findItemByIdx(s)
-                eLStartPort = int(aNode.attrib.get("sourceport", 0))
-                pItm = sItm.portFromIndex(p)
+                sItm = self.Scene.findItemByIdx(eLStart)
+                eLStartPort = int(eL.attrib.get("sourceport", 0))
+                spItm = sItm.portFromIndex(eLStartPort)
+                
             else: #dummy Node
                 #find the dummy node
                 stDN = oldToNewdN[eLStart]
-                stDNItem = [d for d in dNList if d.nodeNum == stDN][0]  #rtn DNitem, not a list
+                sItm = [d for d in dNList if d.nodeNum == stDN][0]  #rtn DNitem, not a list
+                spItm = sItm #dummyNodes are their own ports
+
+            eItm, pItm = None,None
+            eLEnd = int(eL.attrib.get("target"))
+            if eLEnd in eNodes: #real, not dummy
+                eItm = self.Scene.findItemByIdx(eLEnd)
+                eLEndPort = int(eL.attrib.get("targetport", 0))
+                epItm = eItm.portFromIndex(eLEndPort)
+            else: #dummy Node
+                #find the dummy node
+                endDN = oldToNewdN[eLEnd]
+                eItm = [d for d in dNList if d.nodeNum == endDN][0]  #rtn DNitem, not a list
+                epItm = eItm
+
+            #print(f"   HEFX {id} {eLID=}  ({sItm.nodeNum}, {spItm.nodeNum}) : ({eItm.nodeNum=},{epItm.nodeNum})")
 
 
-            eLEnd = float(eL.attrib.get("y"))
-
-            #>>>>
+            path = eL.find("Path")
+            points = []
+            #Start point
+            points.append(spItm.pos())
+            #Tangents and middle points
             if path is not None:
                 if polyLineType == SPLINE:
                     #get tangents
@@ -3216,7 +3237,6 @@ class MainWindow(QMainWindow):
                     
                 pathPoints = path.findall("Point")
                 if pathPoints is not None:
-                    points = []
                     for pt in pathPoints:
                         #TODO: Not only pastes might generate `newID`s. Needs a better method.
                         if newID:  #if this is a paste, offset any points
@@ -3243,7 +3263,18 @@ class MainWindow(QMainWindow):
                                                 float(endT.attrib.get("y")) ),
                                                 QPointF(0,0)
                                             ) )
-                     
+            #End point
+            points.append(epItm.pos())
+
+            #Now create the edgeLine, and store it
+            if polyLineType == SPLINE:
+                #Created with no parent, since edge does not yet exist. Link at the end
+                newEdgeLine = HermiteSplineItem(p=points, t=tangents)
+            #if polyLineType == STRAIGHT:
+            edgeLineList.append(newEdgeLine)
+
+        #print(f"edgelines: {[e.lineNum for e in edgeLineList]}")
+
         #Read metadata, including `name`
         edgeMetadata = {}
         edgeMetadataAttributes = {}        
@@ -3256,14 +3287,17 @@ class MainWindow(QMainWindow):
                     edgeMetadataAttributes[metaKey] = {'display':edgeNameAttribs.attrib.get("value") == "True"}
                 else:
                     edgeMetadataAttributes[metaKey] = {edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")}
+        
+        edgeName = edgeMetadata['name']
 
         #All the data read, create the edge
-        newEdge = VisHyperEdgeItem(self.model,self.ui.treeWidget, sItem, eItem, 
+        newEdge = VisHyperEdgeItem(self.model, self.Scene, self.ui.treeWidget, sItem, eItem, 
                                 directed=directed,  nameP=edgeName, id = id,
                                 polyLineType = polyLineType, points=points,tangents=tangents,
-                                metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes   )
+                                metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes,
+                                dummyNodes=dNList  , edgeLines=edgeLineList   )
 
-        #TODO: Update parenting of dummyNodes
+        #TODO: Update parenting of dummyNodes & edgeLines
 
         return newEdge
 
