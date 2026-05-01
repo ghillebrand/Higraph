@@ -1204,7 +1204,10 @@ class grScene(QGraphicsScene):
                     edgeLine.setSelected(True)
 
                 elif cxChoice == "delPt":
-                    item.edgeLineAt(mPos).deletePoint(mPos)
+                    edgeLine = item.edgeLineAt(mPos)
+                    edgeLine.deletePoint(mPos)
+                    item.setSelected(True)
+                    item.update()
 
                 #if a lambda, run it
                 if callable(cxChoice):

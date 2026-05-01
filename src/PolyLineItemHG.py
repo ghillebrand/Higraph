@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QGraphicsObject, QGraphicsItem, QGraphicsRectItem
 from  HGConstants import *
 from GraphicsSupport import *
 
-
+import os
 
 class StraightLineItem(QGraphicsItem):
     lineCount  = 3000
@@ -456,8 +456,10 @@ class HermiteSplineItem(QGraphicsItem):
         #Add to the lists
         self._p.insert(i+1,QPointF(xc,yc))
         self._t.insert(i+1,(QPointF(dx,dy), QPointF(dx,dy)))
-        self._deleteHandles()
-        self._createHandles()
+        #self._deleteHandles()
+        #self._createHandles()
+        self.parentItem()._deleteHandles()
+        self.parentItem()._createHandles()
         self.update()
 
     def split(self,newP:QPointF):
@@ -519,18 +521,20 @@ class HermiteSplineItem(QGraphicsItem):
                 if newD < minD:
                     ic, xc, yc = i,xo,yo
                     minD = newD
-
-            self.suppressItemChange = True
+            ##self.suppressItemChange = True
         #TODO: CHeck for <hitsize?
             if minD <= HITSIZE and ic !=0 and ic!=len(self._p)-1:
-                self._deleteHandles()
+                ##self._deleteHandles()
                 #remove tangents
                 self._t.pop(ic)
                 #remove point
                 self._p.pop(ic)
-                self.suppressItemChange = False
-                self._createHandles()
+                ##self.suppressItemChange = False
+                self.parentItem()._deleteHandles()
+                self.parentItem()._createHandles()
+                #self._createHandles()
                 self.update()
+
             """if minD <= HITSIZE and len(self._p) > 2:
                 #remove handles 
                 #Not first point
@@ -583,10 +587,33 @@ class HermiteSplineItem(QGraphicsItem):
         #Start and end points always present p0, pn (or p-1)
         #have a list of point and tgnt handles
         #print(f"createHandles for {self.lineNum}")
+        #create list to check for node starts and ends
+        portPositions=[]
+        for pP in self.parentItem().startNodes:
+            portPositions.append(pP[1].scenePos())
+        for pP in self.parentItem().endNodes:
+            portPositions.append(pP[1].scenePos())
         self.parentItem().setZValue(3000)
         self._pHandles = []
-        for pi in self._p: 
-            self._pHandles.append(HandleItem(pi,color=EDGE_HANDLE_COLOUR,parent=self))
+        for pi in self._p:
+            if pi in portPositions:
+                self._pHandles.append(HandleItem(pi,color=EDGE_HANDLE_COLOUR,parent=self))
+            elif pi == self._p[0] or pi == self._p[-1]:  #it's a dummy node
+                handleAlreadyCreated = False
+                for eL in self.parentItem().edgeLines:  #checking if a handle has already been created for this point
+                    if eL !=self and eL._pHandles != []:
+                        if pi == eL._pHandles[0].scenePos():
+                            self._pHandles.append(eL._pHandles[0])
+                            handleAlreadyCreated = True
+                            break
+                        elif pi == eL._pHandles[-1].scenePos():
+                            self._pHandles.append(eL._pHandles[-1])
+                            handleAlreadyCreated = True
+                            break 
+                if not handleAlreadyCreated:
+                    self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,parent=self))          
+            else:  #it's a point that was added to the edge by the user
+                self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,parent=self))
 
         #Tangent handles
         self._tHandles = []
@@ -622,7 +649,7 @@ class HermiteSplineItem(QGraphicsItem):
             return
         #print("Deleting handles")
 
-        self.suppressItemChange = True
+        ##self.suppressItemChange = True
 
         for handle in self._tHandles:
             del handle
@@ -630,14 +657,16 @@ class HermiteSplineItem(QGraphicsItem):
 
         #del self._pHandles
         for handle in self._pHandles:  
-            self.scene().removeItem(handle)
-            del handle
+            if handle in self.scene().items():
+                self.scene().removeItem(handle)
+                del handle
+
         #for i in range(len(self._pHandles)):
         #    self.scene().removeItem(self._pHandles[i])
         self._pHandles.clear()
         self.parentItem().setZValue(0)
         
-        self.suppressItemChange = False
+        ##self.suppressItemChange = False
         
     def _updateFromHandles(self, moved=0):
         """ if a handle moves, update the coords, and recompute the spline curve """
