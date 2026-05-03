@@ -511,6 +511,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #If needed move all the polyline points - updatePath handles this.
         self.edgeLine.updatePath()
 
+###################################################################################################################
 
 class VisHyperEdgeItem(QGraphicsObject): 
     """ Create a new Hyperedge - both Graph Model and Visual ("graphics")
@@ -521,11 +522,15 @@ class VisHyperEdgeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
-                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
+                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={},
+                    dummyNodes=None,edgeLines=None, hyperEdgeGraph=None):
 
         """ Create a visual edge, using the pos of the st and end items, which are tuples of (Node,Port)
-        points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
+            points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
+            When created from XML, points will be empty (should?), dummyNodes & edgeLines pre-populated for linking up.
+            The hyperEdgeGraph is only used to reconstruct at load, and not stored.
         """
+        #TODO: Check - points may be redundant with hyperEdges
         super().__init__(parent)
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
@@ -544,28 +549,34 @@ class VisHyperEdgeItem(QGraphicsObject):
         else:
             self.endNodes = [eItem]
 
-        #Store the edgeLines (>1 for hyperEdges) aka segments
-        self.edgeLines = [] 
+        #Store the edgeLines aka segments (>1 for hyperEdges) 
+        #NOTE! parameter edgeLine (and dummyNode) is mutable, and will store previous call values
+        self.edgeLines = [] if edgeLines is None else edgeLines
+        
         #List of the intermediate, dummy nodes needed to graphical contruct the hyper edge 
-        self.dummyNodes = []
-        #the structure of the binary graph mapping out the hyperedge. Its edges will be tuples of `VisNodeItems` and/or `dummyNodeItems`
-        #  eg hyperedge {s=[1,2] e=[4]} => hEg = [(1,10),(10,4),(2,10) ] 
-        #  len == 1 implies simple edge, >1 hyperedge
-        # hyperEdgeGraph is nodes & ports - a list of tuples of tuples!
-        #self.hyperEdgeGraph = [(self.startNodes[0],self.endNodes[0])]
+        self.dummyNodes = [] if dummyNodes is None else dummyNodes
 
         #option to set a default name. 
         defName = "" #just the ID
 
         #Create an abstract edge, and keep the index as well
         #Simple edge
-        if len(self.startNodes) == 1 and len(self.endNodes) == 1:
-            #these should have two indices one for list one for tuple  JH (maybe procedure sorts it out?). ok
-            #but for now it is not a list, so it's ok
-            self.edge,self.edgeNum = self.model.addGMEdge(sItem[0],eItem[0],nameP = defName,id=id)
-        else:
+        
+        #these should have two indices one for list one for tuple  JH (maybe procedure sorts it out?). ok
+        #but for now it is not a list, so it's ok
+        #THere is always a simple edge to start
+        self.edge,self.edgeNum = self.model.addGMEdge(self.startNodes[0][0],
+                                                    self.endNodes[0][0],nameP = defName,id=id)
+        if len(self.startNodes) > 1 or len(self.endNodes) > 1:
             #deal with creation of hyperedge from passed in lists.
-            pass
+
+            #add each additional start
+            for s in self.startNodes[1:]:
+                self.model.Gr.addEdge(s[0].data(KEY_INDEX), self.edge.data(KEY_INDEX))
+            #add each additional end
+            for e in self.endNodes[1:]:
+                self.model.Gr.addEdge(self.edge.data(KEY_INDEX),e[0].data(KEY_INDEX))
+
         
         # self.metadata is just a more elegant wrapper
         self.metadata = self.model.Gr.edgeD[self.edgeNum].metadata
@@ -587,10 +598,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                 
         #add to the text list
         #TODO: Should this not be driven from the model?
-        #lWitem = QListWidgetItem(self.metadata['name'])
-        #lWitem.setData(KEY_INDEX,self.edgeNum)
-        #lWitem.setData(KEY_ROLE,ROLE_EDGE)
-        #self.listWidget.addItem(lWitem)
         tWitem = QTreeWidgetItem([self.model.Gr.edgeD[self.edgeNum].metadata['name'],str(self.edgeNum)])
         tWitem.setIcon(2, Scene.mainwindow.EDGE_ICON)
         tWitem.setData(0, KEY_INDEX,self.edgeNum)
@@ -609,8 +616,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         #self.textItem = QGraphicsTextItem(self.model.Gr.edgeD[self.edgeNum].metadata['name'], parent=self)
         # chatGPT's suggestion to avoid shape() not selecting it - TransparentTextItem
         self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
-        #Stop Python GC from mangling things on delete. This ref is critical?? - Python crashes on delete without it.?
-        self.textItem.my_parent_item = self
 
         self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
@@ -623,78 +628,113 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.setMetadataDisplay()
 
         #Create the graphical lines
-        #TODO: All this code is going to need to be in a loop for each segment
-        #PointList to pass to polyLine
-        #Simple edge
-        if len(self.startNodes) == 1 and len(self.endNodes) == 1:
+
+        #directed edge?
+        if directed == '':
+            self.isDirected = self.model.isDigraph
+        else:
+            self.isDirected=directed
+        
+        #this will create the necessary arrows - needed before `setStart` is called
+        #Add in the arrowhead for digraph
+        self.endShape = []
+        if self.isDirected:
+            #Every endNode end will need an arrowhead
+            for e in self.endNodes:
+                print(f"he add arrow {e[0].nodeNum}=")
+                #pos & details are set in `updateLine`. Additional endShapes created in addSegment
+                self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
+
+
+        #Track what sort of edge this one is
+        self._polyEdge = polyLineType   
+        self.tgtScaleFactor = TANGENT_SCALE_FACTOR 
+     
+        #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML`)
+        if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None:
+            #print(f"he: simple creation {len(dummyNodes)=}")
             stN = self.startNodes[0]
             endN = self.endNodes[0]
             if len(points) == 0: #just start with a 2-pt line from the port coords
                 ptList = [stN[1].scenePos(),endN[1].scenePos()]
             else: #Wrap the intermediate points with the start & end port position
                 ptList = [stN[1].scenePos()] + points + [endN[1].scenePos()]
-        else: #Hyperedge
-            #If we are _creating_ an n-ary edge, it must be from a file, so `points` and `tangents` will be populated
-            #TODO 
-            pass
 
-        #Track what sort of edge this one is
-        self._polyEdge = polyLineType
-        if self._polyEdge == STRAIGHT:
-            self.edgeLines.append(StraightLineItem(ptList,parent=self))
-        else: #Assume spline! Error checking later!
-            #If no tangents given, and start/end are on a blob, make tangent at right angles to blob
-            #The spline constructor default doesn't (can't) do the orthogonal tangents.
-            if len(tangents) == 0:
-                #Orthogonal to `nodeshape` at `point`
-                startSlope = self.startNodes[0][1].orthogonalSlope()
-                endSlope =  self.endNodes[0][1].orthogonalSlope()
-                self.tgtScaleFactor = 30 #TODO: Make this a global constant (also used in PolyLineItem)
-                tangents = [(QPointF(0,0),  
-                             QPointF(startSlope[0] * self.tgtScaleFactor, startSlope[1] * self.tgtScaleFactor))]
+            if self._polyEdge == STRAIGHT:
+                self.edgeLines.append(StraightLineItem(ptList,parent=self))
+            else: #Assume spline! Error checking later!
+                #If no tangents given, and start/end are on a blob, make tangent at right angles to blob
+                #The spline constructor default doesn't (can't) do the orthogonal tangents. Do them here.
+                if len(tangents) == 0:
+                    #Orthogonal to `nodeshape` at `point`
+                    startSlope = self.startNodes[0][1].orthogonalSlope()
+                    endSlope =  self.endNodes[0][1].orthogonalSlope()
+                    tangents = [(QPointF(0,0),  
+                                QPointF(startSlope[0] * self.tgtScaleFactor, startSlope[1] * self.tgtScaleFactor))]
 
-                tangents.append((QPointF(-endSlope[0] * self.tgtScaleFactor,-endSlope[1] * self.tgtScaleFactor), 
-                                QPointF(0,0)))
+                    tangents.append((QPointF(-endSlope[0] * self.tgtScaleFactor,-endSlope[1] * self.tgtScaleFactor), 
+                                    QPointF(0,0)))
 
-            self.edgeLines.append(HermiteSplineItem(p=ptList,t=tangents,parent=self))
+                self.edgeLines.append(HermiteSplineItem(p=ptList,t=tangents,parent=self))
+            
+            #Link up the topology for the visual graph - tell the start & end nodes about the edge
+            #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
+            for stN in self.startNodes: #Loops are redundant - handled in hyperedge else:
+                stN[0].startsEdges.append(self) #NODE
+                #Tell the Port too.
+                stN[1].startsEdgeLines.append(self.edgeLines[0]) 
+                self.setStart(stN, self.edgeLines[0])
+            for endN in self.endNodes:
+                endN[0].endsEdges.append(self) #NODE
+                #Port
+                endN[1].endsEdgeLines.append(self.edgeLines[0]) 
+                self.setEnd(endN, self.edgeLines[0])
+            
+        else: #Created from XML
+            #If we are _creating_ an n-ary edge, it must be from a file/ clipboard, 
+            # so `points`, `tangents` & dummyNodes will be populated, 
+            # and instantiated in edgeLines, with hyperEdgeGraph holding the structure.
+            
+            #print(f"HE init: sItem {[d[0].nodeNum for d in sItem]}") 
+            #print(f"HE init: eItem {[d[0].nodeNum for d in eItem]}") 
+            #print(f"HE init: dummyNodes { [(d[0].nodeNum, [el.lineNum for el in d[0].startsEdgeLines], [el.lineNum for el in d[0].endsEdgeLines]) for d in dummyNodes]}") 
+            #print(f"HE init: edgelines: {[e.lineNum for e in edgeLines]}")
+            #print(f"HE init: hyperEdgeGraph {hyperEdgeGraph}")
+            #For each edgeLine, tell the start and end nodes. NOTE: dummyNodes are connected already in fromXML()
+            for eL,eLNodes in hyperEdgeGraph.items():
+                #print(f"heGr  eL {eL.lineNum}, ({eLNodes[0][0].nodeNum}, {eLNodes[0][1].nodeNum}),({eLNodes[1][0].nodeNum}, {eLNodes[1][1].nodeNum}) ")
+                if eLNodes[0][0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
+                    #print(f"    sItem {eL.lineNum}, ({eLNodes[0][0].nodeNum}, {eLNodes[0][1].index})")
+                    stN = eLNodes[0] #tuple of (node,port)
+                    stN[0].startsEdges.append(self)
+                    stN[1].startsEdgeLines.append(eL)
+                    self.setStart(stN, eL)
+                if eLNodes[1][0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
+                    #print(f"    eItem {eL.lineNum}, ({eLNodes[1][0].nodeNum}, {eLNodes[1][1].index})")
+                    endN = eLNodes[1] #tuple of (node,port)
+                    endN[0].endsEdges.append(self)
+                    endN[1].endsEdgeLines.append(eL)
+                    self.setEnd(endN, eL)   
+            #Now set the parenting
+            for d in self.dummyNodes:
+                d[0].setParentItem(self)
+            for e in self.edgeLines:
+                e.setParentItem(self)
         
+        print(f"he init checking port endlines")
+        for d in self.endNodes:
+            print(f"  endNode {d[0].nodeNum} port {d[1].index}")
+            for e in d[1].startsEdgeLines:
+                print(f"   starts {e.lineNum}")
+            for e in d[1].endsEdgeLines:
+                print(f"   ends {e.lineNum}")
+
+        #Bounding rectangle
         self.bRect = QRectF(0,0,0,0) #initial bounding rectangle
         for edgeLine in self.edgeLines:
             edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
             edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
             self.bRect = self.bRect.united(edgeLine.boundingRect())
-
-        #Add in the arrowhead for digraph
-        if directed == '':
-            self.isDirected = self.model.isDigraph
-        else:
-            self.isDirected=directed
-
-        #Every endNode end will need an arrowhead
-        self.endShape = []
-        if self.isDirected:
-            #pos & details are set in `updateLine`. Additional endShapes created in addSegment
-            self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
-
-
-        #Link up the topology for the visual graph - tell the start & end nodes about the edge
-        #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
-        for stN in self.startNodes:
-            stN[0].startsEdges.append(self) #NODE
-            #Tell the Port too.
-            #TODO: Check if this is edge or edgeLine. Currently same
-            #stN[1].startsEdgeLines.append(self)  #JH duplicate this for now
-            #TODO: How to map the right port to the right endLine? dummyNodeIndex is unique...            
-            stN[1].startsEdgeLines.append(self.edgeLines[0]) 
-            self.setStart(stN, self.edgeLines[0])
-        for endN in self.endNodes:
-            endN[0].endsEdges.append(self) #NODE
-            #Port
-            #endN[1].endsEdgeLines.append(self)    #JH duplicate this for now
-            #TODO: How to map the right port to the right endLine? dummyNodeIndex is unique...
-            #  Initially, there is only 1 segment, edgeLines[0]. fromXML will be different.
-            endN[1].endsEdgeLines.append(self.edgeLines[0]) 
-            self.setEnd(endN, self.edgeLines[0])
 
         #Selection and editing vars:
         #TODO: will need a list of st & end handles
@@ -736,67 +776,105 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #hyperEdgeGraph: {[(h[0][0].nodeNum,h[1][0].nodeNum) for h in self.hyperEdgeGraph]
     
     def toXML(self,Xparent):
-        """ add an Element Tree node to the XML parent node with the Edge Data 
-            This uses the yEd names for line types for compatibility
+        """ add an Element Tree node to the XML parent node with the Edge Data
         """
         xmlEdge = ET.Element(
-            "edge",
-            id=str(self.edgeNum),
-            source=str(self.startNode[0].nodeNum),
-            target=str(self.endNode[0].nodeNum),
-            sourceport=str(self.startNode[1].index),
-            targetport=str(self.endNode[1].index)
-        )
+            "hyperedge",
+            id=str(self.edgeNum)   )
+        
         if self.isDirected: 
             xmlEdge.set("directed", "true")     
         else:
             xmlEdge.set("directed", "false") 
+        if self.isDirected: #subelement or just a property? 
+            ET.SubElement(xmlEdge, "y:Arrows", {'source':"none", 'target':"standard"})  
 
-        data = ET.SubElement(xmlEdge, "data", key="data_edge")
         if self._polyEdge == STRAIGHT:
-            pl = ET.SubElement(data, "y:PolyLineEdge")
+            xmlEdge.set("lineType", "Straight")
         else:
-            pl = ET.SubElement(data, "y:QuadCurveEdge")
+            xmlEdge.set("lineType", "Spline")
 
-        if self.isDirected: 
-            ET.SubElement(pl, "y:Arrows", {'source':"none", 'target':"standard"})  
+        #Build  edgeLine:start and edgeEdline:end dictionaries for saving edge start/ ends
+        hStarts = {} # dict 
+        hEnds = {} # dict
+        nL = ET.SubElement(xmlEdge,"h:nodeList")
+        for n in self.startNodes:
+            ET.SubElement(nL,"start" , 
+                 source= str(n[0].nodeNum),
+                 sourceport=str(n[1].index)  )
+            #store the start (node,port) for the edgeLine (end is not yet defined)
+            hStarts.update({n[1].startsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
 
-        #Add in the points   
-        points = self.edgeLine._p
-        if len(points) > 0:
-            path = ET.SubElement(pl,"y:Path ") #No ports yet
-            pathElts = []
-            for p in points[1:-1]:
-                pathElts.append(ET.SubElement(path, "y:Point", {"x":str(p.x()),"y":str(p.y())}))
-            #Tangents 
-            if self._polyEdge == SPLINE:
-                tangents = self.edgeLine._t
+        for n in self.endNodes:
+            ET.SubElement(nL,"end",
+                 target = str(n[0].nodeNum),
+                 targetport=str(n[1].index) )
+            #Update the 'end' tuple
+            print(f"he toX endNode {n[0].nodeNum} port {n[1].index} {len(n[1].endsEdgeLines)=}")
+            hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
+        
+        dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
+        for n in self.dummyNodes:
+            #Currently (Apr 2026) dummyNodes don't have ports dN[0] = dN[1]
+            dNElt = ET.SubElement(dL,"dummyNode", id=str(n[0].nodeNum), x=str(n[0].pos().x()),y=str(n[0].pos().y()) )
+            for eL in n[0].startsEdgeLines:
+                ET.SubElement(dNElt, "startsEdgeLine", eL=str(eL.lineNum))
+                hStarts.update({eL.lineNum : (n[0].nodeNum, n[1].nodeNum)})
+            for eL in n[0].endsEdgeLines:
+                ET.SubElement(dNElt, "endsEdgeLine", eL=str(eL.lineNum))
+                hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
+        
+        #the hyperEdge graph - a comment, to aid debugging. Data needed is in the edgeLine element
+        #print(f"hyperEdge {self.edgeNum} {hStarts.items()} , {hEnds.items()}")
+        hEdgeGraph = dict()
+        for k,v in hStarts.items():
+            hEdgeGraph.update({k:(v,hEnds[k])})
+        #print(f"hyperEdge {hEdgeGraph}")
+        comment = ET.Comment(f"hyperEdge {hEdgeGraph}")
 
-                if len(tangents) > 0:
-                    ET.SubElement(path,"h:StartTangent", {"x":str(tangents[0][1].x()),
-                                                          "y":str(tangents[0][1].y())})
-                    for i,pElt in enumerate(pathElts):
-                        ET.SubElement(pElt,"h:Tangent",
-                                            {"leftx":str(tangents[i+1][0].x()), "lefty":str(tangents[i+1][0].y()), 
-                                             "rightx":str(tangents[i+1][1].x()),"righty":str(tangents[i+1][1].y())})
+        #Add the edgelines
+        eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
+        eLL.append(comment)
 
-                    ET.SubElement(path,"h:EndTangent", {"x":str(tangents[-1][0].x()),"y":str(tangents[-1][0].y())})
+        for eL in self.edgeLines:
+            #edgeLine id=<eLineID> source=<nID> sourceport=<portID> target=<nID> targetport=<portID>
+            eLelt =  ET.SubElement(eLL,"edgeLine", id=str(eL.lineNum), 
+                                source=str(hStarts[eL.lineNum][0]), sourceport=str(hStarts[eL.lineNum][1]), 
+                                target=str(hEnds[eL.lineNum][0]), targetport=str(hEnds[eL.lineNum][1])  )
+            #Add in the points   
+            points = eL._p
+            if len(points) > 0:
+                path = ET.SubElement(eLelt,"y:Path ") #No ports yet
+                pathElts = []
+                for p in points[1:-1]:
+                    pathElts.append(ET.SubElement(path, "y:Point", {"x":str(p.x()),"y":str(p.y())}))
+                #Tangents 
+                if self._polyEdge == SPLINE:
+                    tangents = eL._t
+
+                    if len(tangents) > 0:
+                        ET.SubElement(path,"h:StartTangent", {"x":str(tangents[0][1].x()),
+                                                            "y":str(tangents[0][1].y())})
+                        for i,pElt in enumerate(pathElts):
+                            ET.SubElement(pElt,"h:Tangent",
+                                                {"leftx":str(tangents[i+1][0].x()), "lefty":str(tangents[i+1][0].y()), 
+                                                "rightx":str(tangents[i+1][1].x()),"righty":str(tangents[i+1][1].y())})
+
+                        ET.SubElement(path,"h:EndTangent", {"x":str(tangents[-1][0].x()),"y":str(tangents[-1][0].y())})
 
 
         #TODO: Refactor edge save/ load code to not use edgeLabel as `name` - do it all in metadata
-        label = ET.SubElement(pl, "y:EdgeLabel")
-        label.text = self.metadata['name']
-        for atK,atV in self.metadataAttributes['name'].items():
-            metaAtt = ET.SubElement(label, "h:metadataAttribute", {"key":atK,"value":str(atV)})
+        #label = ET.SubElement(pl, "y:EdgeLabel")
+        #label.text = self.metadata['name']
+        #for atK,atV in self.metadataAttributes['name'].items():
+        #    metaAtt = ET.SubElement(label, "h:metadataAttribute", {"key":atK,"value":str(atV)})
 
-        #add metadata other than name
-        if len(self.metadata) >= 2:
+        #add metadata (including than name)
+        if len(self.metadata) >= 1:
             for k, v in self.metadata.items():
-                if k != "name":
-                    metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":k,"value":str(v)})
-                    for atK,atV in self.metadataAttributes[k].items():
-                        metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
-
+                metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":k,"value":str(v)})
+                for atK,atV in self.metadataAttributes[k].items():
+                    metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
 
         return xmlEdge
         

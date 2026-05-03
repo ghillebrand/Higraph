@@ -1137,7 +1137,7 @@ class grScene(QGraphicsScene):
                             if not selItem.stH:
                                 selItem.setZValue(2000) #move the edge above nodes
                                 # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
-                                print(" Setting stH", end="")
+                                #print(" Setting stH", end="")
                                 #print(f" clicked on {selItem.edgeLineAt(mPos)._pHandles}")
                                 #Which edgeLine?
                                 #if len(selItem.edgeLine._pHandles)>0:
@@ -3021,8 +3021,10 @@ class MainWindow(QMainWindow):
         if sItem == None:
             #TODO - this should be in a try-except, since this means the file is corrupt
             print(f"WARNING! - Start Item ID {sItemID} not found ")
+            #return None
         if eItem == None:
             print(f"WARNING! - End Item ID {eItemID} not found ")
+            #return None
         
         #Add the port
         sItem = (sItem, sItem.portFromIndex(srcPort))
@@ -3062,6 +3064,7 @@ class MainWindow(QMainWindow):
                     if pathPoints is not None:
                         points = []
                         for pt in pathPoints:
+                            #TODO: Not only pastes might generate `newID`s. Needs a better method.
                             if newID:  #if this is a paste, offset any points
                                 points.append( QPointF(float(pt.attrib.get("x"))+PASTE_OFFSET,
                                             float(pt.attrib.get("y"))+PASTE_OFFSET) )  
@@ -3115,6 +3118,250 @@ class MainWindow(QMainWindow):
                                 metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes   )
 
         return newEdge
+
+    
+    def hyperEdgeFromXML(self,xEdge,newID=False)->VisHyperEdgeItem:
+        """ Create a new hyperEdge from an XML string `xEdge`
+            if newID is True, the item is created with a newID,otherwise, the read value.
+            This is the difference between file load (new items) and edit paste (structure)
+            newStartID & newEndID also must be overwritten on paste/ structure copy
+            For hyperedges, this will create the `edgeLine` here, and pass it in to the hyperEdge constructor.
+            Returns VisHyperEdgeItem
+        """
+
+        if not newID:
+            #TODO: type check id/ process string IDs
+            id = int(xEdge.attrib.get("id"))
+            #print(f"HyperEdge {id} being read")
+        else: 
+            id = '' #let the model assign an ID
+
+        #directed
+        if xEdge.attrib.get("directed", '') == "true":  #xml needs string not bool
+            directed=True
+        else:
+            directed=False
+
+        #lineType (STRAIGHT | SPLINE)
+        lineType = xEdge.attrib.get("lineType", "")
+        if lineType == "Straight":  
+            polyLineType = STRAIGHT
+        elif lineType == "Spline":  
+            polyLineType = SPLINE
+        else:
+            polyLineType = DEFAULT_EDGE
+
+        #Arrowheads
+        #Currently just using the defaults
+        #TODO: Read in the type of terminator symbols (well - write alt terminator symbol code!)
+
+        #Extact start (`sItem`) & end ((eItem`) ID's 
+        #newID implies we need newStartID used to be None? Use newID.
+        sItem = []
+        sNodes = []
+        eItem = []
+        eNodes = []
+        
+        #print(f"old to NewIDs {[(k,v) for k,v in self.oldToNewID.items()]}")
+
+        for aNode in xEdge.find("nodeList"): 
+            #Starts
+            if aNode.tag == "start":
+                s = int(aNode.attrib.get("source", 0))
+                if not s:
+                    print(f"ERROR: can't find source in {aNode}")
+                    return None
+                #TODO: refactor `oldToNewID` to work purely on int's!
+                #print(f"Start node {s} --> {self.oldToNewID[str(s)]}")
+                s = self.oldToNewID[str(s)]  
+                sItm = self.Scene.findItemByIdx(s)
+                #Track real nodes to differentiate from dummys later
+                sNodes.append(s)
+                p = int(aNode.attrib.get("sourceport", 0))
+                pItm = sItm.portFromIndex(p)
+                #This assumes portIDs don't/ won't change - should be OK - local to nodes
+                sItem.append( (sItm,pItm) )
+
+            if aNode.tag == "end":
+                e = int(aNode.attrib.get("target", 0))
+                if not e:
+                    print(f"ERROR: can't find target in {aNode}")
+                    return None
+                #print(f"end node {e} --> {self.oldToNewID[str(e)]}")
+                e = self.oldToNewID[str(e)]
+                eItm = self.Scene.findItemByIdx(e)
+                #Track real nodes
+                eNodes.append(e)
+                p = int(aNode.attrib.get("targetport", 0))
+                pItm = sItm.portFromIndex(p)
+                #This assumes portIDs don't/ won't change
+                eItem.append( (eItm,pItm) )
+
+        #dummyNodes - read, and instantiate
+        dNList = []
+        eLstarts = {} #Dictionary of  {eL.lineNum: dN} for start of lines
+        eLends = {}   #For ends of lines. Note these contain whole dN objects, not nodeNums
+        oldToNewdN = {}  #Track any dummyNodeID changes
+        for dNode in xEdge.find("dummyNodeList"):
+            dNID = int(dNode.attrib.get("id",0))
+            dNx = float(dNode.attrib.get("x"))
+            dNy = float(dNode.attrib.get("y"))
+            if newID : #create a newID
+                dNID = 0
+            #Note: `parent` will have to be updated once the edge is created.
+            dN = dummyNodeItem(QPointF(dNx,dNy),id=dNID)
+            #Note: EdgeLines don't yet exist - this will need to be udpated once they do.
+            #Get the edges that start/ end here
+            for sE in dNode.findall("startsEdgeLine"):
+                eLstarts[int(sE.attrib.get("eL"))] = dN
+            for eE in dNode.findall("endsEdgeLine"):
+                eLends[int(eE.attrib.get("eL"))] = dN
+            #Track the dNID in case it was changed on create
+            #print(f"{dNID=} --> {dN.nodeNum}")
+            oldToNewdN[dNID] = dN.nodeNum
+            dNList.append( (dN,dN) )  #dummyNode are their own ports
+            #Which edges this starts
+            
+        #edgeLines - read and instantiate
+
+        #Note that if edgeLine ID's change, nodes will auto-update them during creation. I think.
+        edgeLineList = []
+        hyperEdgeGraph = dict() #An ordinary digraph of the hyperedge
+        
+        oldToNewEL = {}  #Track any edgeLineID changes
+        for eL in xEdge.find("edgeLineList"):
+            #print(f"edgeLine: {eL.attrib}")
+            points=[]
+            tangents = []
+            #Note: dN edgeID need to become global (Real nodes could go beyond 1000 ...)
+            #If not in sItem or eItem, then a dummy node
+            eLID = int(eL.attrib.get("id",0))
+            if newID : #create a newID by calling with 0
+                eLID = False #0
+
+            #Get elStart, then check if it's a node or a dummyNode (and for end)
+            sItm,pItm = None,None
+            eLStart = int(eL.attrib.get("source", 0))
+            if eLStart in sNodes: #real, not dummy
+                sItm = self.Scene.findItemByIdx(eLStart)
+                eLStartPort = int(eL.attrib.get("sourceport", 0))
+                spItm = sItm.portFromIndex(eLStartPort)
+                
+            else: #dummy Node
+                #find the dummy node
+                stDN = oldToNewdN[eLStart]
+                sItm = [d[0] for d in dNList if d[0].nodeNum == stDN][0]  #rtn DNitem, not a list
+                spItm = sItm#[1] #dummyNodes are their own ports,
+
+            eItm, pItm = None,None
+            eLEnd = int(eL.attrib.get("target"))
+            if eLEnd in eNodes: #real, not dummy
+                eItm = self.Scene.findItemByIdx(eLEnd)
+                eLEndPort = int(eL.attrib.get("targetport", 0))
+                epItm = eItm.portFromIndex(eLEndPort)
+            else: #dummy Node
+                #find the dummy node
+                endDN = oldToNewdN[eLEnd]
+                eItm = [d[0] for d in dNList if d[0].nodeNum == endDN][0]  #rtn DNitem, not a list
+                epItm = eItm #[1]
+
+            path = eL.find("Path")
+            points = []
+            #Start point
+            points.append(spItm.pos())
+            #Tangents and middle points
+            if path is not None:
+                if polyLineType == SPLINE:
+                    #get tangents
+                    startT = path.find("StartTangent")
+                    if startT is not None: 
+                        #Each list entry is a tuple of tuples!
+                        tangents.append( ( QPointF(0,0),
+                                            QPointF(float(startT.attrib.get("x")),
+                                                float(startT.attrib.get("y")) )
+                                        ) )
+                    
+                pathPoints = path.findall("Point")
+                if pathPoints is not None:
+                    for pt in pathPoints:
+                        #TODO: Not only pastes might generate `newID`s. Needs a better method.
+                        if newID:  #if this is a paste, offset any points
+                            points.append( QPointF(float(pt.attrib.get("x"))+PASTE_OFFSET,
+                                        float(pt.attrib.get("y"))+PASTE_OFFSET) )  
+                        else: 
+                            points.append( QPointF(float(pt.attrib.get("x")),
+                                        float(pt.attrib.get("y"))) )
+                        #if QuadCurve, #get tangents
+                        if polyLineType == SPLINE:
+                            T = pt.find("Tangent")
+                            if T is not None:
+                                tangents.append( ( QPointF(float(T.attrib.get("leftx")),
+                                                            float(T.attrib.get("lefty")) ),
+                                                    QPointF(float(T.attrib.get("rightx")),
+                                                            float(T.attrib.get("righty")) )
+                                        ) )
+
+                if polyLineType == SPLINE:
+                    #get End tangents
+                    endT = path.find("EndTangent")
+                    if endT is not None:
+                            tangents.append( (  QPointF(float(endT.attrib.get("x")),
+                                                float(endT.attrib.get("y")) ),
+                                                QPointF(0,0)
+                                            ) )
+            #End point
+            points.append(epItm.pos())
+
+            #Now create the edgeLine, and store it
+            if polyLineType == SPLINE:
+                #Created with no parent, since edge does not yet exist. Link at the end
+                newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=eLID)
+            #elif polyLineType == STRAIGHT:
+
+            oldToNewEL[eLID] = newEdgeLine.lineNum
+            #print(f"heX {eLID=} -> {oldToNewEL[eLID]}")
+            #TODO: What has to be updated if eLID changes!?@?
+
+            #Put this into the hyperEdgeGraph for this edge
+            #print(f"   heFX edge {id} edgeLine {eLID=}  ({sItm.nodeNum}, {spItm.nodeNum}) : ({eItm.nodeNum},{epItm.nodeNum})")
+            hyperEdgeGraph.update({newEdgeLine:((sItm,spItm),(eItm,epItm))})
+
+            edgeLineList.append(newEdgeLine)
+            #Tell the dummyNodes 
+            if newEdgeLine.lineNum in eLstarts.keys():
+                eLstarts[newEdgeLine.lineNum].startsEdgeLines.append(newEdgeLine)
+            if newEdgeLine.lineNum in eLends.keys():
+                eLends[newEdgeLine.lineNum].endsEdgeLines.append(newEdgeLine)
+                
+        #print(f"edgelines: {[e.lineNum for e in edgeLineList]}")
+
+        #Read metadata, including `name`
+        edgeMetadata = {}
+        edgeMetadataAttributes = {}        
+        for metaEl in xEdge.iter("metadata"):
+            metaKey = metaEl.attrib.get("key")
+            edgeMetadata[metaKey] = metaEl.attrib.get("value")
+            for edgeNameAttribs in metaEl.iter("metadataAttribute"):
+                #Deal with Boolean for display (This is why you should use the proper key types!)
+                if edgeNameAttribs.attrib.get("key") == 'display':
+                    edgeMetadataAttributes[metaKey] = {'display':edgeNameAttribs.attrib.get("value") == "True"}
+                else:
+                    edgeMetadataAttributes[metaKey] = {edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")}
+        
+        edgeName = edgeMetadata['name']
+
+        #All the data read, create the edge
+        newEdge = VisHyperEdgeItem(self.model, self.Scene, self.ui.treeWidget, sItem, eItem, 
+                                directed=directed,  nameP=edgeName, id = id,
+                                polyLineType = polyLineType, points=points,tangents=tangents,
+                                metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes,
+                                dummyNodes=dNList  , edgeLines=edgeLineList,
+                                hyperEdgeGraph=hyperEdgeGraph   )
+
+        #TODO: Update parenting of dummyNodes & edgeLines
+
+        return newEdge
+
 
     def action_FileOpen(self):
         #check for unsaved changes
@@ -3173,7 +3420,8 @@ class MainWindow(QMainWindow):
             self.model.isDirected = ISDIGRAPH 
 
         #Track the old -> new IDs to deal with string IDs, and hook up edges
-        oldToNewID = {}
+        #Hyperedges are complex, so make it accessible to hyperEdgeFromXML
+        self.oldToNewID = {}
 
         #Nodes
         for xNode in graphStr.iter("node"):
@@ -3188,7 +3436,7 @@ class MainWindow(QMainWindow):
 
             GItem = self.nodeFromXML(xNode, newID=newID)
             #Track it, even if it doesn't change - simplifies the edge code
-            oldToNewID[fileID] = GItem.nodeNum
+            self.oldToNewID[fileID] = GItem.nodeNum
             #TODO: Do something meaningful with mismatches
             #if fileID != GItem.nodeNum:
             #    print(f"WARNING: node id {fileID=} changed on load")
@@ -3211,7 +3459,7 @@ class MainWindow(QMainWindow):
 
             GItem = self.blobFromXML(xBlob, newID=newID)
             #Track it, even if it doesn't change - simplifies the edge code
-            oldToNewID[fileID] = GItem.nodeNum
+            self.oldToNewID[fileID] = GItem.nodeNum
             #TODO: Do something meaningful with mismatches
             #if fileID != GItem.nodeNum:
             #    print(f"WARNING: node id {fileID=} changed on load")
@@ -3234,17 +3482,26 @@ class MainWindow(QMainWindow):
             sItemID = xEdge.attrib.get("source", None)
             eItemID = xEdge.attrib.get("target", None)
             edgeItem = self.edgeFromXML(xEdge, newID=newID, 
-                                            newStartID=oldToNewID[sItemID],
-                                            newEndID = oldToNewID[eItemID])
+                                            newStartID=self.oldToNewID[sItemID],
+                                            newEndID = self.oldToNewID[eItemID])
 
             #Add to Scene
             self.Scene.addItem(edgeItem)
             edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
         
+        #HyperEdges
+        for xEdge in graphStr.iter("hyperedge"):
+            hEdgeItem = self.hyperEdgeFromXML(xEdge)
+            #Add to Scene
+            self.Scene.addItem(hEdgeItem)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+
         self.Scene.update()
 
         self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + "[*]")
+        self.oldToNewID.clear()
 
         #self.setZoom(100)
         #zoomToFitWithMargin(self.ui.graphicsView, margin=0.2)
@@ -3633,11 +3890,11 @@ class MainWindow(QMainWindow):
         graphStr = root.find("graph")
 
         #Track the old -> new IDs to hook up edges
-        oldToNewID = {}
+        self.oldToNewID = {}
         for xNode in graphStr.iter("node"):
             #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
             GItem = self.nodeFromXML(xNode, newID=True)
-            oldToNewID[int(xNode.attrib.get("id"))] = GItem.nodeNum
+            self.oldToNewID[int(xNode.attrib.get("id"))] = GItem.nodeNum
 
             #Bump the pasted items over by PASTE_OFFSET
             GItem.moveBy(PASTE_OFFSET,PASTE_OFFSET)
@@ -3651,7 +3908,7 @@ class MainWindow(QMainWindow):
         for xBlob in graphStr.iter("blob"):
             #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
             GItem = self.blobFromXML(xBlob, newID=True)
-            oldToNewID[int(xBlob.attrib.get("id"))] = GItem.nodeNum
+            self.oldToNewID[int(xBlob.attrib.get("id"))] = GItem.nodeNum
 
             #Bump the pasted items over by PASTE_OFFSET
             GItem.suppressItemChange = True
@@ -3670,8 +3927,8 @@ class MainWindow(QMainWindow):
             #BUG - edges don't work on paste - ID's have changed!
 
             edgeItem = self.edgeFromXML(xEdge, newID=True, 
-                                            newStartID=oldToNewID[sItemID],
-                                            newEndID = oldToNewID[eItemID])
+                                            newStartID=self.oldToNewID[sItemID],
+                                            newEndID = self.oldToNewID[eItemID])
             #Bump any polyline points over -  now done in edgefromXML
             #for pt in edgeItem.edgeLine._p:
             #    pt += QPointF(PASTE_OFFSET,PASTE_OFFSET)
@@ -3683,6 +3940,7 @@ class MainWindow(QMainWindow):
             edgeItem.setSelected(True)
         
         self.Scene.update()
+        self.oldToNewID.clear()
 
     #Some helper functions for deletion
 
