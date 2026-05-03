@@ -201,7 +201,7 @@ class dummyNodeRoot(QGraphicsItem):
         super().__init__(parent=parent)
         self.suppressItemChange = True
         #This might be resolved by the starts end finishEdges code 
-        #self.setData(KEY_ROLE, ROLE_DUMMYNODE)
+        self.setData(KEY_ROLE, ROLE_DUMMYNODE)
         self.setPos(center)
         #self.setFlag(QGraphicsItem.ItemIsMovable, True)
  

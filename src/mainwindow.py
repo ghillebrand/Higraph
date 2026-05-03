@@ -1108,7 +1108,7 @@ class grScene(QGraphicsScene):
                             if not selItem.stH:
                                 selItem.setZValue(2000) #move the edge above nodes
                                 # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
-                                print(" Setting stH", end="")
+                                #print(" Setting stH", end="")
                                 #print(f" clicked on {selItem.edgeLineAt(mPos)._pHandles}")
                                 #Which edgeLine?
                                 #if len(selItem.edgeLine._pHandles)>0:
@@ -3157,10 +3157,12 @@ class MainWindow(QMainWindow):
                 p = int(aNode.attrib.get("targetport", 0))
                 pItm = sItm.portFromIndex(p)
                 #This assumes portIDs don't/ won't change
-                eItem.append( (eItm,p) )
+                eItem.append( (eItm,pItm) )
 
         #dummyNodes - read, and instantiate
         dNList = []
+        eLstarts = {} #Dictionary of  {eL.lineNum: dN} for start of lines
+        eLends = {}   #For ends of lines. Note these contain whole dN objects, not nodeNums
         oldToNewdN = {}  #Track any dummyNodeID changes
         for dNode in xEdge.find("dummyNodeList"):
             dNID = int(dNode.attrib.get("id",0))
@@ -3170,27 +3172,36 @@ class MainWindow(QMainWindow):
                 dNID = 0
             #Note: `parent` will have to be updated once the edge is created.
             dN = dummyNodeItem(QPointF(dNx,dNy),id=dNID)
-            dNList.append(dN)
+            #Note: EdgeLines don't yet exist - this will need to be udpated once they do.
+            #Get the edges that start/ end here
+            for sE in dNode.findall("startsEdgeLine"):
+                eLstarts[int(sE.attrib.get("eL"))] = dN
+            for eE in dNode.findall("endsEdgeLine"):
+                eLends[int(eE.attrib.get("eL"))] = dN
             #Track the dNID in case it was changed on create
             #print(f"{dNID=} --> {dN.nodeNum}")
             oldToNewdN[dNID] = dN.nodeNum
+            dNList.append( (dN,dN) )  #dummyNode are their own ports
+            #Which edges this starts
             
         #edgeLines - read and instantiate
 
         #Note that if edgeLine ID's change, nodes will auto-update them during creation. I think.
         edgeLineList = []
-
+        hyperEdgeGraph = dict() #An ordinary digraph of the hyperedge
+        
+        oldToNewEL = {}  #Track any edgeLineID changes
         for eL in xEdge.find("edgeLineList"):
             #print(f"edgeLine: {eL.attrib}")
             points=[]
             tangents = []
-            #Note: dN edgeID are prefixed with a "d" (Real nodes could go beyond 1000 ...)
+            #Note: dN edgeID need to become global (Real nodes could go beyond 1000 ...)
             #If not in sItem or eItem, then a dummy node
             eLID = int(eL.attrib.get("id",0))
-            if newID : #create a newID
-                eLID = 0
+            if newID : #create a newID by calling with 0
+                eLID = False #0
 
-            #TODO: Get elStart, then check if it's a node or a dummyNode (and for end)
+            #Get elStart, then check if it's a node or a dummyNode (and for end)
             sItm,pItm = None,None
             eLStart = int(eL.attrib.get("source", 0))
             if eLStart in sNodes: #real, not dummy
@@ -3201,8 +3212,8 @@ class MainWindow(QMainWindow):
             else: #dummy Node
                 #find the dummy node
                 stDN = oldToNewdN[eLStart]
-                sItm = [d for d in dNList if d.nodeNum == stDN][0]  #rtn DNitem, not a list
-                spItm = sItm #dummyNodes are their own ports
+                sItm = [d[0] for d in dNList if d[0].nodeNum == stDN][0]  #rtn DNitem, not a list
+                spItm = sItm#[1] #dummyNodes are their own ports,
 
             eItm, pItm = None,None
             eLEnd = int(eL.attrib.get("target"))
@@ -3213,11 +3224,8 @@ class MainWindow(QMainWindow):
             else: #dummy Node
                 #find the dummy node
                 endDN = oldToNewdN[eLEnd]
-                eItm = [d for d in dNList if d.nodeNum == endDN][0]  #rtn DNitem, not a list
-                epItm = eItm
-
-            #print(f"   HEFX {id} {eLID=}  ({sItm.nodeNum}, {spItm.nodeNum}) : ({eItm.nodeNum=},{epItm.nodeNum})")
-
+                eItm = [d[0] for d in dNList if d[0].nodeNum == endDN][0]  #rtn DNitem, not a list
+                epItm = eItm #[1]
 
             path = eL.find("Path")
             points = []
@@ -3269,10 +3277,24 @@ class MainWindow(QMainWindow):
             #Now create the edgeLine, and store it
             if polyLineType == SPLINE:
                 #Created with no parent, since edge does not yet exist. Link at the end
-                newEdgeLine = HermiteSplineItem(p=points, t=tangents)
-            #if polyLineType == STRAIGHT:
-            edgeLineList.append(newEdgeLine)
+                newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=eLID)
+            #elif polyLineType == STRAIGHT:
 
+            oldToNewEL[eLID] = newEdgeLine.lineNum
+            #print(f"heX {eLID=} -> {oldToNewEL[eLID]}")
+            #TODO: What has to be updated if eLID changes!?@?
+
+            #Put this into the hyperEdgeGraph for this edge
+            #print(f"   heFX edge {id} edgeLine {eLID=}  ({sItm.nodeNum}, {spItm.nodeNum}) : ({eItm.nodeNum},{epItm.nodeNum})")
+            hyperEdgeGraph.update({newEdgeLine:((sItm,spItm),(eItm,epItm))})
+
+            edgeLineList.append(newEdgeLine)
+            #Tell the dummyNodes 
+            if newEdgeLine.lineNum in eLstarts.keys():
+                eLstarts[newEdgeLine.lineNum].startsEdgeLines.append(newEdgeLine)
+            if newEdgeLine.lineNum in eLends.keys():
+                eLends[newEdgeLine.lineNum].endsEdgeLines.append(newEdgeLine)
+                
         #print(f"edgelines: {[e.lineNum for e in edgeLineList]}")
 
         #Read metadata, including `name`
@@ -3295,7 +3317,8 @@ class MainWindow(QMainWindow):
                                 directed=directed,  nameP=edgeName, id = id,
                                 polyLineType = polyLineType, points=points,tangents=tangents,
                                 metadata=edgeMetadata, metadataAttributes=edgeMetadataAttributes,
-                                dummyNodes=dNList  , edgeLines=edgeLineList   )
+                                dummyNodes=dNList  , edgeLines=edgeLineList,
+                                hyperEdgeGraph=hyperEdgeGraph   )
 
         #TODO: Update parenting of dummyNodes & edgeLines
 
@@ -3432,7 +3455,10 @@ class MainWindow(QMainWindow):
         #HyperEdges
         for xEdge in graphStr.iter("hyperedge"):
             hEdgeItem = self.hyperEdgeFromXML(xEdge)
-            print("hEdgeItem created, still link up!!!")
+            #Add to Scene
+            self.Scene.addItem(hEdgeItem)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
 
         self.Scene.update()
 

@@ -240,9 +240,9 @@ class StraightLineItem(QGraphicsItem):
         return path
  
 class HermiteSplineItem(QGraphicsItem):
-    nextID = 2000 #Note that the start value doesn't matter, since these are local to SLI, and clashes with HS can't happen.
+    nextID = 2000 #Note that the start value doesn't matter, since these are local to HSI, and clashes with SL can't happen.
     IDsUsed = set()    
-    def __init__(self, p:List, t:List=[], parent=None):
+    def __init__(self, p:List, t:List=[], parent=None, id=None):
         """ create a hermite (cubic) spline with a list of points (QPointFs) and an optional, matching list of 2-tuples of tangents (QPointFs). 
             Tangent coordinates are relative to their parent point. 
             First tangent tuple is (0,QPointF), and last is (QPointF,0)
@@ -250,11 +250,21 @@ class HermiteSplineItem(QGraphicsItem):
         super().__init__(parent)
         #id to make debuging easier
         #TODO: include dealing with `id` as a parameter
-        self.lineNum = HermiteSplineItem.nextID
-        HermiteSplineItem.nextID +=  1
+        #ID for saving, and debugging 
+        #Check for unique ID
+        if id and not id in HermiteSplineItem.IDsUsed:
+                self.lineNum = id
+                HermiteSplineItem.IDsUsed.add(id)
+        else:
+            while HermiteSplineItem.nextID in HermiteSplineItem.IDsUsed:
+                HermiteSplineItem.nextID += 1
+            self.lineNum = HermiteSplineItem.nextID
+            HermiteSplineItem.IDsUsed.add(self.lineNum)
+            HermiteSplineItem.nextID += 1   
 
         self.suppressItemChange = True
 
+        #TODO: Put the emtpy list guard clause around this
         self._p = p
         self._pHandles = []        
         self._tHandles = []
@@ -264,7 +274,7 @@ class HermiteSplineItem(QGraphicsItem):
 
         #Tangents
         #TODO: Put this in HGConstants
-        self.scaleFactor = 30 #20 #how long the default tangents are
+        self.scaleFactor = TANGENT_SCALE_FACTOR #how long the default tangents are
         #Are tangents given:
         if len(t) == len(p):
             self._t = t

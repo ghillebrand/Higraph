@@ -511,6 +511,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         #If needed move all the polyline points - updatePath handles this.
         self.edgeLine.updatePath()
 
+###################################################################################################################
 
 class VisHyperEdgeItem(QGraphicsObject): 
     """ Create a new Hyperedge - both Graph Model and Visual ("graphics")
@@ -521,11 +522,13 @@ class VisHyperEdgeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
-                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={},dummyNodes=[],edgeLines=[]):
+                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={},
+                    dummyNodes=None,edgeLines=None, hyperEdgeGraph=None):
 
         """ Create a visual edge, using the pos of the st and end items, which are tuples of (Node,Port)
             points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
             When created from XML, points will be empty (should?), dummyNodes & edgeLines pre-populated for linking up.
+            The hyperEdgeGraph is only used to reconstruct at load, and not stored.
         """
         #TODO: Check - points may be redundant with hyperEdges
         super().__init__(parent)
@@ -547,14 +550,11 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.endNodes = [eItem]
 
         #Store the edgeLines aka segments (>1 for hyperEdges) 
-        self.edgeLines = edgeLines 
+        #NOTE! parameter edgeLine (and dummyNode) is mutable, and will store previous call values
+        self.edgeLines = [] if edgeLines is None else edgeLines
+        
         #List of the intermediate, dummy nodes needed to graphical contruct the hyper edge 
-        self.dummyNodes = dummyNodes
-        #the structure of the binary graph mapping out the hyperedge. Its edges will be tuples of `VisNodeItems` and/or `dummyNodeItems`
-        #  eg hyperedge {s=[1,2] e=[4]} => hEg = [(1,10),(10,4),(2,10) ] 
-        #  len == 1 implies simple edge, >1 hyperedge
-        # hyperEdgeGraph is nodes & ports - a list of tuples of tuples!
-        #self.hyperEdgeGraph = [(self.startNodes[0],self.endNodes[0])]
+        self.dummyNodes = [] if dummyNodes is None else dummyNodes
 
         #option to set a default name. 
         defName = "" #just the ID
@@ -635,17 +635,24 @@ class VisHyperEdgeItem(QGraphicsObject):
         else:
             self.isDirected=directed
         
+        #this will create the necessary arrows - needed before `setStart` is called
         #Add in the arrowhead for digraph
-        #Every endNode end will need an arrowhead
         self.endShape = []
         if self.isDirected:
-            #pos & details are set in `updateLine`. Additional endShapes created in addSegment
-            self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
+            #Every endNode end will need an arrowhead
+            for e in self.endNodes:
+                print(f"he add arrow {e[0].nodeNum}=")
+                #pos & details are set in `updateLine`. Additional endShapes created in addSegment
+                self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
+
 
         #Track what sort of edge this one is
-        self._polyEdge = polyLineType        
-        #Simple edge
-        if len(self.startNodes) == 1 and len(self.endNodes) == 1:
+        self._polyEdge = polyLineType   
+        self.tgtScaleFactor = TANGENT_SCALE_FACTOR 
+     
+        #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML`)
+        if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None:
+            #print(f"he: simple creation {len(dummyNodes)=}")
             stN = self.startNodes[0]
             endN = self.endNodes[0]
             if len(points) == 0: #just start with a 2-pt line from the port coords
@@ -662,7 +669,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                     #Orthogonal to `nodeshape` at `point`
                     startSlope = self.startNodes[0][1].orthogonalSlope()
                     endSlope =  self.endNodes[0][1].orthogonalSlope()
-                    self.tgtScaleFactor = 30 #TODO: Make this a global constant (also used in PolyLineItem)
                     tangents = [(QPointF(0,0),  
                                 QPointF(startSlope[0] * self.tgtScaleFactor, startSlope[1] * self.tgtScaleFactor))]
 
@@ -670,31 +676,60 @@ class VisHyperEdgeItem(QGraphicsObject):
                                     QPointF(0,0)))
 
                 self.edgeLines.append(HermiteSplineItem(p=ptList,t=tangents,parent=self))
-        else: #Hyperedge
-            #If we are _creating_ an n-ary edge, it must be from a file, so `points` and `tangents` will be populated, and instantiated in edgeLines
-            print(f"HE init: sItem {[d[0].nodeNum for d in sItem]}") 
-            print(f"HE init: eItem {[d[0].nodeNum for d in eItem]}") 
-            print(f"HE init: dummyNodes {[d.nodeNum for d in dummyNodes]}") 
-            print(f"HE init: edgelines: {[e.lineNum for e in edgeLines]}")
+            
+            #Link up the topology for the visual graph - tell the start & end nodes about the edge
+            #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
+            for stN in self.startNodes: #Loops are redundant - handled in hyperedge else:
+                stN[0].startsEdges.append(self) #NODE
+                #Tell the Port too.
+                stN[1].startsEdgeLines.append(self.edgeLines[0]) 
+                self.setStart(stN, self.edgeLines[0])
+            for endN in self.endNodes:
+                endN[0].endsEdges.append(self) #NODE
+                #Port
+                endN[1].endsEdgeLines.append(self.edgeLines[0]) 
+                self.setEnd(endN, self.edgeLines[0])
+            
+        else: #Created from XML
+            #If we are _creating_ an n-ary edge, it must be from a file/ clipboard, 
+            # so `points`, `tangents` & dummyNodes will be populated, 
+            # and instantiated in edgeLines, with hyperEdgeGraph holding the structure.
+            
+            #print(f"HE init: sItem {[d[0].nodeNum for d in sItem]}") 
+            #print(f"HE init: eItem {[d[0].nodeNum for d in eItem]}") 
+            #print(f"HE init: dummyNodes { [(d[0].nodeNum, [el.lineNum for el in d[0].startsEdgeLines], [el.lineNum for el in d[0].endsEdgeLines]) for d in dummyNodes]}") 
+            #print(f"HE init: edgelines: {[e.lineNum for e in edgeLines]}")
+            #print(f"HE init: hyperEdgeGraph {hyperEdgeGraph}")
+            #For each edgeLine, tell the start and end nodes. NOTE: dummyNodes are connected already in fromXML()
+            for eL,eLNodes in hyperEdgeGraph.items():
+                #print(f"heGr  eL {eL.lineNum}, ({eLNodes[0][0].nodeNum}, {eLNodes[0][1].nodeNum}),({eLNodes[1][0].nodeNum}, {eLNodes[1][1].nodeNum}) ")
+                if eLNodes[0][0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
+                    #print(f"    sItem {eL.lineNum}, ({eLNodes[0][0].nodeNum}, {eLNodes[0][1].index})")
+                    stN = eLNodes[0] #tuple of (node,port)
+                    stN[0].startsEdges.append(self)
+                    stN[1].startsEdgeLines.append(eL)
+                    self.setStart(stN, eL)
+                if eLNodes[1][0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
+                    #print(f"    eItem {eL.lineNum}, ({eLNodes[1][0].nodeNum}, {eLNodes[1][1].index})")
+                    endN = eLNodes[1] #tuple of (node,port)
+                    endN[0].endsEdges.append(self)
+                    endN[1].endsEdgeLines.append(eL)
+                    self.setEnd(endN, eL)   
+            #Now set the parenting
+            for d in self.dummyNodes:
+                d[0].setParentItem(self)
+            for e in self.edgeLines:
+                e.setParentItem(self)
+        
+        print(f"he init checking port endlines")
+        for d in self.endNodes:
+            print(f"  endNode {d[0].nodeNum} port {d[1].index}")
+            for e in d[1].startsEdgeLines:
+                print(f"   starts {e.lineNum}")
+            for e in d[1].endsEdgeLines:
+                print(f"   ends {e.lineNum}")
 
-
-        #Link up the topology for the visual graph - tell the start & end nodes about the edge
-        #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
-        for stN in self.startNodes:
-            stN[0].startsEdges.append(self) #NODE
-            #Tell the Port too.
-            #TODO: How to map the right port to the right endLine? dummyNodeIndex is unique...            
-            stN[1].startsEdgeLines.append(self.edgeLines[0]) 
-            self.setStart(stN, self.edgeLines[0])
-        for endN in self.endNodes:
-            endN[0].endsEdges.append(self) #NODE
-            #Port
-            #TODO: How to map the right port to the right endLine? dummyNodeIndex is unique...
-            #  Initially, there is only 1 segment, edgeLines[0]. fromXML will be different.
-            endN[1].endsEdgeLines.append(self.edgeLines[0]) 
-            self.setEnd(endN, self.edgeLines[0])
-
-
+        #Bounding rectangle
         self.bRect = QRectF(0,0,0,0) #initial bounding rectangle
         for edgeLine in self.edgeLines:
             edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
@@ -775,29 +810,31 @@ class VisHyperEdgeItem(QGraphicsObject):
                  target = str(n[0].nodeNum),
                  targetport=str(n[1].index) )
             #Update the 'end' tuple
+            print(f"he toX endNode {n[0].nodeNum} port {n[1].index} {len(n[1].endsEdgeLines)=}")
             hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
         
         dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
         for n in self.dummyNodes:
             #Currently (Apr 2026) dummyNodes don't have ports dN[0] = dN[1]
-            ET.SubElement(dL,"dummyNode", id=str(n[0].nodeNum), x=str(n[0].pos().x()),y=str(n[0].pos().y()) )
+            dNElt = ET.SubElement(dL,"dummyNode", id=str(n[0].nodeNum), x=str(n[0].pos().x()),y=str(n[0].pos().y()) )
             for eL in n[0].startsEdgeLines:
+                ET.SubElement(dNElt, "startsEdgeLine", eL=str(eL.lineNum))
                 hStarts.update({eL.lineNum : (n[0].nodeNum, n[1].nodeNum)})
             for eL in n[0].endsEdgeLines:
+                ET.SubElement(dNElt, "endsEdgeLine", eL=str(eL.lineNum))
                 hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
         
-        #the hyperEdge graph - needed for reconstruction too?
-        print(f"hyperEdge {self.edgeNum} {hStarts.items()} , {hEnds.items()}")
-        hEdgeGraph = {}
+        #the hyperEdge graph - a comment, to aid debugging. Data needed is in the edgeLine element
+        #print(f"hyperEdge {self.edgeNum} {hStarts.items()} , {hEnds.items()}")
         hEdgeGraph = dict()
         for k,v in hStarts.items():
             hEdgeGraph.update({k:(v,hEnds[k])})
-        print(f"hyperEdge {hEdgeGraph}")
-        #Not sure if this will be needed to reconstruct the hyperedge
-        ET.Comment(f"hyperEdge {hEdgeGraph}")
+        #print(f"hyperEdge {hEdgeGraph}")
+        comment = ET.Comment(f"hyperEdge {hEdgeGraph}")
 
         #Add the edgelines
         eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
+        eLL.append(comment)
 
         for eL in self.edgeLines:
             #edgeLine id=<eLineID> source=<nID> sourceport=<portID> target=<nID> targetport=<portID>
