@@ -581,7 +581,7 @@ class HermiteSplineItem(QGraphicsItem):
 
     def updatePath(self):
         """ Allow the calling of the recalculation independently of handle updates"""
-        #print(f"u",end="",flush=True)
+        print(f"u",end="",flush=True)
         #traceback.print_stack(limit=3)
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
