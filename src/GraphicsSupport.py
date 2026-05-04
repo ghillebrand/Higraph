@@ -140,7 +140,7 @@ class HandleItem(QGraphicsRectItem):
     lastChanged = None  #Track the handle which was last changed
     lastChangedbyCentre = QPointF(0,0)  # JH add for debugging
 
-    def __init__(self, center: QPointF, hSize=HITSIZE, color=Qt.red, parent=None):
+    def __init__(self, center: QPointF, hSize=HITSIZE, color=Qt.red, handleShape="rectangle", parent=None):
 
         super().__init__(-hSize, -hSize, 2 * hSize, 2 * hSize, parent)
 
@@ -149,6 +149,7 @@ class HandleItem(QGraphicsRectItem):
 
         self.setBrush(QBrush(color))
         self.setPen(QPen(Qt.NoPen))
+        self.handleShape = handleShape  #circle or rectangle
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         #NOT selectable, otherwise default click handling gets in the way
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
@@ -187,8 +188,10 @@ class HandleItem(QGraphicsRectItem):
         painter.save()
         painter.setBrush(self.brush())
         painter.setPen(self.pen())
-        #painter.drawEllipse(self.rect())
-        painter.drawRect(self.rect())
+        if self.handleShape == "circle":
+            painter.drawEllipse(self.rect())
+        else:
+            painter.drawRect(self.rect())
         painter.restore()
         
 

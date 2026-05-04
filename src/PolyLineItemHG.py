@@ -203,7 +203,7 @@ class StraightLineItem(QGraphicsItem):
         self.parentItem().setZValue(3000)
         # Add new handles
         for pt in self._p:
-            handle = HandleItem(pt, color=EDGE_HANDLE_COLOUR,parent=self)
+            handle = HandleItem(pt, color=EDGE_HANDLE_COLOUR,handleShape="rectangle", parent=self)
             handle.setMoveCallback(self._updateFromHandles)
             self._pHandles.append(handle)
 
@@ -583,7 +583,6 @@ class HermiteSplineItem(QGraphicsItem):
 
     def _createHandles(self):
         """create handles on single selection, in called from itemChange()"""
-
         #Start and end points always present p0, pn (or p-1)
         #have a list of point and tgnt handles
         #print(f"createHandles for {self.lineNum}")
@@ -597,7 +596,7 @@ class HermiteSplineItem(QGraphicsItem):
         self._pHandles = []
         for pi in self._p:
             if pi in portPositions:
-                self._pHandles.append(HandleItem(pi,color=EDGE_HANDLE_COLOUR,parent=self))
+                self._pHandles.append(HandleItem(pi,color=EDGE_HANDLE_COLOUR,handleShape="rectangle",parent=self))
             elif pi == self._p[0] or pi == self._p[-1]:  #it's a dummy node
                 handleAlreadyCreated = False
                 for eL in self.parentItem().edgeLines:  #checking if a handle has already been created for this point
@@ -611,9 +610,9 @@ class HermiteSplineItem(QGraphicsItem):
                             handleAlreadyCreated = True
                             break 
                 if not handleAlreadyCreated:
-                    self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,parent=self))          
+                    self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,handleShape="circle",parent=self))          
             else:  #it's a point that was added to the edge by the user
-                self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,parent=self))
+                self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,handleShape="circle", parent=self))
 
         #Tangent handles
         self._tHandles = []
@@ -647,7 +646,6 @@ class HermiteSplineItem(QGraphicsItem):
         if len(self._pHandles) == 0 and len(self.childItems()) == 0:
             #print("call to delete handles WHEN NONE ")
             return
-        #print("Deleting handles")
 
         ##self.suppressItemChange = True
 
@@ -660,7 +658,6 @@ class HermiteSplineItem(QGraphicsItem):
             if handle in self.scene().items():
                 self.scene().removeItem(handle)
                 del handle
-
         #for i in range(len(self._pHandles)):
         #    self.scene().removeItem(self._pHandles[i])
         self._pHandles.clear()
