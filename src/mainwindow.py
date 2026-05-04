@@ -253,6 +253,9 @@ class grScene(QGraphicsScene):
         self._lastMousePos = QPointF(0,0)
         self.dragEdge=None
 
+        #For avoiding click on same spot undoing bulk select
+        self._lastMouseClickPos = QPointF(0,0)
+
         #Add axes to help see how things move & debug graphical issues.
             #TODO: THere must be a better solution!
         #WHite to provide a auto-zoom anchor
@@ -868,10 +871,15 @@ class grScene(QGraphicsScene):
         return super().clearSelection()
         
     def mousePressEvent(self, mouseEvent):
+        if mouseEvent.scenePos() == self._lastMouseClickPos:
+            mouseEvent.accept()
+            return
         self.savedPositionList=[]
         mPos = mouseEvent.scenePos()
         #Track the last mouse position for Pointer moves
         self._lastMousePos = mPos
+        #save the last click position
+        self._lastMouseClickPos = mPos
 
         #print(f"Press {self.mouseMode =}")
         #print(f"\nStart mousePress {len(self.selectedItems())=}",end = ' ')
@@ -887,8 +895,6 @@ class grScene(QGraphicsScene):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
             if mouseEvent.modifiers() == Qt.KeyboardModifier.ControlModifier and \
                     self.mouseMode==self.POINTER and len(self.selectedItems())>0:
-            #if Qt.ControlModifier and\
-            #        self.mouseMode==self.POINTER and len(self.selectedItems())>0:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
                 #print(f"scene MPE first if {selItem}")
                 if selItem:
@@ -989,12 +995,13 @@ class grScene(QGraphicsScene):
                         #return
                     mouseEvent.accept()
                     return
-            if len(self.selectedItems())>1:
+            itemsClicked=self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_BLOB, ROLE_NODE, ROLE_EDGE])
+            if len(self.selectedItems())>1 and len(itemsClicked) != 0 and itemsClicked[0] in self.selectedItems():
                 self.mouseMode=self.DRAGGING #or in the middle of a modifier selection
                 self.dragEdge=None
                 if len(self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_BLOB, ROLE_NODE]))==0:
                     edgeItems = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE])  #find out if a line is being dragged
-                    if len(edgeItems)>0:
+                    if len(edgeItems)>0 and edgeItems[0] in self.selectedItems():
                         self.dragEdge=edgeItems[0]
                     else:
                         self.mouseMode=self.POINTER    #the mouse is no longer over the selected items
