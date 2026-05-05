@@ -1,0 +1,311 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+	<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+	<key id="data_blob" for="blob" higraph.type="blobgraphics"/>
+	<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+	<graph edgedefault="directed" id="G">
+		<node id="4">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-270.0" y="52.0"/>
+					<port name="3" t="0.026284228355626715" x="7.397954428741079" y="1.2329924047901795"/>
+					<y:NodeLabel>
+						n4
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="2">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-264.0" y="-199.0"/>
+					<port name="0" t="0.17620819117478337" x="3.354101966249685" y="6.7082039324993685"/>
+					<y:NodeLabel>
+						n2
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+			<h:metadata key="desc" value="end of the dynasty">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+		</node>
+		<node id="1">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-168.0" y="-185.0"/>
+					<port name="1" t="0.9355594707954217" x="6.893587725135434" y="-2.954394739343759"/>
+					<y:NodeLabel>
+						n1
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<h:blob id="13">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-381.0" y="-285.0" width="502.0" height="245.0" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+					<port name="0" t="0.8872635180513235" x="0.0" y="176.50522650677112"/>
+					<port name="1" t="0.08572385797642293" x="120.87369337330719" y="0.0"/>
+					<h:BlobLabel>
+						n13
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+		</h:blob>
+		<h:blob id="8">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-301.0" y="-239.0" width="175.0" height="70.0" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+					<port name="1" t="0.25713342133116635" x="115.87369337330716" y="0.0"/>
+					<h:BlobLabel>
+						n8
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+		</h:blob>
+		<h:blob id="9">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-64.0" y="-177.0" width="155.0" height="113.0" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+					<port name="0" t="0.08788875559289867" x="39.87369337330718" y="0.0"/>
+					<port name="1" t="0.9007495194156896" x="0.0" y="61.5052265067713"/>
+					<h:BlobLabel>
+						n9
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+		</h:blob>
+		<h:blob id="14">
+			<data key="data_blob">
+				<h:ShapeBlob>
+					<h:Geometry x="-329.0" y="-270.0" width="123.0" height="361.0" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+					<port name="0" t="0.8847594624498484" x="0.0" y="119.58704823006619"/>
+					<h:BlobLabel>
+						n14
+						<h:metadataAttribute key="display" value="True"/>
+					</h:BlobLabel>
+				</h:ShapeBlob>
+			</data>
+			<h:metadata key="description" value="*">
+				<h:metadataAttribute key="display" value="False"/>
+			</h:metadata>
+		</h:blob>
+		<node id="3">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-25.0" y="-131.0"/>
+					<port name="1" t="0.05120819117478336" x="7.115124735378854" y="2.3717082451262845"/>
+					<port name="2" t="0.25" x="4.592425496802575e-16" y="7.5"/>
+					<y:NodeLabel>
+						n3
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="5">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="62.0" y="-102.0"/>
+					<port name="0" t="0.5737918088252166" x="-6.708203932499369" y="-3.354101966249684"/>
+					<y:NodeLabel>
+						n5
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="11">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-121.0" y="-131.0"/>
+					<port name="0" t="0.9012842283556267" x="6.103001034050512" y="-4.359286452893223"/>
+					<port name="1" t="0.25" x="4.592425496802575e-16" y="7.5"/>
+					<y:NodeLabel>
+						n11
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<hyperedge id="7" directed="true" lineType="Spline">
+			<y:Arrows source="none" target="standard"/>
+			<h:nodeList>
+				<start source="3" sourceport="1"/>
+				<end target="5" targetport="0"/>
+			</h:nodeList>
+			<h:dummyNodeList/>
+			<h:edgeLineList>
+				<!--hyperEdge {2011: ((3, 1), (5, 0))}-->
+				<edgeLine id="2011" source="3" sourceport="1" target="5" targetport="0">
+					<y:Path>
+						<h:StartTangent x="28.460498941515414" y="9.486832980505138"/>
+						<h:EndTangent x="26.832815729997478" y="13.416407864998735"/>
+					</y:Path>
+				</edgeLine>
+			</h:edgeLineList>
+			<h:metadata key="name" value="7 ">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</hyperedge>
+		<hyperedge id="6" directed="true" lineType="Spline">
+			<y:Arrows source="none" target="standard"/>
+			<h:nodeList>
+				<start source="2" sourceport="0"/>
+				<start source="3" sourceport="2"/>
+				<end target="4" targetport="3"/>
+			</h:nodeList>
+			<h:dummyNodeList>
+				<dummyNode id="1018" x="-114.0" y="-25.0">
+					<startsEdgeLine eL="2009"/>
+					<endsEdgeLine eL="2008"/>
+					<endsEdgeLine eL="2010"/>
+				</dummyNode>
+			</h:dummyNodeList>
+			<h:edgeLineList>
+				<!--hyperEdge {2008: ((2, 0), (1018, 1018)), 2010: ((3, 2), (1018, 1018)), 2009: ((1018, 1018), (4, 3))}-->
+				<edgeLine id="2008" source="2" sourceport="0" target="1018" targetport="1018">
+					<y:Path>
+						<h:StartTangent x="13.41640786499874" y="26.832815729997474"/>
+						<h:EndTangent x="-2.098433180871171" y="19.889609804755317"/>
+					</y:Path>
+				</edgeLine>
+				<edgeLine id="2009" source="1018" sourceport="1018" target="4" targetport="3">
+					<y:Path>
+						<y:Point x="-159.0" y="31.0">
+							<h:Tangent leftx="-13.0" lefty="21.0" rightx="-13.0" righty="21.0"/>
+						</y:Point>
+						<h:StartTangent x="0.0" y="28.0"/>
+						<h:EndTangent x="-40.314787143341846" y="0.14348392917727182"/>
+					</y:Path>
+				</edgeLine>
+				<edgeLine id="2010" source="3" sourceport="2" target="1018" targetport="1018">
+					<y:Path>
+						<h:StartTangent x="-19.696699141100893" y="56.69669914110089"/>
+						<h:EndTangent x="-2.098433180871171" y="19.889609804755317"/>
+					</y:Path>
+				</edgeLine>
+			</h:edgeLineList>
+			<h:metadata key="name" value="6 ">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</hyperedge>
+		<hyperedge id="10" directed="true" lineType="Spline">
+			<y:Arrows source="none" target="standard"/>
+			<h:nodeList>
+				<start source="1" sourceport="1"/>
+				<end target="9" targetport="0"/>
+				<end target="11" targetport="0"/>
+			</h:nodeList>
+			<h:dummyNodeList>
+				<dummyNode id="1014" x="-96.0" y="-211.0">
+					<startsEdgeLine eL="2001"/>
+					<startsEdgeLine eL="2002"/>
+					<endsEdgeLine eL="2000"/>
+				</dummyNode>
+			</h:dummyNodeList>
+			<h:edgeLineList>
+				<!--hyperEdge {2000: ((1, 1), (1014, 1014)), 2001: ((1014, 1014), (9, 0)), 2002: ((1014, 1014), (11, 0))}-->
+				<edgeLine id="2000" source="1" sourceport="1" target="1014" targetport="1014">
+					<y:Path>
+						<h:StartTangent x="18.382900600361157" y="-7.8783859715833575"/>
+						<h:EndTangent x="19.986238019660714" y="0.7418152205695566"/>
+					</y:Path>
+				</edgeLine>
+				<edgeLine id="2001" source="1014" sourceport="1014" target="9" targetport="0">
+					<y:Path>
+						<h:StartTangent x="19.986238019660714" y="0.7418152205695566"/>
+						<h:EndTangent x="-0.0" y="20.0"/>
+					</y:Path>
+				</edgeLine>
+				<edgeLine id="2002" source="1014" sourceport="1014" target="11" targetport="0">
+					<y:Path>
+						<h:StartTangent x="19.986238019660714" y="0.7418152205695566"/>
+						<h:EndTangent x="-16.274669424134697" y="11.62476387438193"/>
+					</y:Path>
+				</edgeLine>
+			</h:edgeLineList>
+			<h:metadata key="name" value="10 ">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</hyperedge>
+		<hyperedge id="12" directed="true" lineType="Spline">
+			<y:Arrows source="none" target="standard"/>
+			<h:nodeList>
+				<start source="11" sourceport="1"/>
+				<end target="9" targetport="1"/>
+			</h:nodeList>
+			<h:dummyNodeList/>
+			<h:edgeLineList>
+				<!--hyperEdge {2003: ((11, 1), (9, 1))}-->
+				<edgeLine id="2003" source="11" sourceport="1" target="9" targetport="1">
+					<y:Path>
+						<h:StartTangent x="1.2246467991473533e-15" y="20.0"/>
+						<h:EndTangent x="20.0" y="0.0"/>
+					</y:Path>
+				</edgeLine>
+			</h:edgeLineList>
+			<h:metadata key="name" value="12 ">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</hyperedge>
+		<hyperedge id="15" directed="true" lineType="Spline">
+			<y:Arrows source="none" target="standard"/>
+			<h:nodeList>
+				<start source="14" sourceport="0"/>
+				<end target="13" targetport="0"/>
+			</h:nodeList>
+			<h:dummyNodeList/>
+			<h:edgeLineList>
+				<!--hyperEdge {2004: ((14, 0), (13, 0))}-->
+				<edgeLine id="2004" source="14" sourceport="0" target="13" targetport="0">
+					<y:Path>
+						<h:StartTangent x="-56.0" y="-0.5052265067713506"/>
+						<h:EndTangent x="20.0" y="0.0"/>
+					</y:Path>
+				</edgeLine>
+			</h:edgeLineList>
+			<h:metadata key="name" value="15 ">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</hyperedge>
+		<hyperedge id="16" directed="true" lineType="Spline">
+			<y:Arrows source="none" target="standard"/>
+			<h:nodeList>
+				<start source="13" sourceport="1"/>
+				<end target="8" targetport="1"/>
+			</h:nodeList>
+			<h:dummyNodeList/>
+			<h:edgeLineList>
+				<!--hyperEdge {2005: ((13, 1), (8, 1))}-->
+				<edgeLine id="2005" source="13" sourceport="1" target="8" targetport="1">
+					<y:Path>
+						<h:StartTangent x="-1.8736933733072192" y="-21.0"/>
+						<h:EndTangent x="-8.126306626692838" y="110.0"/>
+					</y:Path>
+				</edgeLine>
+			</h:edgeLineList>
+			<h:metadata key="name" value="16 vvv">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+			<h:metadata key="w" value="3">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</hyperedge>
+	</graph>
+</graphml>
