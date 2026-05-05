@@ -3200,7 +3200,7 @@ class MainWindow(QMainWindow):
                 #Track real nodes
                 eNodes.append(e)
                 p = int(aNode.attrib.get("targetport", 0))
-                pItm = sItm.portFromIndex(p)
+                pItm = eItm.portFromIndex(p)
                 #This assumes portIDs don't/ won't change
                 eItem.append( (eItm,pItm) )
 
@@ -3332,12 +3332,14 @@ class MainWindow(QMainWindow):
             #Put this into the hyperEdgeGraph for this edge
             #print(f"   heFX edge {id} edgeLine {eLID=}  ({sItm.nodeNum}, {spItm.nodeNum}) : ({eItm.nodeNum},{epItm.nodeNum})")
             hyperEdgeGraph.update({newEdgeLine:((sItm,spItm),(eItm,epItm))})
-
+            #print(f"heg: {[(k.lineNum,v[0][0].nodeNum,v[1][0].nodeNum) for k,v in hyperEdgeGraph.items()]}\neLStarts: {[(k,v.nodeNum) for k,v in eLstarts.items()]}\neLends: {[(k,v.nodeNum) for k,v in eLends.items()]}")
             edgeLineList.append(newEdgeLine)
             #Tell the dummyNodes 
             if newEdgeLine.lineNum in eLstarts.keys():
+                #print(f" adding eL {newEdgeLine.lineNum} to start at  {eLstarts[newEdgeLine.lineNum].nodeNum}")
                 eLstarts[newEdgeLine.lineNum].startsEdgeLines.append(newEdgeLine)
             if newEdgeLine.lineNum in eLends.keys():
+                #print(f" adding eL {newEdgeLine.lineNum} to end at {eLends[newEdgeLine.lineNum].nodeNum}")
                 eLends[newEdgeLine.lineNum].endsEdgeLines.append(newEdgeLine)
                 
         #print(f"edgelines: {[e.lineNum for e in edgeLineList]}")

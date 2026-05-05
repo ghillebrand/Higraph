@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+	<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+	<key id="data_blob" for="blob" higraph.type="blobgraphics"/>
+	<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+	<graph edgedefault="directed" id="G">
+		<node id="2">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-12.0" y="-165.0"/>
+					<port name="0" t="0.36057103081184777" x="-4.801382997483599" y="5.761659596980318"/>
+					<y:NodeLabel>
+						n2
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<node id="1">
+			<data key="data_node">
+				<y:ShapeNode>
+					<y:Geometry x="-183.0" y="-138.0"/>
+					<port name="0" t="0.07379180882521663" x="6.7082039324993685" y="3.354101966249684"/>
+					<y:NodeLabel>
+						n1
+						<h:metadataAttribute key="display" value="True"/>
+					</y:NodeLabel>
+				</y:ShapeNode>
+			</data>
+		</node>
+		<hyperedge id="3" directed="true" lineType="Spline">
+			<y:Arrows source="none" target="standard"/>
+			<h:nodeList>
+				<start source="1" sourceport="0"/>
+				<end target="2" targetport="0"/>
+			</h:nodeList>
+			<h:dummyNodeList/>
+			<h:edgeLineList>
+				<!--hyperEdge {2000: ((1, 0), (2, 0))}-->
+				<edgeLine id="2000" source="1" sourceport="0" target="2" targetport="0">
+					<y:Path>
+						<h:StartTangent x="26.832815729997474" y="13.416407864998735"/>
+						<h:EndTangent x="19.205531989934396" y="-23.046638387921274"/>
+					</y:Path>
+				</edgeLine>
+			</h:edgeLineList>
+			<h:metadata key="name" value="3 ">
+				<h:metadataAttribute key="display" value="True"/>
+			</h:metadata>
+		</hyperedge>
+	</graph>
+</graphml>

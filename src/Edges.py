@@ -641,7 +641,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         if self.isDirected:
             #Every endNode end will need an arrowhead
             for e in self.endNodes:
-                print(f"he add arrow {e[0].nodeNum}=")
+                #print(f"he add arrow {e[0].nodeNum}=")
                 #pos & details are set in `updateLine`. Additional endShapes created in addSegment
                 self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
 
@@ -701,6 +701,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             #print(f"HE init: edgelines: {[e.lineNum for e in edgeLines]}")
             #print(f"HE init: hyperEdgeGraph {hyperEdgeGraph}")
             #For each edgeLine, tell the start and end nodes. NOTE: dummyNodes are connected already in fromXML()
+
             for eL,eLNodes in hyperEdgeGraph.items():
                 #print(f"heGr  eL {eL.lineNum}, ({eLNodes[0][0].nodeNum}, {eLNodes[0][1].nodeNum}),({eLNodes[1][0].nodeNum}, {eLNodes[1][1].nodeNum}) ")
                 if eLNodes[0][0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
@@ -708,6 +709,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                     stN = eLNodes[0] #tuple of (node,port)
                     stN[0].startsEdges.append(self)
                     stN[1].startsEdgeLines.append(eL)
+                    #Why does this not crash, since end is not yet set???
                     self.setStart(stN, eL)
                 if eLNodes[1][0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                     #print(f"    eItem {eL.lineNum}, ({eLNodes[1][0].nodeNum}, {eLNodes[1][1].index})")
@@ -720,15 +722,20 @@ class VisHyperEdgeItem(QGraphicsObject):
                 d[0].setParentItem(self)
             for e in self.edgeLines:
                 e.setParentItem(self)
-        
+        """
         print(f"he init checking port endlines")
         for d in self.endNodes:
-            print(f"  endNode {d[0].nodeNum} port {d[1].index}")
+            print(f" endNode  {d[0].nodeNum} port {d[1].index}")
+            for e in d[0].startsEdges:
+                print(f"   starts Edge {e.edgeNum}")
+            for e in d[0].endsEdges:
+                print(f"   ends Edge {e.edgeNum}")            
+            #print(f"  endNode  {d[0].nodeNum} port {d[1].index}")
             for e in d[1].startsEdgeLines:
-                print(f"   starts {e.lineNum}")
+                print(f"   starts eLine {e.lineNum}")
             for e in d[1].endsEdgeLines:
-                print(f"   ends {e.lineNum}")
-
+                print(f"   ends eLine {e.lineNum}")
+        """
         #Bounding rectangle
         self.bRect = QRectF(0,0,0,0) #initial bounding rectangle
         for edgeLine in self.edgeLines:
@@ -810,7 +817,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                  target = str(n[0].nodeNum),
                  targetport=str(n[1].index) )
             #Update the 'end' tuple
-            print(f"he toX endNode {n[0].nodeNum} port {n[1].index} {len(n[1].endsEdgeLines)=}")
+            #print(f"he toX endNode {n[0].nodeNum} port {n[1].index} {len(n[1].endsEdgeLines)=}")
             hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
         
         dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
@@ -1150,6 +1157,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #DummyNodes are handled in the callback, I _think_    
         elif type(source) == dummyNodeItem:
             print("Dummynode")
+
         #Draw the arrow/ end shape
         #Currently, endshapes have no managed relationship to the end nodes - they are just allocated out
         if len(self.endShape) > 0:
