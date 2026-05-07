@@ -106,9 +106,10 @@ class graphModel(QStandardItemModel):
         #NB: The order in the lists (Gr, listView and model MUST BE MAINTAINED.
 
         # Make the coreGraph02 node
-        n = self.Gr.addNode(id=id)
+        n = self.Gr.addNode(name=nameP, id=id)
+        #self.Gr.nodeD[n].metadata.update({'name':nameP })
         #Default name is node number
-        if not nameP:
+        if nameP=="":
             self.Gr.nodeD[n].metadata.update({'name': f"n{n}"})
         else:
             self.Gr.nodeD[n].metadata.update({'name': nameP})
@@ -2882,6 +2883,8 @@ class MainWindow(QMainWindow):
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
                     nodeName = nodeLable.text.strip()
+                    if newID:
+                        nodeName="*"+nodeName
                     for nodeNameAttribs in nodeLable.iter("metadataAttribute"):
                         #nodeMetadataAttributes['name'] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
                         #Deal with Boolean for display (This is why you should use the proper key types!)
@@ -2956,6 +2959,8 @@ class MainWindow(QMainWindow):
                 blobLabel = shapeBlob.find("BlobLabel")
                 if blobLabel is not None:
                     blobName = blobLabel.text.strip()
+                    if newID:
+                        blobName="*"+blobName
                     for blobNameAttribs in blobLabel.iter("metadataAttribute"):
                         #nodeMetadataAttributes['name'] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
                         #Deal with Boolean for display (This is why you should use the proper key types!)
@@ -3180,7 +3185,8 @@ class MainWindow(QMainWindow):
                     return None
                 #TODO: refactor `oldToNewID` to work purely on int's!
                 #print(f"Start node {s} --> {self.oldToNewID[str(s)]}")
-                s = self.oldToNewID[str(s)]  
+                #s = self.oldToNewID[str(s)] 
+                s = self.oldToNewID[s] 
                 sItm = self.Scene.findItemByIdx(s)
                 #Track real nodes to differentiate from dummys later
                 sNodes.append(s)
@@ -3195,7 +3201,7 @@ class MainWindow(QMainWindow):
                     print(f"ERROR: can't find target in {aNode}")
                     return None
                 #print(f"end node {e} --> {self.oldToNewID[str(e)]}")
-                e = self.oldToNewID[str(e)]
+                e = self.oldToNewID[e]
                 eItm = self.Scene.findItemByIdx(e)
                 #Track real nodes
                 eNodes.append(e)
@@ -3214,9 +3220,13 @@ class MainWindow(QMainWindow):
             dNx = float(dNode.attrib.get("x"))
             dNy = float(dNode.attrib.get("y"))
             if newID : #create a newID
-                dNID = 0
+                iD = 0
+                offset=PASTE_OFFSET
+            else:
+                iD=dNID
+                offset=0
             #Note: `parent` will have to be updated once the edge is created.
-            dN = dummyNodeItem(QPointF(dNx,dNy),id=dNID)
+            dN = dummyNodeItem(QPointF(dNx+offset,dNy+offset),id=iD)
             #Note: EdgeLines don't yet exist - this will need to be udpated once they do.
             #Get the edges that start/ end here
             for sE in dNode.findall("startsEdgeLine"):
@@ -3244,11 +3254,15 @@ class MainWindow(QMainWindow):
             #If not in sItem or eItem, then a dummy node
             eLID = int(eL.attrib.get("id",0))
             if newID : #create a newID by calling with 0
-                eLID = False #0
+                iD = False #0
+            else:
+                iD = eLID
 
             #Get elStart, then check if it's a node or a dummyNode (and for end)
             sItm,pItm = None,None
             eLStart = int(eL.attrib.get("source", 0))
+            if eLStart in self.oldToNewID:
+                eLStart = self.oldToNewID[eLStart]  #JH
             if eLStart in sNodes: #real, not dummy
                 sItm = self.Scene.findItemByIdx(eLStart)
                 eLStartPort = int(eL.attrib.get("sourceport", 0))
@@ -3262,6 +3276,8 @@ class MainWindow(QMainWindow):
 
             eItm, pItm = None,None
             eLEnd = int(eL.attrib.get("target"))
+            if eLEnd in self.oldToNewID:
+                eLEnd = self.oldToNewID[eLEnd]  #JH
             if eLEnd in eNodes: #real, not dummy
                 eItm = self.Scene.findItemByIdx(eLEnd)
                 eLEndPort = int(eL.attrib.get("targetport", 0))
@@ -3318,11 +3334,10 @@ class MainWindow(QMainWindow):
                                             ) )
             #End point
             points.append(epItm.pos())
-
             #Now create the edgeLine, and store it
             if polyLineType == SPLINE:
                 #Created with no parent, since edge does not yet exist. Link at the end
-                newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=eLID)
+                newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=iD)
             #elif polyLineType == STRAIGHT:
 
             oldToNewEL[eLID] = newEdgeLine.lineNum
@@ -3335,12 +3350,16 @@ class MainWindow(QMainWindow):
             #print(f"heg: {[(k.lineNum,v[0][0].nodeNum,v[1][0].nodeNum) for k,v in hyperEdgeGraph.items()]}\neLStarts: {[(k,v.nodeNum) for k,v in eLstarts.items()]}\neLends: {[(k,v.nodeNum) for k,v in eLends.items()]}")
             edgeLineList.append(newEdgeLine)
             #Tell the dummyNodes 
-            if newEdgeLine.lineNum in eLstarts.keys():
+            #if newEdgeLine.lineNum in eLstarts.keys():
+            if eLID in eLstarts.keys():
                 #print(f" adding eL {newEdgeLine.lineNum} to start at  {eLstarts[newEdgeLine.lineNum].nodeNum}")
-                eLstarts[newEdgeLine.lineNum].startsEdgeLines.append(newEdgeLine)
-            if newEdgeLine.lineNum in eLends.keys():
+                #eLstarts[newEdgeLine.lineNum].startsEdgeLines.append(newEdgeLine)
+                eLstarts[eLID].startsEdgeLines.append(newEdgeLine)
+            #if newEdgeLine.lineNum in eLends.keys():
+            if eLID in eLends.keys():
                 #print(f" adding eL {newEdgeLine.lineNum} to end at {eLends[newEdgeLine.lineNum].nodeNum}")
-                eLends[newEdgeLine.lineNum].endsEdgeLines.append(newEdgeLine)
+                #eLends[newEdgeLine.lineNum].endsEdgeLines.append(newEdgeLine)
+                eLends[eLID].endsEdgeLines.append(newEdgeLine)
                 
         #print(f"edgelines: {[e.lineNum for e in edgeLineList]}")
 
@@ -3358,7 +3377,8 @@ class MainWindow(QMainWindow):
                     edgeMetadataAttributes[metaKey] = {edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")}
         
         edgeName = edgeMetadata['name']
-
+        if newID:
+            edgeName="*"+edgeName
         #All the data read, create the edge
         newEdge = VisHyperEdgeItem(self.model, self.Scene, self.ui.treeWidget, sItem, eItem, 
                                 directed=directed,  nameP=edgeName, id = id,
@@ -3445,7 +3465,7 @@ class MainWindow(QMainWindow):
 
             GItem = self.nodeFromXML(xNode, newID=newID)
             #Track it, even if it doesn't change - simplifies the edge code
-            self.oldToNewID[fileID] = GItem.nodeNum
+            self.oldToNewID[int(fileID)] = GItem.nodeNum
             #TODO: Do something meaningful with mismatches
             #if fileID != GItem.nodeNum:
             #    print(f"WARNING: node id {fileID=} changed on load")
@@ -3468,7 +3488,7 @@ class MainWindow(QMainWindow):
 
             GItem = self.blobFromXML(xBlob, newID=newID)
             #Track it, even if it doesn't change - simplifies the edge code
-            self.oldToNewID[fileID] = GItem.nodeNum
+            self.oldToNewID[int(fileID)] = GItem.nodeNum
             #TODO: Do something meaningful with mismatches
             #if fileID != GItem.nodeNum:
             #    print(f"WARNING: node id {fileID=} changed on load")
@@ -3756,7 +3776,18 @@ class MainWindow(QMainWindow):
             if sItem.data(KEY_ROLE) == ROLE_EDGE:
                 #TODO: Check the semantics here - does this make sense
                 #only copy edges if all ends are in the selection
-                if sItem.startNode[0] in selectedItems and sItem.endNode[0] in selectedItems:
+                includeEdge=True
+                for startN in sItem.startNodes:
+                    if startN[0] not in selectedItems:
+                        includeEdge=False
+                        break
+                if includeEdge==True:
+                    for endN in sItem.endNodes:
+                        if endN[0] not in selectedItems:
+                            includeEdge=False
+                            break
+                if includeEdge==True:
+                #if sItem.startNode[0] in selectedItems and sItem.endNode[0] in selectedItems:
                     graph.append(sItem.toXML(graph))
 
         #graphmlData = yGr.stringify_graph()
@@ -3909,6 +3940,7 @@ class MainWindow(QMainWindow):
             GItem.moveBy(PASTE_OFFSET,PASTE_OFFSET)
             
             self.Scene.addItem(GItem)
+            self.addTreeNode(GItem, ROLE_NODE)
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True) 
             GItem.setSelected(True)   
@@ -3925,6 +3957,7 @@ class MainWindow(QMainWindow):
             GItem.suppressItemChange = False
 
             self.Scene.addItem(GItem)
+            self.addTreeNode(GItem, ROLE_BLOB)
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True) 
             GItem.setSelected(True)   
@@ -3947,6 +3980,15 @@ class MainWindow(QMainWindow):
             edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
             edgeItem.setSelected(True)
+
+        #HyperEdges
+        for xEdge in graphStr.iter("hyperedge"):
+            hEdgeItem = self.hyperEdgeFromXML(xEdge, newID=True)
+            #Add to Scene
+            self.Scene.addItem(hEdgeItem)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+            hEdgeItem.setSelected(True)
         
         self.Scene.update()
         self.oldToNewID.clear()
