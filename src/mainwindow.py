@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 """
-V02 of a Python Graph Editing Tool. 
+V03 of a Python Graph Editing Tool. 
 Grant Hillebrand 
 
 See https://isijingi.co.za/wp/category/higraph/ for related posts.
@@ -22,7 +22,7 @@ from xml.dom import minidom
 #Debugging stuff
 
 #import logging
-#import gc
+import gc
 import weakref
 
 from typing import List, Dict
@@ -1672,12 +1672,6 @@ class grScene(QGraphicsScene):
         return None
 
     def deleteItemAndChildren(self,item):
-        #print(f" start dIC for {item}")
-        #BUG:DeleteEdge This leaves a the line/ polyline 'in the scene' (but not in scene.getItems()!)
-        #Trying https://pypi.org/project/referrers/ to look for links
-        #1st try overflows the line allocation in VSCodium
-        #import referrers
-        #print(referrers.get_referrer_graph(item))
 
         #TODO: Make this recursive, deleting leaves first (Python/ C++ memory handling issue - see old code in V00)
         # Recursively remove and delete children. Action is post-recursion to delete from the bottom up
@@ -1688,37 +1682,25 @@ class grScene(QGraphicsScene):
             #print(f"dIC {child}")
             self.deleteItemAndChildren( child)
         
-        #print(f"   now processing dIC for {item}")
+        print(f"   now processing dIC for {item}")
         item.suppressItemChange = True
         #unparent
         #item.setParentItem(None)
         # Remove from scene
         #if its an edge, tell the nodes ends that the edge is gone
         if item.data(KEY_ROLE) == ROLE_EDGE:
-            item.startNode[0].startsEdges.remove(item)
-            #print(f"{item.endNode = }") #eItem
-            item.endNode[0].endsEdges.remove(item)
-            item.startNode[1].startsEdgeLines.remove(item)
-            item.endNode[1].endsEdgeLines.remove(item)
-            #print(f"{item.endNode.endsEdges =}")
-        #print(f"{item =}")  
-        #logging.debug("delItem&chld scene items, BEFORE remove")
-        #for i in self.items():
-        #    logging.debug(f"{i =}")        
-        
-        # Register a finalize callback to confirm deletion
-        #weakref.finalize(item, self._on_finalize, repr(item))
+            for i in item.startNodes:
+                i[0].startsEdges.remove(item)
+                #EdgeLine references are removed by removing the port from the node
+                #i[1].startsEdgeLines.remove(item)
+            for i in item.endNodes:
+                i[0].endsEdges.remove(item)
+                #i[1].startsEdgeLines.remove(item)
+        #unparent
+        item.setParentItem(None)
 
         item.suppressItemChange = False  
         self.removeItem(item)
-        #import referrers
-        #print(referrers.get_referrer_graph(item, max_depth=3))
-        
-        #logging.debug("delItem&chld scene items, AFTER remove")
-        #for i in self.items():
-        #    logging.debug(f"{i =}")
-        #Item now belongs to Scene, del from memory
-        #forcing the del will crash sooner. Otherwise, crashes on GC?
         del item
 
     def update(self):
@@ -1971,7 +1953,7 @@ class createEdgeCommand(QUndoCommand):
         self.edge=newEdge
 
 class deleteEdgeCommand(QUndoCommand):
-    def __init__(self, edge, scene, model, treeWidget, startNode, endNode, parent=None):
+    def __init__(self, edge, scene, model, treeWidget, startNodes, endNodes, parent=None):
         super().__init__(parent=parent)
         self.edge = edge
         self.edgeNum=edge.edgeNum
@@ -3980,6 +3962,39 @@ class MainWindow(QMainWindow):
 
         del delItem 
 
+    def delHyperEdge(self, delIdx):
+        """ all the calls to delete a Hyperedge"""
+
+        #delete from model
+        self.model.delEdge(delIdx)
+        #Delete from LWscene updat
+        #delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
+        #delItem = self.ui.listWidget.takeItem(delRow)
+        itemsToBeDeleted = self.ui.treeWidget.findItems(str(delIdx), Qt.MatchRecursive, 1)
+        for item in itemsToBeDeleted:
+            self.ui.treeWidget.takeTopLevelItem(self.ui.treeWidget.indexOfTopLevelItem(item))
+        #del delItem
+        #Delete from Scene
+        delItem = self.Scene.findItemByIdx(delIdx)
+
+        for eL in delItem.edgeLines:
+            eL._deleteHandles()
+
+        if self.Scene.thisHandleObjectSelected in delItem.edgeLines:
+            self.Scene.thisHandleObjectSelected = None
+        
+        #Del the port on the nodes 
+        for n in delItem.startNodes:
+            n[0].deletePort(n[1])
+        for n in delItem.endNodes:
+            n[0].deletePort(n[1])
+
+        #debug_qgraphicsitem_refs()
+
+        self.Scene.deleteItemAndChildren(delItem)
+        
+        del delItem 
+
     def delNode(self, delIdx):
         """ all the calls to delete an node"""
         #TODO: Pop a warning dialog when deleting the edges
@@ -4035,12 +4050,13 @@ class MainWindow(QMainWindow):
         if selected_items:
             self.undoStack.beginMacro("Delete/Undelete")
             for item in selected_items:
-                #print(self.model.itemName(item))
+                print(f"delete: {self.model.itemName(item)=} size={sys.getsizeof(item)}")
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     delIdx = item.data(KEY_INDEX)
                     #self.delEdge(delIdx)
-                    newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.treeWidget, item.startNode, item.endNode, parent=None)
-                    self.undoStack.push(newAction)
+                    self.delHyperEdge(delIdx)
+                    #newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.treeWidget, item.startNodes, item.endNodes, parent=None)
+                    #self.undoStack.push(newAction)
             #Node delete - 1st del any connected edges - handled by GrScene
             for item in selected_items:
                 if item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
@@ -4048,12 +4064,15 @@ class MainWindow(QMainWindow):
                     #check for any unselected edges attached to node and delete
                     eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
                     if eList:
+                        print(f"MW del : {eList=}")
                         for e in eList:
                             edgeItem = self.Scene.findItemByIdx(e)
                             #self.delEdge(e)
                             if edgeItem not in selected_items:
-                                newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
-                                self.undoStack.push(newAction)
+                                #TODO: re-implement UNDO!
+                                self.delHyperEdge(e)
+                                # newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
+                                #self.undoStack.push(newAction)
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.treeWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
@@ -4162,6 +4181,7 @@ class action_CreditsDlg(QDialog):
 
 if __name__ == "__main__":
     print("="*100)
+    #print(f"Garbage collection is {gc.isenabled()}")
     #logger = logging.getLogger(__name__)
     #logging.basicConfig(filename='higraphDebug.log', 
     #                    encoding='utf-8', 
