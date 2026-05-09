@@ -24,7 +24,7 @@ DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT
 #Model level default for edges
 ISDIGRAPH = True
 
-APP_NAME = "qtPyGraphEdit V02.0"
+APP_NAME = "qtPyGraphEdit V03.0"
 
 # Indices for Qt Item metadata tags 
 from PySide6.QtCore import Qt
