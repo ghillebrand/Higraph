@@ -590,6 +590,7 @@ class VisNodeItem(QGraphicsObject):
         #TODO: index is not used - delete based on ID 
         #Currently (02a) only one edge per port. This is critical for hyperedges
 
+        #print(f"node: Del port {delPort.nodeNum=}, {delPort.index=}")
         self._Ports.remove(delPort)
         delPort.setParentItem(None)
         del delPort

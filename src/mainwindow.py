@@ -1673,17 +1673,19 @@ class grScene(QGraphicsScene):
         return None
 
     def deleteItemAndChildren(self,item):
-
+        """ REmove the items from the scene
+            assumes that the rest of the model links are dealt with
+        """
         #TODO: Make this recursive, deleting leaves first (Python/ C++ memory handling issue - see old code in V00)
         # Recursively remove and delete children. Action is post-recursion to delete from the bottom up
         #TODO - why does doing this cause index errors (use b2.grml, multiple select, as test)
         #for child in item.childItems():
-        cList = item.childItems()
-        for child in cList:
-            #print(f"dIC {child}")
-            self.deleteItemAndChildren( child)
+        #cList = item.childItems()
+        #for child in cList:
+        #    #print(f"dIC {child}")
+        #    self.deleteItemAndChildren( child)
         
-        print(f"   now processing dIC for {item}")
+        #print(f"   now processing dIC for {item}")
         item.suppressItemChange = True
         #unparent
         #item.setParentItem(None)
@@ -1697,6 +1699,7 @@ class grScene(QGraphicsScene):
             for i in item.endNodes:
                 i[0].endsEdges.remove(item)
                 #i[1].startsEdgeLines.remove(item)
+
         #unparent
         item.setParentItem(None)
 
@@ -4009,6 +4012,7 @@ class MainWindow(QMainWindow):
 
         #delete from model
         self.model.delEdge(delIdx)
+
         #Delete from LWscene updat
         #delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
         #delItem = self.ui.listWidget.takeItem(delRow)
@@ -4027,9 +4031,14 @@ class MainWindow(QMainWindow):
         
         #Del the port on the nodes 
         for n in delItem.startNodes:
-            n[0].deletePort(n[1])
+            p = n[1]
+            n = (n[0],0) #unhook the port from the immutable tuple
+            n[0].deletePort(p)
         for n in delItem.endNodes:
-            n[0].deletePort(n[1])
+            p = n[1]
+            n = (n[0],0) #unhook the port from the immutable tuple
+            n[0].deletePort(p)
+        
 
         #debug_qgraphicsitem_refs()
 
@@ -4092,7 +4101,6 @@ class MainWindow(QMainWindow):
         if selected_items:
             self.undoStack.beginMacro("Delete/Undelete")
             for item in selected_items:
-                print(f"delete: {self.model.itemName(item)=} size={sys.getsizeof(item)}")
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     delIdx = item.data(KEY_INDEX)
                     #self.delEdge(delIdx)
@@ -4106,7 +4114,6 @@ class MainWindow(QMainWindow):
                     #check for any unselected edges attached to node and delete
                     eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
                     if eList:
-                        print(f"MW del : {eList=}")
                         for e in eList:
                             edgeItem = self.Scene.findItemByIdx(e)
                             #self.delEdge(e)
