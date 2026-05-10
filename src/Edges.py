@@ -780,7 +780,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                 dummyNodeEdgeLines.append(e.lineNum)
 
         return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\n {self.textItem.toPlainText() =}\n edgeLines {[eL.lineNum for eL in self.edgeLines] }\n" + \
-                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} startNodes (node,port):({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})\n endNodes (node,port):({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[(d[0].nodeNum, type(d[0].parentItem())) for d in self.dummyNodes]} {dummyNodeEdgeLines=}\n<<"
+                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} startNodes (node,port):({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})\n endNodes (node,port):({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[d[0].nodeNum for d in self.dummyNodes]} {dummyNodeEdgeLines=}\n<<"
                 #hyperEdgeGraph: {[(h[0][0].nodeNum,h[1][0].nodeNum) for h in self.hyperEdgeGraph]
     
     def toXML(self,Xparent):

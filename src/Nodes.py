@@ -589,7 +589,8 @@ class VisNodeItem(QGraphicsObject):
         #TODO: How to check there are no references to _Ports[i]
         #TODO: index is not used - delete based on ID 
         #Currently (02a) only one edge per port. This is critical for hyperedges
-        print(f"delPort {delPort.index=} , {delPort.nodeNum=}")
+
+        #print(f"node: Del port {delPort.nodeNum=}, {delPort.index=}")
         self._Ports.remove(delPort)
         delPort.setParentItem(None)
         del delPort
