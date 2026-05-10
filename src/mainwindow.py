@@ -1188,10 +1188,12 @@ class grScene(QGraphicsScene):
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     #Where to do the handles update for these?
                     cxMenu = [  (posText, None),
-                                ("add Point","addPt" ),
-                                ("del Point","delPt" ),
-                                ("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item))
-                            ]
+                                ("Add Point","addPt" ),
+                                ("Delete Point","delPt" )]
+                    if len(item.edgeLines) > 1 :  #Only offer delete if meaningful
+                        cxMenu.append(("Delete Segment","delSegment"))
+                    cxMenu.append(("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item)))
+                            
                 if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                     cxMenu = [  (posText, None),
                               (("Edit Details", 
@@ -1214,6 +1216,14 @@ class grScene(QGraphicsScene):
                 elif cxChoice == "delPt":
                     edgeLine = item.edgeLineAt(mPos)
                     edgeLine.deletePoint(mPos)
+                    item.setSelected(True)
+                    item.update()
+
+                elif cxChoice == "delSegment":
+                    edgeLine = item.edgeLineAt(mPos)
+                    edgeLine._deleteHandles()                    
+                    item.delSegment(edgeLine)
+                    #TODO: Sort out handle selection
                     item.setSelected(True)
                     item.update()
 

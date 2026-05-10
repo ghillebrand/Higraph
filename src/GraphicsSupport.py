@@ -204,7 +204,6 @@ class dummyNodeRoot(QGraphicsItem):
         super().__init__(parent=parent)
         self.suppressItemChange = True
         #This might be resolved by the starts end finishEdges code 
-        self.setData(KEY_ROLE, ROLE_DUMMYNODE)
         self.setPos(center)
         #self.setFlag(QGraphicsItem.ItemIsMovable, True)
  
@@ -240,6 +239,9 @@ class dummyNodeItem(dummyNodeRoot):
     """ true dummyNodes need an `itemchange()` method, which breaks `port`s"""
     def __init__(self,center: QPointF,  parent=None, id=None):
         super().__init__(center, parent=parent, id=id)
+
+        self.setData(KEY_ROLE, ROLE_DUMMYNODE)
+        self.setData(KEY_INDEX, self.nodeNum)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges,True)
         self.setFlag(QGraphicsItem.ItemIsSelectable,False)
 
