@@ -1443,7 +1443,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             newStart = heg[eLold[0].lineNum][0][0] # [0][0] is node, but we will need the port too!
             newStartItem = self.Scene.findItemByIdx(newStart)
             print(f"delseg {newStart=}  {newStartItem=}")
-            newEnd = heg[eLold[1].lineNum][1][1]
+            newEnd = heg[eLold[1].lineNum][1][0]
             newEndItem = self.Scene.findItemByIdx(newEnd)
             print(f"delseg {newEnd=} {newEndItem=}")
             #Unlink the edgeLines to be replaced
