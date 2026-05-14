@@ -1354,7 +1354,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             #Find the port. heg uses `index`, not nodeNum
             #print(f"delSeg {[p.index for p in sNItem._Ports if p.index == heg[eLIdx][0][1]]}")
 
-            print(f"deledgeline {sNItem=}")
+            #print(f"deledgeline {sNItem=}")
             if  sNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
                 sNItem.startsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
             else: #real Node
@@ -1461,25 +1461,29 @@ class VisHyperEdgeItem(QGraphicsObject):
             if newStartItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                 #1st edgeLine's 1st point:
                 newSPort = newStartItem.createPort(eLold[0]._p[0])
-            else: #dummyNode
+            elif newStartItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
                 newSPort = newStartItem
-
+            else:
+                print(f"ERROR deleting segment in edge {self.edgeNum} - start mangled")
             print(f"delseg {newEndItem.nodeNum=}")
             if newEndItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                 #last edgeLine's lastst point:
                 newEPort = newEndItem.createPort(eLold[1]._p[-1])
-            else: #dummyNode
+            elif ewEndItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
                 newEPort = newEndItem
+            else:
+                 print(f"ERROR deleting segment in edge {self.edgeNum} - end mangled")
 
-            #TODO: Does this actually make a difference - is it not `itemChange()`  that does the work?
-            #newPoints = [newPort.pos()] 
-            newPoints = []
 
             #get the rest of the points and tangents.
-            # Treat the dN as a point, use left tangents as default (this is a bit arbitrary)
+            newPoints = []
+
+            #incoming points
             newPoints += eLold[0]._p[:-1]
             if self._polyEdge == SPLINE:
                 newTangents = eLold[0]._t[:-1]
+
+            # Treat the dN as a point, use left tangents as default (this is a bit arbitrary)
             newPoints += [dNItem.pos()]
             if self._polyEdge == SPLINE:
                 if dNItem == sNItem: #start has Right tangents (1st tuple item) 
@@ -1489,8 +1493,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                     newTangents += [(delEdgeLine._t[1][0],delEdgeLine._t[1][0])]
             
             #End
-             #end at (newEndItem,NEWport) or (dN,dN)
-           
             newPoints += eLold[1]._p[1:]
             if self._polyEdge == SPLINE:
                 newTangents += eLold[1]._t[1:]
@@ -1506,7 +1508,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             eLNew.setData(KEY_ROLE,ROLE_POLYLINE)
             self.edgeLines.append(eLNew)
 
-            #Add eLNew to startNodes
+            #Add eLNew to startNodes and the port
             newSNP = (newStartItem,newSPort)
             print(f"del seg {newSNP[0].nodeNum=} {newSNP[1].nodeNum=}")
             if newStartItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
@@ -1524,18 +1526,27 @@ class VisHyperEdgeItem(QGraphicsObject):
             #remove the 2 old eLs
             #TODO: This shouldn't be in a for loop, but I can't remember what it should be!
             for e in eLold:
+
+                ##??? Somehow a pointer is being missed in this loop, causing the second-delete error
+                # and also that the item isn't bein removed from the scene/ edge
+                #Remove the pointers from start/endNode to the OLD edgeLines
+
                 e.setParentItem(None)
                 self.edgeLines.remove(e)
                 self.Scene.removeItem(e)
 
             #Remove dummyNode (which is stored as a tuple
             self.dummyNodes.remove((dNItem,dNItem))
+            dNItem.setParentItem(None)
+            self.Scene.removeItem(dNItem)
 
         #remove item from edgeLines & scene
         delEdgeLine.setParentItem(None)
         self.edgeLines.remove(delEdgeLine)
         self.Scene.removeItem(delEdgeLine)
         del delEdgeLine
+        print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
+        print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False
         #Tidy up the arrows
