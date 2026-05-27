@@ -1,11 +1,10 @@
 """ Edges code """
 #For debugging: (stack traces)
 import traceback
+import gc
 
 #Global constants. 
 from  HGConstants import *
-
-from  GraphicsSupport import *
 
 # core Graph class:
 from coreGraph import Graph
@@ -1357,8 +1356,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                 sNItem.startsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
             else: #real Node
                 #print(f"delSeg: delELSN: real node")
-                #Remove from the self.model.Gr
-                self.model.Gr.delNodeFromEdge(sNItem.nodeNum, self.edgeNum)
                 #1st clear the s/eNodes tuple, to avoid referencing issues
                 for n in self.startNodes:
                     if n[0] == sNItem: # an edge can only start once from a node
@@ -1378,8 +1375,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             if  eNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
                 eNItem.endsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
             else: #real Node
-                #Remove from the self.model.Gr
-                self.model.Gr.delNodeFromEdge(eNItem.nodeNum, self.edgeNum)
+
                 #Find the port. heg uses `index`, not nodeNum, so search ...
                 p = [p for p in eNItem._Ports if p.index == heg[eLIdx][1][1]][0]
                 #1st clear the s/eNodes tuple, to avoid referencing issues
@@ -1397,7 +1393,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #get the hyperEdgeGraph for navigation/ checking
         heg = self.hyperEdgeGraph()
-        #print(f"delSeg {dEIdx=} {heg=}")
+        print(f"delSeg {dEIdx=} {heg=}")
 
         #Check for dN - dN segment (can't delete)
         sN = heg[dEIdx][0][0]
@@ -1409,7 +1405,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                           eNItem.data(KEY_ROLE) != ROLE_DUMMYNODE
 
         #Check if the sN/ eN node is the *only* start/ end node 
-        #TODO: This is only true for directed edges. (But then 2 s/eNs would have to be split apart)
+        #NOTE: This is only really true for directed edges. (But then 2 s/eNs would have to be split apart). User must delete the whole edge for this.
         if sNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
             canDelete = canDelete and len(self.startNodes) > 1 
         if eNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
@@ -1425,9 +1421,13 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Node side pointers
         #only "proper" edges have distinct ports
         if sNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:  
+            #Remove from the self.model.Gr
+            self.model.Gr.delNodeFromEdge(sNItem.nodeNum, self.edgeNum)
             delEdgeLineFromStartNode(sNItem, dEIdx)
 
         if eNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+            #Remove from the self.model.Gr
+            self.model.Gr.delNodeFromEdge(eNItem.nodeNum, self.edgeNum)
             delEdgeLineFromEndNode(eNItem, dEIdx)
 
         #Check how many edgeLines at the dummyNode
@@ -1456,7 +1456,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             newEnd = heg[eLold[1].lineNum][1][0]
             newEndItem = self.Scene.findItemByIdx(newEnd)
 
-            #print(f"delseg {newEnd=} {newEndItem=}")
+            #print(f"delseg - consol {newEnd=} {newEndItem=}")
             #Unlink the edgeLines to be replaced
             delEdgeLineFromStartNode(newStartItem, eLold[0].lineNum)
             delEdgeLineFromEndNode(newEndItem, eLold[1].lineNum)
@@ -1534,14 +1534,14 @@ class VisHyperEdgeItem(QGraphicsObject):
             #remove the 2 old eLs
             #TODO: This shouldn't be in a for loop, but I can't remember what it should be!
             for e in eLold:
-
                 ##??? Somehow a pointer is being missed in this loop, causing the second-delete error
                 # and also that the item isn't bein removed from the scene/ edge
                 #Remove the pointers from start/endNode to the OLD edgeLines
-
+                print(f"delSeg ==3 removing {e.lineNum=}")
                 e.setParentItem(None)
                 self.edgeLines.remove(e)
                 self.Scene.removeItem(e)
+                del(e)
 
             #Remove dummyNode (which is stored as a tuple
             self.dummyNodes.remove((dNItem,dNItem))
@@ -1549,10 +1549,13 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.Scene.removeItem(dNItem)
 
         #remove item from edgeLines & scene
+        print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
+        print(f"delSeg {delEdgeLine.lineNum=}")
         delEdgeLine.setParentItem(None)
         self.edgeLines.remove(delEdgeLine)
         self.Scene.removeItem(delEdgeLine)
         del delEdgeLine
+
         #print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
         print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
@@ -1560,6 +1563,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Tidy up the arrows
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
+        self.update()
 
     def edgeLineAt(self, pos):
         """ Takes a position, and returns the edgeLine closest to that point
