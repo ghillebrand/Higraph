@@ -1351,28 +1351,35 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         def delEdgeLineFromStartNode(sNItem,eLIdx):
             """ Delete the reference to eLine `eLIdx` in startNode `sNItem`"""
-            #Find the port. heg uses `index`, not nodeNum
-            #print(f"delSeg {[p.index for p in sNItem._Ports if p.index == heg[eLIdx][0][1]]}")
 
-            #print(f"deledgeline {sNItem=}")
+            print(f"deledgeline {sNItem.nodeNum=}")
             if  sNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
                 sNItem.startsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
             else: #real Node
-                p = [p for p in sNItem._Ports if p.index == heg[eLIdx ][0][1]][0]
+                #print(f"delSeg: delELSN: real node")
+                #Remove from the self.model.Gr
+                self.model.Gr.delNodeFromEdge(sNItem.nodeNum, self.edgeNum)
                 #1st clear the s/eNodes tuple, to avoid referencing issues
                 for n in self.startNodes:
                     if n[0] == sNItem: # an edge can only start once from a node
                         self.startNodes.remove(n)
                         break
+                #Find the port. heg uses `index`, not nodeNum
+                #print(f"delSeg {[p.index for p in sNItem._Ports if p.index == heg[eLIdx][0][1]]}")
+                #Find the port
+                p = [p for p in sNItem._Ports if p.index == heg[eLIdx ][0][1]][0]
                 sNItem.deletePort(p) #Which deals with startsEdgeLines
                 #Remove the node ptr to this whole edge
                 sNItem.startsEdges.remove(self)
+                
 
         def delEdgeLineFromEndNode(eNItem, eLIdx):
             """ Delete the reference to eLine `eLIdx` in endNode `eNItem`"""
             if  eNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
                 eNItem.endsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
             else: #real Node
+                #Remove from the self.model.Gr
+                self.model.Gr.delNodeFromEdge(eNItem.nodeNum, self.edgeNum)
                 #Find the port. heg uses `index`, not nodeNum, so search ...
                 p = [p for p in eNItem._Ports if p.index == heg[eLIdx][1][1]][0]
                 #1st clear the s/eNodes tuple, to avoid referencing issues
@@ -1390,7 +1397,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #get the hyperEdgeGraph for navigation/ checking
         heg = self.hyperEdgeGraph()
-        print(f"delSeg {dEIdx=} {heg=}")
+        #print(f"delSeg {dEIdx=} {heg=}")
 
         #Check for dN - dN segment (can't delete)
         sN = heg[dEIdx][0][0]
@@ -1410,7 +1417,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         if not canDelete:
             #TODO: Make this a `QtWidgets.QMessageBox`
-            print(f"Deleting this segment will destroy the edge")
+            print(f"Error - Deleting this segment will destroy the edge")
             return
 
         self.suppressItemChange = True
@@ -1432,32 +1439,33 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #Keep the coords 
         dNpos = dNItem.pos()
-        print(f"delseg deleting {dNItem.nodeNum=}")
+        #print(f"delseg deleting {dNItem.nodeNum=}")
 
         #if == 3, consolidate the 2 edgelines into 1
         if dNEdgeLinesCount == 3:
             #Get the 2 edgeLines that the dN joins. Note: the edge order is correct by construction
             #  ends = incoming, starts = outgoing
             eLold = dNItem.endsEdgeLines + dNItem.startsEdgeLines
+
             #Remove the common line, leaving newStart -> newEnd, where newEdge must be linked
             eLold.remove(delEdgeLine)
             newStart = heg[eLold[0].lineNum][0][0] # [0][0] is node
             newStartItem = self.Scene.findItemByIdx(newStart)
+
             #print(f"delseg {newStart=}  {newStartItem=}")
             newEnd = heg[eLold[1].lineNum][1][0]
             newEndItem = self.Scene.findItemByIdx(newEnd)
+
             #print(f"delseg {newEnd=} {newEndItem=}")
             #Unlink the edgeLines to be replaced
             delEdgeLineFromStartNode(newStartItem, eLold[0].lineNum)
             delEdgeLineFromEndNode(newEndItem, eLold[1].lineNum)
 
-            #TODO:Reattach to start/end/dummyNodes
-            #######
-            # Look at the addSegment code for the details
+            #Reattach to start/end/dummyNodes
 
             #start at (newStartItem,NEWport) or (dN,dN)
             #This could go after the edgeLine is recreated - newPoints doesn't need it?
-            print(f"delseg {newStartItem.nodeNum=}")
+            #print(f"delseg {newStartItem.nodeNum=}")
             if newStartItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                 #1st edgeLine's 1st point:
                 newSPort = newStartItem.createPort(eLold[0]._p[0])
@@ -1465,15 +1473,14 @@ class VisHyperEdgeItem(QGraphicsObject):
                 newSPort = newStartItem
             else:
                 print(f"ERROR deleting segment in edge {self.edgeNum} - start mangled")
-            print(f"delseg {newEndItem.nodeNum=}")
+            #print(f"delseg {newEndItem.nodeNum=}")
             if newEndItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                 #last edgeLine's lastst point:
                 newEPort = newEndItem.createPort(eLold[1]._p[-1])
-            elif ewEndItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
+            elif newEndItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
                 newEPort = newEndItem
             else:
                  print(f"ERROR deleting segment in edge {self.edgeNum} - end mangled")
-
 
             #get the rest of the points and tangents.
             newPoints = []
@@ -1510,18 +1517,19 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             #Add eLNew to startNodes and the port
             newSNP = (newStartItem,newSPort)
-            print(f"del seg {newSNP[0].nodeNum=} {newSNP[1].nodeNum=}")
+            #print(f"del seg {newSNP[0].nodeNum=} {newSNP[1].nodeNum=}")
             if newStartItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                 newSNP[0].startsEdges.append(self)
+                self.setStart(newSNP,eLNew)
             newSNP[1].startsEdgeLines.append(eLNew)
-            self.setStart(newSNP,eLNew)
+
             #and end
             newENP = (newEndItem,newEPort)
-            print(f"del seg {newENP[0].nodeNum=} {newENP[1].nodeNum=}")
+            #print(f"del seg {newENP[0].nodeNum=} {newENP[1].nodeNum=}")
             if newEndItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                 newENP[0].endsEdges.append(self)
+                self.setEnd(newENP,eLNew)
             newENP[1].endsEdgeLines.append(eLNew)
-            self.setEnd(newENP,eLNew)
 
             #remove the 2 old eLs
             #TODO: This shouldn't be in a for loop, but I can't remember what it should be!
@@ -1545,7 +1553,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.edgeLines.remove(delEdgeLine)
         self.Scene.removeItem(delEdgeLine)
         del delEdgeLine
-        print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
+        #print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
         print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False

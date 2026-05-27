@@ -4053,6 +4053,8 @@ class MainWindow(QMainWindow):
         #TODO: Pop a warning dialog when deleting the edges
 
         #Check for any edges attached and delete
+        #TODO: If the edge is a hyperedge, only delete the attached segment, 
+        # not the whole edge
         #JH this should now be redundant-edges deleted beforehand
         eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
         if eList:
