@@ -144,12 +144,13 @@ class Graph:
         Graph.IDsUsed = set()
 
     def addNode(self,name=None, id=None)->int: 
+        """ Add a new Node to the graph, passing a name and ID"""
         n = self.node({"name" : name},id=id,parents = [], children = [])
         self.nodeD.update({n.nodeID : n})
         return n.nodeID
         
     def addEdge(self,start,end,name=None,id=None)->int|None:
-
+        """ Add a new edge to the graph, passing a name and ID"""
         #standard n-n edge
         if start in self.nodeD and end in self.nodeD:
             #create a new one
@@ -199,6 +200,36 @@ class Graph:
         print(f"***Error adding edge: No nodes found for edge {start}->{end}")
         return None
             
+    def delNodeFromEdge(self,nodeID:int, edgeID:int)->bool:
+        """ For a hyperEdge, remove a node, so long as it is not the only start/ end node """
+
+        if nodeID in self.edgeD[edgeID].startNodes:
+            print(f"deNFE - start {nodeID=} {edgeID=}")
+            if len(self.edgeD[edgeID].startNodes) > 1:
+                #Not the last node, OK to delete
+                #Tell the node:
+                self.nodeD[nodeID].startsEdges.remove(edgeID)
+                self.edgeD[edgeID].startNodes.remove(nodeID)
+                return True
+            else:
+                print(f"coreGraph Error - cannot delete the last start node {nodeID} for edge {edgeID}")
+                return False
+
+        elif nodeID in self.edgeD[edgeID].endNodes:
+            #print(f"deNFE - end")
+            if len(self.edgeD[edgeID].endNodes) > 1:
+                #Not the last node, OK to delete
+                self.nodeD[nodeID].endsEdges.remove(edgeID)
+                self.edgeD[edgeID].endNodes.remove(nodeID)
+                return True
+            else:
+                print(f"coreGraph Error - cannot delete the last end node {nodeID} for edge {edgeID}")
+                return False
+        else:
+            print(f"coreGraph Error - node {nodeID} not part of {edgeID}")
+            return False
+
+    
     def delNode(self,nodeID:int):
         """ Delete a node. If the node is the only start/ end for an edge, 
             the edge is deleted too
@@ -241,7 +272,7 @@ class Graph:
             Graph.IDsUsed.remove(nodeID)
             self.nodeD.pop(nodeID)
         else:
-            print(f"*** Error Can't delete {delNode =} - does not exist")
+            print(f"coreGraph *** Error Can't delete {delNode =} - does not exist")
             return
 
     def delEdge(self,edgeID:int):
@@ -261,7 +292,9 @@ class Graph:
             print(f"***Error deleting edge <{edgeID}> - does not exist")
 
     def updateEdge(self, edgeID:int ,oldID:int, end:str, newID:int):
-        """ relinks `edgeID` from oldID to newID at end ("start" or "end" """
+        """ Allows an edge to be moved from one node to another.
+            Relinks `edgeID` from oldID (node) to newID (node) at end ("start" or "end" )
+        """
         if not end in ["start", "end"]:
             #TODO: make this an exception
             print(f"error - end must be 'start' or 'end' , not '{end}'")

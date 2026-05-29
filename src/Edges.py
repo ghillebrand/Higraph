@@ -1,11 +1,10 @@
 """ Edges code """
 #For debugging: (stack traces)
 import traceback
+import gc
 
 #Global constants. 
 from  HGConstants import *
-
-from  GraphicsSupport import *
 
 # core Graph class:
 from coreGraph import Graph
@@ -1313,10 +1312,12 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Edge added succesfully
         return True
 
-    def hyperEdgeGraph(self):
+    def hyperEdgeGraph(self)->dict:
         """ Runs through the nodes, dummyNodes and edgeLines, 
             and returns dictionary of INDICES {edge: ((startNode,startPort),(endNode,endPort))}
             Based on a segment of `toXML()` 
+            heg[idx][0] is the start (node,port) tuple.
+            heg[idx][1] is the end (node,port) tuple
         """
 
         hStarts = {} # dict 
@@ -1346,12 +1347,53 @@ class VisHyperEdgeItem(QGraphicsObject):
 
     def delSegment(self, delEdgeLine):
         """ Deletes the edgeLine, if it won't destroy the whole edge """
+
+        def delEdgeLineFromStartNode(sNItem,eLIdx):
+            """ Delete the reference to eLine `eLIdx` in startNode `sNItem`"""
+
+            print(f"deledgeline {sNItem.nodeNum=}")
+            if  sNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
+                sNItem.startsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
+            else: #real Node
+                #print(f"delSeg: delELSN: real node")
+                #1st clear the s/eNodes tuple, to avoid referencing issues
+                for n in self.startNodes:
+                    if n[0] == sNItem: # an edge can only start once from a node
+                        self.startNodes.remove(n)
+                        break
+                #Find the port. heg uses `index`, not nodeNum
+                #print(f"delSeg {[p.index for p in sNItem._Ports if p.index == heg[eLIdx][0][1]]}")
+                #Find the port
+                p = [p for p in sNItem._Ports if p.index == heg[eLIdx ][0][1]][0]
+                sNItem.deletePort(p) #Which deals with startsEdgeLines
+                #Remove the node ptr to this whole edge
+                sNItem.startsEdges.remove(self)
+                
+
+        def delEdgeLineFromEndNode(eNItem, eLIdx):
+            """ Delete the reference to eLine `eLIdx` in endNode `eNItem`"""
+            if  eNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
+                eNItem.endsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
+            else: #real Node
+
+                #Find the port. heg uses `index`, not nodeNum, so search ...
+                p = [p for p in eNItem._Ports if p.index == heg[eLIdx][1][1]][0]
+                #1st clear the s/eNodes tuple, to avoid referencing issues
+                for n in self.endNodes:
+                    if n[0] == eNItem: # an edge can only start once from a node
+                        self.endNodes.remove(n)
+                        break
+                eNItem.deletePort(p)
+                #Remove the node ptr to this whole edge
+                eNItem.endsEdges.remove(self)
+
+
         #TODO: look at failure modes (and return values)
         dEIdx = delEdgeLine.lineNum
 
         #get the hyperEdgeGraph for navigation/ checking
         heg = self.hyperEdgeGraph()
-        print(f"delSeg {heg=}")
+        print(f"delSeg {dEIdx=} {heg=}")
 
         #Check for dN - dN segment (can't delete)
         sN = heg[dEIdx][0][0]
@@ -1363,8 +1405,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                           eNItem.data(KEY_ROLE) != ROLE_DUMMYNODE
 
         #Check if the sN/ eN node is the *only* start/ end node 
-        #TODO: This is only true for directed edges. (But then 2 s/eNs would have to be split apart)
-        #print(f"delSeg {len(self.startNodes)=}  or {len(self.endNodes)=}")
+        #NOTE: This is only really true for directed edges. (But then 2 s/eNs would have to be split apart). User must delete the whole edge for this.
         if sNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
             canDelete = canDelete and len(self.startNodes) > 1 
         if eNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
@@ -1372,39 +1413,22 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         if not canDelete:
             #TODO: Make this a `QtWidgets.QMessageBox`
-            print(f"Deleting this segment will destroy the edge")
+            print(f"Error - Deleting this segment will destroy the edge")
             return
 
         self.suppressItemChange = True
 
-
         #Node side pointers
         #only "proper" edges have distinct ports
-        if sNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:    
-            #Find the port. heg uses `index`, not nodeNum
-            #print(f"delSeg {[p.index for p in sNItem._Ports if p.index == heg[dEIdx][0][1]]}")
-            p = [p for p in sNItem._Ports if p.index == heg[dEIdx][0][1]][0]
-            #1st clear the s/eNodes tuple, to avoid referencing issues
-            for n in self.startNodes:
-                if n[0] == sNItem: # an edge can only start once from a node
-                    self.startNodes.remove(n)
-                    break
-            sNItem.deletePort(p)
-            #Remove the node ptr to this whole edge
-            sNItem.startsEdges.remove(self)
+        if sNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:  
+            #Remove from the self.model.Gr
+            self.model.Gr.delNodeFromEdge(sNItem.nodeNum, self.edgeNum)
+            delEdgeLineFromStartNode(sNItem, dEIdx)
 
-        if eNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:    
-            #Find the port. heg uses `index`, not nodeNum, so search ...
-            p = [p for p in eNItem._Ports if p.index == heg[dEIdx][1][1]][0]
-            #1st clear the s/eNodes tuple, to avoid referencing issues
-            for n in self.endNodes:
-                if n[0] == eNItem: # an edge can only start once from a node
-                    self.endNodes.remove(n)
-                    break
-            eNItem.deletePort(p)
-            #Remove the node ptr to this whole edge
-            eNItem.endsEdges.remove(self)
-            #TODO: CHeck for arrows
+        if eNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+            #Remove from the self.model.Gr
+            self.model.Gr.delNodeFromEdge(eNItem.nodeNum, self.edgeNum)
+            delEdgeLineFromEndNode(eNItem, dEIdx)
 
         #Check how many edgeLines at the dummyNode
         if sNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
@@ -1415,56 +1439,131 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #Keep the coords 
         dNpos = dNItem.pos()
-        #print(f"delseg remove refs {type(sNItem)=} , {type(eNItem)=}")
+        #print(f"delseg deleting {dNItem.nodeNum=}")
 
-        #if == 3, convert dN to point on remaining edgeLine
-        #BUG: The join-tangents are doubling up the tuple somehow.
-        if False: # dNEdgeLinesCount == 3:
-            print("delseg: convert dn to spline pt")
-            #consolidate the 2 edgelines into 1
-            #Get the 2 edgeLines that the dN joins
+        #if == 3, consolidate the 2 edgelines into 1
+        if dNEdgeLinesCount == 3:
+            #Get the 2 edgeLines that the dN joins. Note: the edge order is correct by construction
+            #  ends = incoming, starts = outgoing
             eLold = dNItem.endsEdgeLines + dNItem.startsEdgeLines
-            eLold.remove(delEdgeLine)
-            print(f"delseg: {[e.lineNum for e in eLold]}")
 
-            #get all the points and tangents.
-            # Treat the dN as a point, use left tangents as default (this is a bit arbitrary)
-            print(f"delseg {delEdgeLine._t=}")
-            newPoints = eLold[0]._p[:-1]
+            #Remove the common line, leaving newStart -> newEnd, where newEdge must be linked
+            eLold.remove(delEdgeLine)
+            newStart = heg[eLold[0].lineNum][0][0] # [0][0] is node
+            newStartItem = self.Scene.findItemByIdx(newStart)
+
+            #print(f"delseg {newStart=}  {newStartItem=}")
+            newEnd = heg[eLold[1].lineNum][1][0]
+            newEndItem = self.Scene.findItemByIdx(newEnd)
+
+            #print(f"delseg - consol {newEnd=} {newEndItem=}")
+            #Unlink the edgeLines to be replaced
+            delEdgeLineFromStartNode(newStartItem, eLold[0].lineNum)
+            delEdgeLineFromEndNode(newEndItem, eLold[1].lineNum)
+
+            #Reattach to start/end/dummyNodes
+
+            #start at (newStartItem,NEWport) or (dN,dN)
+            #This could go after the edgeLine is recreated - newPoints doesn't need it?
+            #print(f"delseg {newStartItem.nodeNum=}")
+            if newStartItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+                #1st edgeLine's 1st point:
+                newSPort = newStartItem.createPort(eLold[0]._p[0])
+            elif newStartItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
+                newSPort = newStartItem
+            else:
+                print(f"ERROR deleting segment in edge {self.edgeNum} - start mangled")
+            #print(f"delseg {newEndItem.nodeNum=}")
+            if newEndItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+                #last edgeLine's lastst point:
+                newEPort = newEndItem.createPort(eLold[1]._p[-1])
+            elif newEndItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
+                newEPort = newEndItem
+            else:
+                 print(f"ERROR deleting segment in edge {self.edgeNum} - end mangled")
+
+            #get the rest of the points and tangents.
+            newPoints = []
+
+            #incoming points
+            newPoints += eLold[0]._p[:-1]
             if self._polyEdge == SPLINE:
                 newTangents = eLold[0]._t[:-1]
+
+            # Treat the dN as a point, use left tangents as default (this is a bit arbitrary)
             newPoints += [dNItem.pos()]
             if self._polyEdge == SPLINE:
                 if dNItem == sNItem: #start has Right tangents (1st tuple item) 
                     #_t is a list of tuples
-                    newTangents += [(delEdgeLine._t[1][0],(-delEdgeLine._t[1][0],-delEdgeLine._t[1][1]))]
+                    newTangents += [(delEdgeLine._t[0][1],delEdgeLine._t[0][1])]
                 else: #left tangent 
-                    newTangents += [(delEdgeLine._t[0],(-delEdgeLine._t[0][0],-delEdgeLine._t[0][1]))]
+                    newTangents += [(delEdgeLine._t[1][0],delEdgeLine._t[1][0])]
+            
+            #End
             newPoints += eLold[1]._p[1:]
             if self._polyEdge == SPLINE:
                 newTangents += eLold[1]._t[1:]
-            print(f"delseg \n{newPoints=}\n\n{newTangents=}")
+
             #Build a new edgeLine
             if self._polyEdge == SPLINE:
-                eLnew = HermiteSplineItem(p=newPoints,t=newTangents,parent=self)
+                eLNew = HermiteSplineItem(p=newPoints,t=newTangents,parent=self)
             else:
-                eLnew = StraightLineItem(newPoints,parent=self)
+                eLNew = StraightLineItem(newPoints,parent=self)
+            eLNew.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            #TODO: Should bRect not be totally recreated, since we are subtracting?
+            self.bRect = self.bRect.united(eLNew.boundingRect())
+            eLNew.setData(KEY_ROLE,ROLE_POLYLINE)
             self.edgeLines.append(eLNew)
 
-            #remove the 2 old eLs
-            for e in eLold:
-                self.edgeLines.remove(e)
+            #Add eLNew to startNodes and the port
+            newSNP = (newStartItem,newSPort)
+            #print(f"del seg {newSNP[0].nodeNum=} {newSNP[1].nodeNum=}")
+            if newStartItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+                newSNP[0].startsEdges.append(self)
+                self.setStart(newSNP,eLNew)
+            newSNP[1].startsEdgeLines.append(eLNew)
 
-            #Remove dummyNode
-            self.dummyNodes.remove(dNItem)
+            #and end
+            newENP = (newEndItem,newEPort)
+            #print(f"del seg {newENP[0].nodeNum=} {newENP[1].nodeNum=}")
+            if newEndItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+                newENP[0].endsEdges.append(self)
+                self.setEnd(newENP,eLNew)
+            newENP[1].endsEdgeLines.append(eLNew)
+
+            #remove the 2 old eLs
+            #TODO: This shouldn't be in a for loop, but I can't remember what it should be!
+            for e in eLold:
+                ##??? Somehow a pointer is being missed in this loop, causing the second-delete error
+                # and also that the item isn't bein removed from the scene/ edge
+                #Remove the pointers from start/endNode to the OLD edgeLines
+                print(f"delSeg ==3 removing {e.lineNum=}")
+                e.setParentItem(None)
+                self.edgeLines.remove(e)
+                self.Scene.removeItem(e)
+                del(e)
+
+            #Remove dummyNode (which is stored as a tuple
+            self.dummyNodes.remove((dNItem,dNItem))
+            dNItem.setParentItem(None)
+            self.Scene.removeItem(dNItem)
 
         #remove item from edgeLines & scene
+        print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
+        print(f"delSeg {delEdgeLine.lineNum=}")
         delEdgeLine.setParentItem(None)
         self.edgeLines.remove(delEdgeLine)
         self.Scene.removeItem(delEdgeLine)
         del delEdgeLine
 
+        #print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
+        print(f"delseg heg2: {self.hyperEdgeGraph()}")
+
         self.suppressItemChange = False
+        #Tidy up the arrows
+        self.setDirected(not self.isDirected)
+        self.setDirected(not self.isDirected)
+        self.update()
 
     def edgeLineAt(self, pos):
         """ Takes a position, and returns the edgeLine closest to that point

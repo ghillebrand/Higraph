@@ -1686,14 +1686,6 @@ class grScene(QGraphicsScene):
         """ REmove the items from the scene
             assumes that the rest of the model links are dealt with
         """
-        #TODO: Make this recursive, deleting leaves first (Python/ C++ memory handling issue - see old code in V00)
-        # Recursively remove and delete children. Action is post-recursion to delete from the bottom up
-        #TODO - why does doing this cause index errors (use b2.grml, multiple select, as test)
-        #for child in item.childItems():
-        #cList = item.childItems()
-        #for child in cList:
-        #    #print(f"dIC {child}")
-        #    self.deleteItemAndChildren( child)
         
         #print(f"   now processing dIC for {item}")
         item.suppressItemChange = True
@@ -4061,6 +4053,8 @@ class MainWindow(QMainWindow):
         #TODO: Pop a warning dialog when deleting the edges
 
         #Check for any edges attached and delete
+        #TODO: If the edge is a hyperedge, only delete the attached segment, 
+        # not the whole edge
         #JH this should now be redundant-edges deleted beforehand
         eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
         if eList:
