@@ -3364,6 +3364,7 @@ class MainWindow(QMainWindow):
                     edgeMetadataAttributes[metaKey] = {edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")}
         
         edgeName = edgeMetadata['name']
+        #TODO: This is for copies - needs a better check for file read ID changes
         if newID:
             edgeName="*"+edgeName
         #All the data read, create the edge

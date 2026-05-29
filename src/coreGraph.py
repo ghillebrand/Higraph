@@ -204,7 +204,6 @@ class Graph:
         """ For a hyperEdge, remove a node, so long as it is not the only start/ end node """
 
         if nodeID in self.edgeD[edgeID].startNodes:
-            print(f"deNFE - start {nodeID=} {edgeID=}")
             if len(self.edgeD[edgeID].startNodes) > 1:
                 #Not the last node, OK to delete
                 #Tell the node:
@@ -216,7 +215,6 @@ class Graph:
                 return False
 
         elif nodeID in self.edgeD[edgeID].endNodes:
-            #print(f"deNFE - end")
             if len(self.edgeD[edgeID].endNodes) > 1:
                 #Not the last node, OK to delete
                 self.nodeD[nodeID].endsEdges.remove(edgeID)

@@ -1011,25 +1011,45 @@ class VisHyperEdgeItem(QGraphicsObject):
         return super().itemChange(change, value)
 
     def setPolylineType(self, lineType:int):
-        """set and change _polyEdge """
+        """ set and change _polyEdge to `lineType`
+            deletes lines of old type (SPLINE / STRAIGHT), and replaces them with the new type
+        """
 
         if self._polyEdge != lineType:
             self._polyEdge = lineType
-            ptList = self.edgeLine._p
-            self.edgeLine._deleteHandles() 
-            self.scene().removeItem(self.edgeLine) 
-            del self.edgeLine 
+            #grab the points from each edgeLine
+            eLinePoints = []
+            for e in self.edgeLines:
+                eLinePoints.append(e._p)
+                #self.edgeLine._deleteHandles() 
+                e._deleteHandles() 
+                #self.scene().removeItem(self.edgeLine) 
+                e.setParentItem(None)
+                self.scene().removeItem(e)
+            #del self.edgeLine 
+            #Don't delete them yet - we need their connections (heg to the rescue?)
+            self.edgeLines.clear()
+
             #self.edgeLine.my_parent_item = None
             #if self.isOnlySelected:
             #    self.scene().clea#rEdgeOnly(self)
-            if self._polyEdge == STRAIGHT:
-                self.edgeLine = StraightLineItem(ptList,parent=self) 
-            elif self._polyEdge == SPLINE:
-                self.edgeLine = HermiteSplineItem(ptList,parent=self)
+            #Rebuild as the new line type
+            #What about dummyNodes, ports.startsLines, etc
+            for ptList in eLinePoints:
+                if self._polyEdge == STRAIGHT:
+                    #self.edgeLine = StraightLineItem(ptList,parent=self) 
+                    eL = StraightLineItem(ptList,parent=self) 
+                elif self._polyEdge == SPLINE:
+                    #self.edgeLine = HermiteSplineItem(ptList,parent=self)
+                    eL = HermiteSplineItem(ptList,parent=self)
 
-            self.edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
-            self.edgeLine.my_parent_item = self #TODO: Needed???
-            self.edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                #self.edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
+                eL.setData(KEY_ROLE,ROLE_POLYLINE)
+                #self.edgeLine.my_parent_item = self #TODO: Needed???
+                #self.edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                eL.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                self.edgeLines.append(e)
+
             self.setSelected(False)
             self.scene().thisHandleObjectSelected=None
             self.updateLine()
@@ -1537,16 +1557,17 @@ class VisHyperEdgeItem(QGraphicsObject):
                 ##??? Somehow a pointer is being missed in this loop, causing the second-delete error
                 # and also that the item isn't bein removed from the scene/ edge
                 #Remove the pointers from start/endNode to the OLD edgeLines
-                print(f"delSeg ==3 removing {e.lineNum=}")
+                #print(f"delSeg ==3 removing {e.lineNum=}")
                 e.setParentItem(None)
                 self.edgeLines.remove(e)
                 self.Scene.removeItem(e)
-                del(e)
+                #del(e)
 
             #Remove dummyNode (which is stored as a tuple
             self.dummyNodes.remove((dNItem,dNItem))
             dNItem.setParentItem(None)
             self.Scene.removeItem(dNItem)
+
 
         #remove item from edgeLines & scene
         print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
@@ -1557,6 +1578,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         del delEdgeLine
 
         #print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
+        #Force a cleanup???
+        gc.collect()
         print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False
