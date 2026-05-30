@@ -1018,37 +1018,34 @@ class VisHyperEdgeItem(QGraphicsObject):
         if self._polyEdge != lineType:
             self._polyEdge = lineType
             #grab the points from each edgeLine
-            eLinePoints = []
-            for e in self.edgeLines:
-                eLinePoints.append(e._p)
-                #self.edgeLine._deleteHandles() 
-                e._deleteHandles() 
-                #self.scene().removeItem(self.edgeLine) 
-                e.setParentItem(None)
-                self.scene().removeItem(e)
-            #del self.edgeLine 
-            #Don't delete them yet - we need their connections (heg to the rescue?)
+            #Grab the structure to rebuild
+            #heg = self.hyperEdgeGraph()
+            hegObj = self.hyperEdgeGraph(idX = False)
+            #allow a "swop" of edgeLines
+            oldEdgeLines = self.edgeLines[:]
             self.edgeLines.clear()
+            for oldE in oldEdgeLines:
+                ptList = oldE._p
+                oldE._deleteHandles() 
+                oldE.setParentItem(None)
+                self.scene().removeItem(oldE)
 
-            #self.edgeLine.my_parent_item = None
-            #if self.isOnlySelected:
-            #    self.scene().clea#rEdgeOnly(self)
-            #Rebuild as the new line type
-            #What about dummyNodes, ports.startsLines, etc
-            for ptList in eLinePoints:
                 if self._polyEdge == STRAIGHT:
-                    #self.edgeLine = StraightLineItem(ptList,parent=self) 
                     eL = StraightLineItem(ptList,parent=self) 
                 elif self._polyEdge == SPLINE:
-                    #self.edgeLine = HermiteSplineItem(ptList,parent=self)
                     eL = HermiteSplineItem(ptList,parent=self)
+                #Relink the port pointers to the new lines
+                self.edgeLines.append(eL)
+                sP = hegObj[oldE][0][1]  #start,port
+                sP.startsEdgeLines.remove(oldE)
+                sP.startsEdgeLines.append(eL)
 
-                #self.edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
+                eP = hegObj[oldE][1][1]  #end,port
+                eP.endsEdgeLines.remove(oldE)
+                eP.endsEdgeLines.append(eL)
+
                 eL.setData(KEY_ROLE,ROLE_POLYLINE)
-                #self.edgeLine.my_parent_item = self #TODO: Needed???
-                #self.edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
                 eL.setFlag(QGraphicsItem.ItemIsSelectable, False)
-                self.edgeLines.append(e)
 
             self.setSelected(False)
             self.scene().thisHandleObjectSelected=None
@@ -1332,32 +1329,41 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Edge added succesfully
         return True
 
-    def hyperEdgeGraph(self)->dict:
+    def hyperEdgeGraph(self,idX= True)->dict:
         """ Runs through the nodes, dummyNodes and edgeLines, 
-            and returns dictionary of INDICES {edge: ((startNode,startPort),(endNode,endPort))}
-            Based on a segment of `toXML()` 
-            heg[idx][0] is the start (node,port) tuple.
-            heg[idx][1] is the end (node,port) tuple
+            if iDX== True, returns dictionary of INDICES {edge: ((startNode,startPort),(endNode,endPort))}
+            else returns dict of OBJECTS 
+            heg[i][0] is the ith edgeLine start (node,port) tuple.
+            heg[i][1] is the ith edgeLine end (node,port) tuple
         """
 
         hStarts = {} # dict 
         hEnds = {} # dict
         for n in self.startNodes:
-            hStarts.update({n[1].startsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
-
+            if idX:
+                hStarts.update({n[1].startsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
+            else:
+                hStarts.update({n[1].startsEdgeLines[0] : (n[0], n[1])})
         for n in self.endNodes:
             #print(f"he toX endNode {n[0].nodeNum} port {n[1].index} {len(n[1].endsEdgeLines)=}")
-            hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
-        
+            if idX:
+                hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
+            else:
+                hEnds.update({n[1].endsEdgeLines[0] : (n[0], n[1])})
         for n in self.dummyNodes:
             #Currently (Apr 2026) dummyNodes don't have ports dN[0] = dN[1]
             for eL in n[0].startsEdgeLines:
-                hStarts.update({eL.lineNum : (n[0].nodeNum, n[1].nodeNum)})
+                if idX:
+                    hStarts.update({eL.lineNum : (n[0].nodeNum, n[1].nodeNum)})
+                else:
+                    hStarts.update({eL : (n[0], n[1])})
             for eL in n[0].endsEdgeLines:
-                hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
+                if idX:
+                    hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
+                else:
+                    hEnds.update({eL  : (n[0], n[1])})
         
-        #the hyperEdge graph - a comment, to aid debugging. Data needed is in the edgeLine element
-        #print(f"hyperEdge {self.edgeNum} {hStarts.items()} , {hEnds.items()}")
+        #the hyperEdge graph - a comment, to aid debugging. 
         hEdgeGraph = dict()
         for k,v in hStarts.items():
             hEdgeGraph.update({k:(v,hEnds[k])})
@@ -1530,8 +1536,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             else:
                 eLNew = StraightLineItem(newPoints,parent=self)
             eLNew.setFlag(QGraphicsItem.ItemIsSelectable, False)
-            #TODO: Should bRect not be totally recreated, since we are subtracting?
-            self.bRect = self.bRect.united(eLNew.boundingRect())
+            self.bRect = self.boundingRect() #bRect.united(eLNew.boundingRect())
             eLNew.setData(KEY_ROLE,ROLE_POLYLINE)
             self.edgeLines.append(eLNew)
 
