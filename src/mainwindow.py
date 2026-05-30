@@ -3377,6 +3377,10 @@ class MainWindow(QMainWindow):
                                 hyperEdgeGraph=hyperEdgeGraph   )
 
         #TODO: Update parenting of dummyNodes & edgeLines
+        for dN in dNList:
+            dN[0].setParentItem(newEdge)
+        for eL in edgeLineList:
+            eL.setParentItem(newEdge)
 
         return newEdge
 
