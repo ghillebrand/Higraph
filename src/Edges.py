@@ -1011,28 +1011,45 @@ class VisHyperEdgeItem(QGraphicsObject):
         return super().itemChange(change, value)
 
     def setPolylineType(self, lineType:int):
-        """set and change _polyEdge """
+        """ set and change _polyEdge to `lineType`
+            deletes lines of old type (SPLINE / STRAIGHT), and replaces them with the new type
+        """
 
         if self._polyEdge != lineType:
             self._polyEdge = lineType
-            ptList = self.edgeLine._p
-            self.edgeLine._deleteHandles() 
-            self.scene().removeItem(self.edgeLine) 
-            del self.edgeLine 
-            #self.edgeLine.my_parent_item = None
-            #if self.isOnlySelected:
-            #    self.scene().clea#rEdgeOnly(self)
-            if self._polyEdge == STRAIGHT:
-                self.edgeLine = StraightLineItem(ptList,parent=self) 
-            elif self._polyEdge == SPLINE:
-                self.edgeLine = HermiteSplineItem(ptList,parent=self)
+            #Grab the structure to rebuild
+            hegObj = self.hyperEdgeGraph(idX = False)
+            #allow a "swop" of edgeLines
+            oldEdgeLines = self.edgeLines[:]
+            self.edgeLines.clear()
+            for oldE in oldEdgeLines:
+                ptList = oldE._p
+                oldE._deleteHandles() 
+                oldE.setParentItem(None)
+                self.scene().removeItem(oldE)
 
-            self.edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
-            self.edgeLine.my_parent_item = self #TODO: Needed???
-            self.edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
+                if self._polyEdge == STRAIGHT:
+                    eL = StraightLineItem(ptList,parent=self) 
+                elif self._polyEdge == SPLINE:
+                    eL = HermiteSplineItem(ptList,parent=self)
+                self.edgeLines.append(eL)
+
+                #Relink the port pointers to the new lines
+                sP = hegObj[oldE][0][1]  #start,port
+                sP.startsEdgeLines.remove(oldE)
+                sP.startsEdgeLines.append(eL)
+
+                eP = hegObj[oldE][1][1]  #end,port
+                eP.endsEdgeLines.remove(oldE)
+                eP.endsEdgeLines.append(eL)
+
+                eL.setData(KEY_ROLE,ROLE_POLYLINE)
+                eL.setFlag(QGraphicsItem.ItemIsSelectable, False)
+
             self.setSelected(False)
             self.scene().thisHandleObjectSelected=None
             self.updateLine()
+            #TODO: Arrows are not being recalculated
 
     def setDirected(self, isDirected:bool):
         """ set isDirected, add/ remove arrows """
@@ -1185,7 +1202,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             `nodePt` is where to put the port on `newNode`
             Splits the `edgeLine`, adding a dummyNode at that splitPoint
             Adds a new Polyline in the correct direction
-            updates self.edgeLines[], self.dummyNodes[], >> removed >> self.hyperEdgeGraph[]
+            updates self.edgeLines[], self.dummyNodes[]
             >>updates the node reverse pointers via updateLine()
             Returns False if guard clauses not met, else false.
         """
@@ -1254,15 +1271,19 @@ class VisHyperEdgeItem(QGraphicsObject):
             nPort = newNode.createPort(nodePt)    
             #give the edgeLine the new endpoint 
             pts = [nPort.pos(),dN[0].pos()]
-            #Make pretty tangents
-            tgts = []        
-            newSlope = nPort.orthogonalSlope()
-            tgts = [(QPointF(0,0),  
-                             QPointF(newSlope[0] * self.tgtScaleFactor, 
-                                     newSlope[1] * self.tgtScaleFactor))]
-            # directed parallel to existing t's at end - steal from edgeLine
-            tgts.append( edgeLine._t[-1] )
-            newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            if self._polyEdge == SPLINE:
+                #Make pretty tangents
+                tgts = []        
+                newSlope = nPort.orthogonalSlope()
+                tgts = [(QPointF(0,0),  
+                                QPointF(newSlope[0] * self.tgtScaleFactor, 
+                                        newSlope[1] * self.tgtScaleFactor))]
+                # directed parallel to existing t's at end - steal from edgeLine
+                tgts.append( edgeLine._t[-1] )
+                newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            else: #STRAIGHT
+                newEdge = StraightLineItem(p=pts, parent=self)
+
             newEdge.setData(KEY_ROLE,ROLE_POLYLINE)
 
             #Add this to startNodes
@@ -1283,13 +1304,16 @@ class VisHyperEdgeItem(QGraphicsObject):
             nPort = newNode.createPort(nodePt)    
             #give the edgeLine the new endpoint 
             pts = [dN[1].pos(), nPort.pos()]
-            #Make pretty tangents
-            #Use the start tangent of the split line
-            tgts = [splitLine._t[0] ]
-            newSlope = nPort.orthogonalSlope()
-            tgts.append( (QPointF(newSlope[0] * -self.tgtScaleFactor, newSlope[1] * -self.tgtScaleFactor),QPointF(0,0))  )
+            if self._polyEdge == SPLINE:
+                #Make pretty tangents
+                #Use the start tangent of the split line
+                tgts = [splitLine._t[0] ]
+                newSlope = nPort.orthogonalSlope()
+                tgts.append( (QPointF(newSlope[0] * -self.tgtScaleFactor, newSlope[1] * -self.tgtScaleFactor),QPointF(0,0))  )
+                newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            else: #STRAIGHT
+                newEdge = StraightLineItem(p=pts, parent=self)
 
-            newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
             newEdge.setData(KEY_ROLE,ROLE_POLYLINE)
 
             newNP = (newNode,nPort)
@@ -1312,32 +1336,41 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Edge added succesfully
         return True
 
-    def hyperEdgeGraph(self)->dict:
+    def hyperEdgeGraph(self,idX= True)->dict:
         """ Runs through the nodes, dummyNodes and edgeLines, 
-            and returns dictionary of INDICES {edge: ((startNode,startPort),(endNode,endPort))}
-            Based on a segment of `toXML()` 
-            heg[idx][0] is the start (node,port) tuple.
-            heg[idx][1] is the end (node,port) tuple
+            if iDX== True, returns dictionary of INDICES {edge: ((startNode,startPort),(endNode,endPort))}
+            else returns dict of OBJECTS 
+            heg[i][0] is the ith edgeLine start (node,port) tuple.
+            heg[i][1] is the ith edgeLine end (node,port) tuple
         """
 
         hStarts = {} # dict 
         hEnds = {} # dict
         for n in self.startNodes:
-            hStarts.update({n[1].startsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
-
+            if idX:
+                hStarts.update({n[1].startsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
+            else:
+                hStarts.update({n[1].startsEdgeLines[0] : (n[0], n[1])})
         for n in self.endNodes:
             #print(f"he toX endNode {n[0].nodeNum} port {n[1].index} {len(n[1].endsEdgeLines)=}")
-            hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
-        
+            if idX:
+                hEnds.update({n[1].endsEdgeLines[0].lineNum : (n[0].nodeNum, n[1].index)})
+            else:
+                hEnds.update({n[1].endsEdgeLines[0] : (n[0], n[1])})
         for n in self.dummyNodes:
             #Currently (Apr 2026) dummyNodes don't have ports dN[0] = dN[1]
             for eL in n[0].startsEdgeLines:
-                hStarts.update({eL.lineNum : (n[0].nodeNum, n[1].nodeNum)})
+                if idX:
+                    hStarts.update({eL.lineNum : (n[0].nodeNum, n[1].nodeNum)})
+                else:
+                    hStarts.update({eL : (n[0], n[1])})
             for eL in n[0].endsEdgeLines:
-                hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
+                if idX:
+                    hEnds.update({eL.lineNum  : (n[0].nodeNum, n[1].nodeNum)})
+                else:
+                    hEnds.update({eL  : (n[0], n[1])})
         
-        #the hyperEdge graph - a comment, to aid debugging. Data needed is in the edgeLine element
-        #print(f"hyperEdge {self.edgeNum} {hStarts.items()} , {hEnds.items()}")
+        #the hyperEdge graph - a comment, to aid debugging. 
         hEdgeGraph = dict()
         for k,v in hStarts.items():
             hEdgeGraph.update({k:(v,hEnds[k])})
@@ -1510,8 +1543,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             else:
                 eLNew = StraightLineItem(newPoints,parent=self)
             eLNew.setFlag(QGraphicsItem.ItemIsSelectable, False)
-            #TODO: Should bRect not be totally recreated, since we are subtracting?
-            self.bRect = self.bRect.united(eLNew.boundingRect())
+            self.bRect = self.boundingRect() #bRect.united(eLNew.boundingRect())
             eLNew.setData(KEY_ROLE,ROLE_POLYLINE)
             self.edgeLines.append(eLNew)
 
@@ -1537,16 +1569,17 @@ class VisHyperEdgeItem(QGraphicsObject):
                 ##??? Somehow a pointer is being missed in this loop, causing the second-delete error
                 # and also that the item isn't bein removed from the scene/ edge
                 #Remove the pointers from start/endNode to the OLD edgeLines
-                print(f"delSeg ==3 removing {e.lineNum=}")
+                #print(f"delSeg ==3 removing {e.lineNum=}")
                 e.setParentItem(None)
                 self.edgeLines.remove(e)
                 self.Scene.removeItem(e)
-                del(e)
+                #del(e)
 
             #Remove dummyNode (which is stored as a tuple
             self.dummyNodes.remove((dNItem,dNItem))
             dNItem.setParentItem(None)
             self.Scene.removeItem(dNItem)
+
 
         #remove item from edgeLines & scene
         print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
@@ -1557,6 +1590,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         del delEdgeLine
 
         #print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
+        #Force a cleanup???
+        gc.collect()
         print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False

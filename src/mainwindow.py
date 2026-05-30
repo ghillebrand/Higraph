@@ -1192,7 +1192,8 @@ class grScene(QGraphicsScene):
                                 ("Delete Point","delPt" )]
                     if len(item.edgeLines) > 1 :  #Only offer delete if meaningful
                         cxMenu.append(("Delete Segment","delSegment"))
-                    cxMenu.append(("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item)))
+                    cxMenu.append( ("Edit Details", lambda: self.mainwindow.showEditEdgeDialog(item)) )
+                    cxMenu.append( ("Print HyperEdge structure", lambda: print(f"{item.edgeNum=} {item.hyperEdgeGraph()}")) )
                             
                 if item.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]:
                     cxMenu = [  (posText, None),
@@ -3325,8 +3326,8 @@ class MainWindow(QMainWindow):
             if polyLineType == SPLINE:
                 #Created with no parent, since edge does not yet exist. Link at the end
                 newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=iD)
-            #elif polyLineType == STRAIGHT:
-
+            elif polyLineType == STRAIGHT:
+                newEdgeLine = StraightLineItem(p=points,  id=iD)
             oldToNewEL[eLID] = newEdgeLine.lineNum
             #print(f"heX {eLID=} -> {oldToNewEL[eLID]}")
             #TODO: What has to be updated if eLID changes!?@?
@@ -3364,6 +3365,7 @@ class MainWindow(QMainWindow):
                     edgeMetadataAttributes[metaKey] = {edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")}
         
         edgeName = edgeMetadata['name']
+        #TODO: This is for copies - needs a better check for file read ID changes
         if newID:
             edgeName="*"+edgeName
         #All the data read, create the edge
