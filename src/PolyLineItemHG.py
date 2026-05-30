@@ -19,13 +19,21 @@ import os
 class StraightLineItem(QGraphicsItem):
     nextID = 3000 #Note that the start value doesn't matter, since these are local to SLI, and clashes with HS can't happen.
     IDsUsed = set()
-    def __init__(self, p: List[QPointF], parent=None):
+    def __init__(self, p: List[QPointF], parent=None, id=None):
         """Create a polyline with a list of points (QPointFs)."""
         super().__init__(parent)
 
         #id to make debuging easier
-        self.lineNum = StraightLineItem.nextID
-        StraightLineItem.nextID +=  1
+        #Check for unique ID
+        if id and not id in StraightLineItem.IDsUsed:
+                self.lineNum = id
+                StraightLineItem.IDsUsed.add(id)
+        else:
+            while StraightLineItem.nextID in StraightLineItem.IDsUsed:
+                StraightLineItem.nextID += 1
+            self.lineNum = StraightLineItem.nextID
+            StraightLineItem.IDsUsed.add(self.lineNum)
+            StraightLineItem.nextID += 1   
 
         self.suppressItemChange = True
         self._p = p
@@ -156,7 +164,42 @@ class StraightLineItem(QGraphicsItem):
         self.updatePath()
 
     def split(self,newP:QPointF):
-        print("Add in split for straight lines!!!!")
+        """ splits the spline at newP, updating the point list of self and return a new HS
+            Note this code is very close to the HermiteSpline code, 
+                using closestPointOnLine rather than small segments,
+                and with the tangent sections removed.
+        """
+        #Based on `addPoint` code
+        #There shouldn't be any handles, but just in case
+        self._deleteHandles()
+
+        #Find which path points it's between. 
+        # Just uses the start point of each element, since they're short
+        minD = math.inf 
+        for i in range(self._path.elementCount()-1):
+            newP,newD = closestPointOnLine(QPointF(self._path.elementAt(i)),
+                                            QPointF(self._path.elementAt(i+1)),newP)
+            if newD < minD:
+                closestP,minD,idx = newP,newD,i
+
+        #i to ic conversion is required for a HermiteSpline - keep it to keep things simple/ consistent
+        #i is the start of the segment we're on.
+        print(f"SLI split segment to split = {idx}")
+        i = idx
+
+        #keep the remnant points for the new segment
+        newPts = self._p[i+1:]
+
+        #truncate self after i, at newP
+        self._p = self._p[:i+1] + [newP]        
+        self.updatePath()
+
+        #start newSeg at newPoint, just before i+1
+        newPts = [newP] + newPts
+        print(f"SLI split {newPts=}")
+        newSeg = StraightLineItem(newPts, parent=self.parentItem())
+
+        return newSeg
 
     def deletePoint(self, point: QPointF):
         # Remove nearest point within HITSIZE

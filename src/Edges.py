@@ -1017,9 +1017,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         if self._polyEdge != lineType:
             self._polyEdge = lineType
-            #grab the points from each edgeLine
             #Grab the structure to rebuild
-            #heg = self.hyperEdgeGraph()
             hegObj = self.hyperEdgeGraph(idX = False)
             #allow a "swop" of edgeLines
             oldEdgeLines = self.edgeLines[:]
@@ -1034,8 +1032,9 @@ class VisHyperEdgeItem(QGraphicsObject):
                     eL = StraightLineItem(ptList,parent=self) 
                 elif self._polyEdge == SPLINE:
                     eL = HermiteSplineItem(ptList,parent=self)
-                #Relink the port pointers to the new lines
                 self.edgeLines.append(eL)
+
+                #Relink the port pointers to the new lines
                 sP = hegObj[oldE][0][1]  #start,port
                 sP.startsEdgeLines.remove(oldE)
                 sP.startsEdgeLines.append(eL)
@@ -1050,6 +1049,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.setSelected(False)
             self.scene().thisHandleObjectSelected=None
             self.updateLine()
+            #TODO: Arrows are not being recalculated
 
     def setDirected(self, isDirected:bool):
         """ set isDirected, add/ remove arrows """
@@ -1202,7 +1202,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             `nodePt` is where to put the port on `newNode`
             Splits the `edgeLine`, adding a dummyNode at that splitPoint
             Adds a new Polyline in the correct direction
-            updates self.edgeLines[], self.dummyNodes[], >> removed >> self.hyperEdgeGraph[]
+            updates self.edgeLines[], self.dummyNodes[]
             >>updates the node reverse pointers via updateLine()
             Returns False if guard clauses not met, else false.
         """
@@ -1271,15 +1271,19 @@ class VisHyperEdgeItem(QGraphicsObject):
             nPort = newNode.createPort(nodePt)    
             #give the edgeLine the new endpoint 
             pts = [nPort.pos(),dN[0].pos()]
-            #Make pretty tangents
-            tgts = []        
-            newSlope = nPort.orthogonalSlope()
-            tgts = [(QPointF(0,0),  
-                             QPointF(newSlope[0] * self.tgtScaleFactor, 
-                                     newSlope[1] * self.tgtScaleFactor))]
-            # directed parallel to existing t's at end - steal from edgeLine
-            tgts.append( edgeLine._t[-1] )
-            newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            if self._polyEdge == SPLINE:
+                #Make pretty tangents
+                tgts = []        
+                newSlope = nPort.orthogonalSlope()
+                tgts = [(QPointF(0,0),  
+                                QPointF(newSlope[0] * self.tgtScaleFactor, 
+                                        newSlope[1] * self.tgtScaleFactor))]
+                # directed parallel to existing t's at end - steal from edgeLine
+                tgts.append( edgeLine._t[-1] )
+                newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            else: #STRAIGHT
+                newEdge = StraightLineItem(p=pts, parent=self)
+
             newEdge.setData(KEY_ROLE,ROLE_POLYLINE)
 
             #Add this to startNodes
@@ -1300,13 +1304,16 @@ class VisHyperEdgeItem(QGraphicsObject):
             nPort = newNode.createPort(nodePt)    
             #give the edgeLine the new endpoint 
             pts = [dN[1].pos(), nPort.pos()]
-            #Make pretty tangents
-            #Use the start tangent of the split line
-            tgts = [splitLine._t[0] ]
-            newSlope = nPort.orthogonalSlope()
-            tgts.append( (QPointF(newSlope[0] * -self.tgtScaleFactor, newSlope[1] * -self.tgtScaleFactor),QPointF(0,0))  )
+            if self._polyEdge == SPLINE:
+                #Make pretty tangents
+                #Use the start tangent of the split line
+                tgts = [splitLine._t[0] ]
+                newSlope = nPort.orthogonalSlope()
+                tgts.append( (QPointF(newSlope[0] * -self.tgtScaleFactor, newSlope[1] * -self.tgtScaleFactor),QPointF(0,0))  )
+                newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
+            else: #STRAIGHT
+                newEdge = StraightLineItem(p=pts, parent=self)
 
-            newEdge = HermiteSplineItem(p=pts, t=tgts, parent=self)
             newEdge.setData(KEY_ROLE,ROLE_POLYLINE)
 
             newNP = (newNode,nPort)

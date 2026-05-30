@@ -3326,8 +3326,8 @@ class MainWindow(QMainWindow):
             if polyLineType == SPLINE:
                 #Created with no parent, since edge does not yet exist. Link at the end
                 newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=iD)
-            #elif polyLineType == STRAIGHT:
-
+            elif polyLineType == STRAIGHT:
+                newEdgeLine = StraightLineItem(p=points,  id=iD)
             oldToNewEL[eLID] = newEdgeLine.lineNum
             #print(f"heX {eLID=} -> {oldToNewEL[eLID]}")
             #TODO: What has to be updated if eLID changes!?@?
