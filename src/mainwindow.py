@@ -1039,6 +1039,7 @@ class grScene(QGraphicsScene):
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
                 self.mouseMode = self.POINTER
+                self.mainwindow.actionPointer()
                 mouseEvent.accept()
                 return
             #
@@ -1111,7 +1112,7 @@ class grScene(QGraphicsScene):
                             # accept? return?
 
                         if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
-                            print(f"scene mousePress Polyline {selItem.lineNum}")
+                            #print(f"scene mousePress Polyline {selItem.lineNum}")
                             # save handleobject and create handles
                             self.thisHandleObjectSelected=selItem
                             self.onlySelected=selItem
@@ -1218,13 +1219,12 @@ class grScene(QGraphicsScene):
                     edgeLine = item.edgeLineAt(mPos)
                     edgeLine.deletePoint(mPos)
                     item.setSelected(True)
-                    item.update()
+                    item.updateLine(edgeLine=edgeLine)
 
                 elif cxChoice == "delSegment":
                     edgeLine = item.edgeLineAt(mPos)
                     edgeLine._deleteHandles()                    
                     item.delSegment(edgeLine)
-                    #TODO: Sort out handle selection
                     item.setSelected(True)
                     item.update()
 
@@ -1788,6 +1788,7 @@ class deleteNodeCommand(QUndoCommand):
         super().__init__(parent=parent)
         self.node = node
         self.nodeNum = self.node.nodeNum
+        print(f"deleteNodeCommand {self.nodeNum=}")
         self.posn = posn
         self.scene = scene
         self.model = model
@@ -2554,7 +2555,10 @@ class MainWindow(QMainWindow):
 
     def actionPointer(self):
         self.statusBar().showMessage("Select Mode",3000)
+        if self.Scene.mouseMode in [grScene.INSERTEDGE,grScene.INSERTEDGE2CLICK]:
+            self.Scene.resetRubberLine()
         self.Scene.mouseMode = grScene.POINTER
+        #Clean
 
     def listClick(self,item):
 
@@ -3376,7 +3380,7 @@ class MainWindow(QMainWindow):
                                 dummyNodes=dNList  , edgeLines=edgeLineList,
                                 hyperEdgeGraph=hyperEdgeGraph   )
 
-        #TODO: Update parenting of dummyNodes & edgeLines
+        #Update parenting of dummyNodes & edgeLines
         for dN in dNList:
             dN[0].setParentItem(newEdge)
         for eL in edgeLineList:
@@ -3618,6 +3622,7 @@ class MainWindow(QMainWindow):
                  
     def action_FileClose(self):
         print("File Close")  
+        #TODO: Close app?
 
     def action_Print(self):
         """
@@ -4126,12 +4131,29 @@ class MainWindow(QMainWindow):
                     if eList:
                         for e in eList:
                             edgeItem = self.Scene.findItemByIdx(e)
-                            #self.delEdge(e)
-                            if edgeItem not in selected_items:
-                                #TODO: re-implement UNDO!
-                                self.delHyperEdge(e)
-                                # newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
-                                #self.undoStack.push(newAction)
+                            #Check if this is one of multiple start nodes
+                            if len(edgeItem.startNodes) >= 2:
+                                #Only delete the startLine/ segment
+                                #Find the edgeLine
+                                for p in item._Ports:
+                                    if len(p.startsEdgeLines) > 0 and p.startsEdgeLines[0] in edgeItem.edgeLines:
+                                        touchingEdgeLine = p.startsEdgeLines[0]
+                                        edgeItem.delSegment(touchingEdgeLine)
+                                        break
+                            elif len(edgeItem.endNodes) >= 2:
+                                #Only delete the touching endLine
+                                for p in item._Ports:
+                                    if len(p.endsEdgeLines) > 0 and p.endsEdgeLines[0] in edgeItem.edgeLines:
+                                        touchingEdgeLine = p.endsEdgeLines[0]
+                                        edgeItem.delSegment(touchingEdgeLine)
+                                        break
+                            else: # Delete the whole edge
+                                #self.delEdge(e)
+                                if edgeItem not in selected_items:
+                                    #TODO: re-implement UNDO!
+                                    self.delHyperEdge(e)
+                                    # newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
+                                    #self.undoStack.push(newAction)
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.treeWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
