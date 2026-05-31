@@ -104,7 +104,7 @@ class HermiteSplineItem(QGraphicsObject):
                 self._t[i] = (QPointF(dx,dy),QPointF(dx,dy))                
 
         else:
-            print("Must have tangents set!!!")
+            print("Error - Must have tangents correctly set {len(t)=} != {len{p)=}!!!")
             pass
 
         self.pen = QPen(Qt.darkBlue, 1) 

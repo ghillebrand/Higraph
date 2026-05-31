@@ -184,7 +184,6 @@ class StraightLineItem(QGraphicsItem):
 
         #i to ic conversion is required for a HermiteSpline - keep it to keep things simple/ consistent
         #i is the start of the segment we're on.
-        print(f"SLI split segment to split = {idx}")
         i = idx
 
         #keep the remnant points for the new segment
@@ -196,7 +195,6 @@ class StraightLineItem(QGraphicsItem):
 
         #start newSeg at newPoint, just before i+1
         newPts = [newP] + newPts
-        print(f"SLI split {newPts=}")
         newSeg = StraightLineItem(newPts, parent=self.parentItem())
 
         return newSeg

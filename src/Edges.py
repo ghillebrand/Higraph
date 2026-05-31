@@ -1119,13 +1119,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         #print(f" updateLine: {edgeLine.lineNum=}")
 
         self.prepareGeometryChange()
-        #TODO: For hypergraphs, segment start/ end may be a dummyNode
-        #For hyperedges, there are possibly multiple edgeLines
-
-        #When called from VisNodeItem.itemChange, source is pure VisNode, not a tuple
-        
-        #print(f"updateLine called with {type(source)=}")
-        #print(traceback.print_stack())
         #source may be a `Handle`, which a not a tuple, or just a Node: Normalise to tuple
         if not type(source) is tuple: 
             if type(source) is VisNodeItem or type(source) is VisBlobItem:
@@ -1384,7 +1377,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         def delEdgeLineFromStartNode(sNItem,eLIdx):
             """ Delete the reference to eLine `eLIdx` in startNode `sNItem`"""
 
-            print(f"deledgeline {sNItem.nodeNum=}")
+            #print(f"deledgeline {sNItem.nodeNum=}")
             if  sNItem.data(KEY_ROLE) == ROLE_DUMMYNODE:
                 sNItem.startsEdgeLines.remove([eL for eL in self.edgeLines if eL.lineNum == eLIdx][0])
             else: #real Node
@@ -1420,13 +1413,18 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #Remove the node ptr to this whole edge
                 eNItem.endsEdges.remove(self)
 
+        #Clean up handles
+        for eL in self.edgeLines:
+            eL._deleteHandles()
+        if self.Scene.thisHandleObjectSelected in self.edgeLines:
+            self.Scene.thisHandleObjectSelected = None
 
         #TODO: look at failure modes (and return values)
         dEIdx = delEdgeLine.lineNum
 
         #get the hyperEdgeGraph for navigation/ checking
         heg = self.hyperEdgeGraph()
-        print(f"delSeg {dEIdx=} {heg=}")
+        #print(f"delSeg {dEIdx=} {heg=}")
 
         #Check for dN - dN segment (can't delete)
         sN = heg[dEIdx][0][0]
@@ -1582,8 +1580,8 @@ class VisHyperEdgeItem(QGraphicsObject):
 
 
         #remove item from edgeLines & scene
-        print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
-        print(f"delSeg {delEdgeLine.lineNum=}")
+        #print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
+        #print(f"delSeg {delEdgeLine.lineNum=}")
         delEdgeLine.setParentItem(None)
         self.edgeLines.remove(delEdgeLine)
         self.Scene.removeItem(delEdgeLine)
@@ -1592,13 +1590,13 @@ class VisHyperEdgeItem(QGraphicsObject):
         #print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
         #Force a cleanup???
         gc.collect()
-        print(f"delseg heg2: {self.hyperEdgeGraph()}")
+        #print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False
         #Tidy up the arrows
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
-        self.update()
+        self.updateLine()
 
     def edgeLineAt(self, pos):
         """ Takes a position, and returns the edgeLine closest to that point
