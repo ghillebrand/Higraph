@@ -590,6 +590,7 @@ class grScene(QGraphicsScene):
             #  if so, make sure there is a mid point in the  polyline line
             #TODO: Generalise from ...Node[0]
             #HACK: Just disabled self-edges totally during build of hyperedges
+            # mmm - self edges can be createdwork anyway!!!
             elif False: ###*****###(newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
                 #newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
                 print(f"Self edge {self.EdgeEnd}")
@@ -668,9 +669,10 @@ class grScene(QGraphicsScene):
 
         self.handle = None
 
-    def clearEdgeOnly(self, edge):
+    def XXXclearEdgeOnly(self, edge):
         """ No longer used
             Remove the controlboxes from an edge and deselect."""
+        print("clearEdgeOnly")
         #TODO: Generalise to items, for blob handles
 
         #For edges, was there only one selected? Clear.
@@ -991,9 +993,7 @@ class grScene(QGraphicsScene):
                             self.savedPositionList=self.savePosition([p])
                             selItem.setMoveCallback(p._updateFromHandles)  
                             selItem.parentItem().removeGroup("group")
-                        #BUG - DRagging - this stops dragging from an edge, but not having it breaks tangent update values
-                        #mouseEvent.accept()
-                        #return
+
                     mouseEvent.accept()
                     return
             itemsClicked=self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_BLOB, ROLE_NODE, ROLE_EDGE])
@@ -1088,13 +1088,6 @@ class grScene(QGraphicsScene):
                             selItem.setSelected(True)
                             self.savedPositionList=self.savePosition([selItem])
                             #super().mousePressEvent(mouseEvent) JH commented out
-                            #return JH commented out APril 11 2026
-                        #immediately hand off for Qt to move
-                        #BUG:Dragging With these on, DRAGGING doesn't happen, off, a single node select doesn't clear selection
-                        #Solution: Move `isSelected` to mouseRelease, to allow for movement
-                        #TODO: DRAGGING
-                        #super().mousePressEvent(mouseEvent)
-                        #return
 
                         if selItem.data(KEY_ROLE) == ROLE_BLOB:
                             #print(f"Sel Blob {selItem.metadata['name']}")
@@ -3963,8 +3956,6 @@ class MainWindow(QMainWindow):
         for xEdge in graphStr.iter("edge"):
             sItemID = int(xEdge.attrib.get("source", None))
             eItemID = int(xEdge.attrib.get("target", None))
-
-            #BUG - edges don't work on paste - ID's have changed!
 
             edgeItem = self.edgeFromXML(xEdge, newID=True, 
                                             newStartID=self.oldToNewID[sItemID],
