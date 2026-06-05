@@ -13,6 +13,24 @@ Nodes as sets will be added later - inclusion is easier than n-ary edges.
 import copy
 from  HGConstants import *
 
+#This needs to be callable when `Graph` is not accessible (for `dummyNodes`)
+def getGUID(self,id=None)->int:
+    """ manage global UIDs for both coreGraph objects and some supporting objects
+        (dummyNodes for hyperEdges must have GUIDs)
+    """
+    #Check for unique ID
+    if id and not id in Graph.IDsUsed:
+            gUID = id
+            Graph.IDsUsed.add(id)
+    else:
+        while Graph.nextID in Graph.IDsUsed:
+            Graph.nextID += 1
+        gUID = Graph.nextID
+        Graph.IDsUsed.add(gUID)
+        Graph.nextID += 1  
+    
+    return gUID
+
 class Graph:
     """ a set of nodes and edges"""
     
@@ -22,22 +40,13 @@ class Graph:
     #A set of used IDs. Allows loading of files with existing IDs
     #TODO: Clear on FileNew
     IDsUsed = set()
-    
+
     # a container class of nodes. Mostly exists as a place to hold metadata, and some optimisations 
     class node():
       
         def __init__(self,metadata=None,id=None, parents = [], children = []):
             #Check for unique ID
-            if id:
-                if not id in Graph.IDsUsed:
-                    self.nodeID = id
-                    Graph.IDsUsed.add(id)
-            else:
-                while Graph.nextID in Graph.IDsUsed:
-                    Graph.nextID += 1
-                self.nodeID = Graph.nextID
-                Graph.IDsUsed.add(self.nodeID)
-                Graph.nextID += 1
+            self.nodeID = getGUID(id)
 
             self.metadata = metadata
             self.startsEdges = []  
@@ -89,17 +98,8 @@ class Graph:
        
         def __init__(self,start:int,end:int,metadata:dict|None=None,id=None):
             """new edge, must have start = nodeID or tuple, end = nodeID, optional metadata   """
-            #TODO: For re-creating from file/ paste, ID will need to be a param?
-             #Check for unique ID
-            if id and not id in Graph.IDsUsed:
-                    self.edgeID = id
-                    Graph.IDsUsed.add(id)
-            else:
-                while Graph.nextID in Graph.IDsUsed:
-                    Graph.nextID += 1
-                self.edgeID = Graph.nextID
-                Graph.IDsUsed.add(self.edgeID)
-                Graph.nextID += 1           
+            #Check for unique ID
+            self.edgeID = getGUID(id)          
 
             self.metadata = metadata
             self.startNodes = [] 
