@@ -1971,19 +1971,39 @@ class deleteEdgeCommand(QUndoCommand):
         self.treeWidget=treeWidget
         self.isDirected=edge.isDirected
         self._polyEdge=edge._polyEdge
-        self.startNode=startNode
-        self.startNodeNum=startNode[0].nodeNum
-        self.endNode=endNode
-        self.endNodeNum=endNode[0].nodeNum
+        #self.startNode=startNode
+        self.startNodes=[]
+        #self.startNodeNum=startNode[0].nodeNum
+        self.startNodeNums=[]
+        self.startPortPos=[]
+        self.startPortT=[]
+        self.startPortIndex=[]
+        for sN in startNodes:
+            self.startNodes.append(sN)
+            self.startNodeNums.append(sN[0].nodeNum)
+            self.startPortPos.append(sN[1].scenePos())
+            self.startPortT.append(sN[1].t)
+            self.startPortIndex.append(sN[1].index)
+        #self.endNode=endNode
+        self.endNodes=[]
+        #self.endNodeNum=endNode[0].nodeNum
+        self.endNodeNums=[]
+        self.endPortPos=[]
+        self.endPortT=[]
+        self.endPortIndex=[]
+        for eN in endNodes:
+            self.endNodes.append(eN)
+            self.endNodeNums.append(eN[0].nodeNum)
+            self.endPortPos.append(eN[1].scenePos())
+            self.endPortT.append(eN[1].t)
+            self.endPortIndex.append(eN[1].index)
         #save port elements to recreate
-        self.startPortPos=self.startNode[1].scenePos()
-        self.startPortT=self.startNode[1].t
-        self.startPortIndex=self.startNode[1].index
-        #self.startPortParent=self.startNode[1].parentItem()
-        self.endPortPos=self.endNode[1].scenePos()
-        self.endPortT=self.endNode[1].t
-        self.endPortIndex=self.endNode[1].index
-        #self.endPortParent=self.endNode[1].parentItem()
+        #self.startPortPos=self.startNode[1].scenePos()
+        #self.startPortT=self.startNode[1].t
+        #self.startPortIndex=self.startNode[1].index
+        #self.endPortPos=self.endNode[1].scenePos()
+        #self.endPortT=self.endNode[1].t
+        #self.endPortIndex=self.endNode[1].index
         self.points=[]
         self.tangentPoints=[]
         #if self.edge != None and hasattr("self.edge.edgeLine","_t"):
@@ -2004,14 +2024,31 @@ class deleteEdgeCommand(QUndoCommand):
         self.metadataAttributes={}
         for k,v in edge.metadataAttributes.items():
             self.metadataAttributes[k] = v
+        self.dNList=copy.deepcopy(edge.dNList)
+        self.edgeLines=copy.deepcopy(edge.edgeLines)
+        self.hyperEdgeGraph=copy.deepcopy(edge.hyperEdgeGraph)
 
     def undo(self):
         #if the connecting nodes have been deleted and recreated their referencing is suspect
-        startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
-        endNodeZero=self.scene.findItemByIdx(self.endNodeNum)
-        #self.edge.startNode=(self.scene.findItemByIdx(self.edge.startNode[0].nodeNum),self.edge.startNode[1])
-        #self.edge.endNode=(self.scene.findItemByIdx(self.edge.endNode[0].nodeNum),self.edge.endNode[1])
         # ports WILL have been deleted, so recreate and add to node 
+        self.startNodes=[]
+        for i in range(0, len(self.startNodeNums)):
+            startNodeZero=self.scene.findItemByIdx(self.startNodeNums[i])
+            portPos = startNodeZero.parameterToPosition(self.startPortT[i])
+            startNodeOne=port(portPos, t=self.startPortT[i], index =self.startPortIndex[i], parent=startNodeZero.nodeShape)
+            startNodeZero._Ports.append(startNodeOne)
+            self.startNodes.append((startNodeZero, startNodeOne))
+        self.endNodes=[]
+        for i in range(0, len(self.endNodeNums)):
+            endNodeZero=self.scene.findItemByIdx(self.endNodeNums[i])
+            portPos = endNodeZero.parameterToPosition(self.endPortT[i])
+            endNodeOne=port(portPos, t=self.endPortT[i], index =self.endPortIndex[i], parent=endNodeZero.nodeShape)
+            endNodeZero._Ports.append(endNodeOne)
+            self.endNodes.append((endNodeZero, endNodeOne))
+
+        """startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
+        endNodeZero=self.scene.findItemByIdx(self.endNodeNum)
+
         portPos = startNodeZero.parameterToPosition(self.startPortT)
         startNodeOne=port(portPos, t=self.startPortT, index =self.startPortIndex, parent=startNodeZero.nodeShape)
         portPos = endNodeZero.parameterToPosition(self.endPortT)
@@ -2019,26 +2056,19 @@ class deleteEdgeCommand(QUndoCommand):
         startNodeZero._Ports.append(startNodeOne)
         endNodeZero._Ports.append(endNodeOne)
         self.startNode=(startNodeZero, startNodeOne)
-        self.endNode=(endNodeZero, endNodeOne)
-        """#recreate ports if necessary
-        if not self.edge.startNode[1] or not self.edge.startNode[1].parentItem():#instead of being deleted QT removes the parent. Weird but
-            pStart= port(self.startPortPos, t=self.startPortT, index =self.startPortIndex, parent=self.startNode[0].nodeShape)
-            self.edge.startNode[0]._Ports.append(pStart)
-            self.edge.startNode=(self.edge.startNode[0],pStart)
-        else:
-            self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
-        if not self.edge.endNode[1] or not self.edge.endNode[1].parentItem():
-            pEnd= port(self.endPortPos, t=self.endPortT, index =self.endPortIndex, parent=self.endNode[0].nodeShape)
-            self.edge.endNode[0]._Ports.append(pEnd)
-            self.edge.endNode=(self.edge.endNode[0],pEnd)
-        else:
-            self.edge.endNode[0]._Ports.append(self.edge.endNode[1])  """
+        self.endNode=(endNodeZero, endNodeOne)"""
+
         #VisEdgeItem adds to the model and the  list      
-        newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
-                            directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
-                            polyLineType = self._polyEdge, points=self.points[1:-1], #exclude edgepoints
-                            tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
-               
+        #newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
+        #                    directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
+        #                    polyLineType = self._polyEdge, points=self.points[1:-1], #exclude edgepoints
+        #                    tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
+  
+        newEdge = VisHyperEdgeItem(self.model, self.Scene, self.treeWidget, self.startNodes, self.endNodes, 
+                                directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
+                                polyLineType = self._polyEdge, points=self.points[1:-1],tangents=self.tangentPoints,
+                                metadata=self.metadata, metadataAttributes=self.metadataAttributes,
+                                dummyNodes=self.dNList  , edgeLines=self.edgeLines, hyperEdgeGraph=self.hyperEdgeGraph) 
         #Add to *Scene*
         self.scene.addItem(newEdge)
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
@@ -2047,7 +2077,8 @@ class deleteEdgeCommand(QUndoCommand):
 
     def redo(self):
         delIdx = self.edge.data(KEY_INDEX)
-        self.scene.mainwindow.delEdge(delIdx)
+        #self.scene.mainwindow.delEdge(delIdx)
+        self.scene.mainwindow.delHyperEdge(delIdx)
 
 class moveNodeCommand(QUndoCommand):
     def __init__(self, lastPosition, currentPosition, scene, model, treeWidget):
@@ -4119,9 +4150,9 @@ class MainWindow(QMainWindow):
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     delIdx = item.data(KEY_INDEX)
                     #self.delEdge(delIdx)
-                    self.delHyperEdge(delIdx)
-                    #newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.treeWidget, item.startNodes, item.endNodes, parent=None)
-                    #self.undoStack.push(newAction)
+                    #self.delHyperEdge(delIdx)
+                    newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.treeWidget, item.startNodes, item.endNodes, parent=None)
+                    self.undoStack.push(newAction)
             #Node delete - 1st del any connected edges - handled by GrScene
             for item in selected_items:
                 if item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
@@ -4151,9 +4182,9 @@ class MainWindow(QMainWindow):
                                 #self.delEdge(e)
                                 if edgeItem not in selected_items:
                                     #TODO: re-implement UNDO!
-                                    self.delHyperEdge(e)
-                                    # newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
-                                    #self.undoStack.push(newAction)
+                                    #self.delHyperEdge(e)
+                                    newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNodes, edgeItem.endNodes, parent=None)
+                                    self.undoStack.push(newAction)
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.treeWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
