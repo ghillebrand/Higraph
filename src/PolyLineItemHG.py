@@ -387,7 +387,9 @@ class HermiteSplineItem(QGraphicsItem):
 
     def boundingRect(self) -> QRectF:
         adjust = 2
-        return self._boundingRect.united (self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust))
+        self._boundingRect = self._path.boundingRect().adjusted(-adjust, -adjust, adjust, adjust)
+        return self._boundingRect
+
 
     def shape(self):
         outlinePath = QPainterPathStroker()

@@ -6,7 +6,7 @@ from PySide6.QtGui import  QPen, QPainter, QInputEvent
 
 import sys
 
-from PolyLineItem import StraightLineItem, HermiteSplineItem, HandleItem
+from PolyLineItemHG import StraightLineItem, HermiteSplineItem, HandleItem
 
 class grScene(QGraphicsScene):
     """ Simple scene to handle some basic clicks for testing"""

@@ -1116,9 +1116,6 @@ class grScene(QGraphicsScene):
                             #TODO: Hyperedge - create handles on all the edgeLines
                             selItem._createHandles()
                             #This code leaves a lot of orphans, but is the ultimate goal
-                            #Temp fix for hyperedges
-                            #for eL in parent.edgeLines:
-                            #    eL._createHandles()
 
                             #selItem.setSelected(False)
                             #selItem = parent
@@ -1133,16 +1130,9 @@ class grScene(QGraphicsScene):
                             #parent = selItem.parentItem() 
                             #parent.setSelected(True) #Select the Edge
                             #parent.isOnlySelected = True
-                            #TODO: Hyperedge - create handles on all the edgeLines
-                            #print("running create")
                             selItem._createHandles()
                             if not selItem.stH:
                                 selItem.setZValue(2000) #move the edge above nodes
-                                # item.stHandle must be the 1st point handle: item.edgeLine._pHandles[0]
-                                #print(" Setting stH", end="")
-                                #print(f" clicked on {selItem.edgeLineAt(mPos)._pHandles}")
-                                #Which edgeLine?
-                                #if len(selItem.edgeLine._pHandles)>0:
                                 if getattr(selItem.edgeLineAt(mPos),'_pHandles',False):
                                     if len(selItem.edgeLineAt(mPos)._pHandles)>0:
                                         selItem.stH = selItem.edgeLineAt(mPos)._pHandles[0]
@@ -1157,14 +1147,7 @@ class grScene(QGraphicsScene):
                             tWItem = self.treeWidget.findItemByIdx(selItem.data(KEY_INDEX))
                             self.treeWidget.setCurrentItem(tWItem)
                             self.changedByCode=False
-                            # if not selItem.endH:
-                            #print(", endH")
-                            #     selItem.endH = selItem.edgeLine._pHandles[-1]
-                            # will this ever be needed?
-                            #selItem.setSelected(True) 
-                            #selItem.isOnlySelected = True
-                        #Let the scene remember, for unsetting
-                            #self.onlySelected = selItem
+
                             mouseEvent.accept()
                             return
 
@@ -1261,19 +1244,15 @@ class grScene(QGraphicsScene):
             pass
         
         #manually handle click drag (This _could_ be another state, but only used here)
-        #elif self.mouseMode == self.DRAGGING: # and mouseEvent.buttons() & Qt.LeftButton:
         if self.mouseMode == self.DRAGGING:# and (mouseEvent.buttons() & Qt.LeftButton):
             #Handle edges with multiple points - update the points
             sIlist = self.selectedItems()
-            #print(f"->{len(sIlist)}",end="")
             if len(sIlist) > 2: #high probability of an edge in the mix
                 for item in sIlist:
                     if item.data(KEY_ROLE) == ROLE_EDGE:
                         #move hyperEdge dummyNodes if they exist, before the `updatePath()`
                         for dN in item.dummyNodes:
-                            #print(f"dN {dN[0].nodeNum} sPos{dN[0].pos()} + d {delta} = {dN[0].pos() + delta} move)")
                             dN[0].setPos(dN[0].pos() + delta)
-                            #print(f" {item.edgeLines[0]._p[-1]=} "
                             pass
                         
                         for eL in item.edgeLines:
@@ -1285,15 +1264,11 @@ class grScene(QGraphicsScene):
                                 if node.data(KEY_ROLE) in [ROLE_BLOB, ROLE_NODE]:
                                     node.setPos(node.scenePos()+delta)
 
-            
         elif self.mouseMode == self.MOVEEDGEEND:
-            #self.MoveEdgeEnd(self.onlySelected.parentItem(),mPos)
             self.MoveEdgeEnd(self.thisHandleObjectSelected,mPos)
             mouseEvent.accept()
             
         elif self.mouseMode == self.MOVEHANDLE:
-            #print("Move Handle")
-            #Same code as moveEdgeEnd
             self.handle.setPos(mPos) 
               
         super().mouseMoveEvent(mouseEvent)
@@ -1303,9 +1278,6 @@ class grScene(QGraphicsScene):
         #print(f"release {self.mouseMode =}")
 
         if self.mouseMode == self.INSERTNODE:
-            #print("Node release at :",mouseEvent.scenePos())
-            #print("up node")
-            #TODO: Clear selection after adding a node (or before?)
             self.clearSelection()
             #self.updateBlobParenting()
             self.mouseMode = self.POINTER

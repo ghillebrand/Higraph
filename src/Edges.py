@@ -722,27 +722,18 @@ class VisHyperEdgeItem(QGraphicsObject):
                 d[0].setParentItem(self)
             for e in self.edgeLines:
                 e.setParentItem(self)
+
         """
-        print(f"he init checking port endlines")
-        for d in self.endNodes:
-            print(f" endNode  {d[0].nodeNum} port {d[1].index}")
-            for e in d[0].startsEdges:
-                print(f"   starts Edge {e.edgeNum}")
-            for e in d[0].endsEdges:
-                print(f"   ends Edge {e.edgeNum}")            
-            #print(f"  endNode  {d[0].nodeNum} port {d[1].index}")
-            for e in d[1].startsEdgeLines:
-                print(f"   starts eLine {e.lineNum}")
-            for e in d[1].endsEdgeLines:
-                print(f"   ends eLine {e.lineNum}")
-        """
-        #Bounding rectangle
-        self.bRect = QRectF(0,0,0,0) #initial bounding rectangle
+        self.bRect = QRectF(self.startNodes[0][0].pos(), self.startNodes[0][0].pos()-self.endNodes[0][0].pos())
         for edgeLine in self.edgeLines:
             edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
             edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
+            print(f"(VH init {edgeLine.boundingRect()=}")
             self.bRect = self.bRect.united(edgeLine.boundingRect())
-
+        """
+        for edgeLine in self.edgeLines:
+            edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
+            edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #Selection and editing vars:
         #TODO: will need a list of st & end handles
         #edit Handles
@@ -896,7 +887,12 @@ class VisHyperEdgeItem(QGraphicsObject):
     def boundingRect(self):
         """ edges boundingRect """
         adjust = 2 # self.pen.width() / 2
-        return self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
+        #self.bRect = self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
+
+        self.bRect = QRectF(self.startNodes[0][0].pos(), self.endNodes[0][0].pos())
+        for edgeLine in self.edgeLines:
+            self.bRect = self.bRect.united(edgeLine.boundingRect())
+        return self.bRect
 
     def paint(self, painter, option, widget=None):
         #print(f" Paint {self.edgeNum =}")
@@ -936,6 +932,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #Debug - draw the shape path
         #painter.drawPath(self.shape())
+        painter.drawRect(self.boundingRect())
 
     def shape(self):
         """ Set a tight selection shape """

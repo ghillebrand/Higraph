@@ -882,6 +882,17 @@ class VisBlobItem(VisNodeItem):
                     self.childGroup.addToGroup(item)
                     #if item not in self.scene().selectedItems():
                         #self.scene().groupedItems.append(item)
+                ## Add WHOLY included edges to the group (to move points & dummyNodes
+                ###
+                searchArea = self.boundingRect()
+                inBlob = self.scene().items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
+                #inBlob = self.scene().items(searchArea, mode=Qt.ItemSelectionMode.IntersectsItemShape )
+                print(f"blob IC {len(inBlob)=}")
+                for item in inBlob:
+                    print(f"blob IC {type(item)=}, {item.data(KEY_INDEX)=}")
+                    if item.data(KEY_ROLE) == ROLE_EDGE:
+                        print(f"blob IC {item.edgeNum=}")
+                        self.childGroup.addToGroup(item) 
             #else: #unselected or no children
             elif value == 0: #when deselected
                 #delete group
