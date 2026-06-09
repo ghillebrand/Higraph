@@ -1110,7 +1110,7 @@ class grScene(QGraphicsScene):
                             self.changedByCode=False
                             self.savedPositionList=self.savePosition([selItem])
                             # accept? return?
-
+                        # the following 'if' is obsolete
                         if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
                             #print(f"scene mousePress Polyline {selItem.lineNum}")
                             # save handleobject and create handles
@@ -4141,7 +4141,8 @@ class MainWindow(QMainWindow):
         for eL in delItem.edgeLines:
             eL._deleteHandles()
 
-        if self.Scene.thisHandleObjectSelected in delItem.edgeLines:
+        #if self.Scene.thisHandleObjectSelected in delItem.edgeLines:
+        if self.Scene.thisHandleObjectSelected == delItem:   #JH
             self.Scene.thisHandleObjectSelected = None
         
         #Del the port on the nodes 
