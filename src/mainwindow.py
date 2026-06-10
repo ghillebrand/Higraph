@@ -2080,11 +2080,15 @@ class deleteEdgeCommand(QUndoCommand):
                 endNodeOne=endNodeZero.portFromIndex(self.endsEdgeLines[newEdgeLine.lineNum][1])
                 endNodeOne.endsEdgeLines.append(newEdgeLine)
             if newEdgeLine.lineNum in self.dummyNodeStartsEdgeLines:
-                dN=self.scene.findItemByIdx(self.dummyNodeStartsEdgeLines[newEdgeLine.lineNum])
-                dN.startsEdgeLines.append(newEdgeLine)
+                for dN in dummyNodes:
+                    if dN[0].nodeNum==self.dummyNodeStartsEdgeLines[newEdgeLine.lineNum]:
+                    #dN=self.scene.findItemByIdx(self.dummyNodeStartsEdgeLines[newEdgeLine.lineNum])
+                        dN[1].startsEdgeLines.append(newEdgeLine)
             if newEdgeLine.lineNum in self.dummyNodeEndsEdgeLines:
-                dN=self.scene.findItemByIdx(self.dummyNodeEndsEdgeLines[newEdgeLine.lineNum])
-                dN.endsEdgeLines.append(newEdgeLine)
+                for dN in dummyNodes:
+                    if dN[0].nodeNum==self.dummyNodeEndsEdgeLines[newEdgeLine.lineNum]:
+                    #dN=self.scene.findItemByIdx(self.dummyNodeEndsEdgeLines[newEdgeLine.lineNum])
+                        dN[1].endsEdgeLines.append(newEdgeLine)
 
 
         """startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
@@ -2105,17 +2109,7 @@ class deleteEdgeCommand(QUndoCommand):
         #                    polyLineType = self._polyEdge, points=self.points[1:-1], #exclude edgepoints
         #                    tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
   
-        print("Before edge creation")
-        for e in edgeLines:
-            print(e.lineNum)
-        #print(edgeLines)
-        #print(dummyNodes)
-        for d in dummyNodes:
-            print(d[0].nodeNum)
-        for s in self.startNodes:
-            print(s[0].nodeNum)
-        for e in self.endNodes:
-            print(e[0].nodeNum)
+
         newEdge = VisHyperEdgeItem(self.model, self.scene, self.treeWidget, self.startNodes, self.endNodes, 
                                 directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
                                 polyLineType = self._polyEdge, points=self.points[1:-1],tangents=self.tangentPoints,
@@ -2123,17 +2117,7 @@ class deleteEdgeCommand(QUndoCommand):
                                 dummyNodes=dummyNodes  , edgeLines=edgeLines, hyperEdgeGraph=None) 
         #Add to *Scene*
         self.scene.addItem(newEdge)
-        print("After edge creation")
-        #print(newEdge.edgeLines)
-        #print(newEdge.dummyNodes)
-        for e in newEdge.edgeLines:
-            print(e.lineNum, e.parentItem())
-        for d in newEdge.dummyNodes:
-            print(d[0].nodeNum)
-        for s in newEdge.startNodes:
-            print(s[0].nodeNum)
-        for e in newEdge.endNodes:
-            print(e[0].nodeNum)
+
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
         newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.edge=newEdge

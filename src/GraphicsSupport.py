@@ -212,7 +212,10 @@ class dummyNodeRoot(QGraphicsItem):
 
         #ID for saving, and debugging 
         #Check for unique ID
-        self.nodeNum = getGUID(id)
+        if id !=None:
+            self.nodeNum=id
+        else:
+            self.nodeNum = getGUID(id)
         """
         if id and not id in dummyNodeRoot.IDsUsed:
                 self.nodeNum = id
@@ -290,7 +293,7 @@ class port(dummyNodeRoot):
     def __init__(self,center: QPointF, t:float = 0, index:int = -1, parent=None):
         super().__init__(center, parent=parent)
         self.t = t  
-        self.index = index #Index must only be used for XML. 
+        self.index = index #Index must only be used for XML. (and undo?)
 
     def orthogonalSlope(self)->tuple:
         """ Return (dx,dy) at right angles to the `nodeshape` at `t` """

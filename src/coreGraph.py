@@ -46,7 +46,10 @@ class Graph:
       
         def __init__(self,metadata=None,id=None, parents = [], children = []):
             #Check for unique ID
-            self.nodeID = getGUID(id)
+            if id != None:
+                self.nodeID=id
+            else:
+                self.nodeID = getGUID(id)
 
             self.metadata = metadata
             self.startsEdges = []  
@@ -99,7 +102,10 @@ class Graph:
         def __init__(self,start:int,end:int,metadata:dict|None=None,id=None):
             """new edge, must have start = nodeID or tuple, end = nodeID, optional metadata   """
             #Check for unique ID
-            self.edgeID = getGUID(id)          
+            if id != None:
+                self.edgeID=id
+            else:
+                self.edgeID = getGUID(id)          
 
             self.metadata = metadata
             self.startNodes = [] 
@@ -267,7 +273,7 @@ class Graph:
 
                
             #delete the node
-            Graph.IDsUsed.remove(nodeID)
+            #Graph.IDsUsed.remove(nodeID) JH this needs to be done consistently
             self.nodeD.pop(nodeID)
         else:
             print(f"coreGraph *** Error Can't delete {delNode =} - does not exist")
@@ -284,7 +290,7 @@ class Graph:
                 self.nodeD[StNode].startsEdges.remove(edgeID)
             for EndNode in e.endNodes:
                 self.nodeD[EndNode].endsEdges.remove(edgeID)
-            Graph.IDsUsed.remove(edgeID)
+            #Graph.IDsUsed.remove(edgeID) JH
             self.edgeD.pop(edgeID)
         else:
             print(f"***Error deleting edge <{edgeID}> - does not exist")

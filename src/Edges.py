@@ -651,7 +651,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.tgtScaleFactor = TANGENT_SCALE_FACTOR 
      
         #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML` *AND undo*)
-        if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None:
+        #if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None: JH
+        if len(self.edgeLines)==0 and hyperEdgeGraph is None:
             #print(f"he: simple creation {len(dummyNodes)=}")
             stN = self.startNodes[0]
             endN = self.endNodes[0]
