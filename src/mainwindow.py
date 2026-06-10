@@ -438,18 +438,18 @@ class grScene(QGraphicsScene):
             endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
             #Create the actual edge
-            #newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-            #self.undoStack.push(newAction)
+            newAction=createEdgeCommand(None, self, self.model,self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            self.undoStack.push(newAction)
             #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-            edgeItem = VisHyperEdgeItem(self.model, self, self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            #edgeItem = VisHyperEdgeItem(self.model, self, self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
             #Commented out because now done in createEdgeCommand
             #Add to *Scene*
             #TODO: fix this for UNDO (sort out createEdgeCommand, add an addEdgeSegmentCommand)
-            self.addItem(edgeItem)
-            edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            #self.addItem(edgeItem)
+            #edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             #can't select a node to move it due to drawing order
-            edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+            #edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
         # Otherwise, add a segment to the edge, forming a hyperedge
         elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_EDGE]:
             #"Node -> edge"
@@ -1883,11 +1883,13 @@ class deleteNodeCommand(QUndoCommand):
 class createEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, treeWidget, startNode, endNode, parent=None):
         super().__init__()
-        self.edge = edge
+        if edge == None: # this is used for checking if it is a brand new edge (not a redo)
+            self.edge = None 
+        else:
+            self.edge = 1
         self.edgeNum=0 #placeholder
         self.scene = scene
         self.model = model
-        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         # save node and port data
         self.startNode=startNode
@@ -1901,29 +1903,17 @@ class createEdgeCommand(QUndoCommand):
         self.endPortPos=endNode[1].scenePos()
         self.endPortT=self.endNode[1].t
         self.endPortIndex=self.endNode[1].index
-        """#self.endPortParent=self.endNode[1].parentItem()
-        # save edgepoints and tangents
-        self.points=[]
-        self.tangentPoints=[]
-        if self.edge != None and self.edge.edgeLine._t:
-            self.tangentPoints=self.edge.edgeLine._t
-        else:
-            self.tangentPoints=[]
-        if self.edge != None and self.edge.edgeLine._p:
-            for p in self.edge.edgeLine._p:
-                self.points.append(p)
-        else:
-            self.points=[]"""
 
     def undo(self):
         #delIdx = self.edge.data(KEY_INDEX) 
         delIdx = self.edgeNum  
-        self.scene.mainwindow.delEdge(delIdx)
+        self.scene.mainwindow.delHyperEdge(delIdx)
 
     def redo(self):
         #VisEdgeItem adds to the model and the  list
         if self.edge==None:
-            newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode)                              
+            #newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode) 
+            newEdge = VisHyperEdgeItem(self.model, self.scene, self.treeWidget, self.startNode, self.endNode, parent=None)                             
         else:
             # if any of the nodes have been deleted and recreated they need to be found by reference
             startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
@@ -1937,7 +1927,7 @@ class createEdgeCommand(QUndoCommand):
             endNodeZero._Ports.append(endNodeOne)
             self.startNode=(startNodeZero, startNodeOne)
             self.endNode=(endNodeZero, endNodeOne)
-            newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
+            newEdge = VisHyperEdgeItem(self.model,self.scene,self.treeWidget, self.startNode, self.endNode, 
                                 id = self.edgeNum)
         self.edgeNum=newEdge.edgeNum  
 
@@ -1951,7 +1941,7 @@ class createEdgeCommand(QUndoCommand):
         self.scene.addItem(newEdge)
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
         newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
-        self.edge=newEdge
+        self.edge=1 # just for checking against
 
 class deleteEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, treeWidget, startNodes, endNodes, parent=None):
@@ -1960,7 +1950,6 @@ class deleteEdgeCommand(QUndoCommand):
         self.edgeNum=edge.edgeNum
         self.scene = scene
         self.model = model
-        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.isDirected=edge.isDirected
         self._polyEdge=edge._polyEdge
@@ -2089,19 +2078,6 @@ class deleteEdgeCommand(QUndoCommand):
                     if dN[0].nodeNum==self.dummyNodeEndsEdgeLines[newEdgeLine.lineNum]:
                     #dN=self.scene.findItemByIdx(self.dummyNodeEndsEdgeLines[newEdgeLine.lineNum])
                         dN[1].endsEdgeLines.append(newEdgeLine)
-
-
-        """startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
-        endNodeZero=self.scene.findItemByIdx(self.endNodeNum)
-
-        portPos = startNodeZero.parameterToPosition(self.startPortT)
-        startNodeOne=port(portPos, t=self.startPortT, index =self.startPortIndex, parent=startNodeZero.nodeShape)
-        portPos = endNodeZero.parameterToPosition(self.endPortT)
-        endNodeOne=port(portPos, t=self.endPortT, index =self.endPortIndex, parent=endNodeZero.nodeShape)
-        startNodeZero._Ports.append(startNodeOne)
-        endNodeZero._Ports.append(endNodeOne)
-        self.startNode=(startNodeZero, startNodeOne)
-        self.endNode=(endNodeZero, endNodeOne)"""
 
         #VisEdgeItem adds to the model and the  list      
         #newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
