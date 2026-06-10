@@ -883,50 +883,45 @@ class VisBlobItem(VisNodeItem):
                     #if item not in self.scene().selectedItems():
                         #self.scene().groupedItems.append(item)
                 ## Add WHOLY included edges to the group (to move points & dummyNodes
-                ###
-                searchArea = self.boundingRect()
+                searchArea = self.sceneBoundingRect()
                 inBlob = self.scene().items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
-                #inBlob = self.scene().items(searchArea, mode=Qt.ItemSelectionMode.IntersectsItemShape )
-                print(f"blob IC {len(inBlob)=}")
+                self.containedEdges = []
                 for item in inBlob:
-                    print(f"blob IC {type(item)=}, {item.data(KEY_INDEX)=}")
                     if item.data(KEY_ROLE) == ROLE_EDGE:
                         print(f"blob IC {item.edgeNum=}")
-                        self.childGroup.addToGroup(item) 
+                        #self.childGroup.addToGroup(item) 
+                        self.containedEdges.append(item)
+                        #store the mouse pos for later delta calcs
+                        self.containedMouse = self._lastMousePressPos                        
+
             #else: #unselected or no children
             elif value == 0: #when deselected
                 #delete group
+                print(f"delete contained edges")
                 #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 #if getattr(self, "childGroup" , False):
                 self.removeGroup(self.childGroup)
-                #self.scene().groupedItems=[]
-                    #JH kids = self.getChildList(self)
-
-                """kidsToGo=self.childGroup.childItems()
-                    #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
-                    #JH for item in kids: #self.children:
-                    for item in kidsToGo:
-                        #removeFromGroup seems to bug out occasionally :/
-                        #self.childGroup.removeFromGroup(item)
-                        
-                        #This seems more reliable.
-                        newScenePos = item.mapToScene(0, 0)
-                        item.setParentItem(self)
-                        item.setPos(newScenePos)
-                    self.scene().destroyItemGroup(self.childGroup)"""
-                    #JH rescue any children that were excluded by a resize
-                    #if getattr(self, "childGroup" , False):
-                    #    if type(self.childGroup) == "QGraphicsItemGroup":
-                    #        self.scene().destroyItemGroup(self.childGroup)
-                    #print(f"AFTER deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
+                if self.containedEdges:
+                    self.containedEdges.clear()
 
             #Call the edge update
             for k in kids:
                 k.updatePortEdges() 
 
         #Moved
-        if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
-            #print("blob pos change")
+        if change in [QGraphicsItem.ItemPositionHasChanged]:
+            #print(f"blob pos change {value=}")
+            #Move the points and dummyNodes of any containedEdges
+            #This is not ideal, but consistent with elsewhere
+            if len(self.containedEdges) > 0:
+                delta = self._lastMousePressPos - self.containedMouse
+                self.containedMouse = self._lastMousePressPos
+                print(f"blob pos change {delta=}")
+                for c in self.containedEdges:
+                    for dN in c.dummyNodes:
+                        dN[0].setPos(dN[0].pos() + delta)
+                #    for p in ...???
+                            
             pass
 
         return super().itemChange(change, value)
@@ -1219,5 +1214,11 @@ class VisBlobItem(VisNodeItem):
 
 
     def mousePressEvent(self, event):
-        #Call VisNode's mouse handler
+        #Track the posn - needed for ItemChange
+        self._lastMousePressPos = event.scenePos()
         super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        #Track the posn - needed for ItemChange
+        self._lastMousePressPos = event.scenePos()
+        super().mouseMoveEvent(event)

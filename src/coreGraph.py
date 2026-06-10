@@ -18,12 +18,25 @@ def getGUID(self,id=None)->int:
     """ manage global UIDs for both coreGraph objects and some supporting objects
         (dummyNodes for hyperEdges must have GUIDs)
     """
+    #To support undo/ redo, 
+    #TODO: This causes errors in the model, but I can't see why
+    #if id:
+    #    gUID = id
+    #else:
+    #    gUID = Graph.nextID
+    #    Graph.nextID += 1
+    #return gUID
+
+    #original GUID code. 
+    #Deletion will need to be added to sanely support un/redo
+    
     #Check for unique ID
     if id and not id in Graph.IDsUsed:
             gUID = id
             Graph.IDsUsed.add(id)
     else:
         while Graph.nextID in Graph.IDsUsed:
+            print(f"g",end="")
             Graph.nextID += 1
         gUID = Graph.nextID
         Graph.IDsUsed.add(gUID)
