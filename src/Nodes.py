@@ -469,9 +469,6 @@ class VisNodeItem(QGraphicsObject):
             
             #Position change
             if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange,QGraphicsItem.ItemScenePositionHasChanged]:
-                #BUG: When >=2 end nodes are present, the move is doubled. Even if there are >=3 nodes, and 2 are selected.
-                #  Note: Multiple STARTS are fine!
-                #  This somehow requires knowing if 1 node or >1 node is moving.
                 for port in self._Ports:
                     for sEdgeLine in port.startsEdgeLines:
                         sEdgeLine.parentItem().updateLine((self,port),sEdgeLine)

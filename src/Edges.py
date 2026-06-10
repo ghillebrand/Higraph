@@ -1103,12 +1103,11 @@ class VisHyperEdgeItem(QGraphicsObject):
         """ Set the end of self to end, a (Node,Port) tuple. Also update model, for edits""" 
          
          # call from old code, not a handle
-        if not edgeLine and end[0].data(ROLE_KEY) not in [ROLE_NODE,ROLE_BLOB, ROLE_HANDLE]: #HACK: end[0] != end[1]:  
+        if not edgeLine and end[0].data(ROLE_KEY) not in [ROLE_NODE,ROLE_BLOB, ROLE_HANDLE]:
             print("setEnd: Setting edgeLine to [0]")
             traceback.print_stack(limit=3)
             edgeLine = self.edgeLines[0]
 
-        #TODO: Add updateEdge() to Graph class, then include here?? (No, missing scene context?
         #node may not end the same edge twice
         if not end in self.endNodes:
             self.endNodes.append(end)
@@ -1151,24 +1150,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #source = (source,source) #>> Don't do this - endNodes end up being set in odd places.
                 source = (0,source)
         #print(f"{source=}  == {self.startNode=}")
-
-        #############
-        """if source and type(source[0] )== VisBlobItem and source[0]==self.startNode[0]\
-                and source[1].t==self.startNode[1].t:
-            self.edgeLine.setP(0,source[1].scenePos())
-        elif source and type(source[0] )== VisBlobItem and source[0]==self.endNode[0]\
-                and source[1].t==self.endNode[1].t:
-            self.edgeLine.setP(-1,source[1].scenePos())
-        elif source == self.startNode:
-            #Set the 0th edgeLine point to where the `source` object port (now) is. 
-            #print(f"setting start from {source[0].nodeNum}, {source[1].index}")
-            self.edgeLine.setP(0,source[1].scenePos())
-
-        elif source == self.endNode: #endNode
-            #print(f"setting end from {source[0].nodeNum}, {source[1].index}")
-            self.edgeLine.setP(-1,source[1].scenePos())"""
-
-        ###########
 
         if source in self.startNodes:
             edgeLine.setP(0,source[1].scenePos())
@@ -1574,7 +1555,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             newENP[1].endsEdgeLines.append(eLNew)
 
             #remove the 2 old eLs
-            #TODO: This shouldn't be in a for loop, but I can't remember what it should be!
             for e in eLold:
                 ##??? Somehow a pointer is being missed in this loop, causing the second-delete error
                 # and also that the item isn't bein removed from the scene/ edge

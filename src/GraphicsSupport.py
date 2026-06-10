@@ -1,6 +1,8 @@
 
 #Global constants. 
 from  HGConstants import *
+from coreGraph import getGUID
+
 import math
 
 from PySide6.QtWidgets import ( QApplication, QWidget, QMainWindow, QDialog,
@@ -19,12 +21,11 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
             QMimeData, QBuffer, QByteArray, QIODevice)
 
-#Various support classes.
+#Various support functions & classes.
 
 def p1TopLeftp2(p1:QPointF, p2:QPointF)->bool:
     """ is p1 'left' and 'above' p2 - used to not create 'inverted' rectangles """
     return p1.x() < p2.x() and p1.y() < p2.y()
-
 
 def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
     """ Finds the closesest point between p1&p2 to point. Returns tuple (closest_point, distance)
@@ -61,7 +62,6 @@ def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
     distance = math.hypot(dx, dy)
 
     return closest_point, distance
-
 
 class TransparentTextItem(QGraphicsTextItem):
     """ allows parent.shape() to select the text, rather than the textItem always grabbing the event  """
@@ -194,7 +194,6 @@ class HandleItem(QGraphicsRectItem):
             painter.drawRect(self.rect())
         painter.restore()
         
-
 class dummyNodeRoot(QGraphicsItem):
     """ an almost-abstract graphics-only node-like object to manage joins for hyperedges, ports for nodes """
     nextID = 1000
@@ -213,6 +212,8 @@ class dummyNodeRoot(QGraphicsItem):
 
         #ID for saving, and debugging 
         #Check for unique ID
+        self.nodeNum = getGUID(id)
+        """
         if id and not id in dummyNodeRoot.IDsUsed:
                 self.nodeNum = id
                 dummyNodeRoot.IDsUsed.add(id)
@@ -222,6 +223,7 @@ class dummyNodeRoot(QGraphicsItem):
             self.nodeNum = dummyNodeRoot.nextID
             dummyNodeRoot.IDsUsed.add(self.nodeNum)
             dummyNodeRoot.nextID += 1   
+        """
 
         self.suppressItemChange = False
 

@@ -25,6 +25,8 @@ class StraightLineItem(QGraphicsItem):
 
         #id to make debuging easier
         #Check for unique ID
+        self.lineNum = getGUID(id)
+        """
         if id and not id in StraightLineItem.IDsUsed:
                 self.lineNum = id
                 StraightLineItem.IDsUsed.add(id)
@@ -34,6 +36,7 @@ class StraightLineItem(QGraphicsItem):
             self.lineNum = StraightLineItem.nextID
             StraightLineItem.IDsUsed.add(self.lineNum)
             StraightLineItem.nextID += 1   
+        """
 
         self.suppressItemChange = True
         self._p = p
@@ -293,6 +296,8 @@ class HermiteSplineItem(QGraphicsItem):
         #TODO: include dealing with `id` as a parameter
         #ID for saving, and debugging 
         #Check for unique ID
+        self.lineNum = getGUID(id)
+        """
         if id and not id in HermiteSplineItem.IDsUsed:
                 self.lineNum = id
                 HermiteSplineItem.IDsUsed.add(id)
@@ -302,7 +307,8 @@ class HermiteSplineItem(QGraphicsItem):
             self.lineNum = HermiteSplineItem.nextID
             HermiteSplineItem.IDsUsed.add(self.lineNum)
             HermiteSplineItem.nextID += 1   
-
+        """
+        
         self.suppressItemChange = True
 
         #TODO: Put the emtpy list guard clause around this
