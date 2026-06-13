@@ -863,9 +863,7 @@ class grScene(QGraphicsScene):
             #kids=[]
             #for k in kidsIdx:
             #    kids.append(self.findItemByIdx(k))
-            
-            
-                
+                  
         return
     
     def clearSelection(self):
@@ -874,6 +872,7 @@ class grScene(QGraphicsScene):
         return super().clearSelection()
         
     def mousePressEvent(self, mouseEvent):
+        #TODO: This is why right click after select without moving doesn't work - see bulk select comment at initialisation
         if mouseEvent.scenePos() == self._lastMouseClickPos:
             mouseEvent.accept()
             return

@@ -709,6 +709,9 @@ class VisBlobItem(VisNodeItem):
         #totalLength = self._basePath.length()
         self._polygon = self._basePath.toFillPolygon()
 
+        #Used in itemChange
+        self.containedEdges = None
+        self._lastMousePressPos = None
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
         self.isOnlySelected = False
@@ -914,15 +917,17 @@ class VisBlobItem(VisNodeItem):
             #Move the points and dummyNodes of any containedEdges
             #This is not ideal, but consistent with elsewhere
             if len(self.containedEdges) > 0:
-                delta = self._lastMousePressPos - self.containedMouse
+                if self._lastMousePressPos:
+                    delta = self._lastMousePressPos - self.containedMouse
+                else: #get the click from the scene
+                    delta = self.scene._lastMouseClickPos - self.containedMouse
+
                 self.containedMouse = self._lastMousePressPos
-                print(f"blob pos change {delta=}")
                 for c in self.containedEdges:
                     for dN in c.dummyNodes:
                         dN[0].setPos(dN[0].pos() + delta)
-                #    for p in ...???
-                            
-            pass
+                    for eL in c.edgeLines:
+                        eL.moveMidPoints(delta)
 
         return super().itemChange(change, value)
     
