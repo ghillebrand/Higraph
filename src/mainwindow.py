@@ -1781,7 +1781,7 @@ class deleteNodeCommand(QUndoCommand):
         super().__init__(parent=parent)
         self.node = node
         self.nodeNum = self.node.nodeNum
-        print(f"deleteNodeCommand {self.nodeNum=}")
+        #print(f"deleteNodeCommand {self.nodeNum=}")
         self.posn = posn
         self.scene = scene
         self.model = model
@@ -4119,20 +4119,27 @@ class MainWindow(QMainWindow):
                     delIdx = item.data(KEY_INDEX)
                     #check for any unselected edges attached to node and delete
                     eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
+                    #print(f"act editDelete {len(eList)=}")
+                    #eList = [i.edgeNum for i in item.startsEdges] + [i.edgeNum for i in item.endsEdges]
+                    #print(f"act editDelete V2: {len(eList)=}")
                     if eList:
                         for e in eList:
                             edgeItem = self.Scene.findItemByIdx(e)
                             #Check if this is one of multiple start nodes
-                            if len(edgeItem.startNodes) >= 2:
+                            ###>> Check WHICH NODE WE ARE DELETING!!!!
+                            if len(edgeItem.startNodes) >= 2 and [item for i in edgeItem.startNodes if item==i[0]]:
                                 #Only delete the startLine/ segment
                                 #Find the edgeLine
+                                #print(f"editDel *start* segDel")
                                 for p in item._Ports:
                                     if len(p.startsEdgeLines) > 0 and p.startsEdgeLines[0] in edgeItem.edgeLines:
                                         touchingEdgeLine = p.startsEdgeLines[0]
+                                        #print(f"   editDel *start* segDel {touchingEdgeLine.lineNum=}")
                                         edgeItem.delSegment(touchingEdgeLine)
                                         break
-                            elif len(edgeItem.endNodes) >= 2:
+                            elif len(edgeItem.endNodes) >= 2 and [item for i in edgeItem.endNodes if item==i[0]]:
                                 #Only delete the touching endLine
+                                #print(f"editDel >>end>> segDel")
                                 for p in item._Ports:
                                     if len(p.endsEdgeLines) > 0 and p.endsEdgeLines[0] in edgeItem.edgeLines:
                                         touchingEdgeLine = p.endsEdgeLines[0]
@@ -4140,6 +4147,7 @@ class MainWindow(QMainWindow):
                                         break
                             else: # Delete the whole edge
                                 #self.delEdge(e)
+                                #print(f"act edDel delete whole edge ")
                                 if edgeItem not in selected_items:
                                     #TODO: re-implement UNDO!
                                     self.delHyperEdge(e)
