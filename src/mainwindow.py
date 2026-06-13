@@ -438,18 +438,18 @@ class grScene(QGraphicsScene):
             endPort = self.tmpEdgeEnd.createPort(self.endPoint)
 
             #Create the actual edge
-            #newAction=createEdgeCommand(None, self, self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-            #self.undoStack.push(newAction)
+            newAction=createEdgeCommand(None, self, self.model,self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            self.undoStack.push(newAction)
             #edgeItem = VisEdgeItem(self.model,self.listWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
-            edgeItem = VisHyperEdgeItem(self.model, self, self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
+            #edgeItem = VisHyperEdgeItem(self.model, self, self.treeWidget, (self.tmpEdgeSt,startPort), (self.tmpEdgeEnd,endPort), parent=None)
 
             #Commented out because now done in createEdgeCommand
             #Add to *Scene*
             #TODO: fix this for UNDO (sort out createEdgeCommand, add an addEdgeSegmentCommand)
-            self.addItem(edgeItem)
-            edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            #self.addItem(edgeItem)
+            #edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             #can't select a node to move it due to drawing order
-            edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+            #edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
         # Otherwise, add a segment to the edge, forming a hyperedge
         elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_EDGE]:
             #"Node -> edge"
@@ -1103,7 +1103,7 @@ class grScene(QGraphicsScene):
                             self.changedByCode=False
                             self.savedPositionList=self.savePosition([selItem])
                             # accept? return?
-
+                        # the following 'if' is obsolete
                         if selItem.data(KEY_ROLE) == ROLE_POLYLINE :
                             #print(f"scene mousePress Polyline {selItem.lineNum}")
                             # save handleobject and create handles
@@ -1883,11 +1883,13 @@ class deleteNodeCommand(QUndoCommand):
 class createEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, treeWidget, startNode, endNode, parent=None):
         super().__init__()
-        self.edge = edge
+        if edge == None: # this is used for checking if it is a brand new edge (not a redo)
+            self.edge = None 
+        else:
+            self.edge = 1
         self.edgeNum=0 #placeholder
         self.scene = scene
         self.model = model
-        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         # save node and port data
         self.startNode=startNode
@@ -1901,29 +1903,17 @@ class createEdgeCommand(QUndoCommand):
         self.endPortPos=endNode[1].scenePos()
         self.endPortT=self.endNode[1].t
         self.endPortIndex=self.endNode[1].index
-        """#self.endPortParent=self.endNode[1].parentItem()
-        # save edgepoints and tangents
-        self.points=[]
-        self.tangentPoints=[]
-        if self.edge != None and self.edge.edgeLine._t:
-            self.tangentPoints=self.edge.edgeLine._t
-        else:
-            self.tangentPoints=[]
-        if self.edge != None and self.edge.edgeLine._p:
-            for p in self.edge.edgeLine._p:
-                self.points.append(p)
-        else:
-            self.points=[]"""
 
     def undo(self):
         #delIdx = self.edge.data(KEY_INDEX) 
         delIdx = self.edgeNum  
-        self.scene.mainwindow.delEdge(delIdx)
+        self.scene.mainwindow.delHyperEdge(delIdx)
 
     def redo(self):
         #VisEdgeItem adds to the model and the  list
         if self.edge==None:
-            newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode)                              
+            #newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode) 
+            newEdge = VisHyperEdgeItem(self.model, self.scene, self.treeWidget, self.startNode, self.endNode, parent=None)                             
         else:
             # if any of the nodes have been deleted and recreated they need to be found by reference
             startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
@@ -1937,7 +1927,7 @@ class createEdgeCommand(QUndoCommand):
             endNodeZero._Ports.append(endNodeOne)
             self.startNode=(startNodeZero, startNodeOne)
             self.endNode=(endNodeZero, endNodeOne)
-            newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
+            newEdge = VisHyperEdgeItem(self.model,self.scene,self.treeWidget, self.startNode, self.endNode, 
                                 id = self.edgeNum)
         self.edgeNum=newEdge.edgeNum  
 
@@ -1951,43 +1941,68 @@ class createEdgeCommand(QUndoCommand):
         self.scene.addItem(newEdge)
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
         newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
-        self.edge=newEdge
+        self.edge=1 # just for checking against
 
 class deleteEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, treeWidget, startNodes, endNodes, parent=None):
         super().__init__(parent=parent)
-        self.edge = edge
+        #self.edge = edge
         self.edgeNum=edge.edgeNum
         self.scene = scene
         self.model = model
-        #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.isDirected=edge.isDirected
         self._polyEdge=edge._polyEdge
-        self.startNode=startNode
-        self.startNodeNum=startNode[0].nodeNum
-        self.endNode=endNode
-        self.endNodeNum=endNode[0].nodeNum
+        #self.startNode=startNode
+        self.startNodes=[]
+        #self.startNodeNum=startNode[0].nodeNum
+        self.startNodeNums=[]
+        self.startPortPos=[]
+        self.startPortT=[]
+        self.startPortIndex=[]
+        self.startsEdgeLines={}
+        for sN in startNodes:
+            self.startNodes.append(sN)
+            self.startNodeNums.append(sN[0].nodeNum)
+            self.startPortPos.append(sN[1].scenePos())
+            self.startPortT.append(sN[1].t)
+            self.startPortIndex.append(sN[1].index)
+            for e in sN[1].startsEdgeLines:
+                self.startsEdgeLines[e.lineNum]=(sN[0].nodeNum, sN[1].index)
+        #self.endNode=endNode
+        self.endNodes=[]
+        #self.endNodeNum=endNode[0].nodeNum
+        self.endNodeNums=[]
+        self.endPortPos=[]
+        self.endPortT=[]
+        self.endPortIndex=[]
+        self.endsEdgeLines={}
+        for eN in endNodes:
+            self.endNodes.append(eN)
+            self.endNodeNums.append(eN[0].nodeNum)
+            self.endPortPos.append(eN[1].scenePos())
+            self.endPortT.append(eN[1].t)
+            self.endPortIndex.append(eN[1].index)
+            for e in eN[1].endsEdgeLines:
+                self.endsEdgeLines[e.lineNum]=(eN[0].nodeNum, eN[1].index)
         #save port elements to recreate
-        self.startPortPos=self.startNode[1].scenePos()
-        self.startPortT=self.startNode[1].t
-        self.startPortIndex=self.startNode[1].index
-        #self.startPortParent=self.startNode[1].parentItem()
-        self.endPortPos=self.endNode[1].scenePos()
-        self.endPortT=self.endNode[1].t
-        self.endPortIndex=self.endNode[1].index
-        #self.endPortParent=self.endNode[1].parentItem()
+        #self.startPortPos=self.startNode[1].scenePos()
+        #self.startPortT=self.startNode[1].t
+        #self.startPortIndex=self.startNode[1].index
+        #self.endPortPos=self.endNode[1].scenePos()
+        #self.endPortT=self.endNode[1].t
+        #self.endPortIndex=self.endNode[1].index
         self.points=[]
         self.tangentPoints=[]
         #if self.edge != None and hasattr("self.edge.edgeLine","_t"):
         if self._polyEdge == SPLINE:
-            for t in self.edge.edgeLine._t:
+            for t in edge.edgeLines[0]._t:
                 self.tangentPoints.append(t)
             #self.tangentPoints=self.edge.edgeLine._t
         else:
             self.tangentPoints=[]
-        if self.edge != None and self.edge.edgeLine._p:
-            for p in self.edge.edgeLine._p:
+        if edge != None and edge.edgeLines[0]._p:
+            for p in edge.edgeLines[0]._p:
                 self.points.append(p)
         else:
             self.points=[]
@@ -1997,50 +2012,97 @@ class deleteEdgeCommand(QUndoCommand):
         self.metadataAttributes={}
         for k,v in edge.metadataAttributes.items():
             self.metadataAttributes[k] = v
+        #self.dNList=copy.deepcopy(edge.dummyNodes)
+        self.dNParameters=[]
+        self.dummyNodeStartsEdgeLines={}
+        self.dummyNodeEndsEdgeLines={}
+        for dN in edge.dummyNodes:
+            self.dNParameters.append({'centre':dN[0].scenePos(), 'id':dN[0].nodeNum})
+            for e in dN[1].startsEdgeLines:
+                self.dummyNodeStartsEdgeLines[e.lineNum]=dN[0].nodeNum
+            for e in dN[1].endsEdgeLines:
+                self.dummyNodeEndsEdgeLines[e.lineNum]=dN[0].nodeNum
+        self.edgeLineParameters=[]
+        for e in edge.edgeLines:
+            if type(e)==StraightLineItem:
+            #if e._polyEdge==STRAIGHT:
+                self.edgeLineParameters.append({'_polyEdge':STRAIGHT, 'id':e.lineNum, 'points': e._p})
+            else:
+                self.edgeLineParameters.append({'_polyEdge':SPLINE, 'id':e.lineNum, 'points': e._p, 'tangents':e._t})
 
     def undo(self):
         #if the connecting nodes have been deleted and recreated their referencing is suspect
-        startNodeZero=self.scene.findItemByIdx(self.startNodeNum)
-        endNodeZero=self.scene.findItemByIdx(self.endNodeNum)
-        #self.edge.startNode=(self.scene.findItemByIdx(self.edge.startNode[0].nodeNum),self.edge.startNode[1])
-        #self.edge.endNode=(self.scene.findItemByIdx(self.edge.endNode[0].nodeNum),self.edge.endNode[1])
         # ports WILL have been deleted, so recreate and add to node 
-        portPos = startNodeZero.parameterToPosition(self.startPortT)
-        startNodeOne=port(portPos, t=self.startPortT, index =self.startPortIndex, parent=startNodeZero.nodeShape)
-        portPos = endNodeZero.parameterToPosition(self.endPortT)
-        endNodeOne=port(portPos, t=self.endPortT, index =self.endPortIndex, parent=endNodeZero.nodeShape)
-        startNodeZero._Ports.append(startNodeOne)
-        endNodeZero._Ports.append(endNodeOne)
-        self.startNode=(startNodeZero, startNodeOne)
-        self.endNode=(endNodeZero, endNodeOne)
-        """#recreate ports if necessary
-        if not self.edge.startNode[1] or not self.edge.startNode[1].parentItem():#instead of being deleted QT removes the parent. Weird but
-            pStart= port(self.startPortPos, t=self.startPortT, index =self.startPortIndex, parent=self.startNode[0].nodeShape)
-            self.edge.startNode[0]._Ports.append(pStart)
-            self.edge.startNode=(self.edge.startNode[0],pStart)
-        else:
-            self.edge.startNode[0]._Ports.append(self.edge.startNode[1])
-        if not self.edge.endNode[1] or not self.edge.endNode[1].parentItem():
-            pEnd= port(self.endPortPos, t=self.endPortT, index =self.endPortIndex, parent=self.endNode[0].nodeShape)
-            self.edge.endNode[0]._Ports.append(pEnd)
-            self.edge.endNode=(self.edge.endNode[0],pEnd)
-        else:
-            self.edge.endNode[0]._Ports.append(self.edge.endNode[1])  """
+        self.startNodes=[]
+        for i in range(0, len(self.startNodeNums)):
+            startNodeZero=self.scene.findItemByIdx(self.startNodeNums[i])
+            portPos = startNodeZero.parameterToPosition(self.startPortT[i])
+            startNodeOne=port(portPos, t=self.startPortT[i], index =self.startPortIndex[i], parent=startNodeZero.nodeShape)
+            startNodeZero._Ports.append(startNodeOne)
+            self.startNodes.append((startNodeZero, startNodeOne))
+        self.endNodes=[]
+        for i in range(0, len(self.endNodeNums)):
+            endNodeZero=self.scene.findItemByIdx(self.endNodeNums[i])
+            portPos = endNodeZero.parameterToPosition(self.endPortT[i])
+            endNodeOne=port(portPos, t=self.endPortT[i], index =self.endPortIndex[i], parent=endNodeZero.nodeShape)
+            endNodeZero._Ports.append(endNodeOne)
+            self.endNodes.append((endNodeZero, endNodeOne))
+        dummyNodes=[]
+        for dN in self.dNParameters:
+            newDummyNode=dummyNodeItem(dN['centre'], None, dN['id'])
+            dummyNodes.append((newDummyNode, newDummyNode))
+        edgeLines=[]
+        for edgeline in self.edgeLineParameters:
+            if edgeline['_polyEdge'] == SPLINE:
+                #Created with no parent, since edge does not yet exist. Link at the end
+                newEdgeLine = HermiteSplineItem(p=edgeline['points'], t=edgeline['tangents'], id=edgeline['id'])
+            elif edgeline.polyLineType == STRAIGHT:
+                newEdgeLine = StraightLineItem(p=edgeline['points'],  id=edgeline['id'])
+            edgeLines.append(newEdgeLine)
+            #add to start or end node
+            if newEdgeLine.lineNum in self.startsEdgeLines:
+                startNodeZero=self.scene.findItemByIdx(self.startsEdgeLines[newEdgeLine.lineNum][0])
+                startNodeOne=startNodeZero.portFromIndex(self.startsEdgeLines[newEdgeLine.lineNum][1])
+                startNodeOne.startsEdgeLines.append(newEdgeLine)
+            if newEdgeLine.lineNum in self.endsEdgeLines:
+                endNodeZero=self.scene.findItemByIdx(self.endsEdgeLines[newEdgeLine.lineNum][0])
+                endNodeOne=endNodeZero.portFromIndex(self.endsEdgeLines[newEdgeLine.lineNum][1])
+                endNodeOne.endsEdgeLines.append(newEdgeLine)
+            if newEdgeLine.lineNum in self.dummyNodeStartsEdgeLines:
+                for dN in dummyNodes:
+                    if dN[0].nodeNum==self.dummyNodeStartsEdgeLines[newEdgeLine.lineNum]:
+                    #dN=self.scene.findItemByIdx(self.dummyNodeStartsEdgeLines[newEdgeLine.lineNum])
+                        dN[1].startsEdgeLines.append(newEdgeLine)
+            if newEdgeLine.lineNum in self.dummyNodeEndsEdgeLines:
+                for dN in dummyNodes:
+                    if dN[0].nodeNum==self.dummyNodeEndsEdgeLines[newEdgeLine.lineNum]:
+                    #dN=self.scene.findItemByIdx(self.dummyNodeEndsEdgeLines[newEdgeLine.lineNum])
+                        dN[1].endsEdgeLines.append(newEdgeLine)
+
         #VisEdgeItem adds to the model and the  list      
-        newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
-                            directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
-                            polyLineType = self._polyEdge, points=self.points[1:-1], #exclude edgepoints
-                            tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
-               
+        #newEdge = VisEdgeItem(self.model,self.treeWidget, self.startNode, self.endNode, 
+        #                    directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
+        #                    polyLineType = self._polyEdge, points=self.points[1:-1], #exclude edgepoints
+        #                    tangents=self.tangentPoints, metadata=self.metadata, metadataAttributes=self.metadataAttributes)
+  
+
+        newEdge = VisHyperEdgeItem(self.model, self.scene, self.treeWidget, self.startNodes, self.endNodes, 
+                                directed=self.isDirected,  nameP=self.metadata['name'], id = self.edgeNum,
+                                polyLineType = self._polyEdge, points=self.points[1:-1],tangents=self.tangentPoints,
+                                metadata=self.metadata, metadataAttributes=self.metadataAttributes,
+                                dummyNodes=dummyNodes  , edgeLines=edgeLines, hyperEdgeGraph=None) 
         #Add to *Scene*
         self.scene.addItem(newEdge)
+
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
         newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.edge=newEdge
 
     def redo(self):
-        delIdx = self.edge.data(KEY_INDEX)
-        self.scene.mainwindow.delEdge(delIdx)
+        #delIdx = self.edge.data(KEY_INDEX)
+        delIdx = self.edgeNum
+        #self.scene.mainwindow.delEdge(delIdx)
+        self.scene.mainwindow.delHyperEdge(delIdx)
 
 class moveNodeCommand(QUndoCommand):
     def __init__(self, lastPosition, currentPosition, scene, model, treeWidget):
@@ -4030,7 +4092,8 @@ class MainWindow(QMainWindow):
         for eL in delItem.edgeLines:
             eL._deleteHandles()
 
-        if self.Scene.thisHandleObjectSelected in delItem.edgeLines:
+        #if self.Scene.thisHandleObjectSelected in delItem.edgeLines:
+        if self.Scene.thisHandleObjectSelected == delItem:   #JH
             self.Scene.thisHandleObjectSelected = None
         
         #Del the port on the nodes 
@@ -4110,9 +4173,9 @@ class MainWindow(QMainWindow):
                 if item.data(KEY_ROLE) == ROLE_EDGE:
                     delIdx = item.data(KEY_INDEX)
                     #self.delEdge(delIdx)
-                    self.delHyperEdge(delIdx)
-                    #newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.treeWidget, item.startNodes, item.endNodes, parent=None)
-                    #self.undoStack.push(newAction)
+                    #self.delHyperEdge(delIdx)
+                    newAction=deleteEdgeCommand(item, self.Scene, self.model, self.ui.treeWidget, item.startNodes, item.endNodes, parent=None)
+                    self.undoStack.push(newAction)
             #Node delete - 1st del any connected edges - handled by GrScene
             for item in selected_items:
                 if item.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
@@ -4150,9 +4213,9 @@ class MainWindow(QMainWindow):
                                 #print(f"act edDel delete whole edge ")
                                 if edgeItem not in selected_items:
                                     #TODO: re-implement UNDO!
-                                    self.delHyperEdge(e)
-                                    # newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNode, edgeItem.endNode, parent=None)
-                                    #self.undoStack.push(newAction)
+                                    #self.delHyperEdge(e)
+                                    newAction=deleteEdgeCommand(edgeItem, self.Scene, self.model, self.ui.treeWidget, edgeItem.startNodes, edgeItem.endNodes, parent=None)
+                                    self.undoStack.push(newAction)
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.treeWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()

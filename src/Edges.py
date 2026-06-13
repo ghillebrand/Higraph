@@ -650,8 +650,9 @@ class VisHyperEdgeItem(QGraphicsObject):
         self._polyEdge = polyLineType   
         self.tgtScaleFactor = TANGENT_SCALE_FACTOR 
      
-        #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML`)
-        if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None:
+        #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML` *AND undo*)
+        #if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None: JH
+        if len(self.edgeLines)==0 and hyperEdgeGraph is None:
             #print(f"he: simple creation {len(dummyNodes)=}")
             stN = self.startNodes[0]
             endN = self.endNodes[0]
@@ -689,8 +690,8 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #Port
                 endN[1].endsEdgeLines.append(self.edgeLines[0]) 
                 self.setEnd(endN, self.edgeLines[0])
-            
-        else: #Created from XML
+        elif hyperEdgeGraph != None: #Created from XML    
+        #else: #Created from XML
             #If we are _creating_ an n-ary edge, it must be from a file/ clipboard, 
             # so `points`, `tangents` & dummyNodes will be populated, 
             # and instantiated in edgeLines, with hyperEdgeGraph holding the structure.
@@ -717,6 +718,18 @@ class VisHyperEdgeItem(QGraphicsObject):
                     endN[0].endsEdges.append(self)
                     endN[1].endsEdgeLines.append(eL)
                     self.setEnd(endN, eL)   
+            #Now set the parenting
+            for d in self.dummyNodes:
+                d[0].setParentItem(self)
+            for e in self.edgeLines:
+                e.setParentItem(self)
+        else:  #called from undo stack
+            for stN in self.startNodes: 
+                stN[0].startsEdges.append(self) 
+            for endN in self.endNodes:
+                endN[0].endsEdges.append(self) 
+                # force endshape
+                #self.updateLine(endN)
             #Now set the parenting
             for d in self.dummyNodes:
                 d[0].setParentItem(self)
