@@ -887,17 +887,10 @@ class VisHyperEdgeItem(QGraphicsObject):
     def boundingRect(self):
         """ edges boundingRect """
         adjust = 2 # self.pen.width() / 2
-        #self.bRect = self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
-        #Set the pos to the first node's centre to avoid weird offset errors
-        #self.setPos(self.startNodes[0][0].pos())
         #start port and end port coords to start with
-        #self.bRect = QRectF(self.startNodes[0][1].pos(), self.startNodes[0][1].pos() - self.endNodes[0][1].pos()).normalized()
-        #self.bRect = QRectF(self.startNodes[0][1].pos(), self.endNodes[0][1].pos())
         self.bRect = self.edgeLines[0].boundingRect().normalized()
-        #print(f"HEI boundingRect ini {self.bRect=}")
         for edgeLine in self.edgeLines[1:]:
             self.bRect = self.bRect.united(edgeLine.boundingRect().normalized()).normalized()
-        #print(f"HEI boundingRect fin {self.bRect=}")
         return self.bRect
 
     def paint(self, painter, option, widget=None):
@@ -938,7 +931,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #Debug - draw the shape path
         #painter.drawPath(self.shape())
-        painter.drawRect(self.boundingRect())
+        #painter.drawRect(self.boundingRect())
 
     def shape(self):
         """ Set a tight selection shape """

@@ -25,6 +25,7 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 
 def p1TopLeftp2(p1:QPointF, p2:QPointF)->bool:
     """ is p1 'left' and 'above' p2 - used to not create 'inverted' rectangles """
+    #TODO: Check if .normalize() would do this?
     return p1.x() < p2.x() and p1.y() < p2.y()
 
 def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):

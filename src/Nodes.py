@@ -878,6 +878,7 @@ class VisBlobItem(VisNodeItem):
             #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
             if value == 1 and self.isOnlySelected: #when selected
             #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
+                print(f"bic for {self.nodeNum=}")
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
                 #self.scene().groupedItems=[]
@@ -887,11 +888,17 @@ class VisBlobItem(VisNodeItem):
                         #self.scene().groupedItems.append(item)
                 ## Add WHOLY included edges to the group (to move points & dummyNodes
                 searchArea = self.sceneBoundingRect()
-                inBlob = self.scene().items(searchArea, mode=Qt.ItemSelectionMode.ContainsItemShape )
+                inBlob = self.scene().items(searchArea) #, mode=Qt.ItemSelectionMode.ContainsItemShape )
+                print(f"bic {len(inBlob)=}")
                 self.containedEdges = []
                 for item in inBlob:
+                    if item.scenePos().x() == 0 and item.scenePos().y() == 0: print(f"bic (0,0) {type(item)=}")
+                    #print(f"bic  {str(type(item)).split('.')[-1]} {item.scenePos()}")
+                    if searchArea.contains(item.boundingRect()):
+                        print(f"   bic CONTAINS {str(type(item)).split('.')[-1]}")
                     if item.data(KEY_ROLE) == ROLE_EDGE:
-                        print(f"blob IC {item.edgeNum=}")
+                        print(f"blob IC {item.edgeNum=} , {item.boundingRect()}")
+
                         #self.childGroup.addToGroup(item) 
                         self.containedEdges.append(item)
                         #store the mouse pos for later delta calcs
@@ -913,7 +920,6 @@ class VisBlobItem(VisNodeItem):
 
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged]:
-            #print(f"blob pos change {value=}")
             #Move the points and dummyNodes of any containedEdges
             #This is not ideal, but consistent with elsewhere
             if len(self.containedEdges) > 0:
