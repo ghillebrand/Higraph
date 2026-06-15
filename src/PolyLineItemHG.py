@@ -25,7 +25,7 @@ class StraightLineItem(QGraphicsItem):
 
         #id to make debuging easier
         #Check for unique ID
-        if id != None:
+        if id != None and isinstance(id,int):
             self.lineNum=id
         else:
             self.lineNum = getGUID(id)
@@ -299,7 +299,7 @@ class HermiteSplineItem(QGraphicsItem):
         #TODO: include dealing with `id` as a parameter
         #ID for saving, and debugging 
         #Check for unique ID
-        if id != None:
+        if id != None and isinstance(id,int) and id != 0:
             self.lineNum=id
         else:
             self.lineNum = getGUID(id)

@@ -19,7 +19,7 @@ def getGUID(self,id=None)->int:
         (dummyNodes for hyperEdges must have GUIDs)
     """
     #Check for unique ID
-    if id and not id in Graph.IDsUsed:
+    if id and isinstance(id,int) and not id in Graph.IDsUsed:
             gUID = id
             Graph.IDsUsed.add(id)
     else:
@@ -46,7 +46,7 @@ class Graph:
       
         def __init__(self,metadata=None,id=None, parents = [], children = []):
             #Check for unique ID
-            if id != None:
+            if id != None and isinstance(id,int):
                 self.nodeID=id
             else:
                 self.nodeID = getGUID(id)
@@ -102,7 +102,7 @@ class Graph:
         def __init__(self,start:int,end:int,metadata:dict|None=None,id=None):
             """new edge, must have start = nodeID or tuple, end = nodeID, optional metadata   """
             #Check for unique ID
-            if id != None:
+            if id != None  and isinstance(id,int):
                 self.edgeID=id
             else:
                 self.edgeID = getGUID(id)          
