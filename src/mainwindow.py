@@ -291,7 +291,6 @@ class grScene(QGraphicsScene):
 
     def pickItemAt(self, mouseEvent, size: QSizeF, itemRoles: List[int]):
         """ Return the user's choice of item at mouseEvent.scenePos() +- size, of type itemRoles, or None 
-            TODO: This can be extended to return the <point> on the item, to allow for multiedges and blob 'control points'
         """
         #TODO: Change the param to pos, to make it more useful
         #or use .mapToGlobal(pos)) instead of passing in the whole event?
@@ -302,6 +301,12 @@ class grScene(QGraphicsScene):
         if len(items) == 1:
             pickedItem = items[0]
         elif len(items) > 1:
+            #a click on a single node gets returned directly
+            nodeItems = [i for i in items if i.data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB] ]
+            if len(nodeItems) == 1:
+                pickedItem = nodeItems[0]
+                return pickedItem
+
             #Since this will add a click, we go to a 2 click insert for edges
             if self.mouseMode == self.INSERTEDGE:
                 self.mouseMode = self.INSERTEDGE2CLICK
@@ -568,14 +573,17 @@ class grScene(QGraphicsScene):
         edge.updateLine(self.handle)
         
     def finishMovingEdgeEnd(self,edge,mPos,mouseEvent):
-        """ note pickItemAt needs the full mouseEvent (screenPos) """
+        """ Process the dropping of a handle (edge end)
+
+            note pickItemAt needs the full mouseEvent (screenPos) 
+         """
         #Check that this is on a valid node/ Termination pt
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
         if newTermItem != None:
-            #print(f"finMovEdge {newTermItem.metadata['name']} {mPos=}")
+            print(f"finMovEdge {newTermItem.metadata['name']}")
             #Node the same, only move the port
             if newTermItem == self.oldTermItem[0]: #Just reposition the port
-                #print(f"finMove - updating port {self.oldTermItem[1].index} ")
+                print(f"finMove - updating port {self.oldTermItem[1].index} ")
                 self.oldTermItem[0].updatePort(self.oldTermItem[1],mPos)
                 #TODO: Check this for flow with rest of func!
                 if self.EdgeEnd == "start":
@@ -584,6 +592,7 @@ class grScene(QGraphicsScene):
                 else:  #end
                     edgeLine = self.oldTermItem[1].endsEdgeLines[0]
                     edge.setEnd(self.oldTermItem,edgeLine)
+                
                 #return
 
             #Check for a self-edge: newTerm == startE and we were moving `end` or the other end is now looped back
@@ -600,14 +609,13 @@ class grScene(QGraphicsScene):
                     edge.edgeLine.addPoint(newTermItem.pos()+QPointF(HITSIZE*4,HITSIZE*4))
 
             #Find the edgeLine involved. 
-            #TODO: Check what happens if you try to drag a `dummyNode` handle onto a real node!
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
             if self.EdgeEnd == "start":
+                print(f"fMEE {edge.edgeNum=}, start")
                 #Grab the line from the old Port's list of edgeLines:
                 edgeLine = self.oldTermItem[1].startsEdgeLines[0]
 
-
-                #Unlink from the old node
+                #Unlink from the old node and port
                 self.oldTermItem[0].startsEdges.remove(edge)
                 self.oldTermItem[1].startsEdgeLines.remove(edgeLine)
                 # Delete the old port
@@ -625,12 +633,12 @@ class grScene(QGraphicsScene):
                 # While clunky, these params will work with any item type
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
 
-                #TODO: change the edge.hyperEdgeGraph  (is it ever used? - No - commented out)
                 #Relink to new node
                 newTermItem[0].startsEdges.append(edge)
                 newTermItem[1].startsEdgeLines.append(edgeLine)
             
-            if self.EdgeEnd == "end":                
+            if self.EdgeEnd == "end":    
+                print(f"fMEE {edge.edgeNum=}, END")            
                 edgeLine = self.oldTermItem[1].endsEdgeLines[0]
                 #TODO: The port code is true for either end - review flow of function and tidy up
                 
@@ -667,6 +675,8 @@ class grScene(QGraphicsScene):
                 edgeLine = self.oldTermItem[1].endsEdgeLines[0]
                 edge.setEnd(self.oldTermItem,edgeLine)
 
+        #Reset these to free the objects
+        self.oldTermItem = None
         self.handle = None
 
     def XXXclearEdgeOnly(self, edge):
