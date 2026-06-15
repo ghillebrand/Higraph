@@ -903,13 +903,18 @@ class VisHyperEdgeItem(QGraphicsObject):
         for k,v in self.metadata.items():
             if k != 'name':
                 if self.metadataAttributes[k]['display']:
-                    metaStr += "\n"+k +":"+v
+                    metaStr += "\n"+k +" : "+v
         self.metaDisplay.setPlainText(metaStr)
 
     def boundingRect(self):
         """ edges boundingRect """
         adjust = 2 # self.pen.width() / 2
-        return self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
+        #return self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
+        #start port and end port coords to start with
+        self.bRect = self.edgeLines[0].boundingRect().normalized()
+        for edgeLine in self.edgeLines[1:]:
+            self.bRect = self.bRect.united(edgeLine.boundingRect().normalized()).normalized()
+        return self.bRect
 
     def paint(self, painter, option, widget=None):
         #print(f" Paint {self.edgeNum =}")
