@@ -105,7 +105,7 @@ class graphModel(QStandardItemModel):
         """Make a Graph Model NODE item, return the item and the index number (item,n) """
         #NB: The order in the lists (Gr, listView and model MUST BE MAINTAINED.
 
-        # Make the coreGraph02 node
+        # Make the coreGraph node
         n = self.Gr.addNode(name=nameP, id=id)
         #self.Gr.nodeD[n].metadata.update({'name':nameP })
         #Default name is node number
@@ -580,10 +580,10 @@ class grScene(QGraphicsScene):
         #Check that this is on a valid node/ Termination pt
         newTermItem = self.pickItemAt(mouseEvent, QSize(HITSIZE,HITSIZE),[ROLE_NODE, ROLE_BLOB])
         if newTermItem != None:
-            print(f"finMovEdge {newTermItem.metadata['name']}")
+            #print(f"finMovEdge {newTermItem.metadata['name']}")
             #Node the same, only move the port
             if newTermItem == self.oldTermItem[0]: #Just reposition the port
-                print(f"finMove - updating port {self.oldTermItem[1].index} ")
+                #print(f"finMove - updating port {self.oldTermItem[1].index} ")
                 self.oldTermItem[0].updatePort(self.oldTermItem[1],mPos)
                 #TODO: Check this for flow with rest of func!
                 if self.EdgeEnd == "start":
@@ -611,7 +611,7 @@ class grScene(QGraphicsScene):
             #Find the edgeLine involved. 
             #Unlink Edge from handle, link to newItem, (if we have really moved:)
             if self.EdgeEnd == "start":
-                print(f"fMEE {edge.edgeNum=}, start")
+                #print(f"fMEE {edge.edgeNum=}, start")
                 #Grab the line from the old Port's list of edgeLines:
                 edgeLine = self.oldTermItem[1].startsEdgeLines[0]
 
@@ -638,7 +638,7 @@ class grScene(QGraphicsScene):
                 newTermItem[1].startsEdgeLines.append(edgeLine)
             
             if self.EdgeEnd == "end":    
-                print(f"fMEE {edge.edgeNum=}, END")            
+                #print(f"fMEE {edge.edgeNum=}, END")            
                 edgeLine = self.oldTermItem[1].endsEdgeLines[0]
                 #TODO: The port code is true for either end - review flow of function and tidy up
                 
@@ -2916,9 +2916,6 @@ class MainWindow(QMainWindow):
         #TODO: type check id
         if not newID:
             id = int(xNode.attrib.get("id"))
-            #JH temp override for n0
-            if id==0:
-                id=1000
         else:
             id = ''
         for dataNode in xNode.iter("data"):
