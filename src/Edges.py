@@ -1638,13 +1638,16 @@ class addSegmentCommand(QUndoCommand):
         self.newEdgeCreated=None
         self.newEdgeLineNum=None
 
-    def undo(self):
+    def undo(self): 
         if self.newEdgeCreated==True:
             edge=self.scene.findItemByIdx(self.edgeNum)
+            delEdgeLine=None
             for e in edge.edgeLines:
                 if e.lineNum==self.newEdgeLineNum:
                     delEdgeLine=e
                     break
+            if delEdgeLine == None:
+                print("Line number not found in Addsegment undo", self.newEdgeLineNum, edge.edgeLines)
             undoInfo=edge.delSegment(delEdgeLine)
             if undoInfo != False:
                 self.exTerminatorEdgeLineNum=undoInfo[0].lineNum
@@ -1660,10 +1663,13 @@ class addSegmentCommand(QUndoCommand):
 
     def redo(self):
         edge=self.scene.findItemByIdx(self.edgeNum)
+        edgeLine=None
         for e in edge.edgeLines:
             if e.lineNum==self.edgeLineNum:
                 edgeLine=e
                 break
+        if edgeLine == None:
+            edgeLine=edge.edgeLineAt(self.splitPoint)
         newNode=self.scene.findItemByIdx(self.newNodeNum)
         newEdgeLine=edge.addSegment(edgeLine, newNode, self.start, self.nodePt, self.splitPoint)
         if newEdgeLine==False:
@@ -1679,9 +1685,6 @@ class delSegmentCommand(QUndoCommand):
         self.scene=scene
         self.edgeNum=edge.edgeNum
         self.edgeLineNum=edgeLine.lineNum
-        #if start=='Edge':
-        #    self.newNodeNum=newNode.edgeNum
-        #else:
         self.newNodeNum=None
         self.start=None
         self.nodePt=None
@@ -1693,26 +1696,27 @@ class delSegmentCommand(QUndoCommand):
     def undo(self):
         if self.segmentDeleted==True:
             edge=self.scene.findItemByIdx(self.edgeNum)
+            edgeLine=None
             for e in edge.edgeLines:
                 if e.lineNum==self.exTerminatorEdgeLineNum:
                     edgeLine=e
                     break
+            if edgeLine == None:
+                edgeLine=edge.edgeLineAt(self.splitPoint)                
             newNode=self.scene.findItemByIdx(self.newNodeNum)
             newEdgeLine=edge.addSegment(edgeLine, newNode, self.start, self.nodePt, self.splitPoint)
             self.edgeLineNum=newEdgeLine.lineNum
-            """if newEdgeLine==False:
-                self.newEdgeCreated=False
-            else:
-                self.newEdgeCreated=True
-                self.newEdgeLineNum=newEdgeLine.lineNum"""
 
     def redo(self):
         if self.segmentDeleted==None or self.segmentDeleted==True:
             edge=self.scene.findItemByIdx(self.edgeNum)
+            edgeLine=None
             for e in edge.edgeLines:
                 if e.lineNum==self.edgeLineNum:     
                     edgeLine=e
                     break
+            if edgeLine == None:
+                print("Line number not found in delsegment redo", self.edgeLineNum, edge.edgeLines)
             undoInfo=edge.delSegment(edgeLine)
             if undoInfo != False:
                 self.exTerminatorEdgeLineNum=undoInfo[0].lineNum
