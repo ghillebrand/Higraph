@@ -470,10 +470,12 @@ class grScene(QGraphicsScene):
             #TODO: Move the guard clause here from `addSegment`
 
             #split it at the given point, update hyperedge geometry
-            if self.tmpEdgeEnd.addSegment(edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint ):
+            newAction=addSegmentCommand(self, self.tmpEdgeEnd, edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint )
+            self.undoStack.push(newAction)
+            """if self.tmpEdgeEnd.addSegmentCommand(self.tmpEdgeEnd, edgeLine, self.tmpEdgeSt, start="Node", nodePt = self.startPoint, splitPoint=self.endPoint ):
                 # On success, update the model
                 #Best way to find the edge? Using edgeLine.parentItem
-                self.model.Gr.addEdge( self.tmpEdgeSt.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )
+                self.model.Gr.addEdge( self.tmpEdgeSt.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )"""
 
         elif self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_EDGE] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
             #edge->node
@@ -485,10 +487,12 @@ class grScene(QGraphicsScene):
                 print("Node-> error finding edgeLine in {itms}")
                 return      
             #split it at the given point, update hyperedge geometry
-            if self.tmpEdgeSt.addSegment(edgeLine, self.tmpEdgeEnd, start="Edge", nodePt = self.endPoint, splitPoint=self.startPoint ):
+            newAction=addSegmentCommand(self, self.tmpEdgeSt, edgeLine, self.tmpEdgeEnd, start="Edge", nodePt = self.endPoint, splitPoint=self.startPoint )
+            self.undoStack.push(newAction)
+            """if self.tmpEdgeSt.addSegmentCommand(self.tmpEdgeSt, edgeLine, self.tmpEdgeEnd, start="Edge", nodePt = self.endPoint, splitPoint=self.startPoint ):
                 #update the model.
                 #Best way to find the edge? Using edgeLine.parentItem
-                self.model.Gr.addEdge( edgeLine.parentItem().data(KEY_INDEX), self.tmpEdgeEnd.data(KEY_INDEX) )
+                self.model.Gr.addEdge( edgeLine.parentItem().data(KEY_INDEX), self.tmpEdgeEnd.data(KEY_INDEX) )"""
 
 
     def resetRubberLine(self):
@@ -1226,8 +1230,10 @@ class grScene(QGraphicsScene):
 
                 elif cxChoice == "delSegment":
                     edgeLine = item.edgeLineAt(mPos)
-                    edgeLine._deleteHandles()                    
-                    item.delSegment(edgeLine)
+                    edgeLine._deleteHandles()  
+                    newAction=delSegmentCommand(self, item, edgeLine)
+                    self.undoStack.push(newAction)                  
+                    #item.delSegment(edgeLine)
                     item.setSelected(True)
                     item.update()
 
@@ -1951,6 +1957,7 @@ class createEdgeCommand(QUndoCommand):
         self.scene.addItem(newEdge)
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
         newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
+        newEdge.updateLine()
         self.edge=1 # just for checking against
 
 class deleteEdgeCommand(QUndoCommand):
@@ -2106,6 +2113,7 @@ class deleteEdgeCommand(QUndoCommand):
 
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
         newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
+        newEdge.updateLine()
         self.edge=newEdge
 
     def redo(self):
@@ -4205,7 +4213,9 @@ class MainWindow(QMainWindow):
                                     if len(p.startsEdgeLines) > 0 and p.startsEdgeLines[0] in edgeItem.edgeLines:
                                         touchingEdgeLine = p.startsEdgeLines[0]
                                         #print(f"   editDel *start* segDel {touchingEdgeLine.lineNum=}")
-                                        edgeItem.delSegment(touchingEdgeLine)
+                                        newAction=delSegmentCommand(self.Scene, edgeItem, touchingEdgeLine)
+                                        self.undoStack.push(newAction)
+                                        #edgeItem.delSegment(touchingEdgeLine)
                                         break
                             elif len(edgeItem.endNodes) >= 2 and [item for i in edgeItem.endNodes if item==i[0]]:
                                 #Only delete the touching endLine
@@ -4213,7 +4223,9 @@ class MainWindow(QMainWindow):
                                 for p in item._Ports:
                                     if len(p.endsEdgeLines) > 0 and p.endsEdgeLines[0] in edgeItem.edgeLines:
                                         touchingEdgeLine = p.endsEdgeLines[0]
-                                        edgeItem.delSegment(touchingEdgeLine)
+                                        newAction=delSegmentCommand(self.Scene, edgeItem, touchingEdgeLine)
+                                        self.undoStack.push(newAction)
+                                        #edgeItem.delSegment(touchingEdgeLine)
                                         break
                             else: # Delete the whole edge
                                 #self.delEdge(e)

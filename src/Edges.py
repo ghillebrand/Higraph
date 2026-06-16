@@ -1240,6 +1240,11 @@ class VisHyperEdgeItem(QGraphicsObject):
         splitLine.my_parent_item = self #TODO: Needed???
         splitLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.bRect = self.bRect.united(splitLine.boundingRect())
+        #Check if there is already a point where the dummynode must go and remove it and its tangents
+        #if splitPoint in edgeLine._p:
+        #    idx=edgeLine._p.index(splitPoint)
+        #    edgeLine._p.remove(splitPoint)
+        #    del edgeLine._t[idx]
 
         self.edgeLines.append(splitLine)
         #Fix the end nodes
@@ -1289,6 +1294,8 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             #Update the dummyNode as end
             dN[0].endsEdgeLines.append(newEdge)
+            #Update the model with  node to edge
+            self.model.Gr.addEdge( newNode.data(KEY_INDEX), edgeLine.parentItem().data(KEY_INDEX) )
 
         else: #edge -> node
             #print("addSegment : edge->Node")
@@ -1320,13 +1327,17 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             #Update the dummyNode as start
             dN[0].startsEdgeLines.append(newEdge)
+
+            #Update the model with edge to node
+            self.model.Gr.addEdge( edgeLine.parentItem().data(KEY_INDEX), newNode.data(KEY_INDEX) )
         
         #Tidy up all the end arrows by toggling isDirected (remove and then add back)
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
         
         #Edge added succesfully
-        return True
+        #return True
+        return newEdge
 
     def hyperEdgeGraph(self,idX= True)->dict:
         """ Runs through the nodes, dummyNodes and edgeLines, 
@@ -1415,7 +1426,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Clean up handles
         for eL in self.edgeLines:
             eL._deleteHandles()
-        if self.Scene.thisHandleObjectSelected in self.edgeLines:
+        if self.Scene.thisHandleObjectSelected == self:
             self.Scene.thisHandleObjectSelected = None
 
         #TODO: look at failure modes (and return values)
@@ -1444,18 +1455,27 @@ class VisHyperEdgeItem(QGraphicsObject):
         if not canDelete:
             #TODO: Make this a `QtWidgets.QMessageBox`
             print(f"Error - Deleting this segment will destroy the edge")
-            return
+            return False
 
         self.suppressItemChange = True
 
         #Node side pointers
         #only "proper" edges have distinct ports
         if sNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:  
+            #needed for undo
+            start='Node'
+            node=sNItem
+            portPos=sNItem.portFromIndex(heg[dEIdx][0][1]).scenePos()
             #Remove from the self.model.Gr
             self.model.Gr.delNodeFromEdge(sNItem.nodeNum, self.edgeNum)
             delEdgeLineFromStartNode(sNItem, dEIdx)
 
+
         if eNItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
+            #needed for undo
+            start='Edge'
+            node=eNItem
+            portPos=eNItem.portFromIndex(heg[dEIdx][1][1]).scenePos()
             #Remove from the self.model.Gr
             self.model.Gr.delNodeFromEdge(eNItem.nodeNum, self.edgeNum)
             delEdgeLineFromEndNode(eNItem, dEIdx)
@@ -1467,8 +1487,8 @@ class VisHyperEdgeItem(QGraphicsObject):
             dNItem = eNItem
         dNEdgeLinesCount = len(dNItem.startsEdgeLines) + len(dNItem.endsEdgeLines)
 
-        #Keep the coords 
-        dNpos = dNItem.pos()
+        #Keep the coords for undo
+        splitPoint = dNItem.pos()
         #print(f"delseg deleting {dNItem.nodeNum=}")
 
         #if == 3, consolidate the 2 edgelines into 1
@@ -1595,6 +1615,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
         self.updateLine()
+        return(eLNew, node, start, portPos, splitPoint)
 
     def edgeLineAt(self, pos):
         """ Takes a position, and returns the edgeLine closest to that point
@@ -1606,6 +1627,108 @@ class VisHyperEdgeItem(QGraphicsObject):
         
         return None  #Not found. Just making the default explicit.
 
-            
+class addSegmentCommand(QUndoCommand):
+    def __init__(self, scene, edge, edgeLine, newNode, start, nodePt, splitPoint:QPointF):
+        super().__init__()
+        self.scene=scene
+        self.edgeNum=edge.edgeNum
+        self.edgeLineNum=edgeLine.lineNum
+        #if start=='Edge':
+        #    self.newNodeNum=newNode.edgeNum
+        #else:
+        self.newNodeNum=newNode.nodeNum
+        self.start=start
+        self.nodePt=nodePt
+        self.splitPoint=splitPoint
+        self.newEdgeCreated=None
+        self.newEdgeLineNum=None
+
+    def undo(self): 
+        if self.newEdgeCreated==True:
+            edge=self.scene.findItemByIdx(self.edgeNum)
+            delEdgeLine=None
+            for e in edge.edgeLines:
+                if e.lineNum==self.newEdgeLineNum:
+                    delEdgeLine=e
+                    break
+            if delEdgeLine == None:
+                print("Line number not found in Addsegment undo", self.newEdgeLineNum, edge.edgeLines)
+            undoInfo=edge.delSegment(delEdgeLine)
+            if undoInfo != False:
+                self.exTerminatorEdgeLineNum=undoInfo[0].lineNum
+                self.newNodeNum=undoInfo[1].nodeNum
+                self.start=undoInfo[2]
+                self.nodePt=undoInfo[3]
+                self.splitPoint=undoInfo[4]
+                self.segmentDeleted=True
+                self.edgeLineNum=self.exTerminatorEdgeLineNum
+            else:
+                self.segmentDeleted=False
+
+
+    def redo(self):
+        edge=self.scene.findItemByIdx(self.edgeNum)
+        edgeLine=None
+        for e in edge.edgeLines:
+            if e.lineNum==self.edgeLineNum:
+                edgeLine=e
+                break
+        if edgeLine == None:
+            edgeLine=edge.edgeLineAt(self.splitPoint)
+        newNode=self.scene.findItemByIdx(self.newNodeNum)
+        newEdgeLine=edge.addSegment(edgeLine, newNode, self.start, self.nodePt, self.splitPoint)
+        if newEdgeLine==False:
+            self.newEdgeCreated=False
+        else:
+            self.newEdgeCreated=True
+            self.newEdgeLineNum=newEdgeLine.lineNum
+        #return(True)
+
+class delSegmentCommand(QUndoCommand):
+    def __init__(self, scene, edge, edgeLine):
+        super().__init__()
+        self.scene=scene
+        self.edgeNum=edge.edgeNum
+        self.edgeLineNum=edgeLine.lineNum
+        self.newNodeNum=None
+        self.start=None
+        self.nodePt=None
+        self.splitPoint=None
+        self.segmentDeleted=None
+        self.exTerminatorEdgeLineNum=None
         
 
+    def undo(self):
+        if self.segmentDeleted==True:
+            edge=self.scene.findItemByIdx(self.edgeNum)
+            edgeLine=None
+            for e in edge.edgeLines:
+                if e.lineNum==self.exTerminatorEdgeLineNum:
+                    edgeLine=e
+                    break
+            if edgeLine == None:
+                edgeLine=edge.edgeLineAt(self.splitPoint)                
+            newNode=self.scene.findItemByIdx(self.newNodeNum)
+            newEdgeLine=edge.addSegment(edgeLine, newNode, self.start, self.nodePt, self.splitPoint)
+            self.edgeLineNum=newEdgeLine.lineNum
+
+    def redo(self):
+        if self.segmentDeleted==None or self.segmentDeleted==True:
+            edge=self.scene.findItemByIdx(self.edgeNum)
+            edgeLine=None
+            for e in edge.edgeLines:
+                if e.lineNum==self.edgeLineNum:     
+                    edgeLine=e
+                    break
+            if edgeLine == None:
+                print("Line number not found in delsegment redo", self.edgeLineNum, edge.edgeLines)
+            undoInfo=edge.delSegment(edgeLine)
+            if undoInfo != False:
+                self.exTerminatorEdgeLineNum=undoInfo[0].lineNum
+                self.newNodeNum=undoInfo[1].nodeNum
+                self.start=undoInfo[2]
+                self.nodePt=undoInfo[3]
+                self.splitPoint=undoInfo[4]
+                self.segmentDeleted=True
+            else:
+                self.segmentDeleted=False
