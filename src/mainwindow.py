@@ -916,7 +916,10 @@ class grScene(QGraphicsScene):
                 #print(f"scene MPE first if {selItem}")
                 if selItem:
                     selItem = selItem[0]
-                    selItem.setSelected(True)
+                    if selItem.isSelected()==False:
+                        selItem.setSelected(True)
+                    else:
+                        selItem.setSelected(False)
                     if self.thisHandleObjectSelected:
                         self.thisHandleObjectSelected.isOnlySelected=False
                         if self.thisHandleObjectSelected.data(KEY_ROLE)==ROLE_POLYLINE:
