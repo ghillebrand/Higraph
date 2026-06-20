@@ -627,7 +627,7 @@ class HermiteSplineItem(QGraphicsItem):
             return
                 
 
-    def setP(self, n:int, p:QPointF):
+    def setP(self, n:int, p:QPointF, type="Node"):
         """sets the nth point to the value p. n is a list index """
         self._p[n] = p
         #print(f"setP {self._p[n]} {hex(id(self._p[n]))} set to {p}, {hex(id(p))} ")

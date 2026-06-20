@@ -1137,35 +1137,44 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         self.prepareGeometryChange()
         #source may be a `Handle`, which a not a tuple, or just a Node: Normalise to tuple
-        if not type(source) is tuple: 
-            if type(source) is VisNodeItem or type(source) is VisBlobItem:
-                # Search for the correct port
-                if source == self.startNode[0]: #Start
-                    for p in source._Ports:
-                        if p == self.startNode[1]:
-                            source = (source,p)
-                            #print(f"setting start to {p.index=}")
-                else: #end
-                    for p in source._Ports:
-                        if p == self.endNode[1]:
-                            source = (source,p)
-                            #print(f"setting end to {p.index=}")
+        if source != None:
+            if not type(source) is tuple: 
+                if type(source) is VisNodeItem or type(source) is VisBlobItem:
+                    # Search for the correct port
+                    if source == self.startNode[0]: #Start
+                        for p in source._Ports:
+                            if p == self.startNode[1]:
+                                source = (source,p)
+                                #print(f"setting start to {p.index=}")
+                    else: #end
+                        for p in source._Ports:
+                            if p == self.endNode[1]:
+                                source = (source,p)
+                                #print(f"setting end to {p.index=}")
 
-            if  type(source) is HandleItem:
-                #print(f"Making Handle into a tuple")
-                #source = (source,source) #>> Don't do this - endNodes end up being set in odd places.
-                source = (0,source)
-        #print(f"{source=}  == {self.startNode=}")
+                if  type(source) is HandleItem:
+                    #print(f"Making Handle into a tuple")
+                    #source = (source,source) #>> Don't do this - endNodes end up being set in odd places.
+                    source = (0,source)
+            #print(f"{source=}  == {self.startNode=}")
 
-        if source in self.startNodes:
-            edgeLine.setP(0,source[1].scenePos())
-        elif source in self.endNodes: #endNode
-            #print(f"updateLine: setting end from node {source[0].nodeNum}, port {source[1].nodeNum} with endLines {[eL.lineNum for eL in source[1].endsEdgeLines]}")
-            edgeLine.setP(-1,source[1].scenePos())
+            if source in self.startNodes:
+                edgeLine.setP(0,source[1].scenePos(),"Node")
+            elif source in self.endNodes: #endNode
+                #print(f"updateLine: setting end from node {source[0].nodeNum}, port {source[1].nodeNum} with endLines {[eL.lineNum for eL in source[1].endsEdgeLines]}")
+                edgeLine.setP(-1,source[1].scenePos(),"Node")
 
-        #DummyNodes are handled in the callback, I _think_    
-        elif type(source) == dummyNodeItem:
-            print("Dummynode")
+            #DummyNodes are handled in the callback, I _think_    
+            #elif type(source) == dummyNodeItem:
+            elif type(source[0]) == dummyNodeItem:
+                if edgeLine in source[0].startsEdgeLines:
+                    edgeLine.setP(0,source[0].scenePos(),"DummyNode")
+                elif edgeLine in source[0].endsEdgeLines:
+                    edgeLine.setP(-1,source[0].scenePos(),"DummyNode")
+            else:
+                #print("source", source)
+                pass
+
 
         #Draw the arrow/ end shape
         #Currently, endshapes have no managed relationship to the end nodes - they are just allocated out
@@ -1541,7 +1550,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                 newTangents = eLold[0]._t[:-1]
 
             # Treat the dN as a point, use left tangents as default (this is a bit arbitrary)
-            newPoints += [dNItem.pos()]
+            newPoints += [dNItem.scenePos()]
             if self._polyEdge == SPLINE:
                 if dNItem == sNItem: #start has Right tangents (1st tuple item) 
                     #_t is a list of tuples

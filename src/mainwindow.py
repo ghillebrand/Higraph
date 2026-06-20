@@ -632,7 +632,7 @@ class grScene(QGraphicsScene):
                 edge.startNodes.remove(self.oldTermItem)
                 #clear the old handle ending
                 edge.startNodes.remove((self.handle,self.handle))
-                edge.setStart(newTermItem,edgeLine)
+                #edge.setStart(newTermItem,edgeLine)  JH move to later
                 #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "start", newTermItem[0].data(KEY_INDEX))
@@ -640,7 +640,7 @@ class grScene(QGraphicsScene):
                 #Relink to new node
                 newTermItem[0].startsEdges.append(edge)
                 newTermItem[1].startsEdgeLines.append(edgeLine)
-            
+                edge.setStart(newTermItem,edgeLine)
             if self.EdgeEnd == "end":    
                 #print(f"fMEE {edge.edgeNum=}, END")            
                 edgeLine = self.oldTermItem[1].endsEdgeLines[0]
@@ -661,12 +661,13 @@ class grScene(QGraphicsScene):
                 #clear the old handle ending
                 edge.endNodes.remove((self.handle,self.handle))
                 #set the new one
-                edge.setEnd(newTermItem,edgeLine)
+                #edge.setEnd(newTermItem,edgeLine)
                 #print(f"fmme after setEnd edge endNodes are {[type(n[0]) for n in edge.endNodes]}")
                 self.model.Gr.updateEdge(edge.data(KEY_INDEX) ,self.oldTermItem[0].data(KEY_INDEX), "end", newTermItem[0].data(KEY_INDEX))
                 
                 newTermItem[0].endsEdges.append(edge)
-                newTermItem[1].endsEdgeLines.append(edgeLine)        
+                newTermItem[1].endsEdgeLines.append(edgeLine)  
+                edge.setEnd(newTermItem,edgeLine)      
         else: # link back to old
             #print("Missed (nothing found) on relink")
             self.handle.setPos(self.oldTermItem[1].scenePos())
