@@ -21,12 +21,12 @@ This is a prototype and learning project. My primary goal is to learn Qt/ Pyside
 
 Given that there seem to be very few (no?) _graphical_ graph editors in Python, it is possible that someone may see the utility in taking this rolling chassis, and turning it into a graphical front-end for something like `networkx`. Since this has a (rudimentary) live Python scripting window, it can be extended to support command line and GUI interactions.
 
-## V0 is a simple node-edge graph editor
+## V0 - figure out PySide and the architecture & design of a higraph editor
 
 Goal: Build a basic PySide6 framework for a model-viewController, with a truly independent Graph model
 This is currently based on a simple [custom Graph library](https://github.com/ghillebrand/qtPyGraphEdit/blob/main/src/coreGraph.py), which will be extended to higraphs in V1. One could use `networkx` or an equivalent at this point, but it doesn't support higraphs, so the work will have to be done sooner or later.
 
-### V0.0
+### V0.0 - simple nodes and single segment straight lines
 - Dictionary of nodes and edges with meta data. 
 - Displayed in a text list and graphically
 - Edit the graph - add, delete, edit text for nodes & edges, move nodes, reroute edges. 
@@ -35,7 +35,7 @@ This is currently based on a simple [custom Graph library](https://github.com/gh
 - A rudimentary Python shell that runs with (write!) access to the Graph, Scene and Model data.
 - NOTE: This version uses the qtcreator `.ui` files, which places some constraints on what one can do. There are some workarounds to this in the code. As I understand Qt better, hopefully there will be fewer of these!
 
-### V0.1
+### V0.1 - multi-point spline and straight line edges
 There has been quite a lot of refactoring of the code. the `yEd` library, which was an invaluable stepping stone for persistence in V00 has been replaced with internal XML read/ write code. As I begin to understand Qt better, I fix things. There are still ~70 `TODO`s, but a number have been dealt with, and many are reminders for future versions.
 
 - Hermite splines for edges - based around [this code](https://github.com/vedantyadu/Hermite-cubic-spline). I _really_ think Bezier splines are an ugly way to edit curves. 
@@ -48,11 +48,11 @@ There has been quite a lot of refactoring of the code. the `yEd` library, which 
 
 The editing dialog. It is simple and functional - I'm still working out how to use Qt!
 
-### V0.2
+### V0.2 - Blobs
 - Higraphs - nodes become sets. This will likely be strictly heirarchical sets (ie no set intersections/ overlaps)
 - Hyperedges were going to be next, but there is more utility in simple blobs, so the order got adjusted.
             
-### V0.3
+### V0.3 - almost a full implementation of Harel's Higraph paper
 
 <img width="480" height="446" alt="image" src="https://github.com/user-attachments/assets/4957b0c5-1110-4ade-a8bb-b2a287404b26" />
 
