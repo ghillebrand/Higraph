@@ -888,7 +888,8 @@ class grScene(QGraphicsScene):
         return super().clearSelection()
         
     def mousePressEvent(self, mouseEvent):
-        if mouseEvent.scenePos() == self._lastMouseClickPos:
+        #Ignore two identically placed left clicks (the 2nd click will clear any previous selection)
+        if mouseEvent.scenePos() == self._lastMouseClickPos and (mouseEvent.button() == Qt.MouseButton.LeftButton):
             mouseEvent.accept()
             return
         self.savedPositionList=[]
@@ -2894,7 +2895,8 @@ class MainWindow(QMainWindow):
         #clear stack
         self.Scene.undoStack.clear()
         # Reset any existing zoom
-        self.ui.graphicsView.resetTransform()     
+        self.ui.graphicsView.resetTransform()   
+        #TODO: Reset the title bar  
 
     def askForFileSave(self):
         reply = QMessageBox.question(
@@ -3472,9 +3474,179 @@ class MainWindow(QMainWindow):
         options = QtWidgets.QFileDialog.Options()
         options |= QtWidgets.QFileDialog.DontUseNativeDialog
         fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 
-            "Load File", dir="", filter ="graphml files(*.graphml);;All Files(*)", options = options)
+            "Load File", dir="", filter ="higraphml files(*.higraphml);;graphml files(*.graphml);;All Files(*)", options = options)
         if fileName == '':  #dialog returns '' on <esc>        
             return
+        #Clear the current graph
+        self.action_FileNew()
+
+        self.fileName = fileName
+        #Check for the interim old file type:
+        if self.fileName.split(".")[-1] == "graphml":
+            self.action_FileOpen_Graphml(fileName)
+            return
+
+        #Load the .higraphml file as a string
+        higraphStr = ""
+        try:
+            with open(fileName, "r") as graphFile:
+                higraphStr = graphFile.read()
+
+        except FileNotFoundError:
+            print(f"Error, file not found: {graphFile}")
+            raise FileNotFoundError(f"Error, file not found: {graphFile}")
+
+
+        # Preprocessing of file for ease of parsing
+        #TODO: Check how this will mess with multiline metadata
+        higraphStr = higraphStr.replace("\n", " ")  # line returns
+        higraphStr = higraphStr.replace("\r", " ")  # line returns
+        higraphStr = higraphStr.replace("\t", " ")  # tabs
+        higraphStr = re.sub("<graphml .*?>", "<graphml>", higraphStr)  # unneeded schema
+        higraphStr = higraphStr.replace("> <", "><")  # empty text
+        higraphStr = higraphStr.replace("y:", "")  # unneeded namespace prefix
+        higraphStr = higraphStr.replace("xml:", "")  # unneeded namespace prefix
+        higraphStr = higraphStr.replace("h:", "")  # unneeded namespace prefix
+
+        higraphStr = higraphStr.replace("yfiles.", "")  # unneeded namespace prefix
+        higraphStr = re.sub(" {1,}", " ", higraphStr)  # reducing redundant spaces
+
+        # Get major higraph wrapper node
+        root = ET.fromstring(higraphStr)
+
+        #Extract the view coords
+        vCRect = None
+        saveViewCoords = root.find("saveViewCoords")
+        if saveViewCoords != None:
+            vCx = float(saveViewCoords.get("x"))
+            vCy = float(saveViewCoords.get("y"))
+            vCwidth = float(saveViewCoords.get("width"))
+            vCheight = float(saveViewCoords.get("height"))
+            vCRect = QRectF(vCx, vCy, vCwidth, vCheight)
+
+        #The graph data is in the `graphml` node
+        graphml = root.find("graphml")
+        graphStr = graphml.find("graph")
+        if graphStr is not None:
+            # get major graph info
+            graphDir = graphStr.get("edgedefault")
+            self.model.isDirected = graphDir == "directed"
+        else: 
+            self.model.isDirected = ISDIGRAPH 
+
+        #Track the old -> new IDs to deal with string IDs, and hook up edges
+        #Hyperedges are complex, so make it accessible to hyperEdgeFromXML
+        self.oldToNewID = {}
+
+        #Nodes
+        for xNode in graphStr.iter("node"):
+            #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
+            #Handle yEd-style string IDs
+            fileID = xNode.attrib.get("id")
+            try: #is the read ID a valid int- use it
+                id = int(fileID)
+                newID = False
+            except ValueError: #No - generate a new one.
+                newID = True
+
+            GItem = self.nodeFromXML(xNode, newID=newID)
+            #Track it, even if it doesn't change - simplifies the edge code
+            self.oldToNewID[int(fileID)] = GItem.nodeNum
+            #TODO: Do something meaningful with mismatches
+            #if fileID != GItem.nodeNum:
+            #    print(f"WARNING: node id {fileID=} changed on load")
+            
+            self.Scene.addItem(GItem)
+            self.addTreeNode(GItem, ROLE_NODE)
+            GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
+
+        #Blobs
+        for xBlob in graphStr.iter("blob"):
+            #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
+            #Handle yEd-style string IDs
+            fileID = xBlob.attrib.get("id")
+            try: #is the read ID a valid int- use it
+                id = int(fileID)
+                newID = False
+            except ValueError: #No - generate a new one.
+                newID = True
+
+            GItem = self.blobFromXML(xBlob, newID=newID)
+            #Track it, even if it doesn't change - simplifies the edge code
+            self.oldToNewID[int(fileID)] = GItem.nodeNum
+            #TODO: Do something meaningful with mismatches
+            #if fileID != GItem.nodeNum:
+            #    print(f"WARNING: node id {fileID=} changed on load")
+            
+            self.Scene.addItem(GItem)
+            self.addTreeNode(GItem, ROLE_BLOB)
+            GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
+
+        #Edges
+        for xEdge in graphStr.iter("edge"):
+            #Handle yEd-style string IDs
+            fileID = xEdge.attrib.get("id")
+            try: #is the read ID a valid int- use it
+                id = int(fileID)
+                newID = False
+            except ValueError: #No - generate a new one.
+                newID = True
+            
+            sItemID = xEdge.attrib.get("source", None)
+            eItemID = xEdge.attrib.get("target", None)
+            edgeItem = self.edgeFromXML(xEdge, newID=newID, 
+                                            newStartID=self.oldToNewID[sItemID],
+                                            newEndID = self.oldToNewID[eItemID])
+
+            #Add to Scene
+            self.Scene.addItem(edgeItem)
+            edgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            edgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+        
+        #HyperEdges
+        for xEdge in graphStr.iter("hyperedge"):
+            hEdgeItem = self.hyperEdgeFromXML(xEdge)
+            #Add to Scene
+            self.Scene.addItem(hEdgeItem)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
+            hEdgeItem.setFlag(QGraphicsItem.ItemIsMovable, False)
+
+        self.Scene.update()
+
+        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME)
+        self.oldToNewID.clear()
+        
+        #Set the view to however it was saved, if it was read back, else fit to screen
+        if vCRect is None:
+            vCRect = self.Scene.sceneRect()
+        self.ui.graphicsView.fitInView(vCRect,Qt.AspectRatioMode.KeepAspectRatio)
+
+
+        #self.setZoom(100)
+        #zoomToFitWithMargin(self.ui.graphicsView, margin=0.2)
+
+    def action_FileOpen_Graphml(self, fileName=None):
+        """ Open 'old style' v0300 file 
+            Deprecated - just here to port the old test files over
+        """
+        #Temp fix while moving to higraphml files
+        if fileName == None:
+
+            #check for unsaved changes
+            if not self.Scene.undoStack.isClean():
+                if self.askForFileSave()=="Cancel":
+                    return
+                self.undoStack.setClean()   #so that this isn't called again when the environment is cleared
+            """ Read a graphml file in, create all the elements """
+            options = QtWidgets.QFileDialog.Options()
+            options |= QtWidgets.QFileDialog.DontUseNativeDialog
+            fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 
+                "Load File", dir="", filter ="graphml files(*.graphml);;All Files(*)", options = options)
+            if fileName == '':  #dialog returns '' on <esc>        
+                return
+        
         #Clear the current graph
         self.action_FileNew()
 
@@ -3605,7 +3777,7 @@ class MainWindow(QMainWindow):
         #self.setZoom(100)
         #zoomToFitWithMargin(self.ui.graphicsView, margin=0.2)
 
-    def action_FileSave(self):
+    def ORIG_action_FileSave(self):
         """ 
             Write the graph to a yEd-style graphml file.
             Heavily based on yEdx code
@@ -3673,7 +3845,7 @@ class MainWindow(QMainWindow):
         else:
             self.action_FileSaveAs()
 
-    def action_FileSaveAs(self):
+    def ORIG_action_FileSaveAs(self):
         #print("File SaveAs")  
         #TODO: Implement isWindowModified()
         #if not self.isWindowModified():
@@ -3686,13 +3858,128 @@ class MainWindow(QMainWindow):
         
         #Note: Qt checks for overwrites, etc
         if fileName:  #dialog returns '' on <esc>
-            if fileName[-8:] == ".graphml":
+            if fileName.split(".")[-1] == ".graphml":
                 self.fileName = fileName
             else:
                 self.fileName = fileName+".graphml"
-            self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + "[*]")
+            self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
+            self.action_FileSave()
+
+
+    def action_FileSave(self):
+        """ 
+            Write the graph to a graphml-like file.
+        """
+        if self.fileName:
+            #Temporary - update filetype (Not sure this will work with any directory info
+            if self.fileName.split(".")[-1] == "graphml":
+                self.fileName = ".".join(self.fileName.split('.')[:-1]+['higraphml'])
+
+            #Generate the graph header info
+            # Creating XML structure in Graphml format
+            # Reference: yEdxFileOnly: construct_graphml
+            higraphml = ET.Element("higraphml")
+
+            #Allow some form of backwards compatibility
+            higraphml.set("version", APP_VERSION)
+
+            #Store the current scene view bounding rect to restore
+            vC = self.ui.graphicsView.viewport().rect()
+            vC = self.ui.graphicsView.mapToScene(vC)
+
+            viewCoords = ET.SubElement(higraphml, "saveViewCoords" )
+
+            viewCoords.set("x",str(vC[0].x()) )
+            viewCoords.set("y",str(vC[1].y()) )
+            viewCoords.set("width" ,str(vC[2].x() - vC[0].x()) )
+            viewCoords.set("height",str(vC[3].y() - vC[1].y()) )
+            """
+            viewCoords.set("x",str(vC.x()) )
+            viewCoords.set("y",str(vC.y()) )
+            viewCoords.set("width",str(vC.width()) )
+            viewCoords.set("height",str(vC.height()) )
+            """
+
+            graphml = ET.SubElement(higraphml, "graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
+            graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
+            graphml.set("xmlns:sys", "http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0")
+            graphml.set("xmlns:x", "http://www.yworks.com/xml/yfiles-common/markup/2.0")
+            graphml.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+            graphml.set("xmlns:y", "http://www.yworks.com/xml/graphml")
+            graphml.set("xmlns:yed", "http://www.yworks.com/xml/yed/3")
+            graphml.set("xmlns:h", "http://www.isijingi.co.za/higraph")
+            graphml.set(
+                "xsi:schemaLocation",
+                "http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd",
+            )
+
+            # Adding some implementation specific keys for identifying urls, descriptions
+            nodeKey = ET.SubElement(graphml, "key", id="data_node")
+            nodeKey.set("for", "node")
+            nodeKey.set("yfiles.type", "nodegraphics")
+
+            blobKey = ET.SubElement(graphml, "key", id="data_blob")
+            blobKey.set("for", "blob")
+            blobKey.set("higraph.type", "blobgraphics")
+
+            edgeKey = ET.SubElement(graphml, "key", id="data_edge")
+            edgeKey.set("for", "edge")
+            edgeKey.set("yfiles.type", "edgegraphics")
+
+
+            # Graph node containing actual objects
+            if self.model.isDigraph:
+                directed = 'directed'
+            else:
+                directed = 'undirected'
+
+            graph = ET.SubElement(graphml, "graph", edgedefault=directed, id="G")
+
+            #Add the nodes & edges
+            for sItem in self.Scene.items():
+                #if sItem.data(KEY_ROLE) == ROLE_NODE or sItem.data(KEY_ROLE) == ROLE_EDGE :
+                if sItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_EDGE,ROLE_BLOB]:
+                    graph.append(sItem.toXML(graph))
+
+            #Add the keys for the metadata at graph level
+
+            #Write to file
+            raw_str = ET.tostring(higraphml)
+            pretty_str = minidom.parseString(raw_str).toprettyxml()
+            #TODO: Check pathing! -- seems to be handled OK?
+            with open(self.fileName, "w") as f:
+                f.write(pretty_str)
+
+            # Mark current state as saved
+            self.Scene.undoStack.setClean() 
+            #TODO: Set window title in the header to clean
+
+        else:
+            self.action_FileSaveAs()
+
+    def action_FileSaveAs(self):
+        #print("File SaveAs")  
+        #TODO: Implement isWindowModified()
+        #if not self.isWindowModified():
+        #    return
+
+        options = QtWidgets.QFileDialog.Options()
+        options |= QtWidgets.QFileDialog.DontUseNativeDialog
+        fileName, _ = QtWidgets.QFileDialog.getSaveFileName(self, 
+            "Save File", dir=self.fileName, filter ="higraphml files(*.higraphml);;All Files(*)", options = options)
+        
+        #Note: Qt checks for overwrites, etc
+        if fileName:  #dialog returns '' on <esc>
+            if fileName[-10:] == ".higraphml":
+                self.fileName = fileName
+            else:
+                self.fileName = fileName+".higraphml"
+            self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
             self.action_FileSave()
                  
+
+
+
     def action_FileClose(self):
         print("File Close")  
         #TODO: Close app?
