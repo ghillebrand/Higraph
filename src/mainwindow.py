@@ -2415,7 +2415,7 @@ class MainWindow(QMainWindow):
         self.ui.actionZoomIn.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl++", None))
         self.ui.actionZoomOut.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+-", None))
         #TODO: Put in the `isWindowModified()` code
-        self.setWindowTitle(APP_NAME +"[*]")
+        self.setWindowTitle(APP_NAME + " " + APP_VERSION)
         self.fileName = ""
 
         #Where the data lives
@@ -4355,7 +4355,7 @@ if __name__ == "__main__":
     #logging.debug("\n\nStarting\n********\n")
     app = QApplication(sys.argv)
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
-    app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'qtpyGraphEdit.ico')))
+    app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icon030.ico')))  #'qtpyGraphEdit.ico')))
     MainWin = MainWindow()
     MainWin.resize(800, 600)
     MainWin.show()
