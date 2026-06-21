@@ -223,7 +223,7 @@ class StraightLineItem(QGraphicsItem):
             self._updateFromHandles(point)
             self.update()
 
-    def setP(self,n:int, p:QPointF):
+    def setP(self,n:int, p:QPointF, nodeType="Node"):
         """sets the nth point to the value p. n is a list index """
         self._p[n] = p
 

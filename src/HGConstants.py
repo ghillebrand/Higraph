@@ -24,7 +24,7 @@ DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT
 #Model level default for edges
 ISDIGRAPH = True
 
-APP_NAME = "qtPyGraphEdit V03.0"
+APP_NAME = "qtPyGraphEdit"
 # Attempt to follow semantic versioning https://semver.org/spec/v2.0.0.html
 APP_VERSION = "0.3.0"
 
