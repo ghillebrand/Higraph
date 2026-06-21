@@ -35,8 +35,6 @@ This is currently based on a simple [custom Graph library](https://github.com/gh
 - A rudimentary Python shell that runs with (write!) access to the Graph, Scene and Model data.
 - NOTE: This version uses the qtcreator `.ui` files, which places some constraints on what one can do. There are some workarounds to this in the code. As I understand Qt better, hopefully there will be fewer of these!
 
-_Currently, V00 has a bug on deleting an edge, such that quite often, but not always, the edge is removed from the data structures, but the Qt Scene still draws it._
-
 ### V0.1
 There has been quite a lot of refactoring of the code. the `yEd` library, which was an invaluable stepping stone for persistence in V00 has been replaced with internal XML read/ write code. As I begin to understand Qt better, I fix things. There are still ~70 `TODO`s, but a number have been dealt with, and many are reminders for future versions.
 
@@ -50,21 +48,23 @@ There has been quite a lot of refactoring of the code. the `yEd` library, which 
 
 The editing dialog. It is simple and functional - I'm still working out how to use Qt!
 
-## TODO:
-
 ### V0.2
 - Higraphs - nodes become sets. This will likely be strictly heirarchical sets (ie no set intersections/ overlaps)
 - Hyperedges were going to be next, but there is more utility in simple blobs, so the order got adjusted.
-
             
 ### V0.3
-- Multiple tabs - editable views of different subsets of the master Graph model 
+
+<img width="480" height="446" alt="image" src="https://github.com/user-attachments/assets/4957b0c5-1110-4ade-a8bb-b2a287404b26" />
+
+This is Minimum Viable Product to show to others.
+- Overlapping Blobs.
+- Hyperedges - n-ended edges
+  
+## TODO:
 
 ### V0.4
-- Hyperedges - n-ended edges
-
-### V0.5
-- Overlapping sets.
+- Multiple tabs - editable views of different subsets of the master Graph model
+- A myriad of "usability" features
 
 # Getting Started with editing the code
 If you are totally new to Qt (or PySide, the Python version used here), this is a [good tutorial](www.pythonguis.com/tutorials/pyside6-qgraphics-vector-graphics/)
