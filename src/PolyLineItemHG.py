@@ -627,9 +627,40 @@ class HermiteSplineItem(QGraphicsItem):
             return
                 
 
-    def setP(self, n:int, p:QPointF, type="Node"):
+    def setP(self, n:int, p:QPointF, nodeType="Node"):
         """sets the nth point to the value p. n is a list index """
         self._p[n] = p
+        """if n == 0 and nodeType=="Node":
+            for sN,sP in self.parentItem().startNodes:
+                #for p in sN._ports:
+                if self in sP.startsEdgeLines:
+                    contactPoint=(sN,sP)
+                    break
+            startSlope = contactPoint[1].orthogonalSlope()
+                    #endSlope =  self.endNodes[0][1].orthogonalSlope()
+            self._t[0] = (QPointF(0,0),  
+                                QPointF(startSlope[0] * TANGENT_SCALE_FACTOR, startSlope[1] * TANGENT_SCALE_FACTOR))
+                    #tangents.append((QPointF(-endSlope[0] * self.tgtScaleFactor,-endSlope[1] * self.tgtScaleFactor), 
+                    #                QPointF(0,0)))
+        elif (n == len(self._t)-1 or n == -1) and nodeType=="Node":
+            for eN,eP in self.parentItem().endNodes:
+                #for p in sN._ports:
+                if self in eP.endsEdgeLines:
+                    contactPoint=(eN,eP)
+                    break
+            endSlope =  contactPoint[1].orthogonalSlope()
+            self._t[len(self._t)-1]=(QPointF(-endSlope[0] * TANGENT_SCALE_FACTOR,-endSlope[1] * TANGENT_SCALE_FACTOR), 
+                                    QPointF(0,0))
+        elif n == 0 and nodeType=="DummyNode":
+            hyp = math.sqrt((self._p[0].x() - self._p[1].x())**2 +(self._p[0].y() - self._p[1].y())**2 )
+            dx = (self._p[1].x() - self._p[0].x())/hyp * self.scaleFactor
+            dy = (self._p[1].y() - self._p[0].y())/hyp * self.scaleFactor
+            self._t[0] = (QPointF(0,0),QPointF(dx,dy))
+        elif (n == len(self._t)-1 or n == -1) and nodeType=="DummyNode":
+            hyp = math.sqrt((self._p[-1].x() - self._p[-2].x())**2 +(self._p[-1].y() - self._p[-2].y())**2 )
+            dx = (self._p[-1].x() -self._p[-2].x())/hyp * self.scaleFactor
+            dy = (self._p[-1].y() -self._p[-2].y())/hyp * self.scaleFactor
+            self._t[-1] = (QPointF(dx,dy),QPointF(0,0))"""
         #print(f"setP {self._p[n]} {hex(id(self._p[n]))} set to {p}, {hex(id(p))} ")
 
     def updatePath(self):
