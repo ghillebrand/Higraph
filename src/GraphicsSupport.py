@@ -254,17 +254,21 @@ class dummyNodeItem(dummyNodeRoot):
         if self.suppressItemChange:
             return super().itemChange(change, value)
         
-        if change in [QGraphicsItem.ItemPositionHasChanged]:
+        if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemScenePositionHasChanged]:
             #print(f"itm change dN {self.nodeNum} ", end = ",  ")
             #print(f".", end = "",flush=True)
             #update attached points
             for eL in self.startsEdgeLines:
                 #print(f"start {eL.lineNum=} ", end = ",  ", flush=True)
-                eL._p[0] = self.pos()
+                #eL._p[0] = self.pos()
+                eL.setP(0, self.scenePos(), "DummyNode")
+                eL.updatePath()
             
             for eL in self.endsEdgeLines:
                 #print(f"end {eL.lineNum=} ",end = ",  ", flush=True)
-                eL._p[-1] = self.pos()
+                #eL._p[-1] = self.pos()
+                eL.setP(-1, self.scenePos(), "DummyNode")
+                eL.updatePath()
 
         return super().itemChange(change, value)
 
@@ -272,21 +276,23 @@ class dummyNodeItem(dummyNodeRoot):
         
         #if self.suppressItemChange == True:
         #    return
-        #self.suppressItemChange = True
+        self.suppressItemChange = True
 
         self.prepareGeometryChange()
         #print(">", end = "", flush=True)
         self.setPos(pos)
         for eL in self.startsEdgeLines:
-            eL._p[0] = self.pos()
+            #eL._p[0] = self.pos()
+            eL.setP(0,self.pos(),"DummyNode")
             eL.updatePath()
-        
         for eL in self.endsEdgeLines:
-            eL._p[-1] = self.pos()
+            #eL._p[-1] = self.pos()
+            eL.setP(-1,self.pos(),"DummyNode")
             eL.updatePath()
         #Tell the edge to update
         #edge = self.startsEdgeLines[0].parentItem()
         #edge.updateLine()
+        self.suppressItemChange = False
 
 class port(dummyNodeRoot):
     """ a port for nodes to give edges a spot to connect. `t` is where on the perimeter the point is"""

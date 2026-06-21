@@ -851,6 +851,13 @@ class VisBlobItem(VisNodeItem):
                 item.setParentItem(None)
                 item.scene().update()
                 item.setPos(newScenePos)
+                if type(item) == dummyNodeItem:
+                    item.setFlag(QGraphicsItem.ItemIsMovable, False)
+                    if len(item.startsEdgeLines)>0:
+                        edgeLine=item.startsEdgeLines[0]
+                    else:
+                        edgeLine=item.endsEdgeLines[0]
+                    item.setParentItem(edgeLine.parentItem())
             self.scene().destroyItemGroup(self.childGroup)
             self.childGroup=None
         except:
@@ -870,16 +877,31 @@ class VisBlobItem(VisNodeItem):
             kids=[]
             for k in kidsIdx:
                 kids.append(self.scene().findItemByIdx(k))
-            #print("checking kids", kidsIdx)
-            #print("and this is kids", kids)
+            pos=self.scenePos()
+            hitrect= QRectF(pos.x(), pos.y(), self._width, self._height)
+            edges=self.scene().itemsHere(self.scenePos(), QSize(self._width, self._height), [ROLE_EDGE], hitrect)
+            dummyNodes=[]
+            for i in edges:
+                for dN in i.dummyNodes:
+                    if hitrect.contains(dN[0].scenePos()):
+                        dummyNodes.append(dN[0])
+
             #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
             if value == 1 and self.isOnlySelected: #when selected
             #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
-                #self.scene().groupedItems=[]
+                if self.childGroup not in self.scene().items():
+                    self.scene().addItem(self.childGroup)
+
                 for item in kids:
                     self.childGroup.addToGroup(item)
+                for dN in dummyNodes:
+                    dN.setFlag(QGraphicsItem.ItemIsMovable, True)
+                    dN.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges)
+                    dN.suppressItemChange = True
+                    self.childGroup.addToGroup(dN)
+                    dN.suppressItemChange = False
                     #if item not in self.scene().selectedItems():
                         #self.scene().groupedItems.append(item)
             #else: #unselected or no children
@@ -888,30 +910,16 @@ class VisBlobItem(VisNodeItem):
                 #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 #if getattr(self, "childGroup" , False):
                 self.removeGroup(self.childGroup)
-                #self.scene().groupedItems=[]
-                    #JH kids = self.getChildList(self)
-
-                """kidsToGo=self.childGroup.childItems()
-                    #print(f"deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
-                    #JH for item in kids: #self.children:
-                    for item in kidsToGo:
-                        #removeFromGroup seems to bug out occasionally :/
-                        #self.childGroup.removeFromGroup(item)
-                        
-                        #This seems more reliable.
-                        newScenePos = item.mapToScene(0, 0)
-                        item.setParentItem(self)
-                        item.setPos(newScenePos)
-                    self.scene().destroyItemGroup(self.childGroup)"""
-                    #JH rescue any children that were excluded by a resize
-                    #if getattr(self, "childGroup" , False):
-                    #    if type(self.childGroup) == "QGraphicsItemGroup":
-                    #        self.scene().destroyItemGroup(self.childGroup)
-                    #print(f"AFTER deleting blob group for {self.nodeNum}, with kids {[(k.nodeNum,hex(id(k))) for k in kids]}")
-
+ 
             #Call the edge update
             for k in kids:
-                k.updatePortEdges() 
+                k.updatePortEdges()
+            for dN in dummyNodes:
+                #print(dN[0])
+                for sEdgeLine in dN.startsEdgeLines:
+                    sEdgeLine.parentItem().updateLine((dN, dN),sEdgeLine)
+                for sEdgeLine in dN.endsEdgeLines:
+                    sEdgeLine.parentItem().updateLine((dN, dN),sEdgeLine) 
 
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
