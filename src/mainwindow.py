@@ -260,14 +260,14 @@ class grScene(QGraphicsScene):
         #Add axes to help see how things move & debug graphical issues.
             #TODO: THere must be a better solution!
         #WHite to provide a auto-zoom anchor
-        #"""
+        """
         VLine = QGraphicsLineItem(0,100,0,-100)
         self.addItem(VLine)
         VLine.setPen(QPen(Qt.black))
         HLine = QGraphicsLineItem(100,0,-100,0)
         HLine.setPen(QPen(Qt.black))
         self.addItem(HLine) 
-        #"""
+        """
 
 
 
@@ -880,7 +880,6 @@ class grScene(QGraphicsScene):
             #    kids.append(self.findItemByIdx(k))
             
             
-                
         return
     
     def clearSelection(self):
