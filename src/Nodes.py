@@ -462,6 +462,7 @@ class VisNodeItem(QGraphicsObject):
                     for eEdgeLine in port.endsEdgeLines:
                         #eEdge.updateLine((self, port),eEdgeLine)
                         eEdgeLine.parentItem().updateLine((self, port),eEdgeLine)
+                """
                 if self.scene().movingBlob==self:   #this is a blob with contents
                     delta=self.scenePos()-self.scene().lastBlobPosn
                     for i in self.scene().blobInsidePoints:
@@ -470,6 +471,7 @@ class VisNodeItem(QGraphicsObject):
                             if eL.lineNum == i[1]:
                                 eL.setP(i[2],eL._p[i[2]]+delta)
                     self.scene().lastBlobPosn=self.scenePos()
+                """
 
         #note the **return**
         return super().itemChange(change,value)
@@ -876,7 +878,8 @@ class VisBlobItem(VisNodeItem):
                     if len(eL._p) > 2:
                         for countP, p in enumerate(eL._p[1:-1]):
                             if hitrect.contains(QPointF(p)):
-                                self.scene().blobInsidePoints.append((i.edgeNum, eL.lineNum, countP+1))
+                                #self.scene().blobInsidePoints.append((i.edgeNum, eL.lineNum, countP+1))
+                                self.scene().blobInsidePoints.append((i, eL.lineNum, countP+1))
             #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
             if value == 1 and self.isOnlySelected: #when selected
             #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
@@ -912,6 +915,15 @@ class VisBlobItem(VisNodeItem):
         #Moved
         if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange]:
             #print("blob pos change")
+            if self.isOnlySelected and self.scene().movingBlob==self:   #this is a blob with contents
+                delta=self.scenePos()-self.scene().lastBlobPosn
+                for i in self.scene().blobInsidePoints:
+                    #edge=self.scene().findItemByIdx(i[0])
+                    edge= i[0]  #self.scene().findItemByIdx(i[0])
+                    for eL in edge.edgeLines:
+                        if eL.lineNum == i[1]:
+                            eL.setP(i[2],eL._p[i[2]]+delta)
+                self.scene().lastBlobPosn=self.scenePos()
             pass
 
         return super().itemChange(change, value)
