@@ -12,7 +12,7 @@ TANGENT_SCALE_FACTOR = 20
 
 DISPLAY_NAME_BY_DEFAULT = True
 DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT = False
-BLOB_FONT_SIZE = 10
+BLOB_FONT_SIZE = 9
 BLOB_FONT_IS_RESIZABLE = True
 BLOB_NAME_ON_TOP = False
 
@@ -24,7 +24,7 @@ DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT
 #Model level default for edges
 ISDIGRAPH = True
 
-APP_NAME = "qtPyGraphEdit"
+APP_NAME = "Higraph"
 # Attempt to follow semantic versioning https://semver.org/spec/v2.0.0.html
 APP_VERSION = "0.3.0"
 

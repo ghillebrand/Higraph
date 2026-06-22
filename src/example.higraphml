@@ -1,0 +1,183 @@
+<?xml version="1.0" ?>
+<higraphml version="0.3.0">
+	<saveViewCoords x="-388.98305084745766" y="-301.6949152542373" width="686.4406779661017" height="553.3898305084746"/>
+	<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+		<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+		<key id="data_blob" for="blob" higraph.type="blobgraphics"/>
+		<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+		<graph edgedefault="directed" id="G">
+			<h:blob id="1">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-277.9230769230769" y="-288.17948717948735" width="467.82206682206686" height="281.1087801087803" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+						<port name="1" t="0.8358930009938961" x="0.0" y="253.01022321883238"/>
+						<port name="3" t="0.6360067326876288" x="272.15827584517" y="281.1087801087803"/>
+						<h:BlobLabel>
+							Blob
+							<h:metadataAttribute key="display" value="True"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="description" value="Press &lt;B&gt; for a blob - a node that behaves like a set, containing other blobs and nodes.&#10;Double click an item to edit the properties - and add additional ones.">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="28">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-271.7741935483872" y="47.352557836428815" width="462.6832844574781" height="140.5262300423591" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+						<h:BlobLabel>
+							Notes
+							<h:metadataAttribute key="display" value="True"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="description" value="Blob descriptions can be interactively typed/ edited.&#10;The text window on the left stays syncronised with the drawing - it points to the same object.&#10;Edit a line by clicking on it, and moving the coloured handles. Right click to add or delete points. Double click the line to set the line type (spline or straight) and directedness, along with any other metadata you choose to add.&#10;Edges are hyperedges - they can have multiple starts or ends. This is single entity, with one set of metadata.">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="4">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-184.61538461538464" y="-98.71794871794873" width="176.2820512820513" height="64.1025641025641" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+						<h:BlobLabel>
+							Sub-Blob
+							<h:metadataAttribute key="display" value="True"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="description" value="This &quot;knows&quot; it is inside 'blob'">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="14">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-64.74358974358972" y="-118.58974358974359" width="165.3846153846154" height="101.28205128205127" xRadius="10.0" yRadius="10.0" radMode="SizeMode.AbsoluteSize"/>
+						<h:BlobLabel>
+							Another blob
+							<h:metadataAttribute key="display" value="True"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="description" value="*">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+			</h:blob>
+			<node id="2">
+				<data key="data_node">
+					<y:ShapeNode>
+						<y:Geometry x="-233.97435897435895" y="-182.6923076923078"/>
+						<port name="0" t="0.34358352090549926" x="-4.160251471689211" y="6.240377207533832"/>
+						<y:NodeLabel>
+							Node
+							<h:metadataAttribute key="display" value="True"/>
+						</y:NodeLabel>
+					</y:ShapeNode>
+				</data>
+				<h:metadata key="." value="Press &lt;N&gt; for a classic graph node">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</node>
+			<node id="3">
+				<data key="data_node">
+					<y:ShapeNode>
+						<y:Geometry x="-131.4102564102564" y="-53.20512820512829"/>
+						<port name="0" t="0.5644405292045787" x="-6.893587725135427" y="-2.9543947393437717"/>
+						<port name="1" t="0.25" x="4.592425496802575e-16" y="7.5"/>
+						<y:NodeLabel>
+							n3
+							<h:metadataAttribute key="display" value="False"/>
+						</y:NodeLabel>
+					</y:ShapeNode>
+				</data>
+			</node>
+			<node id="15">
+				<data key="data_node">
+					<y:ShapeNode>
+						<y:Geometry x="-44.230769230769226" y="-52.5641025641026"/>
+						<port name="0" t="0.40279994389289214" x="-6.14423940389279" y="4.300967582724981"/>
+						<y:NodeLabel>
+							n15
+							<h:metadataAttribute key="display" value="False"/>
+						</y:NodeLabel>
+					</y:ShapeNode>
+				</data>
+			</node>
+			<hyperedge id="7" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="2" sourceport="0"/>
+					<end target="3" targetport="0"/>
+					<end target="1" targetport="1"/>
+				</h:nodeList>
+				<h:dummyNodeList>
+					<dummyNode id="9" x="-243.58974358974325" y="-131.41025641025652">
+						<startsEdgeLine eL="10"/>
+						<startsEdgeLine eL="12"/>
+						<endsEdgeLine eL="8"/>
+					</dummyNode>
+				</h:dummyNodeList>
+				<h:edgeLineList>
+					<!--hyperEdge {8: ((2, 0), (9, 9)), 10: ((9, 9), (3, 0)), 12: ((9, 9), (1, 1))}-->
+					<edgeLine id="8" source="2" sourceport="0" target="9" targetport="9">
+						<y:Path>
+							<h:StartTangent x="-11.22436391292618" y="14.272443305286657"/>
+							<h:EndTangent x="6.410256410256409" y="15.384615384615387"/>
+						</y:Path>
+					</edgeLine>
+					<edgeLine id="10" source="9" sourceport="9" target="3" targetport="0">
+						<y:Path>
+							<h:StartTangent x="11.538461538461547" y="23.71794871794873"/>
+							<h:EndTangent x="60.41410458255689" y="-0.39029217524118565"/>
+						</y:Path>
+					</edgeLine>
+					<edgeLine id="12" source="9" sourceport="9" target="1" targetport="1">
+						<y:Path>
+							<h:StartTangent x="0.0" y="21.79487179487181"/>
+							<h:EndTangent x="48.076923076923094" y="25.641025641025642"/>
+						</y:Path>
+					</edgeLine>
+				</h:edgeLineList>
+				<h:metadata key="name" value="Edge">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+				<h:metadata key="." value="Press &lt;E&gt; for an edge. Can start/ end at a Node, Blob or Edge.">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</hyperedge>
+			<hyperedge id="18" directed="true" lineType="Straight">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="3" sourceport="1"/>
+					<start source="15" sourceport="0"/>
+					<end target="1" targetport="3"/>
+				</h:nodeList>
+				<h:dummyNodeList>
+					<dummyNode id="20" x="-93.58974358974358" y="36.53846153846153">
+						<startsEdgeLine eL="25"/>
+						<endsEdgeLine eL="24"/>
+						<endsEdgeLine eL="26"/>
+					</dummyNode>
+				</h:dummyNodeList>
+				<h:edgeLineList>
+					<!--hyperEdge {24: ((3, 1), (20, 20)), 26: ((15, 0), (20, 20)), 25: ((20, 20), (1, 3))}-->
+					<edgeLine id="24" source="3" sourceport="1" target="20" targetport="20">
+						<y:Path/>
+					</edgeLine>
+					<edgeLine id="25" source="20" sourceport="20" target="1" targetport="3">
+						<y:Path>
+							<y:Point x="-37.82051282051282" y="35.8974358974359"/>
+						</y:Path>
+					</edgeLine>
+					<edgeLine id="26" source="15" sourceport="0" target="20" targetport="20">
+						<y:Path/>
+					</edgeLine>
+				</h:edgeLineList>
+				<h:metadata key="name" value="Straight line Edge">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</hyperedge>
+		</graph>
+	</graphml>
+</higraphml>
