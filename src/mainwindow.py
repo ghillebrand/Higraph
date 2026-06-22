@@ -2421,8 +2421,8 @@ class MainWindow(QMainWindow):
         self.ui.actionZoomIn.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl++", None))
         self.ui.actionZoomOut.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+-", None))
         #TODO: Put in the `isWindowModified()` code
+        #TODO: Use the Qt QApplication options
         self.setWindowTitle(APP_NAME + " " + APP_VERSION)
-        self.fileName = ""
 
         #Where the data lives
         self.model = graphModel()
@@ -2541,6 +2541,15 @@ class MainWindow(QMainWindow):
         self.NODE_ICON=self.ui.icon8
         self.BLOB_ICON=self.ui.icon11
         self.EDGE_ICON=self.ui.icon9
+
+        #Process a input parameter
+        #Check for a file param:
+        if len(sys.argv) > 1:
+            startFile = os.path.abspath(sys.argv[1])
+            #Delay the load to let the window draw and have valid coords
+            QTimer.singleShot(0, lambda: self.action_FileOpen(inFile = startFile))
+        else:
+            self.fileName = ""
 
     #GraphicsView/ scene handling
     def setZoom(self, value):
@@ -3469,23 +3478,29 @@ class MainWindow(QMainWindow):
         return newEdge
 
 
-    def action_FileOpen(self):
+    def action_FileOpen(self, checked=False, inFile=""):
+        """ The Qt trigger function call has a checked parameter. Who knew? """
         #check for unsaved changes
         if not self.Scene.undoStack.isClean():
             if self.askForFileSave()=="Cancel":
                 return
             self.undoStack.setClean()   #so that this isn't called again when the environment is cleared
-        """ Read a graphml file in, create all the elements """
-        options = QtWidgets.QFileDialog.Options()
-        options |= QtWidgets.QFileDialog.DontUseNativeDialog
-        fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 
-            "Load File", dir="", filter ="higraphml files(*.higraphml);;graphml files(*.graphml);;All Files(*)", options = options)
-        if fileName == '':  #dialog returns '' on <esc>        
-            return
-        #Clear the current graph
-        self.action_FileNew()
 
-        self.fileName = fileName
+        #Read the given file
+        if inFile != "":
+            self.fileName = inFile
+        else:
+            """ Read a graphml file in, create all the elements """
+            options = QtWidgets.QFileDialog.Options()
+            options |= QtWidgets.QFileDialog.DontUseNativeDialog
+            fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 
+                "Load File", dir="", filter ="higraphml files(*.higraphml);;graphml files(*.graphml);;All Files(*)", options = options)
+            if fileName == '':  #dialog returns '' on <esc>        
+                return
+            #Clear the current graph
+            self.action_FileNew()
+
+            self.fileName = fileName
         #Check for the interim old file type:
         if self.fileName.split(".")[-1] == "graphml":
             self.action_FileOpen_Graphml(fileName)
@@ -3494,7 +3509,7 @@ class MainWindow(QMainWindow):
         #Load the .higraphml file as a string
         higraphStr = ""
         try:
-            with open(fileName, "r") as graphFile:
+            with open(self.fileName, "r") as graphFile:
                 higraphStr = graphFile.read()
 
         except FileNotFoundError:
@@ -3622,14 +3637,14 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME)
         self.oldToNewID.clear()
-        
+
+
+        #self.setZoom(100)
         #Set the view to however it was saved, if it was read back, else fit to screen
         if vCRect is None:
             vCRect = self.Scene.sceneRect()
         self.ui.graphicsView.fitInView(vCRect,Qt.AspectRatioMode.KeepAspectRatio)
 
-
-        #self.setZoom(100)
         #zoomToFitWithMargin(self.ui.graphicsView, margin=0.2)
 
     def action_FileOpen_Graphml(self, fileName=None):
@@ -4635,18 +4650,13 @@ class action_CreditsDlg(QDialog):
 
 if __name__ == "__main__":
     print("="*100)
-    #print(f"Garbage collection is {gc.isenabled()}")
-    #logger = logging.getLogger(__name__)
-    #logging.basicConfig(filename='higraphDebug.log', 
-    #                    encoding='utf-8', 
-    #                    level=logging.DEBUG,
-    #                    format='%(asctime)s %(message)s\nStk>%(stack_info)s')
-    #logging.debug("\n\nStarting\n********\n")
+
     app = QApplication(sys.argv)
+    
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
-    app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icon030.ico')))  #'qtpyGraphEdit.ico')))
+    app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icons\\icon2.ico')))  #'qtpyGraphEdit.ico')))
     MainWin = MainWindow()
-    MainWin.resize(800, 600)
+    MainWin.resize(1000, 700)
     MainWin.show()
     #cProfile.run('sys.exit(app.exec())')
     sys.exit(app.exec())
