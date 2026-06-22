@@ -257,6 +257,11 @@ class grScene(QGraphicsScene):
         #For avoiding click on same spot undoing bulk select
         self._lastMouseClickPos = QPointF(0,0)
 
+        #For keeping track of points inside a moving blob
+        self.movingBlob=None
+        self.lastBlobPosn=None     #used for moving points contained inside a blob
+        self.blobInsidePoints=[]
+
         #Add axes to help see how things move & debug graphical issues.
             #TODO: THere must be a better solution!
         #WHite to provide a auto-zoom anchor
