@@ -559,7 +559,7 @@ class grScene(QGraphicsScene):
             #print(f"start move {self.oldTermItem}\n{self.oldTermItem[1].index}")
 
             #link edge to handle to move
-            edge.setStart((handle,handle),edgeLine) #Handles are dummy nodes _and_ ports
+            #edge.setStart((handle,handle),edgeLine) #Handles are dummy nodes _and_ ports H this doesn't seem helpful
         else:
             self.EdgeEnd = "end"
             # NOTE: Node relinking is only done on successful finish
@@ -572,7 +572,7 @@ class grScene(QGraphicsScene):
                     self.oldTermItem = NP
                     #print(f"SMEE end oldTermItem = {NP[0].nodeNum}")
                     break
-            edge.setEnd((handle,handle),edgeLine)
+            #edge.setEnd((handle,handle),edgeLine)  #JH this doesn't seem helpful
 
         handle.setFlag(QGraphicsItem.ItemIsMovable, True)
 
@@ -636,7 +636,7 @@ class grScene(QGraphicsScene):
                 newTermItem = (newTermItem, p)
                 edge.startNodes.remove(self.oldTermItem)
                 #clear the old handle ending
-                edge.startNodes.remove((self.handle,self.handle))
+                #edge.startNodes.remove((self.handle,self.handle)) JH Shouldn't be needed anymore?
                 #edge.setStart(newTermItem,edgeLine)  JH move to later
                 #relink self.oldTermItem in Graph
                 # While clunky, these params will work with any item type
@@ -664,7 +664,7 @@ class grScene(QGraphicsScene):
                 # Where is edge.endNodes updated??? (old (node,port) removed, new added <<<<
                 edge.endNodes.remove(self.oldTermItem)
                 #clear the old handle ending
-                edge.endNodes.remove((self.handle,self.handle))
+                #edge.endNodes.remove((self.handle,self.handle)) JH not needed now?
                 #set the new one
                 #edge.setEnd(newTermItem,edgeLine)
                 #print(f"fmme after setEnd edge endNodes are {[type(n[0]) for n in edge.endNodes]}")
@@ -677,7 +677,7 @@ class grScene(QGraphicsScene):
             #print("Missed (nothing found) on relink")
             self.handle.setPos(self.oldTermItem[1].scenePos())
             
-            #TODO: Check all the linkages ()
+            #TODO: Check all the linkages () - JH probably not needed
             if self.EdgeEnd == "start":
                 edgeLine = self.oldTermItem[1].startsEdgeLines[0]
                 edge.setStart(self.oldTermItem,edgeLine)
@@ -4360,17 +4360,14 @@ class MainWindow(QMainWindow):
         """ all the calls to delete an edge"""
         #delete from model
         self.model.delEdge(delIdx)
-        #Delete from LWscene updat
-        #delRow = self.ui.listWidget.findItemRowByIdx(delIdx)
-        #delItem = self.ui.listWidget.takeItem(delRow)
+
         itemsToBeDeleted = self.ui.treeWidget.findItems(str(delIdx), Qt.MatchRecursive, 1)
         for item in itemsToBeDeleted:
             self.ui.treeWidget.takeTopLevelItem(self.ui.treeWidget.indexOfTopLevelItem(item))
-        #del delItem
+
         #Delete from Scene
         delItem = self.Scene.findItemByIdx(delIdx)
-        #remove CBs
-        #self.Scene.clearEdgeOnly(delItem)
+
         delItem.edgeLine._deleteHandles()
         if self.Scene.thisHandleObjectSelected==delItem.edgeLine:
             self.Scene.thisHandleObjectSelected = None
@@ -4434,7 +4431,7 @@ class MainWindow(QMainWindow):
         eList = self.model.edgesAtNode(self.Scene.findItemByIdx(delIdx))
         if eList:
             for e in eList:
-                self.delEdge(e)
+                self.delHyperEdge(e)
         #JH to here        
         if self.Scene.thisHandleObjectSelected==self.Scene.findItemByIdx(delIdx):
             self.Scene.thisHandleObjectSelected = None
