@@ -1109,7 +1109,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         """ Set the end of self to end, a (Node,Port) tuple. Also update model, for edits""" 
          
          # call from old code, not a handle
-        if not edgeLine and end[0].data(ROLE_KEY) not in [ROLE_NODE,ROLE_BLOB, ROLE_HANDLE]:
+        if not edgeLine and end[0].data(KEY_ROLE) not in [ROLE_NODE,ROLE_BLOB, ROLE_HANDLE]:
             print("setEnd: Setting edgeLine to [0]")
             traceback.print_stack(limit=3)
             edgeLine = self.edgeLines[0]
