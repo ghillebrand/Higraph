@@ -241,7 +241,6 @@ class VisNodeItem(QGraphicsObject):
         self.suppressItemChange = True  # suppress itemChange (was protected, but scene needs to set it)
         
         self.model = model
-        #self.listWidget = listWidget
         self.treeWidget = treeWidget
         #Store the edges that start/ end at this node
         self.startsEdges = []  
@@ -249,6 +248,8 @@ class VisNodeItem(QGraphicsObject):
 
         #WHERE it must appear
         self.setPos(posn)
+
+
         
         #Create an abstract node, and keep the index as well
         self.node,self.nodeNum = self.model.addGMNode(posn,nameP=nameP,id=id)
@@ -265,20 +266,6 @@ class VisNodeItem(QGraphicsObject):
         else:
             self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
         self.blobDescription=""   #needed for blobs
-        #Update positions
-        #add to the text list
-        #lWitem = QListWidgetItem(self.model.Gr.nodeD[self.nodeNum].metadata['name'])
-        #lWitem.setData(KEY_INDEX,self.nodeNum)
-        #lWitem.setData(KEY_ROLE,ROLE_NODE)
-        #self.listWidget.addItem(lWitem)
-
-        # Create a text item to hold & show the ID number
-        # Not needed with KEY_INDEX role
-        #self.textItem = QGraphicsTextItem(f"{self.nodeNum}", self)
-        #textRect = self.textItem.boundingRect()
-        #self.textItem.setPos(-textRect.width()/2, -textRect.height()/2)
-        #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
 
         #TODO: Change this to TransparentTextItem
         self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
@@ -475,6 +462,14 @@ class VisNodeItem(QGraphicsObject):
                     for eEdgeLine in port.endsEdgeLines:
                         #eEdge.updateLine((self, port),eEdgeLine)
                         eEdgeLine.parentItem().updateLine((self, port),eEdgeLine)
+                if self.scene().movingBlob==self:   #this is a blob with contents
+                    delta=self.scenePos()-self.scene().lastBlobPosn
+                    for i in self.scene().blobInsidePoints:
+                        edge=self.scene().findItemByIdx(i[0])
+                        for eL in edge.edgeLines:
+                            if eL.lineNum == i[1]:
+                                eL.setP(i[2],eL._p[i[2]]+delta)
+                    self.scene().lastBlobPosn=self.scenePos()
 
         #note the **return**
         return super().itemChange(change,value)
@@ -640,17 +635,12 @@ class VisBlobItem(VisNodeItem):
         #TODO: Make blob names default to bnn
 
         #add to the text list
-        #lWitem = self.listWidget.findItemByIdx(self.nodeNum)
         #TODO: Revisit the value the model adds
         self.node.setData(KEY_ROLE,ROLE_BLOB)
-        #lWitem.setData(KEY_ROLE,ROLE_BLOB)
-
-
         self.setData(KEY_ROLE, ROLE_BLOB)
 
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        #self._hoverColor=QColor("cyan")
         self._baseColor = DRAWING_COLOUR
         self._hoverColor = HOVER_COLOUR
         self._selectColor = SELECT_COLOUR
@@ -676,6 +666,7 @@ class VisBlobItem(VisNodeItem):
         # JH remove self.nodeShape.my_parent_item = self #coPilot's suggestion to stop GC issues. Force a strong reference
         self.nodeShape.setPen(QPen(Qt.NoPen))
         self.nodeShape.setFlag(QGraphicsItem.ItemIsSelectable, False)
+
         # give ports back to the nodeshape
         for port in self._Ports:
             port.setParentItem(self.nodeShape)
@@ -690,11 +681,6 @@ class VisBlobItem(VisNodeItem):
             blobText="*"
         container = BlobTextItem(blobText, width, self)
         self.blobDescription=container
-        #else:
-        #    container = BlobTextItem("", width, self)
-        #    self.text=container
-        #    self.text.setFlag(QGraphicsItem.ItemIsVisible, False)
-        #    self.text.setFlag(QGraphicsItem.ItemIsSelectable, False)
 
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
@@ -702,13 +688,11 @@ class VisBlobItem(VisNodeItem):
         #Placeholder for drag handles
         self._Handles = []
 
-
         #Create a polygon version for `parameterFromPos` - also in `updateFromHandles`
         self._basePath = QPainterPath()
         self._basePath.addRoundedRect(self._rect, self._xRadius, self._yRadius)
         #totalLength = self._basePath.length()
         self._polygon = self._basePath.toFillPolygon()
-
 
         #Use the edge `isOnlySelected` logic as far as possible for handle creation
         self.isOnlySelected = False
@@ -881,11 +865,18 @@ class VisBlobItem(VisNodeItem):
             hitrect= QRectF(pos.x(), pos.y(), self._width, self._height)
             edges=self.scene().itemsHere(self.scenePos(), QSize(self._width, self._height), [ROLE_EDGE], hitrect)
             dummyNodes=[]
+            self.scene().lastBlobPosn=self.scenePos()
+            self.scene().movingBlob=self
+            self.scene().blobInsidePoints=[]
             for i in edges:
                 for dN in i.dummyNodes:
                     if hitrect.contains(dN[0].scenePos()):
                         dummyNodes.append(dN[0])
-
+                for eL in i.edgeLines:
+                    if len(eL._p) > 2:
+                        for countP, p in enumerate(eL._p[1:-1]):
+                            if hitrect.contains(QPointF(p)):
+                                self.scene().blobInsidePoints.append((i.edgeNum, eL.lineNum, countP+1))
             #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
             if value == 1 and self.isOnlySelected: #when selected
             #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
@@ -902,15 +893,12 @@ class VisBlobItem(VisNodeItem):
                     dN.suppressItemChange = True
                     self.childGroup.addToGroup(dN)
                     dN.suppressItemChange = False
-                    #if item not in self.scene().selectedItems():
-                        #self.scene().groupedItems.append(item)
-            #else: #unselected or no children
             elif value == 0: #when deselected
                 #delete group
                 #print(f"delete group for {self.nodeNum} - childGroup: {getattr(self, "childGroup" , "No childGroup")} ")
                 #if getattr(self, "childGroup" , False):
                 self.removeGroup(self.childGroup)
- 
+                self.scene().blobMoving=None
             #Call the edge update
             for k in kids:
                 k.updatePortEdges()
