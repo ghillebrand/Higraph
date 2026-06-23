@@ -4595,6 +4595,10 @@ class MainWindow(QMainWindow):
             #self.ui.listWidget.repaint()
             self.ui.treeWidget.repaint()
 
+    def closeEvent(self,event):
+        """ tidy up """
+        print("shutting down ...")
+        prefs.save()
 
 #Dialogs called by mainwindow
 class action_Aboutdlg(QDialog):
@@ -4617,6 +4621,10 @@ class action_CreditsDlg(QDialog):
 
 if __name__ == "__main__":
     print("="*100)
+    print(f"prefs:  {prefs.NODESIZE=}")
+    #Get the user prefs
+    prefs.load()
+    print(f"prefs:  {prefs.NODESIZE=}")
 
     app = QApplication(sys.argv)
     

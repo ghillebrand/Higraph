@@ -1,0 +1,176 @@
+import sys
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTabWidget,
+                                 QWidget, QFormLayout, QSpinBox, QCheckBox,
+                                 QComboBox, QPushButton, QColorDialog, QDialogButtonBox)
+from PySide6.QtGui import QColor
+
+from  HGConstants import *
+
+class EditPreferences(QDialog):
+    """
+        Edit the preferences
+        Gemini June 2026
+    """
+    def __init__(self, prefs, parent=None):
+        super().__init__(parent)
+        self.prefs = prefs
+        self.setWindowTitle("Preferences")
+        self.resize(450, 500)
+        
+        # Temporary storage for colors so variations are only committed if 'OK' is clicked
+        self.loaded_colors = {}
+
+        # Main Layout
+        main_layout = QVBoxLayout(self)
+        
+        # Tab Container
+        self.tabs = QTabWidget()
+        self.tabs.addTab(self._create_sizing_tab(), "Sizing & Engine")
+        self.tabs.addTab(self._create_display_tab(), "Display & Font")
+        self.tabs.addTab(self._create_color_tab(), "Canvas Colors")
+        main_layout.addWidget(self.tabs)
+        
+        # Dialog Action Buttons (OK / Cancel)
+        self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
+        self.button_box.accepted.connect(self.accept)
+        self.button_box.rejected.connect(self.reject)
+        main_layout.addWidget(self.button_box)
+
+    def _create_sizing_tab(self) -> QWidget:
+        widget = QWidget()
+        layout = QFormLayout(widget)
+        
+        # Numeric SpinBoxes
+        self.sb_node_size = QSpinBox(minimum=1, maximum=200, value=self.prefs.NODESIZE)
+        self.sb_hit_size = QSpinBox(minimum=1, maximum=50, value=self.prefs.HITSIZE)
+        self.sb_paste_offset = QSpinBox(minimum=0, maximum=1000, value=self.prefs.PASTE_OFFSET)
+        self.sb_corner_radius = QSpinBox(minimum=0, maximum=100, value=self.prefs.BLOB_CORNER_RADIUS)
+        self.sb_tangent_scale = QSpinBox(minimum=1, maximum=500, value=self.prefs.TANGENT_SCALE_FACTOR)
+        
+        # Routing Engine Preferences
+        self.cb_is_digraph = QCheckBox(checked=self.prefs.ISDIGRAPH)
+        
+        self.combo_edge_type = QComboBox()
+        self.combo_edge_type.addItem("Straight Line", STRAIGHT)
+        self.combo_edge_type.addItem("Spline Curve", SPLINE)
+        # Set current index based on loaded constant
+        initial_idx = 1 if self.prefs.DEFAULT_EDGE == SPLINE else 0
+        self.combo_edge_type.setCurrentIndex(initial_idx)
+
+        # Append Rows to Layout
+        layout.addRow("Node Display Size:", self.sb_node_size)
+        layout.addRow("Selection Tolerance (Hit Size):", self.sb_hit_size)
+        layout.addRow("Paste Placement Offset:", self.sb_paste_offset)
+        layout.addRow("Blob Corner Radius:", self.sb_corner_radius)
+        layout.addRow("Tangent Scale Factor:", self.sb_tangent_scale)
+        layout.addRow("Default Routing Model:", self.combo_edge_type)
+        layout.addRow("Enable Directed Graph (Digraph):", self.cb_is_digraph)
+        
+        return widget
+
+    def _create_display_tab(self) -> QWidget:
+        widget = QWidget()
+        layout = QFormLayout(widget)
+        
+        # Boolean Checkboxes
+        self.cb_display_name = QCheckBox("Show node names automatically", checked=self.prefs.DISPLAY_NAME_BY_DEFAULT)
+        self.cb_display_desc = QCheckBox("Show descriptions automatically", checked=self.prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT)
+        self.cb_font_resizable = QCheckBox("Allow text scaling on zoom operations", checked=self.prefs.BLOB_FONT_IS_RESIZABLE)
+        self.cb_name_on_top = QCheckBox("Force element names above graphics layer", checked=self.prefs.BLOB_NAME_ON_TOP)
+        
+        # Typography Size
+        self.sb_font_size = QSpinBox(minimum=4, maximum=144, value=self.prefs.BLOB_FONT_SIZE)
+
+        layout.addRow("Node Text Layout:", self.cb_display_name)
+        layout.addRow("Node Content Layout:", self.cb_display_desc)
+        layout.addRow("Base Text Font Size:", self.sb_font_size)
+        layout.addRow("Dynamic Scaling:", self.cb_font_resizable)
+        layout.addRow("Layer Ordering:", self.cb_name_on_top)
+        
+        return widget
+
+    def _create_color_tab(self) -> QWidget:
+        widget = QWidget()
+        layout = QFormLayout(widget)
+        
+        # List mapping the target Preference variable name to a User-Friendly Label
+        color_fields = [
+            ("HOVER_COLOUR", "Element Hover State:"),
+            ("SELECT_COLOUR", "Active Selection Frame:"),
+            ("DRAWING_COLOUR", "Vector Line/Edge Base:"),
+            ("BLOB_HANDLE_COLOUR", "Blob Control Handles:"),
+            ("EDGE_HANDLE_COLOUR", "Edge Control Handles:"),
+            ("POINT_COLOUR", "Vertex Anchor Points:")
+        ]
+
+        for attr_name, label_text in color_fields:
+            # Extract current QColor instance
+            current_color = getattr(self.prefs, attr_name)
+            self.loaded_colors[attr_name] = current_color
+            
+            # Construct color button preview
+            btn = QPushButton()
+            self._update_button_swatch(btn, current_color)
+            
+            # Connect runtime click action
+            btn.clicked.connect(self._make_color_picker_slot(attr_name, btn))
+            layout.addRow(label_text, btn)
+            
+        return widget
+
+    def _update_button_swatch(self, button: QPushButton, color: QColor):
+        """Forces the button to act as a physical color sample swatch."""
+        # Convert light colors to contrast safely against text if text is needed
+        hex_color = color.name()
+        button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {hex_color};
+                border: 2px solid #555555;
+                border-radius: 4px;
+                min-height: 28px;
+            }}
+            QPushButton:hover {{
+                border: 2px solid #ffffff;
+            }}
+        """)
+
+    def _make_color_picker_slot(self, attr_name: str, button: QPushButton):
+        """Factory pattern to tie target attributes cleanly to their picking triggers."""
+        def open_picker():
+            initial_color = self.loaded_colors[attr_name]
+            selected_color = QColorDialog.getColor(initial_color, self, f"Select Theme Color")
+            
+            if selected_color.isValid():
+                self.loaded_colors[attr_name] = selected_color
+                self._update_button_swatch(button, selected_color)
+        return open_picker
+
+    def accept(self):
+        """Converts UI states back to the target Dataclass properties upon saving."""
+        # 1. Update Sizing Fields
+        self.prefs.NODESIZE = self.sb_node_size.value()
+        self.prefs.HITSIZE = self.sb_hit_size.value()
+        self.prefs.PASTE_OFFSET = self.sb_paste_offset.value()
+        self.prefs.BLOB_CORNER_RADIUS = self.sb_corner_radius.value()
+        self.prefs.TANGENT_SCALE_FACTOR = self.sb_tangent_scale.value()
+        
+        # 2. Update Configuration Dropdowns/Booleans
+        self.prefs.ISDIGRAPH = self.cb_is_digraph.isChecked()
+        self.prefs.DEFAULT_EDGE = self.combo_edge_type.currentData()
+
+        # 3. Update Display Options
+        self.prefs.DISPLAY_NAME_BY_DEFAULT = self.cb_display_name.isChecked()
+        self.prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT = self.cb_display_desc.isChecked()
+        self.prefs.BLOB_FONT_SIZE = self.sb_font_size.value()
+        self.prefs.BLOB_FONT_IS_RESIZABLE = self.cb_font_resizable.isChecked()
+        self.prefs.BLOB_NAME_ON_TOP = self.cb_name_on_top.isChecked()
+
+        # 4. Extract Staged Color Items
+        for attr_name, color_obj in self.loaded_colors.items():
+            setattr(self.prefs, attr_name, color_obj)
+
+        # 5. Commit directly to disk via your dataclass serialize logic
+        if hasattr(self.prefs, 'save'):
+            self.prefs.save()
+
+        super().accept()
