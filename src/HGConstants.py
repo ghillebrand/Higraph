@@ -5,7 +5,7 @@ NODESIZE = 15
 #Selection tolerance
 HITSIZE = 5
 #Offset to use when pasting nodes
-PASTE_OFFSET = 20
+PASTE_OFFSET = 100
 
 BLOB_CORNER_RADIUS = 10
 TANGENT_SCALE_FACTOR = 20

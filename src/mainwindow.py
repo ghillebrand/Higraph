@@ -3335,7 +3335,7 @@ class MainWindow(QMainWindow):
             #If not in sItem or eItem, then a dummy node
             eLID = int(eL.attrib.get("id",0))
             if newID : #create a newID by calling with 0
-                iD = False #0
+                iD = 0
             else:
                 iD = eLID
 
