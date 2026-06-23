@@ -689,32 +689,6 @@ class grScene(QGraphicsScene):
         self.oldTermItem = None
         self.handle = None
 
-    def XXXclearEdgeOnly(self, edge):
-        """ No longer used
-            Remove the controlboxes from an edge and deselect."""
-        print("clearEdgeOnly")
-        #TODO: Generalise to items, for blob handles
-
-        #For edges, was there only one selected? Clear.
-        edge.isOnlySelected = None
-
-        #Clear the scene selection too
-        self.onlySelected = None
-
-        #clear any pointers to handles
-        #HACK: func needs to be generalised to blobs. use getAttribute() for blobs for now
-        #if edge.stH:
-        if getattr(edge,'stH',None):
-            edge.setZValue(0) #below nodes
-            edge.stH = None
-        #if edge.endH:
-        if getattr(edge,'endH',None):
-            edge.endH = None
-        #HACK: deal with blobs better
-        if getattr(edge,'edgeLine',None):
-            edge.edgeLine.setSelected(False)
-        edge.setSelected(False)
-
     def qtListToListOfIdxs(self, qtList):
         #qtlist is any list of item objects (that have data(KEY_INDEX))
         outlist=[]
@@ -2400,7 +2374,7 @@ basedir = os.path.dirname(__file__)
 
 try:
     from ctypes import windll  # Only exists on Windows.
-    myappid = "za.co.isijingi.qtpyGraphEdit.v00"
+    myappid = "za.co.isijingi"+APP_NAME+APP_VERSION
     windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 except ImportError:
     pass
@@ -2428,13 +2402,7 @@ class MainWindow(QMainWindow):
         self.model = graphModel()
 
         #Display List
-        #self.ui.listWidget.setModel(self.model)
-        #setup the list to sort by TYPE then ID (using patched function above)
-        #self.ui.listWidget.setSortRoles( (KEY_ROLE,KEY_INDEX) )
-        #self.ui.listWidget.itemChanged.connect(self.updateSceneText)
         self.ui.treeWidget.itemChanged.connect(self.updateSceneText)
-        #self.ui.listWidget.itemClicked.connect(self.listClick) # this is now called by itemSelectionChanged
-        #self.ui.listWidget.itemDoubleClicked.connect(self.listDblClicked)
         self.ui.treeWidget.itemDoubleClicked.connect(self.listDblClicked)
         
         self.undoStack=QUndoStack()
@@ -2442,7 +2410,6 @@ class MainWindow(QMainWindow):
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
         self.Scene = grScene(self.model, self.ui.treeWidget, self.undoStack, self)
         #self.Scene.selectionChanged.connect(self.actionSceneSelectChange)
-        #self.ui.listWidget.itemSelectionChanged.connect(self.actionListSelectChange)
         self.ui.treeWidget.itemSelectionChanged.connect(self.actionListSelectChange)
 
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
@@ -2546,7 +2513,7 @@ class MainWindow(QMainWindow):
         #Check for a file param:
         if len(sys.argv) > 1:
             startFile = os.path.abspath(sys.argv[1])
-            #Delay the load to let the window draw and have valid coords
+            #Delay the load to let the window draw the first time and have valid coords
             QTimer.singleShot(0, lambda: self.action_FileOpen(inFile = startFile))
         else:
             self.fileName = ""
@@ -3635,7 +3602,7 @@ class MainWindow(QMainWindow):
 
         self.Scene.update()
 
-        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME)
+        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + APP_VERSION)
         self.oldToNewID.clear()
 
 
