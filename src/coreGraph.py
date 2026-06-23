@@ -134,7 +134,7 @@ class Graph:
         Graph.IDsUsed = set()
         #Store default edge type. CAn be overridden on individual edges
         #TODO: Make this a per-model editable param.
-        self.isDirected = ISDIGRAPH
+        self.isDirected = prefs.ISDIGRAPH
         #TODO: Add in the global dictionary of metadata attribs the graph holds. Node vs Edge metadata?
         # adding metadata to items must update this list
         self.metadataKeys = {}

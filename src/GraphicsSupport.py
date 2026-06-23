@@ -97,7 +97,7 @@ class ArrowHeadItem(QGraphicsItem):
         position updates are driven from the parent item
        chatGPT based code """
 
-    def __init__(self, size=NODESIZE, parent=None):
+    def __init__(self, size=prefs.NODESIZE, parent=None):
         super().__init__(parent)
         self.size = size
         # Define arrowhead polygon pointing right (+X)
@@ -106,8 +106,8 @@ class ArrowHeadItem(QGraphicsItem):
             QPointF(-size, size / 2),
             QPointF(-size, -size / 2)
         ])
-        #Transform by -NODESIZE/2 to not disappear under the node
-        #self.polygon.translate(QPointF(-NODESIZE/2,0))
+        #Transform by -prefs.NODESIZE/2 to not disappear under the node
+        #self.polygon.translate(QPointF(-prefs.NODESIZE/2,0))
         self.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.setFlag(QGraphicsItem.ItemIsMovable, False)
         self.setZValue(0)

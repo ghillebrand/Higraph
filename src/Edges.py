@@ -45,7 +45,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     requestEdit = Signal(object)  
 
     def __init__(self,model,treeWidget, sItem, eItem, directed='', parent=None, nameP="", id=None,
-                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
+                    polyLineType = prefs.DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
         """ Create a visual edge, using the pos of the st and end, which are tuples of (Node,Port)
         points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
         """
@@ -190,7 +190,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             self.isDirected=directed
 
         if self.isDirected:
-            self.endShape = ArrowHeadItem(size=NODESIZE/2, parent=self)
+            self.endShape = ArrowHeadItem(size=prefs.NODESIZE/2, parent=self)
         else:
             self.endShape = None
 
@@ -319,8 +319,8 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         textBRect = self.textItem.boundingRect()
         midPt = self.edgeLine.textPos(0.5)
         #painter.drawEllipse(midPt,2,2)
-        self.textItem.setPos(midPt.x() - textBRect.width()/2  + NODESIZE/2, \
-                             midPt.y() - textBRect.height()/2 + NODESIZE/2)
+        self.textItem.setPos(midPt.x() - textBRect.width()/2  + prefs.NODESIZE/2, \
+                             midPt.y() - textBRect.height()/2 + prefs.NODESIZE/2)
         self.metaDisplay.setPos(self.textItem.pos()+QPointF(0,0))
         #painter.drawRect(self.textItem.boundingRect())
        
@@ -439,7 +439,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         if self.isDirected != isDirected:
             self.isDirected = isDirected
             if isDirected:  #restore the arrow
-                self.endShape = ArrowHeadItem(size=NODESIZE/2, parent=self)
+                self.endShape = ArrowHeadItem(size=prefs.NODESIZE/2, parent=self)
             else:
                 #Note, previous endShape dereference should delete it
                 self.scene().removeItem(self.endShape)
@@ -521,7 +521,7 @@ class VisHyperEdgeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
-                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={},
+                    polyLineType = None, points=[],tangents=[],metadata={}, metadataAttributes={},
                     dummyNodes=None,edgeLines=None, hyperEdgeGraph=None):
 
         """ Create a visual edge, using the pos of the st and end items, which are tuples of (Node,Port)
@@ -531,6 +531,10 @@ class VisHyperEdgeItem(QGraphicsObject):
         """
         #TODO: Check - points may be redundant with hyperEdges
         super().__init__(parent)
+
+        if polyLineType == None:
+            polyLineType = prefs.DEFAULT_EDGE
+
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
         self.Scene = Scene
@@ -643,7 +647,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             for e in self.endNodes:
                 #print(f"he add arrow {e[0].nodeNum}=")
                 #pos & details are set in `updateLine`. Additional endShapes created in addSegment
-                self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
+                self.endShape.append(ArrowHeadItem(size=prefs.NODESIZE/2, parent=self))
 
 
         #Track what sort of edge this one is
@@ -696,11 +700,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             # so `points`, `tangents` & dummyNodes will be populated, 
             # and instantiated in edgeLines, with hyperEdgeGraph holding the structure.
             
-            #print(f"HE init: sItem {[d[0].nodeNum for d in sItem]}") 
-            #print(f"HE init: eItem {[d[0].nodeNum for d in eItem]}") 
-            #print(f"HE init: dummyNodes { [(d[0].nodeNum, [el.lineNum for el in d[0].startsEdgeLines], [el.lineNum for el in d[0].endsEdgeLines]) for d in dummyNodes]}") 
-            #print(f"HE init: edgelines: {[e.lineNum for e in edgeLines]}")
-            #print(f"HE init: hyperEdgeGraph {hyperEdgeGraph}")
             #For each edgeLine, tell the start and end nodes. NOTE: dummyNodes are connected already in fromXML()
 
             for eL,eLNodes in hyperEdgeGraph.items():
@@ -926,8 +925,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         #  This code should be in itemChanged, not paint
         midPt = self.edgeLines[0].textPos(0.5)
         #painter.drawEllipse(midPt,2,2)
-        self.textItem.setPos(midPt.x() - textBRect.width()/2  + NODESIZE/2, \
-                             midPt.y() - textBRect.height()/2 + NODESIZE/2)
+        self.textItem.setPos(midPt.x() - textBRect.width()/2  + prefs.NODESIZE/2, \
+                             midPt.y() - textBRect.height()/2 + prefs.NODESIZE/2)
         self.metaDisplay.setPos(self.textItem.pos()+QPointF(0,0))
         #painter.drawRect(self.textItem.boundingRect())
        
@@ -1077,7 +1076,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             if isDirected:  #restore the arrow
                 for e in self.endNodes:
                     if e[0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]: #Not on dummyNodes
-                        self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
+                        self.endShape.append(ArrowHeadItem(size=prefs.NODESIZE/2, parent=self))
             else:
                 #Note, previous endShape dereference should delete it
                 for i in range(len(self.endShape)):

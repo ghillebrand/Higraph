@@ -83,8 +83,7 @@ class graphModel(QStandardItemModel):
         super().__init__()
         #Setup the abstract graph
         self.Gr = Graph()
-        #TODO: Read this from config/ on file load
-        self.isDigraph = ISDIGRAPH  
+        self.isDigraph = prefs.ISDIGRAPH  
 
     def __repr__(self):
         rStr =""
@@ -1328,12 +1327,12 @@ class grScene(QGraphicsScene):
             TLx -= width
             TLy -= height
             newAction=createNodeCommand(QPointF(TLx,TLy), self, self.model, self.treeWidget, 
-                                        height = height, width = width, xRadius = BLOB_CORNER_RADIUS, 
-                                        yRadius = BLOB_CORNER_RADIUS, type=ROLE_BLOB)
+                                        height = height, width = width, xRadius = prefs.BLOB_CORNER_RADIUS, 
+                                        yRadius = prefs.BLOB_CORNER_RADIUS, type=ROLE_BLOB)
             self.undoStack.push(newAction)
             #blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 
             #                height = height, width = width,
-            #                xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
+            #                xRadius = prefs.BLOB_CORNER_RADIUS, yRadius = prefs.BLOB_CORNER_RADIUS)
             #self.addItem(blob)
             #self.updateBlobParenting()
             self.mouseMode = self.POINTER
@@ -3219,7 +3218,7 @@ class MainWindow(QMainWindow):
         elif lineType == "Spline":  
             polyLineType = SPLINE
         else:
-            polyLineType = DEFAULT_EDGE
+            polyLineType = prefs.DEFAULT_EDGE
 
         #Arrowheads
         #Currently just using the defaults
@@ -3529,7 +3528,7 @@ class MainWindow(QMainWindow):
             graphDir = graphStr.get("edgedefault")
             self.model.isDirected = graphDir == "directed"
         else: 
-            self.model.isDirected = ISDIGRAPH 
+            self.model.isDirected = prefs.ISDIGRAPH 
 
         #Track the old -> new IDs to deal with string IDs, and hook up edges
         #Hyperedges are complex, so make it accessible to hyperEdgeFromXML
@@ -3685,7 +3684,7 @@ class MainWindow(QMainWindow):
             graphDir = graphStr.get("edgedefault")
             self.model.isDirected = graphDir == "directed"
         else: 
-            self.model.isDirected = ISDIGRAPH 
+            self.model.isDirected = prefs.ISDIGRAPH 
 
         #Track the old -> new IDs to deal with string IDs, and hook up edges
         #Hyperedges are complex, so make it accessible to hyperEdgeFromXML
@@ -4633,9 +4632,8 @@ class action_CreditsDlg(QDialog):
 #import cProfile
 
 if __name__ == "__main__":
-    print("="*100)
-    #user preferences - defaults - see HGConstants
-    prefs = UserPreferences()
+    print("start up ","="*100)
+
     #Get the user prefs (if any)
     prefs.load()
 

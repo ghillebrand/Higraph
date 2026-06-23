@@ -41,10 +41,10 @@ class EditPreferences(QDialog):
         layout = QFormLayout(widget)
         
         # Numeric SpinBoxes
-        self.sb_node_size = QSpinBox(minimum=1, maximum=200, value=self.prefs.NODESIZE)
-        self.sb_hit_size = QSpinBox(minimum=1, maximum=50, value=self.prefs.HITSIZE)
+        #self.sb_node_size = QSpinBox(minimum=1, maximum=200, value=self.prefs.NODESIZE)
+        #self.sb_hit_size = QSpinBox(minimum=1, maximum=50, value=self.prefs.HITSIZE)
         self.sb_paste_offset = QSpinBox(minimum=0, maximum=1000, value=self.prefs.PASTE_OFFSET)
-        self.sb_corner_radius = QSpinBox(minimum=0, maximum=100, value=self.prefs.BLOB_CORNER_RADIUS)
+        #self.sb_corner_radius = QSpinBox(minimum=0, maximum=100, value=self.prefs.BLOB_CORNER_RADIUS)
         self.sb_tangent_scale = QSpinBox(minimum=1, maximum=500, value=self.prefs.TANGENT_SCALE_FACTOR)
         
         # Routing Engine Preferences
@@ -58,13 +58,13 @@ class EditPreferences(QDialog):
         self.combo_edge_type.setCurrentIndex(initial_idx)
 
         # Append Rows to Layout
-        layout.addRow("Node Display Size:", self.sb_node_size)
-        layout.addRow("Selection Tolerance (Hit Size):", self.sb_hit_size)
+        #layout.addRow("Node Display Size:", self.sb_node_size)
+        #layout.addRow("Selection Tolerance (Hit Size):", self.sb_hit_size)
         layout.addRow("Paste Placement Offset:", self.sb_paste_offset)
-        layout.addRow("Blob Corner Radius:", self.sb_corner_radius)
+        #layout.addRow("Blob Corner Radius:", self.sb_corner_radius)
         layout.addRow("Tangent Scale Factor:", self.sb_tangent_scale)
-        layout.addRow("Default Routing Model:", self.combo_edge_type)
-        layout.addRow("Enable Directed Graph (Digraph):", self.cb_is_digraph)
+        layout.addRow("Default Edge Type:", self.combo_edge_type)
+        layout.addRow("Enable Directed Graph (Digraph) (requires restart):", self.cb_is_digraph)
         
         return widget
 
@@ -75,8 +75,8 @@ class EditPreferences(QDialog):
         # Boolean Checkboxes
         self.cb_display_name = QCheckBox("Show node names automatically", checked=self.prefs.DISPLAY_NAME_BY_DEFAULT)
         self.cb_display_desc = QCheckBox("Show descriptions automatically", checked=self.prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT)
-        self.cb_font_resizable = QCheckBox("Allow text scaling on zoom operations", checked=self.prefs.BLOB_FONT_IS_RESIZABLE)
-        self.cb_name_on_top = QCheckBox("Force element names above graphics layer", checked=self.prefs.BLOB_NAME_ON_TOP)
+        self.cb_font_resizable = QCheckBox("Allow text scaling on resize", checked=self.prefs.BLOB_FONT_IS_RESIZABLE)
+        self.cb_name_on_top = QCheckBox("Blob name on top (or inside)", checked=self.prefs.BLOB_NAME_ON_TOP)
         
         # Typography Size
         self.sb_font_size = QSpinBox(minimum=4, maximum=144, value=self.prefs.BLOB_FONT_SIZE)
@@ -148,10 +148,10 @@ class EditPreferences(QDialog):
     def accept(self):
         """Converts UI states back to the target Dataclass properties upon saving."""
         # 1. Update Sizing Fields
-        self.prefs.NODESIZE = self.sb_node_size.value()
-        self.prefs.HITSIZE = self.sb_hit_size.value()
+        #self.prefs.NODESIZE = self.sb_node_size.value()
+        #self.prefs.HITSIZE = self.sb_hit_size.value()
         self.prefs.PASTE_OFFSET = self.sb_paste_offset.value()
-        self.prefs.BLOB_CORNER_RADIUS = self.sb_corner_radius.value()
+        #self.prefs.BLOB_CORNER_RADIUS = self.sb_corner_radius.value()
         self.prefs.TANGENT_SCALE_FACTOR = self.sb_tangent_scale.value()
         
         # 2. Update Configuration Dropdowns/Booleans

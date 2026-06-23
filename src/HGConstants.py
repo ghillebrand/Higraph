@@ -47,13 +47,13 @@ roleDic={ROLE_NODE: "ROLE_NODE",
 
 #User Preferences
 #----------------
-NODESIZE = 15
+#NODESIZE = 15
 #Selection tolerance
 HITSIZE = 5
 #Offset to use when pasting nodes
 PASTE_OFFSET = 100
 
-BLOB_CORNER_RADIUS = 10
+#BLOB_CORNER_RADIUS = 10
 TANGENT_SCALE_FACTOR = 20
 
 DISPLAY_NAME_BY_DEFAULT = True
@@ -63,9 +63,9 @@ BLOB_FONT_IS_RESIZABLE = True
 BLOB_NAME_ON_TOP = False
 
 #Model level default for edges
-ISDIGRAPH = True
+#ISDIGRAPH = True
 
-DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT 
+#DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT 
 
 #options and defaults
 from PySide6.QtGui import QColor
@@ -88,13 +88,13 @@ class UserPreferences:
         Modifiable list of constants that the user can update.
         Managed via QSettings
     """
-    NODESIZE :int = 15
+    NODESIZE :int = 15 #Been made uneditable
     #Selection tolerance
-    HITSIZE :int = 5
+    HITSIZE :int = 5 #Been made uneditable
     #Offset to use when pasting nodes
     PASTE_OFFSET :int = 100
 
-    BLOB_CORNER_RADIUS :int = 10
+    BLOB_CORNER_RADIUS :int = 10 #Been made uneditable
     TANGENT_SCALE_FACTOR :int = 20
 
     DISPLAY_NAME_BY_DEFAULT:bool = True
@@ -103,10 +103,10 @@ class UserPreferences:
     BLOB_FONT_IS_RESIZABLE:bool = True
     BLOB_NAME_ON_TOP:bool = False
 
-    #Model level default for edges
+    #Model level default for edges (requires restart)
     ISDIGRAPH:bool = True
 
-    DEFAULT_EDGE :int = SPLINE #SPLINE #STRAIGHT 
+    DEFAULT_EDGE :int = SPLINE
 
     #options and defaults
 
@@ -170,3 +170,5 @@ class UserPreferences:
             setattr(self, f.name, typed_value)
 
     
+#Define this for access by all other modules
+prefs = UserPreferences()
