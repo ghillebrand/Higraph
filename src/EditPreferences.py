@@ -1,4 +1,4 @@
-import sys
+#import sys
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTabWidget,
                                  QWidget, QFormLayout, QSpinBox, QCheckBox,
                                  QComboBox, QPushButton, QColorDialog, QDialogButtonBox)

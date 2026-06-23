@@ -170,4 +170,3 @@ class UserPreferences:
             setattr(self, f.name, typed_value)
 
     
-prefs = UserPreferences()

@@ -68,6 +68,7 @@ from Edges import *
 
 #cGPT edit code
 from EditVisItemDialog import *  #EditVisEdgeItemDialog, EditVisNodeItemDialog
+from EditPreferences import * #Gemini code to edit prefs ;) 
 
 class graphModel(QStandardItemModel):
     """ Hold the visual details for the nodes and edges of the graph (x,y, size)
@@ -2383,6 +2384,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.treeWidget.setColumnCount(3)
@@ -2492,9 +2494,14 @@ class MainWindow(QMainWindow):
         self.actionEditRedo.triggered.connect(self.undoStack.redo)
 
         #Tools & other 
+        #Python window
         self.execCodeAction = QAction("Run Python Code", self)
         self.execCodeAction.triggered.connect(self.showCodeDialog)
         self.ui.menuTools.addAction(self.execCodeAction)
+        #Edit preferences
+        self.execEditPrefsAction = QAction("Edit preferences", self)
+        self.execEditPrefsAction.triggered.connect(self.showEditPrefsDialog)
+        self.ui.menuTools.addAction(self.execEditPrefsAction)
 
         """
         self.selectColourDefaultsAction = QAction("Select Colours", self)
@@ -2557,6 +2564,9 @@ class MainWindow(QMainWindow):
         if colour.isValid():
             DRAWING_COLOUR=colour
     """
+    def showEditPrefsDialog(self):
+        self.prefsDialog  = EditPreferences(prefs, parent=self)
+        self.prefsDialog.show()
 
     #Graph actions from the toolbar
 
@@ -4598,6 +4608,9 @@ class MainWindow(QMainWindow):
     def closeEvent(self,event):
         """ tidy up """
         print("shutting down ...")
+
+        #TODO: Check for fileChanged
+
         prefs.save()
 
 #Dialogs called by mainwindow
@@ -4621,10 +4634,10 @@ class action_CreditsDlg(QDialog):
 
 if __name__ == "__main__":
     print("="*100)
-    print(f"prefs:  {prefs.NODESIZE=}")
-    #Get the user prefs
+    #user preferences - defaults - see HGConstants
+    prefs = UserPreferences()
+    #Get the user prefs (if any)
     prefs.load()
-    print(f"prefs:  {prefs.NODESIZE=}")
 
     app = QApplication(sys.argv)
     
