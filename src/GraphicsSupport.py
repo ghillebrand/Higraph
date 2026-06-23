@@ -212,7 +212,7 @@ class dummyNodeRoot(QGraphicsItem):
 
         #ID for saving, and debugging 
         #Check for unique ID
-        if id !=None:
+        if id !=None and id !=0:
             self.nodeNum=id
         else:
             self.nodeNum = getGUID(id)

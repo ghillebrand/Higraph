@@ -1,0 +1,116 @@
+<?xml version="1.0" ?>
+<higraphml version="0.3.0">
+	<saveViewCoords x="-686.0" y="-544.0" width="704.0" height="568.0"/>
+	<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+		<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+		<key id="data_blob" for="blob" higraph.type="blobgraphics"/>
+		<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+		<graph edgedefault="directed" id="G">
+			<node id="4">
+				<data key="data_node">
+					<y:ShapeNode>
+						<y:Geometry x="-317.0" y="-331.0"/>
+						<port name="0" t="0.6894405292045783" x="-2.785430072655779" y="-6.963575181639444"/>
+						<y:NodeLabel>
+							n4
+							<h:metadataAttribute key="display" value="True"/>
+						</y:NodeLabel>
+					</y:ShapeNode>
+				</data>
+			</node>
+			<node id="3">
+				<data key="data_node">
+					<y:ShapeNode>
+						<y:Geometry x="-442.0" y="-249.0"/>
+						<port name="0" t="0.9064164790945006" x="6.240377207533829" y="-4.160251471689216"/>
+						<y:NodeLabel>
+							n3
+							<h:metadataAttribute key="display" value="True"/>
+						</y:NodeLabel>
+					</y:ShapeNode>
+				</data>
+			</node>
+			<node id="2">
+				<data key="data_node">
+					<y:ShapeNode>
+						<y:Geometry x="-439.0" y="-379.0"/>
+						<port name="0" t="0.917375329730716" x="6.511823565933441" y="-3.7210420376762587"/>
+						<y:NodeLabel>
+							n2
+							<h:metadataAttribute key="display" value="True"/>
+						</y:NodeLabel>
+					</y:ShapeNode>
+				</data>
+			</node>
+			<node id="1">
+				<data key="data_node">
+					<y:ShapeNode>
+						<y:Geometry x="-440.0" y="-315.0"/>
+						<port name="0" t="0.9557072336085476" x="7.211429607306173" y="-2.0604084592303376"/>
+						<y:NodeLabel>
+							n1
+							<h:metadataAttribute key="display" value="True"/>
+						</y:NodeLabel>
+					</y:ShapeNode>
+				</data>
+			</node>
+			<hyperedge id="7" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="2" sourceport="0"/>
+					<start source="1" sourceport="0"/>
+					<start source="3" sourceport="0"/>
+					<end target="4" targetport="0"/>
+				</h:nodeList>
+				<h:dummyNodeList>
+					<dummyNode id="9" x="-355.0" y="-367.0">
+						<startsEdgeLine eL="10"/>
+						<endsEdgeLine eL="8"/>
+						<endsEdgeLine eL="14"/>
+					</dummyNode>
+					<dummyNode id="13" x="-398.0" y="-343.0">
+						<startsEdgeLine eL="14"/>
+						<endsEdgeLine eL="12"/>
+						<endsEdgeLine eL="16"/>
+					</dummyNode>
+				</h:dummyNodeList>
+				<h:edgeLineList>
+					<!--hyperEdge {8: ((2, 0), (9, 9)), 12: ((1, 0), (13, 13)), 16: ((3, 0), (13, 13)), 10: ((9, 9), (4, 0)), 14: ((13, 13), (9, 9))}-->
+					<edgeLine id="8" source="2" sourceport="0" target="9" targetport="9">
+						<y:Path>
+							<h:StartTangent x="17.364862842489178" y="-9.92277876713669"/>
+							<h:EndTangent x="17.699987784437177" y="9.311843664429443"/>
+						</y:Path>
+					</edgeLine>
+					<edgeLine id="10" source="9" sourceport="9" target="4" targetport="0">
+						<y:Path>
+							<h:StartTangent x="17.699987784437177" y="9.311843664429443"/>
+							<h:EndTangent x="7.427813527082078" y="18.569533817705185"/>
+						</y:Path>
+					</edgeLine>
+					<edgeLine id="12" source="1" sourceport="0" target="13" targetport="13">
+						<y:Path>
+							<h:StartTangent x="19.230478952816462" y="-5.494422557947567"/>
+							<h:EndTangent x="14.04713081791307" y="-14.236506445909994"/>
+						</y:Path>
+					</edgeLine>
+					<edgeLine id="14" source="13" sourceport="13" target="9" targetport="9">
+						<y:Path>
+							<h:StartTangent x="14.04713081791307" y="-14.236506445909994"/>
+							<h:EndTangent x="17.699987784437177" y="9.311843664429443"/>
+						</y:Path>
+					</edgeLine>
+					<edgeLine id="16" source="3" sourceport="0" target="13" targetport="13">
+						<y:Path>
+							<h:StartTangent x="16.641005886756876" y="-11.094003924504577"/>
+							<h:EndTangent x="14.04713081791307" y="-14.236506445909994"/>
+						</y:Path>
+					</edgeLine>
+				</h:edgeLineList>
+				<h:metadata key="name" value="7 ">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</hyperedge>
+		</graph>
+	</graphml>
+</higraphml>
