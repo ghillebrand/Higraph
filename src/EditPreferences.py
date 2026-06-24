@@ -25,9 +25,9 @@ class EditPreferences(QDialog):
         
         # Tab Container
         self.tabs = QTabWidget()
-        self.tabs.addTab(self._create_sizing_tab(), "Sizing & Engine")
-        self.tabs.addTab(self._create_display_tab(), "Display & Font")
-        self.tabs.addTab(self._create_color_tab(), "Canvas Colors")
+        self.tabs.addTab(self._create_sizing_tab(), "Graph Preferences")
+        self.tabs.addTab(self._create_display_tab(), "Display")
+        #self.tabs.addTab(self._create_color_tab(), "Canvas Colors")
         main_layout.addWidget(self.tabs)
         
         # Dialog Action Buttons (OK / Cancel)
@@ -39,13 +39,7 @@ class EditPreferences(QDialog):
     def _create_sizing_tab(self) -> QWidget:
         widget = QWidget()
         layout = QFormLayout(widget)
-        
-        # Numeric SpinBoxes
-        #self.sb_node_size = QSpinBox(minimum=1, maximum=200, value=self.prefs.NODESIZE)
-        #self.sb_hit_size = QSpinBox(minimum=1, maximum=50, value=self.prefs.HITSIZE)
-        self.sb_paste_offset = QSpinBox(minimum=0, maximum=1000, value=self.prefs.PASTE_OFFSET)
-        #self.sb_corner_radius = QSpinBox(minimum=0, maximum=100, value=self.prefs.BLOB_CORNER_RADIUS)
-        self.sb_tangent_scale = QSpinBox(minimum=1, maximum=500, value=self.prefs.TANGENT_SCALE_FACTOR)
+
         
         # Routing Engine Preferences
         self.cb_is_digraph = QCheckBox(checked=self.prefs.ISDIGRAPH)
@@ -57,14 +51,8 @@ class EditPreferences(QDialog):
         initial_idx = 1 if self.prefs.DEFAULT_EDGE == SPLINE else 0
         self.combo_edge_type.setCurrentIndex(initial_idx)
 
-        # Append Rows to Layout
-        #layout.addRow("Node Display Size:", self.sb_node_size)
-        #layout.addRow("Selection Tolerance (Hit Size):", self.sb_hit_size)
-        layout.addRow("Paste Placement Offset:", self.sb_paste_offset)
-        #layout.addRow("Blob Corner Radius:", self.sb_corner_radius)
-        layout.addRow("Tangent Scale Factor:", self.sb_tangent_scale)
         layout.addRow("Default Edge Type:", self.combo_edge_type)
-        layout.addRow("Enable Directed Graph (Digraph) (requires restart):", self.cb_is_digraph)
+        layout.addRow("Directed Edges (Digraph):", self.cb_is_digraph)
         
         return widget
 
@@ -73,22 +61,24 @@ class EditPreferences(QDialog):
         layout = QFormLayout(widget)
         
         # Boolean Checkboxes
-        self.cb_display_name = QCheckBox("Show node names automatically", checked=self.prefs.DISPLAY_NAME_BY_DEFAULT)
-        self.cb_display_desc = QCheckBox("Show descriptions automatically", checked=self.prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT)
+        self.cb_display_name = QCheckBox("Show item names automatically", checked=self.prefs.DISPLAY_NAME_BY_DEFAULT)
+        self.cb_display_desc = QCheckBox("Show blob descriptions automatically", checked=self.prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT)
         self.cb_font_resizable = QCheckBox("Allow text scaling on resize", checked=self.prefs.BLOB_FONT_IS_RESIZABLE)
         self.cb_name_on_top = QCheckBox("Blob name on top (or inside)", checked=self.prefs.BLOB_NAME_ON_TOP)
         
         # Typography Size
         self.sb_font_size = QSpinBox(minimum=4, maximum=144, value=self.prefs.BLOB_FONT_SIZE)
 
-        layout.addRow("Node Text Layout:", self.cb_display_name)
-        layout.addRow("Node Content Layout:", self.cb_display_desc)
-        layout.addRow("Base Text Font Size:", self.sb_font_size)
-        layout.addRow("Dynamic Scaling:", self.cb_font_resizable)
-        layout.addRow("Layer Ordering:", self.cb_name_on_top)
+        layout.addRow("Item Names Displayed:", self.cb_display_name)
+        layout.addRow("Item Description Layout:", self.cb_display_desc)
+        layout.addRow("Base Blob Text Font Size:", self.sb_font_size)
+        layout.addRow("Blob Text Resizing:", self.cb_font_resizable)
+        layout.addRow("Blob Name Position:", self.cb_name_on_top)
         
         return widget
 
+    #This is cool code, and may be useful later.
+    #Not currently used
     def _create_color_tab(self) -> QWidget:
         widget = QWidget()
         layout = QFormLayout(widget)
@@ -148,11 +138,11 @@ class EditPreferences(QDialog):
     def accept(self):
         """Converts UI states back to the target Dataclass properties upon saving."""
         # 1. Update Sizing Fields
-        #self.prefs.NODESIZE = self.sb_node_size.value()
+        #self.NODESIZE = self.sb_node_size.value()
         #self.prefs.HITSIZE = self.sb_hit_size.value()
-        self.prefs.PASTE_OFFSET = self.sb_paste_offset.value()
-        #self.prefs.BLOB_CORNER_RADIUS = self.sb_corner_radius.value()
-        self.prefs.TANGENT_SCALE_FACTOR = self.sb_tangent_scale.value()
+        #self.prefs.PASTE_OFFSET = self.sb_paste_offset.value()
+        #self.BLOB_CORNER_RADIUS = self.sb_corner_radius.value()
+        #self.prefs.TANGENT_SCALE_FACTOR = self.sb_tangent_scale.value()
         
         # 2. Update Configuration Dropdowns/Booleans
         self.prefs.ISDIGRAPH = self.cb_is_digraph.isChecked()
@@ -169,7 +159,7 @@ class EditPreferences(QDialog):
         for attr_name, color_obj in self.loaded_colors.items():
             setattr(self.prefs, attr_name, color_obj)
 
-        # 5. Commit directly to disk via your dataclass serialize logic
+        # 5. Commit directly to disk 
         if hasattr(self.prefs, 'save'):
             self.prefs.save()
 

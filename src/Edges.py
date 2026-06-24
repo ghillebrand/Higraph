@@ -101,7 +101,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         if len(metadataAttributes) > 0:
             self.metadataAttributes = metadataAttributes
         else:
-            self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
+            self.metadataAttributes = {'name':{'display':prefs.DISPLAY_NAME_BY_DEFAULT}}
 
         #TODO: This overwrites in metadata['name'] value, but it should be the same?
         #self.model.Gr.edgeD[self.edgeNum].metadata.update({'name':f"{self.edgeNum} {self.model.Gr.edgeD[self.edgeNum].metadata['name']}"})
@@ -190,7 +190,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
             self.isDirected=directed
 
         if self.isDirected:
-            self.endShape = ArrowHeadItem(size=prefs.NODESIZE/2, parent=self)
+            self.endShape = ArrowHeadItem(size=NODESIZE/2, parent=self)
         else:
             self.endShape = None
 
@@ -319,8 +319,8 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         textBRect = self.textItem.boundingRect()
         midPt = self.edgeLine.textPos(0.5)
         #painter.drawEllipse(midPt,2,2)
-        self.textItem.setPos(midPt.x() - textBRect.width()/2  + prefs.NODESIZE/2, \
-                             midPt.y() - textBRect.height()/2 + prefs.NODESIZE/2)
+        self.textItem.setPos(midPt.x() - textBRect.width()/2  + NODESIZE/2, \
+                             midPt.y() - textBRect.height()/2 + NODESIZE/2)
         self.metaDisplay.setPos(self.textItem.pos()+QPointF(0,0))
         #painter.drawRect(self.textItem.boundingRect())
        
@@ -439,7 +439,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         if self.isDirected != isDirected:
             self.isDirected = isDirected
             if isDirected:  #restore the arrow
-                self.endShape = ArrowHeadItem(size=prefs.NODESIZE/2, parent=self)
+                self.endShape = ArrowHeadItem(size=NODESIZE/2, parent=self)
             else:
                 #Note, previous endShape dereference should delete it
                 self.scene().removeItem(self.endShape)
@@ -591,7 +591,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         if len(metadataAttributes) > 0:
             self.metadataAttributes = metadataAttributes
         else:
-            self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
+            self.metadataAttributes = {'name':{'display':prefs.DISPLAY_NAME_BY_DEFAULT}}
 
         #TODO: This overwrites in metadata['name'] value, but it should be the same?
         #self.model.Gr.edgeD[self.edgeNum].metadata.update({'name':f"{self.edgeNum} {self.model.Gr.edgeD[self.edgeNum].metadata['name']}"})
@@ -635,7 +635,8 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #directed edge?
         if directed == '':
-            self.isDirected = self.model.isDigraph
+            #TODO: This is now getting it dynamically from `prefs`. Right?
+            self.isDirected = prefs.ISDIGRAPH  #self.model.isDigraph
         else:
             self.isDirected=directed
         
@@ -647,7 +648,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             for e in self.endNodes:
                 #print(f"he add arrow {e[0].nodeNum}=")
                 #pos & details are set in `updateLine`. Additional endShapes created in addSegment
-                self.endShape.append(ArrowHeadItem(size=prefs.NODESIZE/2, parent=self))
+                self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
 
 
         #Track what sort of edge this one is
@@ -925,8 +926,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         #  This code should be in itemChanged, not paint
         midPt = self.edgeLines[0].textPos(0.5)
         #painter.drawEllipse(midPt,2,2)
-        self.textItem.setPos(midPt.x() - textBRect.width()/2  + prefs.NODESIZE/2, \
-                             midPt.y() - textBRect.height()/2 + prefs.NODESIZE/2)
+        self.textItem.setPos(midPt.x() - textBRect.width()/2  + NODESIZE/2, \
+                             midPt.y() - textBRect.height()/2 + NODESIZE/2)
         self.metaDisplay.setPos(self.textItem.pos()+QPointF(0,0))
         #painter.drawRect(self.textItem.boundingRect())
        
@@ -1076,7 +1077,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             if isDirected:  #restore the arrow
                 for e in self.endNodes:
                     if e[0].data(KEY_ROLE) in [ROLE_NODE, ROLE_BLOB]: #Not on dummyNodes
-                        self.endShape.append(ArrowHeadItem(size=prefs.NODESIZE/2, parent=self))
+                        self.endShape.append(ArrowHeadItem(size=NODESIZE/2, parent=self))
             else:
                 #Note, previous endShape dereference should delete it
                 for i in range(len(self.endShape)):

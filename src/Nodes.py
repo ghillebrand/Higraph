@@ -39,9 +39,15 @@ class QRoundedRectItem(QGraphicsObject):
     # Custom signal emitted when the border is clicked
  #JH   clicked = Signal()
 
-    def __init__(self, rect: QRectF, xRadius: float=BLOB_CORNER_RADIUS, yRadius: float=BLOB_CORNER_RADIUS, 
+    def __init__(self, rect: QRectF, xRadius: float = None, yRadius: float=None, 
                     mode=Qt.AbsoluteSize,parent=None):
         super().__init__(parent)
+        #Sort out parameter prefs
+        if xRadius == None:
+            xRadius = BLOB_CORNER_RADIUS
+        if yRadius == None:
+            yRadius = BLOB_CORNER_RADIUS
+
         self._rect = rect
         self._xRadius = xRadius
         self._yRadius = yRadius
@@ -123,7 +129,7 @@ class QRoundedRectItem(QGraphicsObject):
 class BlobTextItem(QGraphicsTextItem):
     def __init__(self, text, width, parent):
         super().__init__(text, parent)
-        if not BLOB_NAME_ON_TOP:
+        if not prefs.BLOB_NAME_ON_TOP:
             self.yOffset=10
         else:
             self.yOffset=0
@@ -137,7 +143,7 @@ class BlobTextItem(QGraphicsTextItem):
 
         # 2. Appearance tweaks
         self.setDefaultTextColor(QColor("#2c3e50"))
-        self.setFont(QFont("Arial", BLOB_FONT_SIZE))
+        self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
         #self.setTextWidth(width)
         self.setTextSize(parent)
         # 3. Make the item movable within the scene
@@ -168,7 +174,7 @@ class BlobTextItem(QGraphicsTextItem):
             super().setTextWidth(1)
         else:
             super().setTextWidth(parent._width)
-            if BLOB_FONT_IS_RESIZABLE == True:
+            if prefs.BLOB_FONT_IS_RESIZABLE == True:
                 currentHeight=super().boundingRect().height()
                 currentFontSize=self.font().pointSize()
                 if currentHeight > parent._height and currentFontSize>6:
@@ -176,8 +182,8 @@ class BlobTextItem(QGraphicsTextItem):
                         currentFontSize-=1
                         self.setFont(QFont("Arial",currentFontSize))
                         currentHeight=super().boundingRect().height()
-                elif currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
-                    while currentHeight+5 < parent._height and currentFontSize<BLOB_FONT_SIZE:
+                elif currentHeight+5 < parent._height and currentFontSize<prefs.BLOB_FONT_SIZE:
+                    while currentHeight+5 < parent._height and currentFontSize<prefs.BLOB_FONT_SIZE:
                         currentFontSize+=1
                         self.setFont(QFont("Arial",currentFontSize))
                         currentHeight=super().boundingRect().height()
@@ -264,7 +270,7 @@ class VisNodeItem(QGraphicsObject):
         if len(metadataAttributes) > 0:
             self.metadataAttributes = metadataAttributes
         else:
-            self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
+            self.metadataAttributes = {'name':{'display':prefs.DISPLAY_NAME_BY_DEFAULT}}
         self.blobDescription=""   #needed for blobs
 
         #TODO: Change this to TransparentTextItem
@@ -395,7 +401,7 @@ class VisNodeItem(QGraphicsObject):
 
         nodeRect = QRectF(-NODESIZE/2,-NODESIZE/2,NODESIZE,NODESIZE)
 
-        penWidth = 2
+        penWidth = 3
         bRect = nodeRect.united(textRect).adjusted(-penWidth,-penWidth,penWidth,penWidth)
         return bRect
 
@@ -674,9 +680,9 @@ class VisBlobItem(VisNodeItem):
             port.setParentItem(self.nodeShape)
         #blob text JH
         if 'description' not in self.metadataAttributes:
-            self.metadataAttributes['description']={'display':DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
+            self.metadataAttributes['description']={'display':prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
             self.metadata['description']='*'
-       # if DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
+       # if prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
         if 'description' in self.metadata:
             blobText=self.metadata['description']
         else:
@@ -799,7 +805,7 @@ class VisBlobItem(VisNodeItem):
         #Draw the text if set to display
         if self.metadataAttributes['name']['display']:
             # Pos on top (this can be generalised to left, bottom, right, etc)
-            if BLOB_NAME_ON_TOP:
+            if prefs.BLOB_NAME_ON_TOP:
                 r = QRectF(0,-NODESIZE,0,0) 
                 r = painter.drawText(r,Qt.AlignCenter,self.dispText)
                 painter.drawText(r, Qt.AlignCenter, self.dispText)

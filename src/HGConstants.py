@@ -47,20 +47,22 @@ roleDic={ROLE_NODE: "ROLE_NODE",
 
 #User Preferences
 #----------------
-#NODESIZE = 15
+#TODO: Reverse the prefs version
+NODESIZE = 15
 #Selection tolerance
 HITSIZE = 5
 #Offset to use when pasting nodes
 PASTE_OFFSET = 100
 
-#BLOB_CORNER_RADIUS = 10
+BLOB_CORNER_RADIUS = 10
 TANGENT_SCALE_FACTOR = 20
 
-DISPLAY_NAME_BY_DEFAULT = True
-DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT = False
-BLOB_FONT_SIZE = 9
-BLOB_FONT_IS_RESIZABLE = True
-BLOB_NAME_ON_TOP = False
+#TODO: Use the prefs version
+#DISPLAY_NAME_BY_DEFAULT = True
+#DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT = False
+#BLOB_FONT_SIZE = 9
+#BLOB_FONT_IS_RESIZABLE = True
+#BLOB_NAME_ON_TOP = False
 
 #Model level default for edges
 #ISDIGRAPH = True
@@ -88,14 +90,6 @@ class UserPreferences:
         Modifiable list of constants that the user can update.
         Managed via QSettings
     """
-    NODESIZE :int = 15 #Been made uneditable
-    #Selection tolerance
-    HITSIZE :int = 5 #Been made uneditable
-    #Offset to use when pasting nodes
-    PASTE_OFFSET :int = 100
-
-    BLOB_CORNER_RADIUS :int = 10 #Been made uneditable
-    TANGENT_SCALE_FACTOR :int = 20
 
     DISPLAY_NAME_BY_DEFAULT:bool = True
     DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:bool = False
@@ -103,20 +97,11 @@ class UserPreferences:
     BLOB_FONT_IS_RESIZABLE:bool = True
     BLOB_NAME_ON_TOP:bool = False
 
-    #Model level default for edges (requires restart)
-    ISDIGRAPH:bool = True
-
+    #Model level, and default for new edges 
+    ISDIGRAPH :bool = True
     DEFAULT_EDGE :int = SPLINE
 
     #options and defaults
-
-    #@dataclass needs the cusom classes wrapped to sort
-    HOVER_COLOUR :QColor = field(default_factory=lambda: QColor("blue"))
-    SELECT_COLOUR :QColor = field(default_factory=lambda: QColor("blue"))
-    DRAWING_COLOUR :QColor = field(default_factory=lambda: QColor("black"))
-    BLOB_HANDLE_COLOUR :QColor = field(default_factory=lambda: QColor("green"))
-    EDGE_HANDLE_COLOUR :QColor = field(default_factory=lambda: QColor("green"))
-    POINT_COLOUR :QColor = field(default_factory=lambda: QColor("purple"))
 
     def _get_settings_handle(self) -> QSettings:
         """Returns the OS-specific settings handle."""

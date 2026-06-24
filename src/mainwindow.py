@@ -1327,12 +1327,12 @@ class grScene(QGraphicsScene):
             TLx -= width
             TLy -= height
             newAction=createNodeCommand(QPointF(TLx,TLy), self, self.model, self.treeWidget, 
-                                        height = height, width = width, xRadius = prefs.BLOB_CORNER_RADIUS, 
-                                        yRadius = prefs.BLOB_CORNER_RADIUS, type=ROLE_BLOB)
+                                        height = height, width = width, xRadius = BLOB_CORNER_RADIUS, 
+                                        yRadius = BLOB_CORNER_RADIUS, type=ROLE_BLOB)
             self.undoStack.push(newAction)
             #blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 
             #                height = height, width = width,
-            #                xRadius = prefs.BLOB_CORNER_RADIUS, yRadius = prefs.BLOB_CORNER_RADIUS)
+            #                xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
             #self.addItem(blob)
             #self.updateBlobParenting()
             self.mouseMode = self.POINTER
@@ -3611,7 +3611,7 @@ class MainWindow(QMainWindow):
 
         self.Scene.update()
 
-        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + APP_VERSION)
+        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
         self.oldToNewID.clear()
 
 
