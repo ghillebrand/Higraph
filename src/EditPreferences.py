@@ -47,13 +47,16 @@ class EditPreferences(QDialog):
         self.combo_edge_type = QComboBox()
         self.combo_edge_type.addItem("Straight Line", STRAIGHT)
         self.combo_edge_type.addItem("Spline Curve", SPLINE)
+
         # Set current index based on loaded constant
         initial_idx = 1 if self.prefs.DEFAULT_EDGE == SPLINE else 0
         self.combo_edge_type.setCurrentIndex(initial_idx)
+        self.sbAutoSaveTime = QSpinBox(minimum=0, maximum=30, value=self.prefs.AutoSaveMins)
 
         layout.addRow("Default Edge Type:", self.combo_edge_type)
         layout.addRow("Directed Edges (Digraph):", self.cb_is_digraph)
-        
+        layout.addRow("Autosave time (Mins, 0= off):", self.sbAutoSaveTime)
+
         return widget
 
     def _create_display_tab(self) -> QWidget:
@@ -147,6 +150,7 @@ class EditPreferences(QDialog):
         # 2. Update Configuration Dropdowns/Booleans
         self.prefs.ISDIGRAPH = self.cb_is_digraph.isChecked()
         self.prefs.DEFAULT_EDGE = self.combo_edge_type.currentData()
+        self.prefs.AutoSaveMins= self.sbAutoSaveTime.value()
 
         # 3. Update Display Options
         self.prefs.DISPLAY_NAME_BY_DEFAULT = self.cb_display_name.isChecked()

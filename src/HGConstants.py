@@ -102,6 +102,7 @@ class UserPreferences:
     DEFAULT_EDGE :int = SPLINE
 
     #options and defaults
+    AutoSaveMins = 1
 
     def _get_settings_handle(self) -> QSettings:
         """Returns the OS-specific settings handle."""

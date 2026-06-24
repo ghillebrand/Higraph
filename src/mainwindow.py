@@ -40,9 +40,11 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
             QPainterPath, QPainterPathStroker, QCursor, QUndoStack, QUndoCommand,
             QGuiApplication, QImage, QPixmap)
+
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
+
 from PySide6.QtSvg import QSvgGenerator
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 #from PySide6.Qtcore import QItemSelectionModel
@@ -2370,15 +2372,6 @@ def paintItemAndChildren(item, painter):
     painter.restore()
 
 
-basedir = os.path.dirname(__file__)
-
-try:
-    from ctypes import windll  # Only exists on Windows.
-    myappid = "za.co.isijingi"+APP_NAME+APP_VERSION
-    windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-except ImportError:
-    pass
-
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
@@ -3626,6 +3619,7 @@ class MainWindow(QMainWindow):
     def action_FileOpen_Graphml(self, fileName=None):
         """ Open 'old style' v0300 file 
             Deprecated - just here to port the old test files over
+            TODO: revert to being able to import "genuine" yEd/ graphml files
         """
         #Temp fix while moving to higraphml files
         if fileName == None:
@@ -3777,6 +3771,7 @@ class MainWindow(QMainWindow):
         """ 
             Write the graph to a yEd-style graphml file.
             Heavily based on yEdx code
+            TODO: Revisit this to create a "yed/graphml" export version
         """
         if self.fileName:
 
@@ -3973,12 +3968,27 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
             self.action_FileSave()
                  
+    def startAutoSave(self, interval:int):
+        """ setup the autosave process"""
+        print(f"Autosave will happen every {prefs.AutoSaveMins}")
 
 
+    def autoSave(self):
+        """ Autosave periodically """
+        print(f"Autosave happening {prefs.AutoSaveMins}")
+
+    def checkForAutoSaves(self):
+        """ check if there is an autosave file left over after a crash"""
+        print("checkForAutoSaves")
+
+    def clearAutoSaves(self):
+        """ Remove any autosaves on clean closeEvent"""
+        print("clearAutoSaves")
 
     def action_FileClose(self):
         print("File Close")  
-        #TODO: Close app?
+        #TODO: What does this mean. 
+        #closeEvent() is the shutdown code.
 
     def action_Print(self):
         """
@@ -4243,8 +4253,8 @@ class MainWindow(QMainWindow):
 
     def action_EditCut(self):
         print("Edit>Cut")
-
-        #Edite->Copy
+        #TODO: Edit cut
+        #Edit->Copy
         #Delete selected?
 
     def action_EditPaste(self):
@@ -4609,8 +4619,12 @@ class MainWindow(QMainWindow):
         print("shutting down ...")
 
         #TODO: Check for fileChanged
-
+        if not self.Scene.undoStack.isClean():
+            if self.askForFileSave()=="Cancel":
+                return
+                
         prefs.save()
+        self.clearAutoSaves()
 
 #Dialogs called by mainwindow
 class action_Aboutdlg(QDialog):
@@ -4634,10 +4648,22 @@ class action_CreditsDlg(QDialog):
 if __name__ == "__main__":
     print("start up ","="*100)
 
+    #set the app name in Windows
+    basedir = os.path.dirname(__file__)
+    try:
+        from ctypes import windll  # Only exists on Windows.
+        myappid = "za.co.isijingi"+APP_NAME+APP_VERSION
+        windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    except ImportError:
+        pass
+
     #Get the user prefs (if any)
     prefs.load()
 
     app = QApplication(sys.argv)
+    app.setOrganizationName("isijingi")
+    app.setApplicationName(APP_NAME)
+    app.setApplicationVersion(APP_VERSION)
     
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
     app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icons\\icon2.ico')))  #'qtpyGraphEdit.ico')))
