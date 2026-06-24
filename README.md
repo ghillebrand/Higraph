@@ -73,7 +73,7 @@ Otherwise,
 - create a folder, 
 - create a virtual enviroment  `python -m venv C:\path\to\new\virtual\environment` (and make it active with `scripts\activate`)
 - install PySide with `pip install PySide6`
-- copy all the code from here (git clone https://github.com/ghillebrand/qtPyGraphEdit.git) or download the zip from the green `Code` button above.
+- copy all the code from here (git clone https://github.com/ghillebrand/Higraph.git) or download the zip from the green `Code` button above.
 - Run `python mainwindow.py`, or open `mainwindow.py` with you favourite editor. I use VSCodium: VSCode without the telemetry back to Microsoft.
 - If you want to edit the dialogs, then you need the Qt designer `qtcreator` and to compile the `.ui` files to `.py`. The command is `pyside6-uic <file>.ui -o <file>.py`
 
