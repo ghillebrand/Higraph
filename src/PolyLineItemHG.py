@@ -247,13 +247,40 @@ class StraightLineItem(QGraphicsItem):
         #clear existing handles
         #for h in self._pHandles:
         #    self.scene().removeItem(h)
-        self._pHandles.clear()
-        self.parentItem().setZValue(3000)
+        #self._pHandles.clear()
+        #self.parentItem().setZValue(3000)
         # Add new handles
-        for pt in self._p:
+        """for pt in self._p:
             handle = HandleItem(pt, color=EDGE_HANDLE_COLOUR,handleShape="rectangle", parent=self)
             handle.setMoveCallback(self._updateFromHandles)
-            self._pHandles.append(handle)
+            self._pHandles.append(handle)"""
+        portPositions=[]
+        for pP in self.parentItem().startNodes:
+            portPositions.append(pP[1].scenePos())
+        for pP in self.parentItem().endNodes:
+            portPositions.append(pP[1].scenePos())
+        self.parentItem().setZValue(3000)
+        self._pHandles = []
+        for pi in self._p:
+            if pi in portPositions:
+                self._pHandles.append(HandleItem(pi,color=EDGE_HANDLE_COLOUR,handleShape="rectangle",parent=self))
+            elif pi == self._p[0] or pi == self._p[-1]:  #it's a dummy node
+                handleAlreadyCreated = False
+                for eL in self.parentItem().edgeLines:  #checking if a handle has already been created for this point
+                    if eL !=self and eL._pHandles != []:
+                        if pi == eL._pHandles[0].scenePos():
+                            self._pHandles.append(eL._pHandles[0])
+                            handleAlreadyCreated = True
+                            break
+                        elif pi == eL._pHandles[-1].scenePos():
+                            self._pHandles.append(eL._pHandles[-1])
+                            handleAlreadyCreated = True
+                            break 
+                if not handleAlreadyCreated:
+                    self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,handleShape="circle",parent=self))          
+            else:  #it's a point that was added to the edge by the user
+                self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,handleShape="circle", parent=self))
+
 
     def _deleteHandles(self):
         """ Delete handles when deselected"""
