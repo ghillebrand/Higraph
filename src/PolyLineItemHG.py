@@ -59,7 +59,8 @@ class StraightLineItem(QGraphicsItem):
 
     def __repr__(self):
         #tuple formatted, can't be fed into constructor, since it's a string :(
-        return str(f"({self._p})")
+        #return str(f"({self._p})")
+        return super().__repr__()
 
     def boundingRect(self):
         if not self._p:
@@ -76,25 +77,31 @@ class StraightLineItem(QGraphicsItem):
         return outlinePath.createStroke(self._path)
 
     def itemChange(self, change, value):
-        if change == QGraphicsItem.ItemSelectedHasChanged:
+        """if change == QGraphicsItem.ItemSelectedHasChanged:
             # value is a bool indicating new selected state
             #isSelected = bool(value)
             isSelected = self.parentItem() and self.parentItem().isSelected()
             if isSelected:
                 self._createHandles()
             else:
-                self._deleteHandles()
+                self._deleteHandles()"""
         return super().itemChange(change, value)
     
     def hoverEnterEvent(self, event):
-        self.isHovered = True
-        self.update()
-        super().hoverEnterEvent(event)
+        for eLine in self.parentItem().edgeLines:
+            eLine.isHovered = True
+            eLine.update()
+        #self.isHovered = True
+        #self.update()
+        #super().hoverEnterEvent(event)
 
     def hoverLeaveEvent(self, event):
-        self.isHovered = False
-        self.update()
-        super().hoverLeaveEvent(event)
+        for eLine in self.parentItem().edgeLines:
+            eLine.isHovered = False
+            eLine.update()
+        #self.isHovered = False
+        #self.update()
+        #super().hoverLeaveEvent(event)
 
     def paint(self, painter: QPainter, option, widget=None):
         #print(f"SL Paint {self._p }")
@@ -202,7 +209,6 @@ class StraightLineItem(QGraphicsItem):
         #start newSeg at newPoint, just before i+1
         newPts = [newP] + newPts
         newSeg = StraightLineItem(newPts, parent=self.parentItem())
-
         return newSeg
 
     def deletePoint(self, point: QPointF):
@@ -280,18 +286,23 @@ class StraightLineItem(QGraphicsItem):
                     self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,handleShape="circle",parent=self))          
             else:  #it's a point that was added to the edge by the user
                 self._pHandles.append(HandleItem(pi,color=POINT_COLOUR,handleShape="circle", parent=self))
-
+        for ph in self._pHandles:
+            ph.setMoveCallback(self._updateFromHandles)
 
     def _deleteHandles(self):
         """ Delete handles when deselected"""
-        self.suppressItemChange = True
+        if len(self._pHandles) == 0 and len(self.childItems()) == 0:
+            #print("call to delete handles WHEN NONE ")
+            return
+        ##self.suppressItemChange = True
         # Remove existing handles
         for h in self._pHandles:
-            self.scene().removeItem(h)
-            del h
+            if h in self.scene().items():
+                self.scene().removeItem(h)
+                del h
         self._pHandles.clear()
         self.parentItem().setZValue(0)
-        self.suppressItemChange = False
+        ##self.suppressItemChange = False
 
     def _updateFromHandles(self, moved):
         """ if a handle moves, update the coords, and recompute the spline curve """
