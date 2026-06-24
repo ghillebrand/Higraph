@@ -42,8 +42,12 @@ roleDic={ROLE_NODE: "ROLE_NODE",
         ROLE_POLYLINE:"ROLE_POLYLINE",
         ROLE_DUMMYNODE:"ROLE_DUMMYNODE"}
 
+
+#Being replaced by prefs dataclass
+
 #User Preferences
 #----------------
+#TODO: Reverse the prefs version
 NODESIZE = 15
 #Selection tolerance
 HITSIZE = 5
@@ -53,16 +57,17 @@ PASTE_OFFSET = 100
 BLOB_CORNER_RADIUS = 10
 TANGENT_SCALE_FACTOR = 20
 
-DISPLAY_NAME_BY_DEFAULT = True
-DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT = False
-BLOB_FONT_SIZE = 9
-BLOB_FONT_IS_RESIZABLE = True
-BLOB_NAME_ON_TOP = False
+#TODO: Use the prefs version
+#DISPLAY_NAME_BY_DEFAULT = True
+#DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT = False
+#BLOB_FONT_SIZE = 9
+#BLOB_FONT_IS_RESIZABLE = True
+#BLOB_NAME_ON_TOP = False
 
 #Model level default for edges
-ISDIGRAPH = True
+#ISDIGRAPH = True
 
-DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT 
+#DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT 
 
 #options and defaults
 from PySide6.QtGui import QColor
@@ -73,3 +78,82 @@ DRAWING_COLOUR=QColor("black")
 BLOB_HANDLE_COLOUR=QColor("green")
 EDGE_HANDLE_COLOUR=QColor("green")
 POINT_COLOUR=QColor("purple")
+
+# End of user prefs (to be deleted")
+from PySide6.QtCore import QSettings
+from PySide6.QtGui import QColor
+from dataclasses import dataclass, fields,  field
+
+@dataclass
+class UserPreferences:
+    """ 
+        Modifiable list of constants that the user can update.
+        Managed via QSettings
+    """
+
+    DISPLAY_NAME_BY_DEFAULT:bool = True
+    DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:bool = False
+    BLOB_FONT_SIZE :int = 9
+    BLOB_FONT_IS_RESIZABLE:bool = True
+    BLOB_NAME_ON_TOP:bool = False
+
+    #Model level, and default for new edges 
+    ISDIGRAPH :bool = True
+    DEFAULT_EDGE :int = SPLINE
+
+    #options and defaults
+
+    def _get_settings_handle(self) -> QSettings:
+        """Returns the OS-specific settings handle."""
+        return QSettings("isijingi", APP_NAME)
+
+    def save(self):
+        """Inspects all attributes dynamically and saves them to the OS."""
+        settings = self._get_settings_handle()
+        
+        for f in fields(self):
+            # Convert field names like 'ui_theme' to Qt group paths like 'ui/theme'
+            #qt_key = f.name.replace("_", "/", 1)
+            qt_key = f.name
+            current_value = getattr(self, f.name)
+            
+            settings.setValue(qt_key, current_value)
+
+    def load(self):
+        """Inspects all fields, reads from OS, and forces strict type-casting."""
+        settings = self._get_settings_handle()
+        
+        for f in fields(self):
+            #qt_key = f.name.replace("_", "/", 1)
+            qt_key = f.name
+            
+            # Fetch from QSettings, fallback to the dataclass's default value if missing
+            # If a field uses a default_factory (like a list), we evaluate it
+            default_value = f.default if f.default_factory == field().default_factory else f.default_factory()
+            raw_value = settings.value(qt_key, default_value)
+            
+            # --- CRITICAL: Reflection Type-Casting ---
+            # QSettings can return data as strings or loose types depending on the platform.
+            # We look at the dataclass type-hints to force the correct type back.
+            try:
+                if f.type is bool:
+                    if isinstance(raw_value, str):
+                        typed_value = raw_value.lower() in ("true", "1", "yes")
+                    else:
+                        typed_value = bool(int(raw_value))
+                elif f.type is list or (hasattr(f.type, '__origin__') and f.type.__origin__ is list):
+                    # Handle lists safely (QSettings returns them natively or as string lists)
+                    typed_value = list(raw_value) if raw_value is not None else default_value
+                else:
+                    # Dynamically invoke the type constructor (e.g., int("15") -> 15)
+                    typed_value = f.type(raw_value)
+            except (ValueError, TypeError):
+                # Fallback safeguard if data on disk is corrupted/un-parsable
+                typed_value = default_value
+
+            # Update the class instance attribute dynamically
+            setattr(self, f.name, typed_value)
+
+    
+#Define this for access by all other modules
+prefs = UserPreferences()

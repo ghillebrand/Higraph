@@ -68,6 +68,7 @@ from Edges import *
 
 #cGPT edit code
 from EditVisItemDialog import *  #EditVisEdgeItemDialog, EditVisNodeItemDialog
+from EditPreferences import * #Gemini code to edit prefs ;) 
 
 class graphModel(QStandardItemModel):
     """ Hold the visual details for the nodes and edges of the graph (x,y, size)
@@ -82,8 +83,7 @@ class graphModel(QStandardItemModel):
         super().__init__()
         #Setup the abstract graph
         self.Gr = Graph()
-        #TODO: Read this from config/ on file load
-        self.isDigraph = ISDIGRAPH  
+        self.isDigraph = prefs.ISDIGRAPH  
 
     def __repr__(self):
         rStr =""
@@ -2383,6 +2383,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.ui.treeWidget.setColumnCount(3)
@@ -2492,9 +2493,14 @@ class MainWindow(QMainWindow):
         self.actionEditRedo.triggered.connect(self.undoStack.redo)
 
         #Tools & other 
+        #Python window
         self.execCodeAction = QAction("Run Python Code", self)
         self.execCodeAction.triggered.connect(self.showCodeDialog)
         self.ui.menuTools.addAction(self.execCodeAction)
+        #Edit preferences
+        self.execEditPrefsAction = QAction("Edit preferences", self)
+        self.execEditPrefsAction.triggered.connect(self.showEditPrefsDialog)
+        self.ui.menuTools.addAction(self.execEditPrefsAction)
 
         """
         self.selectColourDefaultsAction = QAction("Select Colours", self)
@@ -2557,6 +2563,9 @@ class MainWindow(QMainWindow):
         if colour.isValid():
             DRAWING_COLOUR=colour
     """
+    def showEditPrefsDialog(self):
+        self.prefsDialog  = EditPreferences(prefs, parent=self)
+        self.prefsDialog.show()
 
     #Graph actions from the toolbar
 
@@ -3209,7 +3218,7 @@ class MainWindow(QMainWindow):
         elif lineType == "Spline":  
             polyLineType = SPLINE
         else:
-            polyLineType = DEFAULT_EDGE
+            polyLineType = prefs.DEFAULT_EDGE
 
         #Arrowheads
         #Currently just using the defaults
@@ -3519,7 +3528,7 @@ class MainWindow(QMainWindow):
             graphDir = graphStr.get("edgedefault")
             self.model.isDirected = graphDir == "directed"
         else: 
-            self.model.isDirected = ISDIGRAPH 
+            self.model.isDirected = prefs.ISDIGRAPH 
 
         #Track the old -> new IDs to deal with string IDs, and hook up edges
         #Hyperedges are complex, so make it accessible to hyperEdgeFromXML
@@ -3602,7 +3611,7 @@ class MainWindow(QMainWindow):
 
         self.Scene.update()
 
-        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + APP_VERSION)
+        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
         self.oldToNewID.clear()
 
 
@@ -3675,7 +3684,7 @@ class MainWindow(QMainWindow):
             graphDir = graphStr.get("edgedefault")
             self.model.isDirected = graphDir == "directed"
         else: 
-            self.model.isDirected = ISDIGRAPH 
+            self.model.isDirected = prefs.ISDIGRAPH 
 
         #Track the old -> new IDs to deal with string IDs, and hook up edges
         #Hyperedges are complex, so make it accessible to hyperEdgeFromXML
@@ -4595,6 +4604,13 @@ class MainWindow(QMainWindow):
             #self.ui.listWidget.repaint()
             self.ui.treeWidget.repaint()
 
+    def closeEvent(self,event):
+        """ tidy up """
+        print("shutting down ...")
+
+        #TODO: Check for fileChanged
+
+        prefs.save()
 
 #Dialogs called by mainwindow
 class action_Aboutdlg(QDialog):
@@ -4616,7 +4632,10 @@ class action_CreditsDlg(QDialog):
 #import cProfile
 
 if __name__ == "__main__":
-    print("="*100)
+    print("start up ","="*100)
+
+    #Get the user prefs (if any)
+    prefs.load()
 
     app = QApplication(sys.argv)
     

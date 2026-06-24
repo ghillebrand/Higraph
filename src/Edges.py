@@ -45,7 +45,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     requestEdit = Signal(object)  
 
     def __init__(self,model,treeWidget, sItem, eItem, directed='', parent=None, nameP="", id=None,
-                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
+                    polyLineType = prefs.DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={}):
         """ Create a visual edge, using the pos of the st and end, which are tuples of (Node,Port)
         points must be QPointFs and tangents must be tuples of QPointFs, relative to the points
         """
@@ -101,7 +101,7 @@ class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
         if len(metadataAttributes) > 0:
             self.metadataAttributes = metadataAttributes
         else:
-            self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
+            self.metadataAttributes = {'name':{'display':prefs.DISPLAY_NAME_BY_DEFAULT}}
 
         #TODO: This overwrites in metadata['name'] value, but it should be the same?
         #self.model.Gr.edgeD[self.edgeNum].metadata.update({'name':f"{self.edgeNum} {self.model.Gr.edgeD[self.edgeNum].metadata['name']}"})
@@ -521,7 +521,7 @@ class VisHyperEdgeItem(QGraphicsObject):
     requestEdit = Signal(object)  
 
     def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
-                    polyLineType = DEFAULT_EDGE, points=[],tangents=[],metadata={}, metadataAttributes={},
+                    polyLineType = None, points=[],tangents=[],metadata={}, metadataAttributes={},
                     dummyNodes=None,edgeLines=None, hyperEdgeGraph=None):
 
         """ Create a visual edge, using the pos of the st and end items, which are tuples of (Node,Port)
@@ -531,6 +531,10 @@ class VisHyperEdgeItem(QGraphicsObject):
         """
         #TODO: Check - points may be redundant with hyperEdges
         super().__init__(parent)
+
+        if polyLineType == None:
+            polyLineType = prefs.DEFAULT_EDGE
+
         self.suppressItemChange = True  # suppress itemChange until all attribs set.
 
         self.Scene = Scene
@@ -587,7 +591,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         if len(metadataAttributes) > 0:
             self.metadataAttributes = metadataAttributes
         else:
-            self.metadataAttributes = {'name':{'display':DISPLAY_NAME_BY_DEFAULT}}
+            self.metadataAttributes = {'name':{'display':prefs.DISPLAY_NAME_BY_DEFAULT}}
 
         #TODO: This overwrites in metadata['name'] value, but it should be the same?
         #self.model.Gr.edgeD[self.edgeNum].metadata.update({'name':f"{self.edgeNum} {self.model.Gr.edgeD[self.edgeNum].metadata['name']}"})
@@ -631,7 +635,8 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #directed edge?
         if directed == '':
-            self.isDirected = self.model.isDigraph
+            #TODO: This is now getting it dynamically from `prefs`. Right?
+            self.isDirected = prefs.ISDIGRAPH  #self.model.isDigraph
         else:
             self.isDirected=directed
         
@@ -696,11 +701,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             # so `points`, `tangents` & dummyNodes will be populated, 
             # and instantiated in edgeLines, with hyperEdgeGraph holding the structure.
             
-            #print(f"HE init: sItem {[d[0].nodeNum for d in sItem]}") 
-            #print(f"HE init: eItem {[d[0].nodeNum for d in eItem]}") 
-            #print(f"HE init: dummyNodes { [(d[0].nodeNum, [el.lineNum for el in d[0].startsEdgeLines], [el.lineNum for el in d[0].endsEdgeLines]) for d in dummyNodes]}") 
-            #print(f"HE init: edgelines: {[e.lineNum for e in edgeLines]}")
-            #print(f"HE init: hyperEdgeGraph {hyperEdgeGraph}")
             #For each edgeLine, tell the start and end nodes. NOTE: dummyNodes are connected already in fromXML()
 
             for eL,eLNodes in hyperEdgeGraph.items():
