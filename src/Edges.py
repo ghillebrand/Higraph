@@ -1237,14 +1237,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                     endN = dN
         #print(f"addSeg segment Start node = {stN[0].nodeNum}, seg end node = {endN[0].nodeNum}")
 
-        #Add a dummyNode at splitPoint, also its own "port", to make it shape consistent with stored nodes
-        dN = dummyNodeItem(splitPoint, parent=self) #parent = self  makes updates a bit easier
-        #print(f" addSeg after create {dN.pos()=}")
-        # dN is it's own node and port, used for handles too.
-        dN = (dN,dN)  
-        self.dummyNodes.append(dN)
-
-        splitLine = edgeLine.split(dN[0].pos() ) #scenePos()) #self now ends just before splitPoint
+        splitLine = edgeLine.split(splitPoint) #scenePos()) #self now ends just before splitPoint
         splitLine.setData(KEY_ROLE,ROLE_POLYLINE)
         splitLine.my_parent_item = self #TODO: Needed???
         splitLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
@@ -1257,6 +1250,14 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         self.edgeLines.append(splitLine)
         #Fix the end nodes
+        #Add a dummyNode at splitPoint, also its own "port", to make it shape consistent with stored nodes
+        #NB straightline split generates a new point position
+        dNPos=splitLine._p[0]
+        dN0 = dummyNodeItem(dNPos, parent=self) #parent = self  makes updates a bit easier
+        #print(f" addSeg after create {dN.pos()=}")
+        # dN is it's own node and port, used for handles too.
+        dN = (dN0,dN0)  
+        self.dummyNodes.append(dN)
         #Disconnect the original edgeLine
         endN[1].endsEdgeLines.remove(edgeLine)
         #Connect it to the dN port

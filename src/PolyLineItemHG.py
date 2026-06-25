@@ -44,7 +44,7 @@ class StraightLineItem(QGraphicsItem):
         self.suppressItemChange = True
         self._p = p
         self._boundingRect = QRectF()
-        self.setFlag(QGraphicsItem.ItemIsSelectable, True)
+        self.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self._path = self._createPolyPath()
         self._pHandles = []
         self.suppressItemChange = False
