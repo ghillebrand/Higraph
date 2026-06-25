@@ -151,6 +151,7 @@ class EditPreferences(QDialog):
         self.prefs.ISDIGRAPH = self.cb_is_digraph.isChecked()
         self.prefs.DEFAULT_EDGE = self.combo_edge_type.currentData()
         self.prefs.AutoSaveMins= self.sbAutoSaveTime.value()
+        #TODO: call mainwindow.autoSave.setInterval(...) as Signal?
 
         # 3. Update Display Options
         self.prefs.DISPLAY_NAME_BY_DEFAULT = self.cb_display_name.isChecked()

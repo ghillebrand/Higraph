@@ -60,6 +60,8 @@ from  HGConstants import *
 from coreGraph import Graph
 
 #Helper & housekeeping functions
+from autosaver import *
+
 #Draw nice edges
 from PolyLineItemHG import StraightLineItem, HermiteSplineItem, HandleItem
 from GraphicsSupport import *
@@ -2517,6 +2519,9 @@ class MainWindow(QMainWindow):
         else:
             self.fileName = ""
 
+        #Start the autosave process
+        self.autoSave = autoSaver(self.action_FileSave, self.action_FileOpen)
+
     #GraphicsView/ scene handling
     def setZoom(self, value):
         """
@@ -3857,15 +3862,17 @@ class MainWindow(QMainWindow):
             self.action_FileSave()
 
 
-    def action_FileSave(self):
+    def action_FileSave(self, autoSaveName = None):
         """ 
             Write the graph to a graphml-like file.
+            Parameter is used for autosaving
         """
         if self.fileName:
             #Temporary - update filetype (Not sure this will work with any directory info
             if self.fileName.split(".")[-1] == "graphml":
                 self.fileName = ".".join(self.fileName.split('.')[:-1]+['higraphml'])
 
+        if self.fileName or autoSaveName:
             #Generate the graph header info
             # Creating XML structure in Graphml format
             # Reference: yEdxFileOnly: construct_graphml
@@ -3884,12 +3891,6 @@ class MainWindow(QMainWindow):
             viewCoords.set("y",str(vC[1].y()) )
             viewCoords.set("width" ,str(vC[2].x() - vC[0].x()) )
             viewCoords.set("height",str(vC[3].y() - vC[1].y()) )
-            """
-            viewCoords.set("x",str(vC.x()) )
-            viewCoords.set("y",str(vC.y()) )
-            viewCoords.set("width",str(vC.width()) )
-            viewCoords.set("height",str(vC.height()) )
-            """
 
             graphml = ET.SubElement(higraphml, "graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
             graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
@@ -3917,7 +3918,6 @@ class MainWindow(QMainWindow):
             edgeKey.set("for", "edge")
             edgeKey.set("yfiles.type", "edgegraphics")
 
-
             # Graph node containing actual objects
             if self.model.isDigraph:
                 directed = 'directed'
@@ -3928,18 +3928,20 @@ class MainWindow(QMainWindow):
 
             #Add the nodes & edges
             for sItem in self.Scene.items():
-                #if sItem.data(KEY_ROLE) == ROLE_NODE or sItem.data(KEY_ROLE) == ROLE_EDGE :
                 if sItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_EDGE,ROLE_BLOB]:
                     graph.append(sItem.toXML(graph))
 
-            #Add the keys for the metadata at graph level
+            #Add the keys for the metadata at graph level (currently none)
 
             #Write to file
             raw_str = ET.tostring(higraphml)
             pretty_str = minidom.parseString(raw_str).toprettyxml()
-            #TODO: Check pathing! -- seems to be handled OK?
-            with open(self.fileName, "w") as f:
-                f.write(pretty_str)
+            if autoSaveName:
+                with open(autoSaveName, "w") as f:
+                    f.write(pretty_str)
+            else:
+                with open(self.fileName, "w") as f:
+                    f.write(pretty_str)
 
             # Mark current state as saved
             self.Scene.undoStack.setClean() 
@@ -3961,29 +3963,14 @@ class MainWindow(QMainWindow):
         
         #Note: Qt checks for overwrites, etc
         if fileName:  #dialog returns '' on <esc>
-            if fileName[-10:] == ".higraphml":
+            if fileName.split(".")[-1] == "higraphml":
                 self.fileName = fileName
             else:
                 self.fileName = fileName+".higraphml"
             self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
             self.action_FileSave()
                  
-    def startAutoSave(self, interval:int):
-        """ setup the autosave process"""
-        print(f"Autosave will happen every {prefs.AutoSaveMins}")
 
-
-    def autoSave(self):
-        """ Autosave periodically """
-        print(f"Autosave happening {prefs.AutoSaveMins}")
-
-    def checkForAutoSaves(self):
-        """ check if there is an autosave file left over after a crash"""
-        print("checkForAutoSaves")
-
-    def clearAutoSaves(self):
-        """ Remove any autosaves on clean closeEvent"""
-        print("clearAutoSaves")
 
     def action_FileClose(self):
         print("File Close")  
@@ -4615,16 +4602,22 @@ class MainWindow(QMainWindow):
             self.ui.treeWidget.repaint()
 
     def closeEvent(self,event):
-        """ tidy up """
+        """ tidy up, save the settings """
         print("shutting down ...")
 
         #TODO: Check for fileChanged
         if not self.Scene.undoStack.isClean():
             if self.askForFileSave()=="Cancel":
+                #Cancel the closeEvent!
+                event.ignore() 
                 return
-                
+
         prefs.save()
-        self.clearAutoSaves()
+        #TODO: Save the window state
+        # settings = QSettings("MyCompany", "MyApp")
+        #settings.setValue("geometry", saveGeometry())
+
+        self.autoSave.clearAutoSaves()
 
 #Dialogs called by mainwindow
 class action_Aboutdlg(QDialog):
