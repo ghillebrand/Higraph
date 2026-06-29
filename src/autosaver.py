@@ -123,7 +123,7 @@ class autoSaver():
         self.timer = QTimer()
         self.timer.timeout.connect(self.autoSave)
         if self.interval != 0:
-            self.timer.start(self.interval * 1000 * 10)   #* 60 * 1000) #10 sec "minutes" for testing!
+            self.timer.start(self.interval * 60 * 1000) 
         else:
             self.timer.stop()
 
@@ -143,8 +143,7 @@ class autoSaver():
         """ update the interval (from preference edit)"""
         self.interval = newInterval
         if self.interval != 0:
-            self.timer.start(self.interval * 1000 * 10)   #* 60 * 1000) #10 sec "minutes" for testing!
-        else:
+            self.timer.start(self.interval * 60 * 1000) 
             self.timer.stop()
 
     def autoSave(self):
