@@ -3618,7 +3618,6 @@ class MainWindow(QMainWindow):
 
         #self.setZoom(100)
         #Set the view to however it was saved, if it was read back, else fit to screen
-        print(f"mw: file open {vCRect=}")
         if vCRect is None:
             vCRect = self.Scene.sceneRect()
         self.ui.graphicsView.fitInView(vCRect,Qt.AspectRatioMode.KeepAspectRatio)
