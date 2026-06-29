@@ -40,9 +40,11 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
             QPainterPath, QPainterPathStroker, QCursor, QUndoStack, QUndoCommand,
             QGuiApplication, QImage, QPixmap)
+
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
+
 from PySide6.QtSvg import QSvgGenerator
 from PySide6.QtPrintSupport import QPrinter, QPrintDialog
 #from PySide6.Qtcore import QItemSelectionModel
@@ -58,6 +60,8 @@ from  HGConstants import *
 from coreGraph import Graph
 
 #Helper & housekeeping functions
+from autosaver import *
+
 #Draw nice edges
 from PolyLineItemHG import StraightLineItem, HermiteSplineItem, HandleItem
 from GraphicsSupport import *
@@ -2370,15 +2374,6 @@ def paintItemAndChildren(item, painter):
     painter.restore()
 
 
-basedir = os.path.dirname(__file__)
-
-try:
-    from ctypes import windll  # Only exists on Windows.
-    myappid = "za.co.isijingi"+APP_NAME+APP_VERSION
-    windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
-except ImportError:
-    pass
-
 class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
@@ -2524,6 +2519,9 @@ class MainWindow(QMainWindow):
         else:
             self.fileName = ""
 
+        #Start the autosave process (after the window is drawn)
+        QTimer.singleShot(1, lambda: setattr(self,"autoSave", autoSaver(self.action_FileSave, self.action_FileOpen, interval = prefs.AutoSaveMins, cycleSize = prefs.AutoSaveCycleSize, statusBar=self.statusBar) ))
+
     #GraphicsView/ scene handling
     def setZoom(self, value):
         """
@@ -2565,7 +2563,10 @@ class MainWindow(QMainWindow):
     """
     def showEditPrefsDialog(self):
         self.prefsDialog  = EditPreferences(prefs, parent=self)
-        self.prefsDialog.show()
+        self.prefsDialog.exec() #TODO: consider using `open()` as its safer.  #show() is non-modal
+        #Update the autoSaver
+        self.autoSave.setInterval(prefs.AutoSaveMins)
+        self.autoSave.setCycleSize(prefs.AutoSaveCycleSize)
 
     #Graph actions from the toolbar
 
@@ -3617,6 +3618,7 @@ class MainWindow(QMainWindow):
 
         #self.setZoom(100)
         #Set the view to however it was saved, if it was read back, else fit to screen
+        print(f"mw: file open {vCRect=}")
         if vCRect is None:
             vCRect = self.Scene.sceneRect()
         self.ui.graphicsView.fitInView(vCRect,Qt.AspectRatioMode.KeepAspectRatio)
@@ -3626,6 +3628,7 @@ class MainWindow(QMainWindow):
     def action_FileOpen_Graphml(self, fileName=None):
         """ Open 'old style' v0300 file 
             Deprecated - just here to port the old test files over
+            TODO: revert to being able to import "genuine" yEd/ graphml files
         """
         #Temp fix while moving to higraphml files
         if fileName == None:
@@ -3777,6 +3780,7 @@ class MainWindow(QMainWindow):
         """ 
             Write the graph to a yEd-style graphml file.
             Heavily based on yEdx code
+            TODO: Revisit this to create a "yed/graphml" export version
         """
         if self.fileName:
 
@@ -3862,15 +3866,17 @@ class MainWindow(QMainWindow):
             self.action_FileSave()
 
 
-    def action_FileSave(self):
+    def action_FileSave(self, autoSaveName = None):
         """ 
             Write the graph to a graphml-like file.
+            Parameter is used for autosaving
         """
         if self.fileName:
             #Temporary - update filetype (Not sure this will work with any directory info
             if self.fileName.split(".")[-1] == "graphml":
                 self.fileName = ".".join(self.fileName.split('.')[:-1]+['higraphml'])
 
+        if self.fileName or autoSaveName:
             #Generate the graph header info
             # Creating XML structure in Graphml format
             # Reference: yEdxFileOnly: construct_graphml
@@ -3889,12 +3895,6 @@ class MainWindow(QMainWindow):
             viewCoords.set("y",str(vC[1].y()) )
             viewCoords.set("width" ,str(vC[2].x() - vC[0].x()) )
             viewCoords.set("height",str(vC[3].y() - vC[1].y()) )
-            """
-            viewCoords.set("x",str(vC.x()) )
-            viewCoords.set("y",str(vC.y()) )
-            viewCoords.set("width",str(vC.width()) )
-            viewCoords.set("height",str(vC.height()) )
-            """
 
             graphml = ET.SubElement(higraphml, "graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
             graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
@@ -3922,7 +3922,6 @@ class MainWindow(QMainWindow):
             edgeKey.set("for", "edge")
             edgeKey.set("yfiles.type", "edgegraphics")
 
-
             # Graph node containing actual objects
             if self.model.isDigraph:
                 directed = 'directed'
@@ -3933,18 +3932,20 @@ class MainWindow(QMainWindow):
 
             #Add the nodes & edges
             for sItem in self.Scene.items():
-                #if sItem.data(KEY_ROLE) == ROLE_NODE or sItem.data(KEY_ROLE) == ROLE_EDGE :
                 if sItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_EDGE,ROLE_BLOB]:
                     graph.append(sItem.toXML(graph))
 
-            #Add the keys for the metadata at graph level
+            #Add the keys for the metadata at graph level (currently none)
 
             #Write to file
             raw_str = ET.tostring(higraphml)
             pretty_str = minidom.parseString(raw_str).toprettyxml()
-            #TODO: Check pathing! -- seems to be handled OK?
-            with open(self.fileName, "w") as f:
-                f.write(pretty_str)
+            if autoSaveName:
+                with open(autoSaveName, "w") as f:
+                    f.write(pretty_str)
+            else:
+                with open(self.fileName, "w") as f:
+                    f.write(pretty_str)
 
             # Mark current state as saved
             self.Scene.undoStack.setClean() 
@@ -3966,7 +3967,7 @@ class MainWindow(QMainWindow):
         
         #Note: Qt checks for overwrites, etc
         if fileName:  #dialog returns '' on <esc>
-            if fileName[-10:] == ".higraphml":
+            if fileName.split(".")[-1] == "higraphml":
                 self.fileName = fileName
             else:
                 self.fileName = fileName+".higraphml"
@@ -3975,10 +3976,10 @@ class MainWindow(QMainWindow):
                  
 
 
-
     def action_FileClose(self):
         print("File Close")  
-        #TODO: Close app?
+        #TODO: What does this mean. 
+        #closeEvent() is the shutdown code.
 
     def action_Print(self):
         """
@@ -4243,8 +4244,8 @@ class MainWindow(QMainWindow):
 
     def action_EditCut(self):
         print("Edit>Cut")
-
-        #Edite->Copy
+        #TODO: Edit cut
+        #Edit->Copy
         #Delete selected?
 
     def action_EditPaste(self):
@@ -4605,12 +4606,22 @@ class MainWindow(QMainWindow):
             self.ui.treeWidget.repaint()
 
     def closeEvent(self,event):
-        """ tidy up """
+        """ tidy up, save the settings """
         print("shutting down ...")
 
         #TODO: Check for fileChanged
+        if not self.Scene.undoStack.isClean():
+            if self.askForFileSave()=="Cancel":
+                #Cancel the closeEvent!
+                event.ignore() 
+                return
 
         prefs.save()
+        #TODO: Save the window state
+        # settings = QSettings("MyCompany", "MyApp")
+        #settings.setValue("geometry", saveGeometry())
+
+        self.autoSave.clearAutoSaves()
 
 #Dialogs called by mainwindow
 class action_Aboutdlg(QDialog):
@@ -4634,10 +4645,22 @@ class action_CreditsDlg(QDialog):
 if __name__ == "__main__":
     print("start up ","="*100)
 
+    #set the app name in Windows
+    basedir = os.path.dirname(__file__)
+    try:
+        from ctypes import windll  # Only exists on Windows.
+        myappid = "za.co.isijingi"+APP_NAME+APP_VERSION
+        windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+    except ImportError:
+        pass
+
     #Get the user prefs (if any)
     prefs.load()
 
     app = QApplication(sys.argv)
+    app.setOrganizationName("isijingi")
+    app.setApplicationName(APP_NAME)
+    app.setApplicationVersion(APP_VERSION)
     
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
     app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icons\\icon2.ico')))  #'qtpyGraphEdit.ico')))
