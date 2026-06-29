@@ -102,11 +102,27 @@ class UserPreferences:
     DEFAULT_EDGE :int = SPLINE
 
     #options and defaults
-    AutoSaveMins = 1
+    AutoSaveMins:int = 1
+    AutoSaveCycleSize:int = 10
 
     def _get_settings_handle(self) -> QSettings:
         """Returns the OS-specific settings handle."""
         return QSettings("isijingi", APP_NAME)
+
+    def __repr__(self):
+        """Inspects all attributes dynamically and converts them to a long string """
+        settings = self._get_settings_handle()
+        
+        r = ""
+        for f in fields(self):
+            # Convert field names like 'ui_theme' to Qt group paths like 'ui/theme'
+            #qt_key = f.name.replace("_", "/", 1)
+            qt_key = f.name
+            current_value = getattr(self, f.name)
+            
+            r += f"({qt_key} : {current_value})\t"
+        return r
+    __str__ = __repr__
 
     def save(self):
         """Inspects all attributes dynamically and saves them to the OS."""

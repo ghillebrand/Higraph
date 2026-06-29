@@ -2519,8 +2519,8 @@ class MainWindow(QMainWindow):
         else:
             self.fileName = ""
 
-        #Start the autosave process
-        self.autoSave = autoSaver(self.action_FileSave, self.action_FileOpen)
+        #Start the autosave process (after the window is drawn)
+        QTimer.singleShot(1, lambda: setattr(self,"autoSave", autoSaver(self.action_FileSave, self.action_FileOpen, interval = prefs.AutoSaveMins, cycleSize = prefs.AutoSaveCycleSize, statusBar=self.statusBar) ))
 
     #GraphicsView/ scene handling
     def setZoom(self, value):
@@ -2563,7 +2563,10 @@ class MainWindow(QMainWindow):
     """
     def showEditPrefsDialog(self):
         self.prefsDialog  = EditPreferences(prefs, parent=self)
-        self.prefsDialog.show()
+        self.prefsDialog.exec() #TODO: consider using `open()` as its safer.  #show() is non-modal
+        #Update the autoSaver
+        self.autoSave.setInterval(prefs.AutoSaveMins)
+        self.autoSave.setCycleSize(prefs.AutoSaveCycleSize)
 
     #Graph actions from the toolbar
 
@@ -3615,6 +3618,7 @@ class MainWindow(QMainWindow):
 
         #self.setZoom(100)
         #Set the view to however it was saved, if it was read back, else fit to screen
+        print(f"mw: file open {vCRect=}")
         if vCRect is None:
             vCRect = self.Scene.sceneRect()
         self.ui.graphicsView.fitInView(vCRect,Qt.AspectRatioMode.KeepAspectRatio)

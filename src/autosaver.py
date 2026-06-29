@@ -95,13 +95,12 @@ class autoSaver():
     #Slot for interval update
     updateInterval = Signal()
 
-    def __init__(self, saveFn:callable , openFn:callable , interval:int=1, cycleSize:int = 10):
+    def __init__(self, saveFn:callable , openFn:callable , interval:int=1, cycleSize:int = 10, statusBar = None):
         """ setup the autosave process, 
             Calls `saveFn` every `interval` minutes. 
             Calls `openFn` on start if needed for a restore
             Use `cycleCount` files - delete old files out of the cycle count
         """
-        print(f"Autosave will happen every {prefs.AutoSaveMins}")
         baseDir = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
         self.autosaveDir = os.path.join(baseDir, "autosaves")
         #Make the dir if needed
@@ -115,6 +114,7 @@ class autoSaver():
 
         self.saveFunc:callable = saveFn
         self.openFunc:callable = openFn  #for restoring
+        self.statusBar = statusBar
 
         #Check for any orphans, and optionally restore
         self.checkForAutoSaves()
@@ -122,18 +122,30 @@ class autoSaver():
         #Set the timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.autoSave)
-        self.timer.start(self.interval * 1000 * 10)   #* 60 * 1000) #10 sec for testing!
+        if self.interval != 0:
+            self.timer.start(self.interval * 1000 * 10)   #* 60 * 1000) #10 sec "minutes" for testing!
+        else:
+            self.timer.stop()
 
 
     def setFileName(self,fileName:str):
-        """ set the base fileName to use for saving
+        """ set the base fileName to use for saving. Should (must?) include full path
             updated on fileSaveAs
         """
         self.baseFileName:str = fileName
-    
+
+    def setCycleSize(self,CycleSize:int):
+        """ Set how many cycles to keep
+        """
+        self.cycleSize:int = CycleSize
+
     def setInterval(self,newInterval:int):
         """ update the interval (from preference edit)"""
-        self.Interval = newInterval
+        self.interval = newInterval
+        if self.interval != 0:
+            self.timer.start(self.interval * 1000 * 10)   #* 60 * 1000) #10 sec "minutes" for testing!
+        else:
+            self.timer.stop()
 
     def autoSave(self):
         """ Autosave periodically """
@@ -143,35 +155,35 @@ class autoSaver():
 
         timeStamp:str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         saveFile:str = os.path.join(self.autosaveDir,self.baseFileName + "_autosave_" + timeStamp + "_" + str(self.cycleCount)+".higraphml")
-        print(f"{saveFile=}")
-
+        if self.statusBar:
+            self.statusBar().showMessage(f"Autosaving to {saveFile}",1000)
         self.saveFunc(autoSaveName=saveFile)
         self.cycleCount = (self.cycleCount + 1) % self.cycleSize
 
     def checkForAutoSaves(self):
         """ check if there is an autosave file left over after a crash"""
-        print(f"checkForAutoSaves in {self.autosaveDir}")
         fileNames = []
         for f in Path(self.autosaveDir).glob(f"*_autosave_*.higraphml"):
             fileNames.append(str(f))
-        print(f"Autosave found file {fileNames}")
+        #print(f"Autosave found file {fileNames}")
         if fileNames:
+            #Get the file to restore, or other command
             dialog = RestoreFileDialog(fileNames)
             dialog.exec()  # Blocks application flow until dialog is dismissed
             result = dialog.result_value
-            match result:
-                case "Cancel": 
-                    pass #do nothing - they will get overwritten in the course of time
-                case "DeleteAll": 
+            if "higraphml" in result:
+                self.openFunc(inFile=result)
+                for f in Path(self.autosaveDir).glob(f"*.higraphml"):
+                    Path.unlink(f)            
+
+            if result == "DeleteAll":
                     for f in Path(self.autosaveDir).glob(f"*.higraphml"):
-                        Path.unlink(f)
-                case _ :   #Restore the file
-                    self.openFunc(inFile=result)
+                        Path.unlink(f)         
+            #Note: "Cancel" will just let the old files be overwritten in time
+  
 
 
     def clearAutoSaves(self):
         """ Remove any autosaves on clean closeEvent"""
-        print("clearAutoSaves")
-        #self.autosaveDir
         for f in Path(self.autosaveDir).glob(f"*.higraphml"):
             Path.unlink(f)

@@ -6,7 +6,7 @@
     <Name>Higraph</Name>
     <Version>V03rc1</Version>
     <CompanyName>isijingi</CompanyName>
-    <WebURI>https://www.isijingi.co.za/higraph</WebURI>
+    <WebURI>https://isijingi.co.za/wp/category/higraph/</WebURI>
   </ProductInformation>
   <InstallerConfiguration>
     <Prerequisites>
@@ -33,16 +33,16 @@
     </UserInterface>
     <InstallationFiles defaultInstallationPath="&lt;ProgramFiles&gt;\&lt;Company&gt;\&lt;AppName&gt;\" isDefaultInstallationPathAlterable ="true">
       <InstallationFile size="2.2 MB" type="exe">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\dist\higraph\higraph.exe</InstallationFile>
-      <InstallationFile size="N/A" type="[Folder]">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\dist\higraph\_internal\icons\</InstallationFile>
-      <InstallationFile size="N/A" type="[Folder]">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\dist\higraph\_internal\PySide6\</InstallationFile>
-      <InstallationFile size="N/A" type="[Folder]">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\dist\higraph\_internal\shiboken6\</InstallationFile>
       <InstallationFile size="N/A" type="[Folder]">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\dist\higraph\_internal\</InstallationFile>
+      <InstallationFile size="10.2 KB" type="higraphml">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\t2.higraphml</InstallationFile>
+      <InstallationFile size="8.2 KB" type="higraphml">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\example.higraphml</InstallationFile>
+      <InstallationFile size="5.2 KB" type="higraphml">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\t1.higraphml</InstallationFile>
     </InstallationFiles>
     <Languages/>
     <Variables/>
     <Commands/>
     <Registry/>
-    <Shortcuts defaultPath="&lt;Company&gt;\&lt;AppName&gt;\" isDefaultPathAlterable="true" isCreateStartmenuShortcutsForAllUsers="false" isCreateDesktopShortcutsForAllUsers="false"/>
+    <Shortcuts defaultPath="&lt;Company&gt;\&lt;AppName&gt;\" isDefaultPathAlterable="true" isCreateStartmenuShortcutsForAllUsers="false" isCreateDesktopShortcutsForAllUsers="true"/>
     <Serials isDialogEnabled="false" count="1000" mask ="#####-#####-#####-#####"/>
     <SplashScreen isDialogEnabled="false" delayTime="2">
       <Image filePath=""/>
@@ -52,7 +52,7 @@
       <Data>e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcbm91aWNvbXBhdFxkZWZsYW5nMTAzM3tcZm9udHRibHtcZjBcZm5pbCBBcmlhbDt9fQ0Ke1wqXGdlbmVyYXRvciBSaWNoZWQyMCAxMC4wLjE5MDQxfVx2aWV3a2luZDRcdWMxIA0KXHBhcmRcZjBcZnMyMFxwYXINCn0NCgA=</Data>
     </License>
     <Finish isRebootMachineEnabled="false">
-      <Program executableFilePath="&lt;InstallPath&gt;\higraph.exe" isLaunchEnabled="true" arguments=""/>
+      <Program executableFilePath="&lt;InstallPath&gt;\higraph.exe " isLaunchEnabled="true" arguments="example.higraphml"/>
     </Finish>
   </InstallerConfiguration>
   <UninstallerConfiguration isPackaged="true">
