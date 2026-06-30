@@ -279,7 +279,7 @@ class dummyNodeItem(dummyNodeRoot):
         self.suppressItemChange = True
 
         self.prepareGeometryChange()
-        #print(">", end = "", flush=True)
+        #print("dN>", end = "", flush=True)
         self.setPos(pos)
         for eL in self.startsEdgeLines:
             #eL._p[0] = self.pos()
@@ -291,7 +291,7 @@ class dummyNodeItem(dummyNodeRoot):
             eL.updatePath()
         #Tell the edge to update
         #edge = self.startsEdgeLines[0].parentItem()
-        #edge.updateLine()
+        self.parentItem().updateLine()
         self.suppressItemChange = False
 
 class port(dummyNodeRoot):

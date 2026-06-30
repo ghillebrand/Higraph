@@ -1679,6 +1679,7 @@ class addSegmentCommand(QUndoCommand):
     def redo(self):
         edge=self.scene.findItemByIdx(self.edgeNum)
         edgeLine=None
+        print(f"Edges redo: {[e.lineNum for e in edge.edgeLines]}")
         for e in edge.edgeLines:
             if e.lineNum==self.edgeLineNum:
                 edgeLine=e
