@@ -30,8 +30,8 @@ def p1TopLeftp2(p1:QPointF, p2:QPointF)->bool:
 def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
     """ Finds the closesest point between p1&p2 to point. Returns tuple (closest_point, distance)
         Helper function for StraightLineItem.addPoint() on straight lines with long segments
+        ChatGPT? Some LLM!
     """
-
     # Vector line
     line_dx = p2.x() - p1.x()
     line_dy = p2.y() - p1.y()
@@ -44,9 +44,8 @@ def closestPointOnLine(p1:QPointF, p2:QPointF, point: QPointF):
     line_len_sq = line_dx * line_dx + line_dy * line_dy
     if line_len_sq == 0:  # Degenerate line (length = 0)
         return p1, math.hypot(pt_dx, pt_dy)
-
+    #Dot product projection
     t = (pt_dx * line_dx + pt_dy * line_dy) / line_len_sq
-
     # Clamp t to [0, 1] if you want closest point *on the segment*
     # Remove clamp if infinite line is desired
     t = max(0, min(1, t))
