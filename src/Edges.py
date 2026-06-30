@@ -1209,7 +1209,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         """
         #store the start & end nodes (or dummyNodes) before any changes
         #Note: The guard clause included in this loop should be applied in the scene
-        #TODO: Move the guard clause from here once everything is stable    
+        #TODO: Move the guard clause from here once everything is stable   
+        # Does `scene` have all the data to do this? 
         stN = None
         for sN in self.startNodes:
             if newNode == sN[0]:
@@ -1679,7 +1680,6 @@ class addSegmentCommand(QUndoCommand):
     def redo(self):
         edge=self.scene.findItemByIdx(self.edgeNum)
         edgeLine=None
-        print(f"Edges redo: {[e.lineNum for e in edge.edgeLines]}")
         for e in edge.edgeLines:
             if e.lineNum==self.edgeLineNum:
                 edgeLine=e

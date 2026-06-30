@@ -442,8 +442,8 @@ class grScene(QGraphicsScene):
 
     def endRubberLine(self):
         """called on successful end item found for edge:
-         from INSERTEDGE mouseRelease or INSERTEDGE2CLICK mousePress """
-        #TODO: How does this relate to finishMovingEdgeEnd?
+            from INSERTEDGE mouseRelease or INSERTEDGE2CLICK mousePress 
+         """
 
         #If both ends are node-like, then this is a new edge.
         if self.tmpEdgeSt.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] and self.tmpEdgeEnd.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
@@ -2410,6 +2410,8 @@ class MainWindow(QMainWindow):
 
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
         self.Scene.nodeEditRequested.connect(self.showEditNodeDialog)
+        #Set an initial sceneRect to stop the scroll/ zoom jumps for the initial item creation
+        self.Scene.setSceneRect(-500,-500,500,500)
 
         self.ui.graphicsView.setScene(self.Scene)
         self.ui.graphicsView.setRenderHint(QPainter.Antialiasing)
@@ -4511,8 +4513,6 @@ class MainWindow(QMainWindow):
                                         #edgeItem.delSegment(touchingEdgeLine)
                                         break
                             else: # Delete the whole edge
-                                #self.delEdge(e)
-                                #print(f"act edDel delete whole edge ")
                                 if edgeItem not in selected_items:
                                     #TODO: re-implement UNDO!
                                     #self.delHyperEdge(e)
@@ -4521,19 +4521,7 @@ class MainWindow(QMainWindow):
                     newAction=deleteNodeCommand(item, item.scenePos(), self.Scene, self.model, self.ui.treeWidget, type=item.data(KEY_ROLE), parent=None)
                     self.undoStack.push(newAction)
             self.undoStack.endMacro()
-            #self.Scene.updateBlobParenting()        #JH there must be a better way to do this
-        #logging.debug("about to update from action_EditDelete",stack_info=True  )
-        #gc.collect() #This will crash the whole thing, with no traces
-        #debug_qgraphicsitem_refs()  #More coPilot code ...
 
-        #self.Scene.update()
-        #Trying to get rid of the orphan lines - which go when the view changes so that scrollbars are added.
-        #JHself.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
-        #GC takes some time (~100ms?) to finalise, so delay the repaint
-     #JH   QTimer.singleShot(500, lambda: self.ui.graphicsView.viewport().repaint())
-        #self.Scene.invalidate(self.Scene.sceneRect(), QGraphicsScene.AllLayers)
-      #JH  self.ui.graphicsView.viewport().repaint()  #update()
-        #self.Scene.invalidate()
 
     def action_EditSelectAll(self):
         #print("Edit>SelectAll")
@@ -4544,8 +4532,6 @@ class MainWindow(QMainWindow):
             if item.GraphicsItemFlag.ItemIsSelectable:
                 item.isOnlySelected=False  
                 item.setSelected(True)
-                #lWItem = self.Scene.listWidget.findItemByIdx(item.data(KEY_INDEX))
-                #self.Scene.listWidget.setCurrentItem(lWItem, QItemSelectionModel.SelectionFlag.Select)   
                 self.setCurrentTreeItems(item.data(KEY_INDEX), QItemSelectionModel.SelectionFlag.Select)                
             if self.Scene.thisHandleObjectSelected:  
                 self.Scene.thisHandleObjectSelected._deleteHandles()
@@ -4553,14 +4539,10 @@ class MainWindow(QMainWindow):
         self.Scene.changedByCode=False
 
     def action_EditSelectNone(self):
-        #print("Edit>SelectNone")
         if len(self.Scene.selectedItems())==1 and self.Scene.thisHandleObjectSelected:
             self.Scene.thisHandleObjectSelected._deleteHandles()
             self.Scene.thisHandleObjectSelected=None
-        #if self.Scene.onlySelected: 
-        #    self.Scene.clearEdgeOnly(self.Scene.onlySelected)
         self.Scene.clearSelection()
-        #self.Scene.listWidget.clearSelection()
         self.Scene.treeWidget.clearSelection()
 
     def action_EditZoomIn(self):

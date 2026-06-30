@@ -187,13 +187,14 @@ class StraightLineItem(QGraphicsItem):
         self._deleteHandles()
 
         #Find which path points it's between. 
-        # Just uses the start point of each element, since they're short
+        # Just uses the start point of each element, since they're short 
+        # (works for splines only!)
         minD = math.inf 
         for i in range(self._path.elementCount()-1):
-            newP,newD = closestPointOnLine(QPointF(self._path.elementAt(i)),
+            nextP,newD = closestPointOnLine(QPointF(self._path.elementAt(i)),
                                             QPointF(self._path.elementAt(i+1)),newP)
             if newD < minD:
-                closestP,minD,idx = newP,newD,i
+                closestP,minD,idx = nextP,newD,i
 
         #i to ic conversion is required for a HermiteSpline - keep it to keep things simple/ consistent
         #i is the start of the segment we're on.
