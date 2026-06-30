@@ -20,7 +20,7 @@ class RestoreFileDialog(QDialog):
     def __init__(self, file_names: list[str], parent=None)->str:
         super().__init__(parent)
         self.setWindowTitle("Restore Autosave File")
-        self.resize(450, 300)
+        self.resize(800, 300)
         
         # Default value if the user closes the window using the X button
         self.result_value = "Cancel"
