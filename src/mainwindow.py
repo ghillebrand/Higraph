@@ -2060,7 +2060,7 @@ class deleteEdgeCommand(QUndoCommand):
             if edgeline['_polyEdge'] == SPLINE:
                 #Created with no parent, since edge does not yet exist. Link at the end
                 newEdgeLine = HermiteSplineItem(p=edgeline['points'], t=edgeline['tangents'], id=edgeline['id'])
-            elif edgeline.polyLineType == STRAIGHT:
+            elif edgeline['_polyEdge'] == STRAIGHT:
                 newEdgeLine = StraightLineItem(p=edgeline['points'],  id=edgeline['id'])
             edgeLines.append(newEdgeLine)
             #add to start or end node
