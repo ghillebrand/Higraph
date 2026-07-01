@@ -14,14 +14,17 @@ import copy
 from  HGConstants import *
 
 #This needs to be callable when `Graph` is not accessible (for `dummyNodes`)
-def getGUID(self,id=None)->int:
+def getGUID(id=None)->int:
     """ manage global UIDs for both coreGraph objects and some supporting objects
         (dummyNodes for hyperEdges must have GUIDs)
     """
     #Check for unique ID
     if id and isinstance(id,int) and not id in Graph.IDsUsed:
-            gUID = id
-            Graph.IDsUsed.add(id)
+        gUID = id
+        Graph.IDsUsed.add(id)
+        #Make sure the nextID is > than this!
+        if id > Graph.nextID:
+            Graph.nextID = id + 1
     else:
         while Graph.nextID in Graph.IDsUsed:
             Graph.nextID += 1
@@ -30,6 +33,13 @@ def getGUID(self,id=None)->int:
         Graph.nextID += 1  
     
     return gUID
+
+def delGUID(id):
+    """ Remove an ID from the set of usedIDs
+        This is needed to allow undo/ redo to reuse the original ID
+    """
+    if id in Graph.IDsUsed:
+        Graph.IDsUsed.remove(id)
 
 class Graph:
     """ a set of nodes and edges"""
@@ -46,10 +56,7 @@ class Graph:
       
         def __init__(self,metadata=None,id=None, parents = [], children = []):
             #Check for unique ID
-            if id != None and isinstance(id,int):
-                self.nodeID=id
-            else:
-                self.nodeID = getGUID(id)
+            self.nodeID = getGUID(id)
 
             self.metadata = metadata
             self.startsEdges = []  
@@ -102,10 +109,10 @@ class Graph:
         def __init__(self,start:int,end:int,metadata:dict|None=None,id=None):
             """new edge, must have start = nodeID or tuple, end = nodeID, optional metadata   """
             #Check for unique ID
-            if id != None  and isinstance(id,int):
-                self.edgeID=id
-            else:
-                self.edgeID = getGUID(id)          
+            #if id != None  and isinstance(id,int):
+            #    self.edgeID=id
+            #else:
+            self.edgeID = getGUID(id)          
 
             self.metadata = metadata
             self.startNodes = [] 

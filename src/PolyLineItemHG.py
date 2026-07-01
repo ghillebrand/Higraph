@@ -338,10 +338,10 @@ class HermiteSplineItem(QGraphicsItem):
         #TODO: include dealing with `id` as a parameter
         #ID for saving, and debugging 
         #Check for unique ID
-        if id != None and isinstance(id,int) and id != 0:
-            self.lineNum=id
-        else:
-            self.lineNum = getGUID(id)
+        #if id != None and isinstance(id,int) and id != 0:
+        #    self.lineNum=id
+        #else:
+        self.lineNum = getGUID(id)
         """
         if id and not id in HermiteSplineItem.IDsUsed:
                 self.lineNum = id

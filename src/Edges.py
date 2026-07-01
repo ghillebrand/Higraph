@@ -7,7 +7,7 @@ import gc
 from  HGConstants import *
 
 # core Graph class:
-from coreGraph import Graph
+from coreGraph import *
 
 #Helper & housekeeping functions
 #Draw nice edges
@@ -1415,6 +1415,8 @@ class VisHyperEdgeItem(QGraphicsObject):
                 sNItem.deletePort(p) #Which deals with startsEdgeLines
                 #Remove the node ptr to this whole edge
                 sNItem.startsEdges.remove(self)
+                #For redo purposes
+                delGUID(eLIdx)
                 
 
         def delEdgeLineFromEndNode(eNItem, eLIdx):
@@ -1433,6 +1435,8 @@ class VisHyperEdgeItem(QGraphicsObject):
                 eNItem.deletePort(p)
                 #Remove the node ptr to this whole edge
                 eNItem.endsEdges.remove(self)
+                #For redo purposes
+                delGUID(eLIdx)
 
         #Clean up handles
         for eL in self.edgeLines:
@@ -1606,6 +1610,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.dummyNodes.remove((dNItem,dNItem))
             dNItem.setParentItem(None)
             self.Scene.removeItem(dNItem)
+            delGUID(dNItem.nodeNum)
 
 
         #remove item from edgeLines & scene
