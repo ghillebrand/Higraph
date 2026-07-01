@@ -1658,17 +1658,21 @@ class addSegmentCommand(QUndoCommand):
         self.splitPoint=splitPoint
         self.newEdgeCreated=None
         self.newEdgeLineNum=None
+        self.newEdgeStart=None
+        self.newEdgeEnd=None
 
     def undo(self): 
         if self.newEdgeCreated==True:
             edge=self.scene.findItemByIdx(self.edgeNum)
             delEdgeLine=None
             for e in edge.edgeLines:
-                if e.lineNum==self.newEdgeLineNum:
+                if e.lineNum==self.newEdgeLineNum or \
+                        (self.newEdgeStart in e._p and self.newEdgeEnd in e._p):
                     delEdgeLine=e
                     break
             if delEdgeLine == None:
                 print("Line number not found in Addsegment undo", self.newEdgeLineNum, edge.edgeLines)
+
             undoInfo=edge.delSegment(delEdgeLine)
             if undoInfo != False:
                 self.exTerminatorEdgeLineNum=undoInfo[0].lineNum
@@ -1698,6 +1702,8 @@ class addSegmentCommand(QUndoCommand):
         else:
             self.newEdgeCreated=True
             self.newEdgeLineNum=newEdgeLine.lineNum
+            self.newEdgeStart=newEdgeLine._p[0]
+            self.newEdgeEnd=newEdgeLine._p[-1]
         #return(True)
 
 class delSegmentCommand(QUndoCommand):
