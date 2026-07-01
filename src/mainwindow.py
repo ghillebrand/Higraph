@@ -57,7 +57,7 @@ from Ui_HelpAbout import Ui_dlgAbout
 from  HGConstants import *
 
 # core Graph class:
-from coreGraph import Graph
+from coreGraph import *
 
 #Helper & housekeeping functions
 from autosaver import *
@@ -2263,7 +2263,7 @@ class CodeExecDialog(QDialog):
         self.codeEdit = QTextEdit()
         self.codeEdit.setText("#Examples - No. of Scene items: \nresult = str(len(S.items()))\n" +
                                 "nC = len(G.nodeD)\neC = len(G.edgeD)\n" +
-                                "result += f'\\n Node Count: {nC}, Edge Count {eC}'\n" +
+                                "result += f'\\n Node Count: {nC}, Edge Count {eC}\\n{G.IDsUsed=} , {G.nextID=}' " +
                                 "#Directed or not:\nresult += f'\\n{M.isDigraph == False =}\\n' \n" +
                                 "#Graph Model contents:\nresult += f'{M.getModelItems() =}\\n' \n"+
                                 "#Abstract Graph G:\nresult += f'{G =}'")
@@ -3585,6 +3585,7 @@ class MainWindow(QMainWindow):
 
         #Edges
         for xEdge in graphStr.iter("edge"):
+            #TODO: Deprecate this code - edges are never created.
             #Handle yEd-style string IDs
             fileID = xEdge.attrib.get("id")
             try: #is the read ID a valid int- use it
@@ -3606,7 +3607,13 @@ class MainWindow(QMainWindow):
         
         #HyperEdges
         for xEdge in graphStr.iter("hyperedge"):
-            hEdgeItem = self.hyperEdgeFromXML(xEdge)
+            fileID = xEdge.attrib.get("id")
+            try: #is the read ID a valid int- use it
+                id = int(fileID)
+                newID = False
+            except ValueError: #No - generate a new one.
+                newID = True
+            hEdgeItem = self.hyperEdgeFromXML(xEdge,newID)
             #Add to Scene
             self.Scene.addItem(hEdgeItem)
             hEdgeItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -4351,6 +4358,8 @@ class MainWindow(QMainWindow):
 
     def delEdge(self, delIdx):
         """ all the calls to delete an edge"""
+        #TODO: Deprecate
+
         #delete from model
         self.model.delEdge(delIdx)
 
@@ -4410,8 +4419,10 @@ class MainWindow(QMainWindow):
         #debug_qgraphicsitem_refs()
 
         self.Scene.deleteItemAndChildren(delItem)
-        
+        #Make the GUID reusable _for undo_ 
+        delGUID(delIdx)
         del delItem 
+
 
     def delNode(self, delIdx):
         """ all the calls to delete an node"""
@@ -4453,6 +4464,8 @@ class MainWindow(QMainWindow):
                 self.ui.treeWidget.takeTopLevelItem(self.ui.treeWidget.indexOfTopLevelItem(item))
             else:
                 itemParent.takeChild(itemParent.indexOfChild(item))
+        #Make the GUID reusable _for undo_ 
+        delGUID(delIdx)
 
         #del delItem  #is this necessary? JH
 
