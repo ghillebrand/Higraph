@@ -573,7 +573,7 @@ class HermiteSplineItem(QGraphicsItem):
         #There shouldn't be any handles, but just in case
         self._deleteHandles()
 
-        #Find which path points it's between. 
+        #Find which path elements it's between. 
         # Just uses the start point of each element, since they're short
         minD = math.inf 
         ic, xc, yc = 0,0,0  #These are path element, element x,y start
@@ -618,14 +618,18 @@ class HermiteSplineItem(QGraphicsItem):
     def deletePoint(self,delP:QPointF):
         """Delete the control point nearest delP"""
         if len(self._p)>2:  # can't delete start or end points
-            minD = math.inf
-            ic, xc, yc = 0,0,0  #c for closest
-            for i in range(len(self._p)):
-                xo, yo = self._p[i].x(), self._p[i].y()
-                newD = math.sqrt((delP.x() - xo)**2+ (delP.y() - yo)**2)
-                if newD < minD:
-                    ic, xc, yc = i,xo,yo
-                    minD = newD
+            if delP in self._p:
+                minD=0
+                ic=self._p.index(delP)
+            else:
+                minD = math.inf
+                ic, xc, yc = 0,0,0  #c for closest
+                for i in range(len(self._p)):
+                    xo, yo = self._p[i].x(), self._p[i].y()
+                    newD = math.sqrt((delP.x() - xo)**2+ (delP.y() - yo)**2)
+                    if newD < minD:
+                        ic, xc, yc = i,xo,yo
+                        minD = newD
             ##self.suppressItemChange = True
         #TODO: CHeck for <hitsize?
             if minD <= HITSIZE and ic !=0 and ic!=len(self._p)-1:
@@ -638,7 +642,7 @@ class HermiteSplineItem(QGraphicsItem):
                 self.parentItem()._deleteHandles()
                 self.parentItem()._createHandles()
                 #self._createHandles()
-                self.update()
+                self.updatePath()
 
             """if minD <= HITSIZE and len(self._p) > 2:
                 #remove handles 

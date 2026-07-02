@@ -35,7 +35,7 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject,
             QMimeData, QBuffer, QByteArray, QIODevice)
 
-
+import os
 
 class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     """ Create a new edge - both Graph Model and Visual ("graphics")
@@ -1695,6 +1695,8 @@ class addSegmentCommand(QUndoCommand):
                 break
         if edgeLine == None:
             edgeLine=edge.edgeLineAt(self.splitPoint)
+        if self.splitPoint in edgeLine._p:
+            edgeLine.deletePoint(self.splitPoint)
         newNode=self.scene.findItemByIdx(self.newNodeNum)
         newEdgeLine=edge.addSegment(edgeLine, newNode, self.start, self.nodePt, self.splitPoint)
         if newEdgeLine==False:
@@ -1729,7 +1731,10 @@ class delSegmentCommand(QUndoCommand):
                     edgeLine=e
                     break
             if edgeLine == None:
-                edgeLine=edge.edgeLineAt(self.splitPoint)                
+                edgeLine=edge.edgeLineAt(self.splitPoint)   
+            if self.splitPoint in edgeLine._p:
+                edgeLine.deletePoint(self.splitPoint) 
+           
             newNode=self.scene.findItemByIdx(self.newNodeNum)
             newEdgeLine=edge.addSegment(edgeLine, newNode, self.start, self.nodePt, self.splitPoint)
             self.edgeLineNum=newEdgeLine.lineNum
