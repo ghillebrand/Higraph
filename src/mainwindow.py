@@ -2248,7 +2248,9 @@ QGraphicsView.wheelEvent=WheelEvent
 
 #Some global helper functions
 class CodeExecDialog(QDialog):
-    """Let the user run arbitrary Python code against the model """
+    """Let the user run arbitrary Python code against the model 
+        Prototype. Replace with PyConsole in 040
+    """
     def __init__(self, parent=None, scene=None):
         super().__init__(parent)
         self.setWindowTitle("Python Code Executor - Experimental - does not save!")
@@ -3986,41 +3988,67 @@ class MainWindow(QMainWindow):
 
     def action_FileClose(self):
         print("File Close")  
-        #TODO: What does this mean. 
+        #TODO: What does this mean - this app doesn't & won't  do multiple files
         #closeEvent() is the shutdown code.
 
     def action_Print(self):
         """
-        chatGPT. Slot to print the entire QGraphicsScene.
+        print
         """
         printer = QPrinter(QPrinter.ScreenResolution)# HighResolution) 
 
         # Show print dialog
         printDialog = QPrintDialog(printer, self)
+
         if printDialog.exec() == QPrintDialog.Accepted:
+            #Gemini's July 2026 code
+            painter = QPainter(printer)
+            
+            # 1. Turn on High-Quality Antialiasing for the printout
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setRenderHint(QPainter.TextAntialiasing)
+            
+            # 2. Get the EXACT bounding box of just your items
+            # (If your canvas is empty, fallback to the base sceneRect to prevent errors)
+            sourceRect = self.Scene.itemsBoundingRect()
+            if sourceRect.isEmpty():
+                sourceRect = self.Scene.sceneRect()
+                
+            # 3. Get the physical printable area of the page
+            targetRect = QRectF(printer.pageRect(QPrinter.DevicePixel))
+            
+            # 4. Render directly! 
+            # Passing targetRect and sourceRect tells Qt to scale and center automatically
+            self.Scene.render(painter, targetRect, sourceRect)
+            
+            painter.end()
+
+
+        if False: #printDialog.exec() == QPrintDialog.Accepted:
+            #hatGPT. Slot to print the entire QGraphicsScene.
             painter = QPainter(printer)
             
             # Get the full scene rectangle
             #sceneRect = self.Scene.sceneRect()
             sceneRect = self.Scene.itemsBoundingRect() 
-            #print(f"{sceneRect =}")
+            print(f"actPrint {sceneRect =}, {self.Scene.itemsBoundingRect()=}")
 
             # Compute scale to fit scene onto the page
             #TODO: Apply a human brain to this scaling - this gives weird results.
             pageRect = printer.pageRect(QPrinter.DevicePixel).toRect()
-            #print(f"{pageRect =}")
+            print(f"actPrint {pageRect =}")
             xScale = pageRect.width() / sceneRect.width()
             yScale = pageRect.height() / sceneRect.height()
             scale = min(xScale, yScale)
-            #print(f"{scale =}")
-            scale = scale/5 #needs tweaking
+            print(f"{scale =}")
+            #scale = scale/5 #needs tweaking
 
             # Center the scene on the page
             #xOffset = (pageRect.width() - sceneRect.width() * scale) / 2
             #yOffset = (pageRect.height() - sceneRect.height() * scale) / 2
 
             #painter.translate(xOffset, yOffset)
-            #painter.scale(scale, scale)
+            painter.scale(scale, scale)
         
             # Render the scene
             self.Scene.render(painter)

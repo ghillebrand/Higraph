@@ -432,8 +432,8 @@ class HermiteSplineItem(QGraphicsItem):
 
     def boundingRect(self) -> QRectF:
         adjust = 2
-        return self._boundingRect.united (self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust))
-
+        self._boundingRect = self._boundingRect.united (self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust))
+        return self._boundingRect
     def shape(self):
         outlinePath = QPainterPathStroker()
         outlinePath.setWidth(HITSIZE*2)
@@ -505,7 +505,8 @@ class HermiteSplineItem(QGraphicsItem):
         """ show self as selected if the parent is selected"""
         return self.parentItem() and self.parentItem().isSelected()
     
-    """def setSelected(self,state:bool):
+    """
+    def setSelected(self,state:bool):
         # set as selected if parent is selected
         #print(f"HS setSelected {state=}")
         #TODO: Check how this messes with built-in selection handling.
@@ -518,7 +519,8 @@ class HermiteSplineItem(QGraphicsItem):
         else:
             #print("calling _deleteHandles")
             self._deleteHandles()
-        #super().setSelected(isSelected)"""
+        #super().setSelected(isSelected)
+    """
 
     def endAngle(self):
         """ Use the path details to work out the end angle. For HS, use the tangent """
@@ -673,6 +675,8 @@ class HermiteSplineItem(QGraphicsItem):
     def setP(self, n:int, p:QPointF, nodeType="Node"):
         """sets the nth point to the value p. n is a list index """
         self._p[n] = p
+        # Currently, tangents are _not_ updated on point change
+        #This code updates the tangents everytime the point is updated.
         """if n == 0 and nodeType=="Node":
             for sN,sP in self.parentItem().startNodes:
                 #for p in sN._ports:
@@ -710,6 +714,7 @@ class HermiteSplineItem(QGraphicsItem):
         """ Allow the calling of the recalculation independently of handle updates"""
         #print(f"u",end="",flush=True)
         #traceback.print_stack(limit=3)
+        self.prepareGeometryChange()
         self._path = self._createHermitePath()
         self._boundingRect = self._path.boundingRect().adjusted(-20, -20, 20, 20)
         self.update()    
