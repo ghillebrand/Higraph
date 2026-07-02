@@ -1623,7 +1623,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #print(f"delseg eLs after del {[e.lineNum for e in self.edgeLines]}")
         #Force a cleanup???
-        gc.collect()
+        #gc.collect()
         #print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False
