@@ -232,7 +232,7 @@ class dummyNodeRoot(QGraphicsItem):
 
     def boundingRect(self):
         #bRect = QRect(self.x(), self.y(), self.x()+1, self.y()+1)
-        bRect = QRect(self.x(), self.y(), 1, 1)
+        bRect = QRect(0, 0, 1, 1)
         return bRect
     
     def paint(self, painter: QPainter, option, widget=None):
