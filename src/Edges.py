@@ -750,7 +750,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                 print(f"   ends eLine {e.lineNum}")
         """
         #Bounding rectangle
-        self.bRect = QRectF(0,0,0,0) #initial bounding rectangle
+        self.bRect = QRectF() #initial bounding rectangle
         for edgeLine in self.edgeLines:
             edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
             edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
@@ -911,10 +911,18 @@ class VisHyperEdgeItem(QGraphicsObject):
         adjust = 2 # self.pen.width() / 2
         #return self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust)
         #start port and end port coords to start with
+        #Make bRect local
+        bRect = self.edgeLines[0].boundingRect().normalized()
+        for edgeLine in self.edgeLines[1:]:
+            bRect = bRect.united(edgeLine.boundingRect().normalized()).normalized()
+        return bRect        
+        
+        """
         self.bRect = self.edgeLines[0].boundingRect().normalized()
         for edgeLine in self.edgeLines[1:]:
             self.bRect = self.bRect.united(edgeLine.boundingRect().normalized()).normalized()
         return self.bRect
+        """
 
     def paint(self, painter, option, widget=None):
         #print(f" Paint {self.edgeNum =}")
