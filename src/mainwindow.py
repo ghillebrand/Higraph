@@ -1694,6 +1694,10 @@ class grScene(QGraphicsScene):
         # Remove from scene
         #if its an edge, tell the nodes ends that the edge is gone
         if item.data(KEY_ROLE) == ROLE_EDGE:
+            #Remove the GUIDs for undo
+            for eL in item.edgeLines:
+                delGUID(eL.lineNum)
+
             for i in item.startNodes:
                 i[0].startsEdges.remove(item)
                 #EdgeLine references are removed by removing the port from the node
@@ -2042,7 +2046,9 @@ class deleteEdgeCommand(QUndoCommand):
         # ports WILL have been deleted, so recreate and add to node 
         self.startNodes=[]
         for i in range(0, len(self.startNodeNums)):
+            #startNode[0]
             startNodeZero=self.scene.findItemByIdx(self.startNodeNums[i])
+            #startNode[1]
             portPos = startNodeZero.parameterToPosition(self.startPortT[i])
             startNodeOne=port(portPos, t=self.startPortT[i], index =self.startPortIndex[i], parent=startNodeZero.nodeShape)
             startNodeZero._Ports.append(startNodeOne)
