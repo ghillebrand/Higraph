@@ -42,7 +42,7 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QGuiApplication, QImage, QPixmap)
 
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
-            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
+            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent,
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
 
 from PySide6.QtSvg import QSvgGenerator
@@ -267,8 +267,6 @@ class grScene(QGraphicsScene):
         self.blobInsidePoints=[]
 
         #Add axes to help see how things move & debug graphical issues.
-            #TODO: THere must be a better solution!
-        #WHite to provide a auto-zoom anchor
         """
         VLine = QGraphicsLineItem(0,100,0,-100)
         self.addItem(VLine)
@@ -2430,7 +2428,10 @@ class MainWindow(QMainWindow):
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
         self.Scene.nodeEditRequested.connect(self.showEditNodeDialog)
         #Set an initial sceneRect to stop the scroll/ zoom jumps for the initial item creation
-        self.Scene.setSceneRect(-500,-500,500,500)
+        self.baseSceneRect = QRectF(-500,-500,1000,1000)
+        self.Scene.setSceneRect(self.baseSceneRect)
+        #allow the scene to grow as the model grows - needed for scrollbars
+        self.Scene.changed.connect(self.adjustSceneRect)
 
         self.ui.graphicsView.setScene(self.Scene)
         self.ui.graphicsView.setRenderHint(QPainter.Antialiasing)
@@ -2542,6 +2543,21 @@ class MainWindow(QMainWindow):
 
         #Start the autosave process (after the window is drawn)
         QTimer.singleShot(1, lambda: setattr(self,"autoSave", autoSaver(self.action_FileSave, self.action_FileOpen, interval = prefs.AutoSaveMins, cycleSize = prefs.AutoSaveCycleSize, statusBar=self.statusBar) ))
+
+    def adjustSceneRect(self, region: QList[QRectF]):
+        """ 
+            Check if the `sceneRect needs expanding
+            (Gemini base)
+        """
+        sceneBoundingRect = self.Scene.itemsBoundingRect()
+        currentSize = self.baseSceneRect.united(sceneBoundingRect)
+
+        #Add space for the scrollbars/ ...
+        scrollBarSize = 20 #Who knows?
+        currentSize.adjust(-scrollBarSize,-scrollBarSize,scrollBarSize,scrollBarSize)
+
+        if self.Scene.sceneRect() != currentSize:
+            self.Scene.setSceneRect(currentSize)  
 
     #GraphicsView/ scene handling
     def setZoom(self, value):
