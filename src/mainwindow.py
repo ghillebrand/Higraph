@@ -1697,6 +1697,8 @@ class grScene(QGraphicsScene):
             #Remove the GUIDs for undo
             for eL in item.edgeLines:
                 delGUID(eL.lineNum)
+            for dN in item.dummyNodes:
+                delGUID(dN[0].nodeNum)
 
             for i in item.startNodes:
                 i[0].startsEdges.remove(item)
