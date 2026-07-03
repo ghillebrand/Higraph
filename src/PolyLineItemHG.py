@@ -184,8 +184,8 @@ class StraightLineItem(QGraphicsItem):
         """
         #Based on `addPoint` code
         #There shouldn't be any handles, but just in case
-        self._deleteHandles()
-
+        #self._deleteHandles()
+        self.parentItem()._deleteHandles()
         #Find which path points it's between. 
         # Just uses the start point of each element, since they're short 
         # (works for splines only!)
@@ -573,7 +573,7 @@ class HermiteSplineItem(QGraphicsItem):
         """ splits the spline at newP, updating the point list of self and return a new HS"""
         #Based on `addPoint` code
         #There shouldn't be any handles, but just in case
-        self._deleteHandles()
+        self.parentItem()._deleteHandles()
 
         #Find which path elements it's between. 
         # Just uses the start point of each element, since they're short
