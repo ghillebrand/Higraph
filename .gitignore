@@ -59,3 +59,52 @@ src/asT1.higraphml
 src/asT1(1).higraphml
 src/strtLineArrow.higraphml
 src/testing.higraphml
+oldTests n stuff/asT1.higraphml
+oldTests n stuff/asT1a.higraphml
+oldTests n stuff/asT1aGUID_crash_2026-07-01_13-38-09_2.higraphml
+oldTests n stuff/autoSaveT2.higraphml
+oldTests n stuff/big2-jul.pdf
+oldTests n stuff/Big10 landscape.pdf
+oldTests n stuff/Big10.pdf
+oldTests n stuff/Big10selected.pdf
+oldTests n stuff/gui5T.pdf
+oldTests n stuff/GUID-segment crash analysis.docx
+oldTests n stuff/GUID3-.svg
+oldTests n stuff/GUIDcrash_2026-07-01_13-54-38_0.higraphml
+oldTests n stuff/GUIDT1.higraphml
+oldTests n stuff/GUIDT2.higraphml
+oldTests n stuff/GUIDT3-.pdf
+oldTests n stuff/GUIDT3a.higraphml
+oldTests n stuff/het4c.graphml
+oldTests n stuff/higraphV03rc1.ifp
+oldTests n stuff/printT3.pdf
+oldTests n stuff/SLMPHE T1.higraphml
+oldTests n stuff/strtLineArrow - Copy.higraphml.xml
+oldTests n stuff/strtLineArrow.higraphml
+oldTests n stuff/strtLineArrow.zip
+oldTests n stuff/strtLineArrow2.higraphml
+oldTests n stuff/untitled_autosave_2026-07-01_14-59-00_0.higraphml
+oldTests n stuff/untitled_autosave_2026-07-01_15-00-00_1.higraphml
+oldTests n stuff/untitled_autosave_2026-07-01_15-01-00_2.higraphml
+oldTests n stuff/zoomT1-.pdf
+oldTests n stuff/zoomT1.higraphml
+oldTests n stuff/zoomT1c-.pdf
+oldTests n stuff/zoomT1land-.pdf
+oldTests n stuff/zT2.pdf
+examples-old/3nodes.graphml
+examples-old/b2.graphml
+examples-old/t8.graphml
+examples-old/Test - all options.graphml
+examples-old/Test1-prettyPrint.graphml
+examples-old/Test1.graphml
+ReleaseCandidates/hg03rc1.00.exe
+ReleaseCandidates/hg03rc1.01.exe
+src/__pycache__/coreGraph.cpython-313.pyc
+src/__pycache__/Edges.cpython-313.pyc
+src/__pycache__/EditVisItemDialog.cpython-313.pyc
+src/__pycache__/GraphicsSupport.cpython-313.pyc
+src/__pycache__/HGConstants.cpython-313.pyc
+src/__pycache__/Nodes.cpython-313.pyc
+src/__pycache__/PolyLineItemHG.cpython-313.pyc
+src/__pycache__/ui_Credits.cpython-313.pyc
+src/__pycache__/Ui_HelpAbout.cpython-313.pyc
