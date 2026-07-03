@@ -1194,10 +1194,13 @@ class grScene(QGraphicsScene):
                     cxMenu = [  (posText, None),
                               (("Edit Details", 
                                 lambda: self.mainwindow.showEditNodeDialog(item)))
+
                             ]
             else: #no or >1 selected.
                 cxMenu =[(posText, None),
-                         ("print",lambda: MainWindow.action_DebugPrint(MainWin))]
+                         ("print",lambda: MainWindow.action_DebugPrint(MainWin)),
+                         (("zoom To Fit", lambda:zoomToFitWithMargin(self.mainwindow.ui.graphicsView) ))
+                        ]
 
             if cxMenu:
                 cxChoice = self.contextMenu(mouseEvent, cxMenu)
@@ -2316,7 +2319,7 @@ class CodeExecDialog(QDialog):
         self.outputEdit.setPlainText(output)
 
 
-def zoomToFitWithMargin(view, margin=0.25):
+def zoomToFitWithMargin(view, margin=0.1):
     """ chatGpt. Pass in a QGraphicsView and a margin multiplier  """
     # Get bounding rect of all items
     sceneRect = view.scene().itemsBoundingRect()
@@ -2325,11 +2328,16 @@ def zoomToFitWithMargin(view, margin=0.25):
         # Nothing to fit
         return
 
-    # Inflate by 25% on each side
+    # Inflate by `margin`  on each side
     marginX = sceneRect.width() * margin
     marginY = sceneRect.height() * margin
     sceneRect.adjust(-marginX, -marginY, marginX, marginY)
 
+
+    view.fitInView(sceneRect, Qt.KeepAspectRatio)
+    
+    #Old (complex?) code
+    """
     # Compute the transform to fit the rect
     viewportRect = view.viewport().rect()
     if viewportRect.isEmpty():
@@ -2350,6 +2358,7 @@ def zoomToFitWithMargin(view, margin=0.25):
     transform.translate(-sceneRect.center().x(), -sceneRect.center().y())
 
     view.setTransform(transform)
+    """
 
 
 def paintItemAndChildren(item, painter):
