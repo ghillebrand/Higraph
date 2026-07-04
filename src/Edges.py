@@ -14,6 +14,7 @@ from coreGraph import *
 from PolyLineItemHG import StraightLineItem, HermiteSplineItem, HandleItem
 from GraphicsSupport import *
 from Nodes import  * #Needed for type checking
+from WarningMessage import *
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -1476,8 +1477,8 @@ class VisHyperEdgeItem(QGraphicsObject):
             canDelete = canDelete and len(self.endNodes) > 1
 
         if not canDelete:
-            #TODO: Make this a `QtWidgets.QMessageBox`
-            print(f"Error - Deleting this segment will destroy the edge")
+            WarningMessage(f"This segment cannot be deleted",
+                infoText="This will destroy the edge - rather delete the edge explicitly")
             return False
 
         self.suppressItemChange = True
