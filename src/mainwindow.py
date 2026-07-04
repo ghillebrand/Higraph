@@ -2541,7 +2541,7 @@ class MainWindow(QMainWindow):
         else:
             self.fileName = ""
 
-        #Start the autosave process (after the window is drawn)
+        #Start the autosave process (after the window is drawn, otherwise reloads don't draw)
         QTimer.singleShot(1, lambda: setattr(self,"autoSave", autoSaver(self.action_FileSave, self.action_FileOpen, interval = prefs.AutoSaveMins, cycleSize = prefs.AutoSaveCycleSize, statusBar=self.statusBar) ))
 
     def adjustSceneRect(self, region: QList[QRectF]):
