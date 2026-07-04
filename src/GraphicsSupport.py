@@ -66,7 +66,7 @@ class TransparentTextItem(QGraphicsTextItem):
     """ allows parent.shape() to select the text, rather than the textItem always grabbing the event  """
     def __init__(self, text:str, parent=None):
         if not parent:
-            print(f"Error creating TransparentTextItem - no parent set")
+            ErrorMessage(f"Error creating TransparentTextItem - no parent set")
         super().__init__(text,parent)
 
     def paint(self, painter, option, widget=None):
