@@ -26,8 +26,11 @@ def ErrorMessage(msg:str, infoText = "", detailText = ""):
     msgBox.setIcon(QMessageBox.Icon.Critical)
     msgBox.setText(msg)
     if infoText: msgBox.setInformativeText(infoText)
-    if detailText: msgBox.setDetailedText(detailText)
-    msgBox.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No )
-    msgBox.setDefaultButton(QMessageBox.StandardButton.No)
+    detailTrailer = "\nemail details to higraph@isijingi.co.za"
+    #TODO: Add this once the repo is public
+    #  or log an issue on github https://github.com/ghillebrand/Higraph/issues"
+    msgBox.setDetailedText(detailText+detailTrailer)
+    #The user must do the emailing
+    msgBox.setStandardButtons(QMessageBox.StandardButton.Ok)
+    msgBox.setDefaultButton(QMessageBox.StandardButton.Ok)
     ret = msgBox.exec()
-    print(f"error msg {ret=}")

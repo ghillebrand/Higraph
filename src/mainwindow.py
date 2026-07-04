@@ -613,7 +613,7 @@ class grScene(QGraphicsScene):
             # mmm - self edges can be createdwork anyway!!!
             elif False: ###*****###(newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
                 #newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
-                print(f"Self edge {self.EdgeEnd}")
+                #print(f"Self edge {self.EdgeEnd}")
                 if len(edge.edgeLine._p) < 3 and edge._polyEdge==STRAIGHT:
                     #add in a point on the middle for now. (only works for straight, splines are OK)
                     #TODO: Refine!!!
@@ -3127,10 +3127,10 @@ class MainWindow(QMainWindow):
         eItem = self.Scene.findItemByIdx(eItemID)
         if sItem == None:
             #TODO - this should be in a try-except, since this means the file is corrupt
-            print(f"WARNING! - Start Item ID {sItemID} not found ")
+            ErrorMessage(f"Error reading edge from file:\nStart Item ID {sItemID} not found ")
             #return None
         if eItem == None:
-            print(f"WARNING! - End Item ID {eItemID} not found ")
+            ErrorMessage(f"Error reading edge from file:\nEnd Item ID {eItemID} not found ")
             #return None
         
         #Add the port
@@ -3276,7 +3276,7 @@ class MainWindow(QMainWindow):
             if aNode.tag == "start":
                 s = int(aNode.attrib.get("source", 0))
                 if not s:
-                    print(f"ERROR: can't find source in {aNode}")
+                    ErrorMessage(f"ERROR: can't find source in {aNode}")
                     return None
                 #TODO: refactor `oldToNewID` to work purely on int's!
                 #print(f"Start node {s} --> {self.oldToNewID[str(s)]}")
@@ -3293,7 +3293,7 @@ class MainWindow(QMainWindow):
             if aNode.tag == "end":
                 e = int(aNode.attrib.get("target", 0))
                 if not e:
-                    print(f"ERROR: can't find target in {aNode}")
+                    ErrorMessage(f"ERROR: can't find target in {aNode}")
                     return None
                 #print(f"end node {e} --> {self.oldToNewID[str(e)]}")
                 e = self.oldToNewID[e]
@@ -3527,7 +3527,7 @@ class MainWindow(QMainWindow):
                 higraphStr = graphFile.read()
 
         except FileNotFoundError:
-            print(f"Error, file not found: {graphFile}")
+            ErrorMessage(f"Error, file not found: {graphFile}")
             raise FileNotFoundError(f"Error, file not found: {graphFile}")
 
 
@@ -3703,7 +3703,7 @@ class MainWindow(QMainWindow):
                 graphStr = graphFile.read()
 
         except FileNotFoundError:
-            print(f"Error, file not found: {graphFile}")
+            ErrorMessage(f"Error, file not found: {graphFile}")
             raise FileNotFoundError(f"Error, file not found: {graphFile}")
 
 
@@ -4064,16 +4064,16 @@ class MainWindow(QMainWindow):
             # Get the full scene rectangle
             #sceneRect = self.Scene.sceneRect()
             sceneRect = self.Scene.itemsBoundingRect() 
-            print(f"actPrint {sceneRect =}, {self.Scene.itemsBoundingRect()=}")
+            #print(f"actPrint {sceneRect =}, {self.Scene.itemsBoundingRect()=}")
 
             # Compute scale to fit scene onto the page
             #TODO: Apply a human brain to this scaling - this gives weird results.
             pageRect = printer.pageRect(QPrinter.DevicePixel).toRect()
-            print(f"actPrint {pageRect =}")
+            #print(f"actPrint {pageRect =}")
             xScale = pageRect.width() / sceneRect.width()
             yScale = pageRect.height() / sceneRect.height()
             scale = min(xScale, yScale)
-            print(f"{scale =}")
+            #print(f"{scale =}")
             #scale = scale/5 #needs tweaking
 
             # Center the scene on the page

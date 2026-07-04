@@ -11,7 +11,8 @@ Nodes as sets will be added later - inclusion is easier than n-ary edges.
 
 #from typing import ClassVar
 import copy
-from  HGConstants import *
+from HGConstants import *
+from WarningMessage import *
 
 #This needs to be callable when `Graph` is not accessible (for `dummyNodes`)
 def getGUID(id=None)->int:
@@ -207,10 +208,10 @@ class Graph:
         
         #edge1 -> edge2 not allowed (requires merging 2 edges
         if start in self.edgeD and end in self.edgeD:
-            print(f"***Error adding edge: edge->edge connections {start}->{end} require merging edges - not allowed")
+            ErrorMessage(f"coreGraph Error -  adding edge: edge->edge connections {start}->{end} require merging edges - not allowed")
             return None
         #else:
-        print(f"***Error adding edge: No nodes found for edge {start}->{end}")
+        ErrorMessage(f"coreGraph Error -  adding edge: No nodes found for edge {start}->{end}")
         return None
             
     def delNodeFromEdge(self,nodeID:int, edgeID:int)->bool:
@@ -224,7 +225,7 @@ class Graph:
                 self.edgeD[edgeID].startNodes.remove(nodeID)
                 return True
             else:
-                print(f"coreGraph Error - cannot delete the last start node {nodeID} for edge {edgeID}")
+                ErrorMessage(f"coreGraph Error - cannot delete the last start node {nodeID} for edge {edgeID}")
                 return False
 
         elif nodeID in self.edgeD[edgeID].endNodes:
@@ -234,10 +235,10 @@ class Graph:
                 self.edgeD[edgeID].endNodes.remove(nodeID)
                 return True
             else:
-                print(f"coreGraph Error - cannot delete the last end node {nodeID} for edge {edgeID}")
+                ErrorMessage(f"coreGraph Error - cannot delete the last end node {nodeID} for edge {edgeID}")
                 return False
         else:
-            print(f"coreGraph Error - node {nodeID} not part of {edgeID}")
+            ErrorMessage(f"coreGraph Error - node {nodeID} not part of {edgeID}")
             return False
 
     
@@ -283,7 +284,7 @@ class Graph:
             #Graph.IDsUsed.remove(nodeID) JH this needs to be done consistently
             self.nodeD.pop(nodeID)
         else:
-            print(f"coreGraph *** Error Can't delete {delNode =} - does not exist")
+            ErrorMessage(f"coreGraph Error: Can't delete {delNode =} - does not exist")
             return
 
     def delEdge(self,edgeID:int):
@@ -300,7 +301,7 @@ class Graph:
             #Graph.IDsUsed.remove(edgeID) JH
             self.edgeD.pop(edgeID)
         else:
-            print(f"***Error deleting edge <{edgeID}> - does not exist")
+            ErrorMessage(f"coreGraph Error - deleting edge <{edgeID}> - does not exist")
 
     def updateEdge(self, edgeID:int ,oldID:int, end:str, newID:int):
         """ Allows an edge to be moved from one node to another.
@@ -308,20 +309,20 @@ class Graph:
         """
         if not end in ["start", "end"]:
             #TODO: make this an exception
-            print(f"error - end must be 'start' or 'end' , not '{end}'")
+            ErrorMessage(f"error in coreGraph - end must be 'start' or 'end' , not '{end}'")
             return None
         if edgeID in self.edgeD:
             e = self.edgeD[edgeID]
         else:
-            print(f"***Error updating edge <{edgeID}> - does not exist")
+            ErrorMessage(f"Error in coreGraph updating edge <{edgeID}> - does not exist")
             return None
         
         if oldID not in self.nodeD:
-            print(f"***Error updating edge <{edgeID}> - node {oldID = } does not exist")
+            ErrorMessage(f"Error in coreGraph updating edge <{edgeID}> - node {oldID = } does not exist")
             return None            
 
         if newID not in self.nodeD:
-            print(f"***Error updating edge <{edgeID}> - node {newID = } does not exist")
+            ErrorMessage(f"Error in coreGraph updating edge <{edgeID}> - node {newID = } does not exist")
             return None
         
         if end == "start":

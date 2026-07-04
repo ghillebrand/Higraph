@@ -600,7 +600,7 @@ class VisNodeItem(QGraphicsObject):
         for p in self._Ports:
             if p.index == Xindex:
                 return p
-        print(f"WARNING: port {Xindex} not found on node {self.nodeNum}")
+        ErrorMessage(f"portFromIndex: port {Xindex} not found on node {self.nodeNum}")
 
     """def mousePressEvent(self, mouseEvent):
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
