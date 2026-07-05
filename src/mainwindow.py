@@ -2272,10 +2272,12 @@ def mouseMoveEvent(self, event):
             boundingRect = sIlist[0].sceneBoundingRect()
             for item in sIlist[1:]:
                 boundingRect = boundingRect.united(item.sceneBoundingRect())
-            self.ensureVisible(boundingRect)
+            #The size of the margin controls the speed of scrolling.
+            #  Default 50 is too high
+            self.ensureVisible(boundingRect, 10,10)
         else:
-            mRect = QRectF(self.mapToScene(event.pos()),QPointF(20,20))
-            self.ensureVisible(mRect)
+            mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
+            self.ensureVisible(mRect, 10,10)
 QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
 #end monkeypatch    
