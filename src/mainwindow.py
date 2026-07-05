@@ -2236,20 +2236,27 @@ def findTreeItemRowByIdx(self,idx):
     return None
 QTreeWidget.findItemRowByIdx = findTreeItemRowByIdx
 
+
+#Monkeypatch for scrollwheel zooming
 _original_wheelEvent = QGraphicsView.wheelEvent
 def WheelEvent(self, event):
-    if event.modifiers() and Qt.ControlModifier:
+    if event.modifiers() & Qt.ControlModifier:
+
+        zoomStep = 1.2
         currentZoom=self.transform().m11()
-        zoomInFactor = 1.25 * currentZoom * 100
-        zoomOutFactor=(1/1.25) * currentZoom * 100
-        if event.angleDelta().y() > 0:
-            #self.scale(zoomInFactor, zoomInFactor)
-            self.window().zoom_slider.setValue(zoomInFactor)
-        else:
-            #self.scale(zoomOutFactor, zoomOutFactor)
+        zoomInFactor = zoomStep * currentZoom * 100
+        zoomOutFactor=(1/zoomStep) * currentZoom * 100
+        if event.angleDelta().y() < 0:
             self.window().zoom_slider.setValue(zoomOutFactor)
+        else:
+            self.window().zoom_slider.setValue(zoomInFactor)
+        event.accept()
+        return
+    #pass the event on
     _original_wheelEvent(self,event)
+
 QGraphicsView.wheelEvent=WheelEvent
+
 
 #end monkeypatch    
 #=======
@@ -2339,35 +2346,12 @@ def zoomToFitWithMargin(view, margin=0.1):
     marginY = sceneRect.height() * margin
     sceneRect.adjust(-marginX, -marginY, marginX, marginY)
 
-
     view.fitInView(sceneRect, Qt.KeepAspectRatio)
-    
-    #Old (complex?) code
-    """
-    # Compute the transform to fit the rect
-    viewportRect = view.viewport().rect()
-    if viewportRect.isEmpty():
-        return
 
-    # Calculate scale factors
-    xScale = viewportRect.width() / sceneRect.width()
-    yScale = viewportRect.height() / sceneRect.height()
-    scale = min(xScale, yScale)
-
-    # Limit scaling to 100% max
-    scale = min(scale, 1.0)
-
-    # Build the target transform manually
-    transform = QTransform()
-    transform.translate(view.viewport().width() / 2, view.viewport().height() / 2)
-    transform.scale(scale, scale)
-    transform.translate(-sceneRect.center().x(), -sceneRect.center().y())
-
-    view.setTransform(transform)
-    """
 
 
 def paintItemAndChildren(item, painter):
+    #TODO: No longer used
     """
     chatGPT: Paint the item and all its children recursively.
     """
@@ -2428,7 +2412,7 @@ class MainWindow(QMainWindow):
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
         self.Scene.nodeEditRequested.connect(self.showEditNodeDialog)
         #Set an initial sceneRect to stop the scroll/ zoom jumps for the initial item creation
-        self.baseSceneRect = QRectF(-500,-500,1000,1000)
+        self.baseSceneRect = QRectF(-1000,-1000,2000,2000)
         self.Scene.setSceneRect(self.baseSceneRect)
         #allow the scene to grow as the model grows - needed for scrollbars
         self.Scene.changed.connect(self.adjustSceneRect)
@@ -2438,9 +2422,11 @@ class MainWindow(QMainWindow):
         self.ui.graphicsView.setDragMode(QGraphicsView.RubberBandDrag)
         #JH try self.ui.graphicsView.setMouseTracking(True)
         self.ui.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-       # JH self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
+        #self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
+        
         #TODO: Make this image centre until scrollwheel zooming is fixed
-        self.ui.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        #self.ui.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        
         # JH self.ui.graphicsView.setResizeAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
 
         # Create a status bar
@@ -2565,9 +2551,21 @@ class MainWindow(QMainWindow):
         chatGPT
         Slot to set the zoom level of the QGraphicsView.
         """
+        """
         scale = value / 100.0  # Convert to 0.1 - 4.0
         self.ui.graphicsView.resetTransform()          # Reset any existing zoom
         self.ui.graphicsView.scale(scale, scale)       # Apply new zoom
+        self.zoom_label.setText(f"Zoom: {value}%")
+        """
+        #Scale without breaking current transform
+        targetScale = value / 100.0
+        # the current absolute horizontal scale factor from the view matrix
+        currentScale = self.ui.graphicsView.transform().m11()
+        if currentScale <= 0: 
+            currentScale = 1.0
+
+        relativeScale = targetScale / currentScale
+        self.ui.graphicsView.scale(relativeScale,relativeScale)
         self.zoom_label.setText(f"Zoom: {value}%")
 
     def search(self, text):
