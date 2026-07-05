@@ -1238,6 +1238,7 @@ class grScene(QGraphicsScene):
         #print(f"M: {self.mouseMode} ",end="",flush=True)
         delta = mPos - self._lastMousePos
         self._lastMousePos = mPos 
+        sIlist = []
 
         #Hovering would be nice, but this gets the job done.
         #Just filter for valid items:
@@ -2237,7 +2238,8 @@ def findTreeItemRowByIdx(self,idx):
 QTreeWidget.findItemRowByIdx = findTreeItemRowByIdx
 
 
-#Monkeypatch for scrollwheel zooming
+#Monkeypatch for the view (which is defined in the ui)
+# scrollwheel zooming
 _original_wheelEvent = QGraphicsView.wheelEvent
 def WheelEvent(self, event):
     if event.modifiers() & Qt.ControlModifier:
@@ -2257,6 +2259,24 @@ def WheelEvent(self, event):
 
 QGraphicsView.wheelEvent=WheelEvent
 
+_original_mouseMoveEvent = QGraphicsView.mouseMoveEvent
+# "autoscroll" when things move around
+def mouseMoveEvent(self, event):
+
+    _original_mouseMoveEvent(self, event)
+    #If something is dragged off the edge, track it
+    if event.buttons() & Qt.LeftButton:
+        sIlist = self.scene().selectedItems()
+
+        if sIlist: #all the selected items
+            boundingRect = sIlist[0].sceneBoundingRect()
+            for item in sIlist[1:]:
+                boundingRect = boundingRect.united(item.sceneBoundingRect())
+            self.ensureVisible(boundingRect)
+        else:
+            mRect = QRectF(self.mapToScene(event.pos()),QPointF(20,20))
+            self.ensureVisible(mRect)
+QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
 #end monkeypatch    
 #=======
