@@ -61,6 +61,7 @@ from coreGraph import *
 
 #Helper & housekeeping functions
 from autosaver import *
+from WarningMessage import *
 
 #Draw nice edges
 from PolyLineItemHG import StraightLineItem, HermiteSplineItem, HandleItem

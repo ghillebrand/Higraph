@@ -4,7 +4,7 @@
 
 from  HGConstants import *
 from GraphicsSupport import *
-
+from WarningMessage import *
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
