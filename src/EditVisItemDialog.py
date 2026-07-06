@@ -52,7 +52,7 @@ class EditVisNodeItemDialog(QDialog):
         if 'description' in self.visNodeItem.metadata \
                 and self.visNodeItem.metadata['description']!=self.visNodeItem.blobDescription.toPlainText():
             self.visNodeItem.metadata['description']=self.visNodeItem.blobDescription.toPlainText()
-
+        #self.visNodeItem.metadata['name']=self.visNodeItem.nameText.toPlainText()
         self.nodeMetadata = self.visNodeItem.metadata
         self.nodeMetadataAttributes = self.visNodeItem.metadataAttributes
         self.metadataWidget = MetadataEditorWidget(self.visNodeItem.metadata,
@@ -91,12 +91,6 @@ class EditVisNodeItemDialog(QDialog):
             if modelItem:
                 modelItem.setText(newName)
 
-            # Update the corresponding list widget item if necessary
-            #listWidget = getattr(self.visNodeItem, "listWidget", None)
-            #if listWidget:
-            #    lwItem = listWidget.findItemByIdx(nodeNum)
-            #    if lwItem:
-            #        lwItem.setText(newName)
             # Update treeWidget
             treeWidget = getattr(self.visNodeItem, "treeWidget", None)
             twItems=treeWidget.findItems(str(nodeNum), Qt.MatchRecursive, 1)
@@ -143,7 +137,7 @@ class EditVisEdgeItemDialog(QDialog):
         startNodeName = graphModel.Gr.nodeD[startNodeIdx].metadata["name"]
         endNodeName = graphModel.Gr.nodeD[endNodeIdx].metadata["name"]
 
-        edgeName = self.visEdgeItem.metadata.get("name", self.visEdgeItem.textItem.toPlainText())
+        edgeName = self.visEdgeItem.metadata.get("name", self.visEdgeItem.nameText.toPlainText())
 
         # --- Dialog Layout ---
         layout = QVBoxLayout(self)
@@ -204,8 +198,8 @@ class EditVisEdgeItemDialog(QDialog):
         # --- Update VisEdgeItem attributes ---
         #newName = self.nameEdit.text()
         newName = self.edgeMetadata["name"]
-        if hasattr(self.visEdgeItem, "textItem"):
-            self.visEdgeItem.textItem.setPlainText(newName)
+        if hasattr(self.visEdgeItem, "nameText"):
+            self.visEdgeItem.nameText.setPlainText(newName)
 
         graphModel = getattr(self.visEdgeItem, "model", None)
         edgeNum = self.visEdgeItem.edgeNum
@@ -291,7 +285,7 @@ class EditVisHyperEdgeItemDialog(QDialog):
         self.edgeMetadata = self.visEdgeItem.metadata
         self.edgeMetadataAttributes = self.visEdgeItem.metadataAttributes
 
-        edgeName = self.visEdgeItem.metadata.get("name", self.visEdgeItem.textItem.toPlainText())
+        edgeName = self.visEdgeItem.metadata.get("name", self.visEdgeItem.nameText.toPlainText())
 
         # --- Dialog Layout ---
         layout = QVBoxLayout(self)
@@ -353,8 +347,8 @@ class EditVisHyperEdgeItemDialog(QDialog):
         # --- Update VisEdgeItem attributes ---
         #newName = self.nameEdit.text()
         newName = self.edgeMetadata["name"]
-        if hasattr(self.visEdgeItem, "textItem"):
-            self.visEdgeItem.textItem.setPlainText(newName)
+        if hasattr(self.visEdgeItem, "nameText"):
+            self.visEdgeItem.nameText.setPlainText(newName)
 
         graphModel = getattr(self.visEdgeItem, "model", None)
         edgeNum = self.visEdgeItem.edgeNum
@@ -557,4 +551,5 @@ class MetadataEditorWidget(QWidget):
             visItem.metadataAttributes[key] = {'display':display}
         if 'description' in visItem.metadata and visItem.metadata['description'] != visItem.blobDescription.toPlainText():
             visItem.blobDescription.setPlainText(visItem.metadata['description'])
-            
+        if visItem.metadata['name'] != visItem.nameText.toPlainText():
+            visItem.nameText.setPlainText(visItem.metadata['name'])            

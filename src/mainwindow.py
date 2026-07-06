@@ -38,7 +38,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor, QUndoStack, QUndoCommand,
+            QPainterPath, QPainterPathStroker, QCursor, QTextCursor, QUndoStack, QUndoCommand,
             QGuiApplication, QImage, QPixmap)
 
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
@@ -856,18 +856,14 @@ class grScene(QGraphicsScene):
                                             removedChildren.remove(i)
                                     parentInTree.addChildren(removedChildren)
                                     #parentInTree.takeChild(parentInTree.indexOfChild(itemsInTree[0]))  #check that this removes correctly
-                                self.model.Gr.nodeD[p].delChild(kid)
-
-            #kids=[]
-            #for k in kidsIdx:
-            #    kids.append(self.findItemByIdx(k))
-            
-            
+                                self.model.Gr.nodeD[p].delChild(kid)                       
         return
     
     def clearSelection(self):
         for item in self.selectedItems():
             item.isOnlySelected=False
+        if self.focusItem():
+            self.focusItem().clearFocus()
         return super().clearSelection()
         
     def mousePressEvent(self, mouseEvent):
@@ -1035,13 +1031,13 @@ class grScene(QGraphicsScene):
                 ###item.setFlag(QGraphicsItem.ItemIsMovable, True)
 
                 #put create node on undo stack
-                newAction=createNodeCommand(mPos, self, self.model, self.treeWidget, type=ROLE_NODE)
+                """newAction=createNodeCommand(mPos, self, self.model, self.treeWidget, nType=ROLE_NODE)
                 self.undoStack.push(newAction)
 
                 #TODO: Should this be actionPointer, to update the toolbar, etc
                 self.mouseMode = self.POINTER
                 self.mainwindow.actionPointer()
-                mouseEvent.accept()
+                mouseEvent.accept()"""
                 return
             #
             if self.mouseMode == self.INSERTBLOB:
@@ -1230,7 +1226,7 @@ class grScene(QGraphicsScene):
                 #if a lambda, run it
                 if callable(cxChoice):
                     cxChoice()
-
+        
         #pass on
 
         super().mousePressEvent(mouseEvent)
@@ -1309,13 +1305,12 @@ class grScene(QGraphicsScene):
         #print(f"release {self.mouseMode =}")
 
         if self.mouseMode == self.INSERTNODE:
-            #print("Node release at :",mouseEvent.scenePos())
-            #print("up node")
-            #TODO: Clear selection after adding a node (or before?)
-            self.clearSelection()
-            #self.updateBlobParenting()
-            self.mouseMode = self.POINTER
-            return # Or use the eventHandled method?
+            newAction=createNodeCommand(mPos, self, self.model, self.treeWidget, nType=ROLE_NODE)
+            self.undoStack.push(newAction)
+            ##self.mouseMode = self.POINTER
+            ##self.mainwindow.actionPointer()
+            ##mouseEvent.accept()
+            return
         elif self.mouseMode == self.INSERTBLOB:
             #add the  Blob
             #TODO: Check for parents/ children - here, or itemChanged?
@@ -1335,17 +1330,12 @@ class grScene(QGraphicsScene):
             TLy -= height
             newAction=createNodeCommand(QPointF(TLx,TLy), self, self.model, self.treeWidget, 
                                         height = height, width = width, xRadius = BLOB_CORNER_RADIUS, 
-                                        yRadius = BLOB_CORNER_RADIUS, type=ROLE_BLOB)
+                                        yRadius = BLOB_CORNER_RADIUS, nType=ROLE_BLOB)
             self.undoStack.push(newAction)
-            #blob = VisBlobItem(QPointF(TLx,TLy),self.model, self.listWidget, 
-            #                height = height, width = width,
-            #                xRadius = BLOB_CORNER_RADIUS, yRadius = BLOB_CORNER_RADIUS)
-            #self.addItem(blob)
-            #self.updateBlobParenting()
-            self.mouseMode = self.POINTER
+            ##self.mouseMode = self.POINTER
             #creating a blob accidentally does a rubber band selection, so clear that
-            self.clearSelection()
-            mouseEvent.accept()
+            ##self.clearSelection()
+            ##mouseEvent.accept()
             return
         elif self.mouseMode == self.INSERTEDGE:
             #print("up edge")
@@ -1368,7 +1358,7 @@ class grScene(QGraphicsScene):
             self.mouseMode = self.POINTER
             #Reset the cursor
             self.views()[0].setCursor(Qt.ArrowCursor)
-            self.clearSelection()
+            ##self.clearSelection()
             #done processing - bail
             return
 
@@ -1728,7 +1718,7 @@ class grScene(QGraphicsScene):
 
 # classes for working with undo and redo (QUndoStack)
 class createNodeCommand(QUndoCommand):
-    def __init__(self, posn, scene, model, treeWidget, width=10, height=10, xRadius=10, yRadius=10,type=ROLE_NODE):
+    def __init__(self, posn, scene, model, treeWidget, width=10, height=10, xRadius=10, yRadius=10,nType=ROLE_NODE):
         super().__init__()
         self.node = None  
         self.posn = posn
@@ -1737,8 +1727,9 @@ class createNodeCommand(QUndoCommand):
         #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.nodeNum = 0 #placeholder
-        self.type=type
-        if type==ROLE_BLOB:
+        self.nodeName="" #placeholder
+        self.nType=nType
+        if nType==ROLE_BLOB:
             self.width=width
             self.height=height
             self.xRadius=xRadius
@@ -1753,40 +1744,41 @@ class createNodeCommand(QUndoCommand):
     def redo(self):
         #VisNodeItem/ VisBlobItem adds to the model and the  list
         if self.node==None:   # this is the first actual create of the node
-            if self.type == ROLE_NODE:
+            if self.nType == ROLE_NODE:
                 newNode =  VisNodeItem(self.posn,self.model, self.treeWidget)
                 # save the node index for recreating identically
             else:
                 newNode =  VisBlobItem(self.posn,self.model, self.treeWidget, height=self.height, width=self.width, 
                                        xRadius=self.xRadius, yRadius=self.yRadius)
             self.nodeNum = newNode.nodeNum
-            #update port  PARENTS (maybe recompute position?)
-            #for p in newNode._Ports:
-            #    p.setParentItem(newNode.nodeShape)
+            self.nodeName = newNode.dispText
         else:   # this is creation after deleting
-            #newNode =  VisNodeItem(self.posn,self.node.model,self.node.listWidget ,nameP=self.node.metadata['name'], \
-            #                   id = self.node.nodeNum, metadata=self.node.metadata, \
-            #                    metadataAttributes=self.node.metadataAttributes, ports=self.node._Ports)
-            if self.type == ROLE_NODE:
-                newNode =  VisNodeItem(self.posn,self.model, self.treeWidget, id=self.nodeNum)
+            if self.nType == ROLE_NODE:
+                newNode =  VisNodeItem(self.posn,self.model, self.treeWidget, id=self.nodeNum, nameP=self.nodeName)
             else:
-                newNode =  VisBlobItem(self.posn,self.model, self.treeWidget, id=self.nodeNum, \
+                newNode =  VisBlobItem(self.posn,self.model, self.treeWidget, id=self.nodeNum, nameP=self.nodeName,\
                                        height=self.height, width=self.width, xRadius=self.xRadius,\
                                         yRadius=self.yRadius)
-            
-        #update port  PARENTS (maybe recompute position?)
-        #for p in newNode._Ports:
-        #    p.setParentItem(newNode)
         newNode.setPos(self.posn)
         #Add to *Scene*
         self.scene.addItem(newNode)
 
         # Now that it is added to scene parents can be found and treewidget updated
-        self.scene.mainwindow.addTreeNode(newNode, self.type)
+        self.scene.mainwindow.addTreeNode(newNode, self.nType)
         
         newNode.setFlag(QGraphicsItem.ItemIsSelectable, True)
         newNode.setFlag(QGraphicsItem.ItemIsMovable, True)
-        self.node=newNode   
+ 
+        self.scene.mouseMode = self.scene.POINTER
+        #creating a blob accidentally does a rubber band selection, so clear that
+        self.scene.clearSelection()
+        if self.node == None:
+            self.node=newNode  
+            cursor=self.node.nameText.textCursor()
+            cursor.select(QTextCursor.SelectionType.Document)
+            self.node.nameText.setTextCursor(cursor)
+            self.node.nameText.setFocus()
+
 
 class deleteNodeCommand(QUndoCommand):
     def __init__(self, node, posn, scene, model, treeWidget, type=ROLE_NODE, parent=None):
@@ -1943,18 +1935,18 @@ class createEdgeCommand(QUndoCommand):
                                 id = self.edgeNum)
         self.edgeNum=newEdge.edgeNum  
 
-            #newEdge = VisEdgeItem(self.model,self.listWidget,self.edge.startNode, self.edge.endNode, 
-            #                    directed=self.edge.isDirected,  nameP=self.edge.metadata['name'], id = self.edge.edgeNum,
-            #                    polyLineType = self.edge._polyEdge, points=self.points[1:-1], #exclude edgepoints
-            #                    tangents=self.tangentPoints, metadata=self.edge.metadata, metadataAttributes=self.edge.metadataAttributes)
-               
-
         #Add to *Scene*
         self.scene.addItem(newEdge)
         newEdge.setFlag(QGraphicsItem.ItemIsSelectable, True) #can't select a node to move it due to drawing order
         newEdge.setFlag(QGraphicsItem.ItemIsMovable, False)
         newEdge.updateLine()
-        self.edge=1 # just for checking against
+        if self.edge != 1:
+            self.edge=1  
+            cursor=newEdge.nameText.textCursor()
+            cursor.select(QTextCursor.SelectionType.Document)
+            newEdge.nameText.setTextCursor(cursor)
+            newEdge.nameText.setFocus()
+        #self.edge=1 # just for checking against
 
 class deleteEdgeCommand(QUndoCommand):
     def __init__(self, edge, scene, model, treeWidget, startNodes, endNodes, parent=None):
