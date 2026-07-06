@@ -39,6 +39,51 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 
 import os
 
+class EdgeNameTextItem(QGraphicsTextItem):
+    def __init__(self, text, parent):
+        super().__init__(text, parent)
+
+        #if type(self.parentItem())==VisNodeItem:
+        #    self.setPos(-NODESIZE/2, -NODESIZE*2)
+        #else:
+        self.setPos(-NODESIZE, -NODESIZE) #position set in hyperedge paint (or itemchange)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
+        self.document().contentsChanged.connect(self.textChanged)
+        self.setDefaultTextColor(QColor('black'))
+        self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
+        #self.setTextWidth(width)
+        #self.setTextWidth(30)
+        self.setFlag(QGraphicsTextItem.ItemIsMovable)
+        #self.setTabChangesFocus(True)
+        self.document().setUndoRedoEnabled(False)
+        #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
+   
+    def textChanged(self):
+        
+        newName=self.toPlainText()
+        edgeToUpdate=self.parentItem()
+        edgeToUpdate.dispText=newName
+        edgeToUpdate.metadata['name']=newName
+        edgeToUpdate.model.Gr.edgeD[edgeToUpdate.edgeNum].metadata['name'] = newName
+        twItems=edgeToUpdate.treeWidget.findItems(str(edgeToUpdate.edgeNum), Qt.MatchRecursive, 1)
+        for twItem in twItems:
+            twItem.setText(0,newName)
+        return
+    
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.clearFocus()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def focusOutEvent(self, event):
+        if self.textCursor().hasSelection:
+            cursor=self.textCursor()
+            cursor.clearSelection()
+            self.setTextCursor(cursor)
+        super().focusOutEvent(event)
+
 class VisEdgeItem(QGraphicsObject): #QGraphicsItem,QObject):
     """ Create a new edge - both Graph Model and Visual ("graphics")
       This connects visual edges to model and list 
@@ -621,10 +666,11 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Draw name in the middle
         #self.textItem = QGraphicsTextItem(self.model.Gr.edgeD[self.edgeNum].metadata['name'], parent=self)
         # chatGPT's suggestion to avoid shape() not selecting it - TransparentTextItem
-        self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
-
-        self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
-        self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
+        #self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
+        containerName = EdgeNameTextItem(self.metadata['name'],self)
+        self.nameText=containerName
+        #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
+        #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
 
         #a place to display metadata
         self.metaDisplay = TransparentTextItem("", parent=self)
@@ -793,8 +839,8 @@ class VisHyperEdgeItem(QGraphicsObject):
             for e in dN[0].endsEdgeLines:
                 dummyNodeEdgeLines.append(e.lineNum)
 
-        return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\n {self.textItem.toPlainText() =}\n edgeLines {[eL.lineNum for eL in self.edgeLines] }\n" + \
-                        f"ID: {self.edgeNum} text:{self.textItem.toPlainText()} startNodes (node,port):({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})\n endNodes (node,port):({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[d[0].nodeNum for d in self.dummyNodes]} {dummyNodeEdgeLines=}\n<<"
+        return f"\n>> VisHyperEdgeItem {hex(id(self))} {super().__repr__()}\n {self.nameText.toPlainText() =}\n edgeLines {[eL.lineNum for eL in self.edgeLines] }\n" + \
+                        f"ID: {self.edgeNum} text:{self.nameText.toPlainText()} startNodes (node,port):({[(sN[0].nodeNum,sN[1].nodeNum) for sN in self.startNodes]})\n endNodes (node,port):({[(N[0].nodeNum,N[1].nodeNum) for N in self.endNodes]}))\ndummyNodes {[d[0].nodeNum for d in self.dummyNodes]} {dummyNodeEdgeLines=}\n<<"
                 #hyperEdgeGraph: {[(h[0][0].nodeNum,h[1][0].nodeNum) for h in self.hyperEdgeGraph]
     
     def toXML(self,Xparent):
@@ -897,7 +943,8 @@ class VisHyperEdgeItem(QGraphicsObject):
                 metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":k,"value":str(v)})
                 for atK,atV in self.metadataAttributes[k].items():
                     metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":atK,"value":str(atV)})
-
+        #if self.metadata['name']!=self.nameText.toPlainText():
+        #    self.metadata['name']=self.nameText.toPlainText()
         return xmlEdge
         
     def setMetadataDisplay(self):
@@ -931,31 +978,33 @@ class VisHyperEdgeItem(QGraphicsObject):
         #painter.setPen(Qt.red)
         #painter.drawRect(self.bRect)
         #use the textBRect to adjust exact display position on the line (can be a [0,1] multiplier)
-        textBRect = self.textItem.boundingRect()
+        ##change textItem to nameText
+        self.nameText.setVisible(self.metadataAttributes['name']['display'])
+        textBRect = self.nameText.boundingRect()
         #HACK: Putting the text at the middle of the first segment. Where should it go?
         #  This code should be in itemChanged, not paint
         midPt = self.edgeLines[0].textPos(0.5)
         #painter.drawEllipse(midPt,2,2)
-        self.textItem.setPos(midPt.x() - textBRect.width()/2  + NODESIZE/2, \
-                             midPt.y() - textBRect.height()/2 + NODESIZE/2)
-        self.metaDisplay.setPos(self.textItem.pos()+QPointF(0,0))
+        self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
+                             midPt.y() - textBRect.height()/2 + NODESIZE)
+        self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
         #painter.drawRect(self.textItem.boundingRect())
        
         if self.isSelected():
             painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
-            self.textItem.setDefaultTextColor(self._selectColor)   
+            self.nameText.setDefaultTextColor(self._selectColor)   
             self.metaDisplay.setDefaultTextColor(self._selectColor)
         elif self.isHovered:
             painter.setPen(QPen(self._hoverColor))
-            self.textItem.setDefaultTextColor(self._hoverColor)   
+            self.nameText.setDefaultTextColor(self._hoverColor)   
             self.metaDisplay.setDefaultTextColor(self._hoverColor)
         else:
             painter.setPen(self._baseColor)
-            self.textItem.setDefaultTextColor(self._baseColor)
+            self.nameText.setDefaultTextColor(self._baseColor)
             self.metaDisplay.setDefaultTextColor(self._baseColor)
 
         #TODO: Move this to itemChanged?
-        self.textItem.setVisible(self.metadataAttributes['name']['display'])
+
 
         #self.edgeLine.paint(painter,option,widget)
 
@@ -972,7 +1021,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             path.addPath(eL.shape())
 
         #Text
-        path.addRect(self.textItem.boundingRect().translated(self.textItem.pos()))
+        ##path.addRect(self.nameText.boundingRect().translated(self.nameText.pos()))
 
         outlinePath = QPainterPathStroker()
         outlinePath.setWidth(HITSIZE*2)
@@ -1033,8 +1082,8 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             # Change the display text - what would the <change> be? Using ToolTip as the closest
             #TODO: Fix the `change` value to something more meanigful
-            if change == QGraphicsItem.GraphicsItemChange.ItemToolTipChange:
-                self.textItem.setPlainText(self.model.Gr.edgeD[self.edgeNum].metadata['name'] )
+            ##if change == QGraphicsItem.GraphicsItemChange.ItemToolTipChange:
+            ##    self.nameText.setPlainText(self.model.Gr.edgeD[self.edgeNum].metadata['name'] )
         
         return super().itemChange(change, value)
 

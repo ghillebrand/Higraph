@@ -135,12 +135,10 @@ class BlobTextItem(QGraphicsTextItem):
             self.yOffset=0
         self.setPos(0, self.yOffset)
         #self.setPos(x, y)
-
         # 1. Enable editing and selection
         self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
         self.document().contentsChanged.connect(self.textChanged)
         #self.setOpenExternalLinks(True)
-
         # 2. Appearance tweaks
         self.setDefaultTextColor(QColor("#2c3e50"))
         self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
@@ -159,9 +157,9 @@ class BlobTextItem(QGraphicsTextItem):
     def paint(self, painter, option, widget):
         # Optional: Draw a subtle background behind the text
         if 'description' in self.parentItem().metadataAttributes and \
-                self.parentItem().metadataAttributes['description']['display']:
+                self.parentItem().metadataAttributes['description']['display']: 
             painter.setClipRect(self.boundingRect())
-            painter.setBrush(QColor(240, 240, 240, 100))
+            painter.setBrush(QColor(240, 240, 240, 240))
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.boundingRect())
             
@@ -212,25 +210,54 @@ class BlobTextItem(QGraphicsTextItem):
         else:
             super().mouseDoubleClickEvent(event)
 
+class NameTextItem(QGraphicsTextItem):
+    def __init__(self, text, width, parent):
+        super().__init__(text, parent)
 
-    #def mousePressEvent(self, mouseEvent):
-    #    if (mouseEvent.button() == Qt.MouseButton.RightButton):
-    """cursor = self.textCursor()
-            if cursor.hasSelection():
-                font=QFontDialog.getFont()
-                if font.isValid():
-                    fmt= QTextCharFormat()
-                    fmt.setFont(font)
-                    cursor.mergeCharFormat(fmt)
-                    self.setTextCursor(cursor)
-                colour=QColorDialog.getColor()
-                if colour.isValid():
-                    fmt = QTextCharFormat()
-                    fmt.setForeground(colour)
-                    cursor.mergeCharFormat(fmt)
-                    self.setTextCursor(cursor)"""
-     #       return super().mousePressEvent(mouseEvent)
+        if type(self.parentItem())==VisNodeItem:
+            self.setPos(-NODESIZE/2, -NODESIZE*2)
+        else:
+            self.setPos(-NODESIZE/2, -NODESIZE*1.5)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
+        self.document().contentsChanged.connect(self.textChanged)
+        self.setDefaultTextColor(QColor('black'))
+        self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
+        #self.setTextWidth(width)
+        #self.setTextWidth(30)
+        self.setFlag(QGraphicsTextItem.ItemIsMovable)
+        #self.setTabChangesFocus(True)
+        self.document().setUndoRedoEnabled(False)
+        #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
+   
+    def textChanged(self):
+        
+        newName=self.toPlainText()
+        nodeToUpdate=self.parentItem()
+        nodeToUpdate.dispText=newName
+        nodeToUpdate.metadata['name']=newName
+        nodeToUpdate.model.Gr.nodeD[nodeToUpdate.nodeNum].metadata['name'] = newName
+        twItems=nodeToUpdate.treeWidget.findItems(str(nodeToUpdate.nodeNum), Qt.MatchRecursive, 1)
+        for twItem in twItems:
+            twItem.setText(0,newName)
+        return
+    
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            """if self.textCursor().hasSelection:
+                cursor=self.textCursor()
+                cursor.clearSelection()
+                self.setTextCursor(cursor)"""
+            self.clearFocus()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
 
+    def focusOutEvent(self, event):
+        if self.textCursor().hasSelection:
+            cursor=self.textCursor()
+            cursor.clearSelection()
+            self.setTextCursor(cursor)
+        super().focusOutEvent(event)
 
 class VisNodeItem(QGraphicsObject):
     """ Create a new node - both Graph Model and Visual ("graphics") 
@@ -255,8 +282,6 @@ class VisNodeItem(QGraphicsObject):
         #WHERE it must appear
         self.setPos(posn)
 
-
-        
         #Create an abstract node, and keep the index as well
         self.node,self.nodeNum = self.model.addGMNode(posn,nameP=nameP,id=id)
 
@@ -273,9 +298,9 @@ class VisNodeItem(QGraphicsObject):
             self.metadataAttributes = {'name':{'display':prefs.DISPLAY_NAME_BY_DEFAULT}}
         self.blobDescription=""   #needed for blobs
 
-        #TODO: Change this to TransparentTextItem
         self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
-
+        containerName = NameTextItem(self.dispText, 100, self)
+        self.nameText=containerName
         #a place to display metadata
         self.metaDisplay = TransparentTextItem("", parent=self)
         self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2))  #NODESIZE/2,0))
@@ -354,6 +379,8 @@ class VisNodeItem(QGraphicsObject):
             ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
 
         nodeLabel = ET.SubElement(shape, "y:NodeLabel")
+        #if self.metadata['name']!=self.nameText.toPlainText():  #shouldn't need?
+        #    self.metadata['name']=self.nameText.toPlainText()
         nodeLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
@@ -417,19 +444,24 @@ class VisNodeItem(QGraphicsObject):
         #painter.drawLine(-10,-10,10,10)
         #painter.drawLine(-10,10,10,-10)
         #painter.drawRect(self.boundingRect())
-        
+        if self.metadataAttributes['name']['display']!=True:
+            self.nameText.setVisible(False)
+        else:
+            self.nameText.setVisible(True)
         painter.setClipping(True)
 
         if self.isSelected():
             painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
             self.nodeShape.setPen(QPen(self._selectColor,1,Qt.DashLine))
+            self.nameText.setDefaultTextColor(self._selectColor)
         elif self.isHovered:
             painter.setPen(self._hoverColor)
             self.nodeShape.setPen(self._hoverColor)
+            self.nameText.setDefaultTextColor(self._hoverColor)
         else:
             painter.setPen(self._baseColor)
             self.nodeShape.setPen(self._baseColor)
-
+            self.nameText.setDefaultTextColor(self._baseColor)
 
         brush = QBrush(Qt.white)      # Normal fill
         #brush = QBrush(Qt.NoBrush) #white)
@@ -440,12 +472,12 @@ class VisNodeItem(QGraphicsObject):
         #painter.drawEllipse(self.nodeShape.rect())
 
         #Draw the text if set to display
-        if self.metadataAttributes['name']['display']:
+        """if self.metadataAttributes['name']['display']:
             # Pos on top (this can be generalised to left, bottom, right, etc)
             r = QRectF(0,-NODESIZE,0,0) 
             #update height & width
             r = painter.drawText(r,Qt.AlignCenter,self.dispText)
-            painter.drawText(r, Qt.AlignCenter, self.dispText)
+            painter.drawText(r, Qt.AlignCenter, self.dispText)"""
 
         #Draw displayed metadata - automagically from the TransparentTextItem painter
 
@@ -458,7 +490,7 @@ class VisNodeItem(QGraphicsObject):
         if not self.suppressItemChange:
             #TODO: figure out the differen `change` options
             #Name change
-            self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
+            #self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
             
             #Position change
             if change in [QGraphicsItem.ItemPositionHasChanged, QGraphicsItem.ItemChildAddedChange,QGraphicsItem.ItemScenePositionHasChanged]:
@@ -468,16 +500,6 @@ class VisNodeItem(QGraphicsObject):
                     for eEdgeLine in port.endsEdgeLines:
                         #eEdge.updateLine((self, port),eEdgeLine)
                         eEdgeLine.parentItem().updateLine((self, port),eEdgeLine)
-                """
-                if self.scene().movingBlob==self:   #this is a blob with contents
-                    delta=self.scenePos()-self.scene().lastBlobPosn
-                    for i in self.scene().blobInsidePoints:
-                        edge=self.scene().findItemByIdx(i[0])
-                        for eL in edge.edgeLines:
-                            if eL.lineNum == i[1]:
-                                eL.setP(i[2],eL._p[i[2]]+delta)
-                    self.scene().lastBlobPosn=self.scenePos()
-                """
 
         #note the **return**
         return super().itemChange(change,value)
@@ -678,7 +700,7 @@ class VisBlobItem(VisNodeItem):
         # give ports back to the nodeshape
         for port in self._Ports:
             port.setParentItem(self.nodeShape)
-        #blob text JH
+        #blob text 
         if 'description' not in self.metadataAttributes:
             self.metadataAttributes['description']={'display':prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
             self.metadata['description']='*'
@@ -687,9 +709,8 @@ class VisBlobItem(VisNodeItem):
             blobText=self.metadata['description']
         else:
             blobText="*"
-        container = BlobTextItem(blobText, width, self)
-        self.blobDescription=container
-
+        containerDescription = BlobTextItem(blobText, width, self)
+        self.blobDescription=containerDescription
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
 
@@ -727,6 +748,8 @@ class VisBlobItem(VisNodeItem):
             ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
 
         blobLabel = ET.SubElement(shape, "h:BlobLabel")
+        if self.metadata['name']!=self.nameText.toPlainText():
+            self.metadata['name']=self.nameText.toPlainText()
         blobLabel.text = self.metadata['name']
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
@@ -790,12 +813,19 @@ class VisBlobItem(VisNodeItem):
         super().hoverLeaveEvent(event)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
+        if self.metadataAttributes['name']['display']!=True:
+            self.nameText.setVisible(False)
+        else:
+            self.nameText.setVisible(True)
         if self.isSelected():
             painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
+            self.nameText.setDefaultTextColor(self._selectColor)
         elif self.isHovered:
             painter.setPen(self._hoverColor)
+            self.nameText.setDefaultTextColor(self._hoverColor)
         else:
             painter.setPen(self._baseColor)
+            self.nameText.setDefaultTextColor(self._baseColor)
 
         #self.nodeShape is painted by Qt, using parent's pen???
 
@@ -803,7 +833,7 @@ class VisBlobItem(VisNodeItem):
         #painter.drawRoundedRect(self.nodeShape._rect, self.nodeShape._xRadius, self.nodeShape._yRadius, self.nodeShape._mode)
 
         #Draw the text if set to display
-        if self.metadataAttributes['name']['display']:
+        """if self.metadataAttributes['name']['display']:
             # Pos on top (this can be generalised to left, bottom, right, etc)
             if prefs.BLOB_NAME_ON_TOP:
                 r = QRectF(0,-NODESIZE,0,0) 
@@ -812,7 +842,7 @@ class VisBlobItem(VisNodeItem):
             else:
             #painter.drawText(self._rect, Qt.AlignCenter | Qt.AlignTop, self.dispText)
             #TODO: This must become a transparentTextItem, to be selectable, and to put the bounding rect in the right place
-                painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)
+                painter.drawText(self._rect, Qt.AlignLeft | Qt.AlignTop, self.dispText)"""
         #Debug - draw the shape path
 
         #painter.setPen(QPen(Qt.green,1))
