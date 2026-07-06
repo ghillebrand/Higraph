@@ -41,7 +41,11 @@
     <Languages/>
     <Variables/>
     <Commands/>
-    <Registry/>
+    <Registry>
+      <Entry rootKey="HKEY_CLASSES_ROOT" subKey="higraphml" valueName="" valueData="higraph.Document" isRemoveWhenUninstalling="true"/>
+      <Entry rootKey="HKEY_CLASSES_ROOT" subKey="higraph.Document\shell\open\command" valueName="" valueData="&quot;&lt;InstallPath&gt;\higraph.exe&quot; &quot;%1&quot;" isRemoveWhenUninstalling="true"/>
+      <Entry rootKey="HKEY_CLASSES_ROOT" subKey="higraph.Document\DefaultIcon" valueName="" valueData="&quot;&lt;InstallPath&gt;\higraph.exe&quot;,0" isRemoveWhenUninstalling="false"/>
+    </Registry>
     <Shortcuts defaultPath="&lt;Company&gt;\&lt;AppName&gt;\" isDefaultPathAlterable="true" isCreateStartmenuShortcutsForAllUsers="false" isCreateDesktopShortcutsForAllUsers="true"/>
     <Serials isDialogEnabled="false" count="1000" mask ="#####-#####-#####-#####"/>
     <SplashScreen isDialogEnabled="false" delayTime="2">

@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from  HGConstants import *
+from WarningMessage import *
 
 class EditVisNodeItemDialog(QDialog):
     """
