@@ -15,6 +15,8 @@ from PolyLineItemHG import StraightLineItem, HermiteSplineItem, HandleItem
 from GraphicsSupport import *
 from Nodes import  * #Needed for type checking
 
+from WarningMessage import *
+
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
 from xml.dom import minidom
@@ -1272,7 +1274,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         for sN in self.startNodes:
             if newNode == sN[0]:
                 #TODO" THis should be a popup, with names, as well as numbers
-                print(f"Error - node {newNode.nodeNum} already starts edge {self.edgeNum}")
+                WarningMessage(f"Node {newNode.nodeNum} already starts edge {self.edgeNum}")
                 return False
             if edgeLine in sN[1].startsEdgeLines:
                 stN = sN
@@ -1284,7 +1286,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         for eN in self.endNodes:
             if newNode == eN[0]:
                 #TODO" THis should be a popup, with names, as well as numbers
-                print(f"Error - node {newNode.nodeNum} already ends edge {self.edgeNum}")
+                WarningMessage(f"Node {newNode.nodeNum} already ends edge {self.edgeNum}")
                 return False         
             if edgeLine in eN[1].endsEdgeLines:
                 endN = eN
@@ -1525,8 +1527,8 @@ class VisHyperEdgeItem(QGraphicsObject):
             canDelete = canDelete and len(self.endNodes) > 1
 
         if not canDelete:
-            #TODO: Make this a `QtWidgets.QMessageBox`
-            print(f"Error - Deleting this segment will destroy the edge")
+            WarningMessage(f"This segment cannot be deleted",
+                infoText="This will destroy the edge - rather delete the edge explicitly")
             return False
 
         self.suppressItemChange = True
@@ -1594,7 +1596,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             elif newStartItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
                 newSPort = newStartItem
             else:
-                print(f"ERROR deleting segment in edge {self.edgeNum} - start mangled")
+                ErrorMessage(f"ERROR deleting segment in edge {self.edgeNum} - start mangled")
             #print(f"delseg {newEndItem.nodeNum=}")
             if newEndItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB]:
                 #last edgeLine's lastst point:
@@ -1602,7 +1604,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             elif newEndItem.data(KEY_ROLE) in [ROLE_DUMMYNODE]: #dummyNode
                 newEPort = newEndItem
             else:
-                 print(f"ERROR deleting segment in edge {self.edgeNum} - end mangled")
+                 ErrorMessage(f"ERROR deleting segment in edge {self.edgeNum} - end mangled")
 
             #get the rest of the points and tangents.
             newPoints = []

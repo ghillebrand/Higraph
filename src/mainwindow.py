@@ -42,7 +42,7 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QGuiApplication, QImage, QPixmap)
 
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
-            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, 
+            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent,
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
 
 from PySide6.QtSvg import QSvgGenerator
@@ -267,8 +267,6 @@ class grScene(QGraphicsScene):
         self.blobInsidePoints=[]
 
         #Add axes to help see how things move & debug graphical issues.
-            #TODO: THere must be a better solution!
-        #WHite to provide a auto-zoom anchor
         """
         VLine = QGraphicsLineItem(0,100,0,-100)
         self.addItem(VLine)
@@ -615,7 +613,7 @@ class grScene(QGraphicsScene):
             # mmm - self edges can be createdwork anyway!!!
             elif False: ###*****###(newTermItem == edge.startNode[0] and self.EdgeEnd == "end") or \
                 #newTermItem == edge.endNode[0] and self.EdgeEnd == "start":
-                print(f"Self edge {self.EdgeEnd}")
+                #print(f"Self edge {self.EdgeEnd}")
                 if len(edge.edgeLine._p) < 3 and edge._polyEdge==STRAIGHT:
                     #add in a point on the middle for now. (only works for straight, splines are OK)
                     #TODO: Refine!!!
@@ -1236,6 +1234,7 @@ class grScene(QGraphicsScene):
         #print(f"M: {self.mouseMode} ",end="",flush=True)
         delta = mPos - self._lastMousePos
         self._lastMousePos = mPos 
+        sIlist = []
 
         #Hovering would be nice, but this gets the job done.
         #Just filter for valid items:
@@ -2230,20 +2229,48 @@ def findTreeItemRowByIdx(self,idx):
     return None
 QTreeWidget.findItemRowByIdx = findTreeItemRowByIdx
 
+
+#Monkeypatch for the view (which is defined in the ui)
+# scrollwheel zooming
 _original_wheelEvent = QGraphicsView.wheelEvent
 def WheelEvent(self, event):
-    if event.modifiers() and Qt.ControlModifier:
+    if event.modifiers() & Qt.ControlModifier:
+
+        zoomStep = 1.2
         currentZoom=self.transform().m11()
-        zoomInFactor = 1.25 * currentZoom * 100
-        zoomOutFactor=(1/1.25) * currentZoom * 100
-        if event.angleDelta().y() > 0:
-            #self.scale(zoomInFactor, zoomInFactor)
-            self.window().zoom_slider.setValue(zoomInFactor)
-        else:
-            #self.scale(zoomOutFactor, zoomOutFactor)
+        zoomInFactor = zoomStep * currentZoom * 100
+        zoomOutFactor=(1/zoomStep) * currentZoom * 100
+        if event.angleDelta().y() < 0:
             self.window().zoom_slider.setValue(zoomOutFactor)
+        else:
+            self.window().zoom_slider.setValue(zoomInFactor)
+        event.accept()
+        return
+    #pass the event on
     _original_wheelEvent(self,event)
+
 QGraphicsView.wheelEvent=WheelEvent
+
+_original_mouseMoveEvent = QGraphicsView.mouseMoveEvent
+# "autoscroll" when things move around
+def mouseMoveEvent(self, event):
+
+    _original_mouseMoveEvent(self, event)
+    #If something is dragged off the edge, track it
+    if event.buttons() & Qt.LeftButton:
+        sIlist = self.scene().selectedItems()
+
+        if sIlist: #all the selected items
+            boundingRect = sIlist[0].sceneBoundingRect()
+            for item in sIlist[1:]:
+                boundingRect = boundingRect.united(item.sceneBoundingRect())
+            #The size of the margin controls the speed of scrolling.
+            #  Default 50 is too high
+            self.ensureVisible(boundingRect, 10,10)
+        else:
+            mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
+            self.ensureVisible(mRect, 10,10)
+QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
 #end monkeypatch    
 #=======
@@ -2333,35 +2360,12 @@ def zoomToFitWithMargin(view, margin=0.1):
     marginY = sceneRect.height() * margin
     sceneRect.adjust(-marginX, -marginY, marginX, marginY)
 
-
     view.fitInView(sceneRect, Qt.KeepAspectRatio)
-    
-    #Old (complex?) code
-    """
-    # Compute the transform to fit the rect
-    viewportRect = view.viewport().rect()
-    if viewportRect.isEmpty():
-        return
 
-    # Calculate scale factors
-    xScale = viewportRect.width() / sceneRect.width()
-    yScale = viewportRect.height() / sceneRect.height()
-    scale = min(xScale, yScale)
-
-    # Limit scaling to 100% max
-    scale = min(scale, 1.0)
-
-    # Build the target transform manually
-    transform = QTransform()
-    transform.translate(view.viewport().width() / 2, view.viewport().height() / 2)
-    transform.scale(scale, scale)
-    transform.translate(-sceneRect.center().x(), -sceneRect.center().y())
-
-    view.setTransform(transform)
-    """
 
 
 def paintItemAndChildren(item, painter):
+    #TODO: No longer used
     """
     chatGPT: Paint the item and all its children recursively.
     """
@@ -2422,16 +2426,21 @@ class MainWindow(QMainWindow):
         self.Scene.edgeEditRequested.connect(self.showEditEdgeDialog)
         self.Scene.nodeEditRequested.connect(self.showEditNodeDialog)
         #Set an initial sceneRect to stop the scroll/ zoom jumps for the initial item creation
-        self.Scene.setSceneRect(-500,-500,500,500)
+        self.baseSceneRect = QRectF(-1000,-1000,2000,2000)
+        self.Scene.setSceneRect(self.baseSceneRect)
+        #allow the scene to grow as the model grows - needed for scrollbars
+        self.Scene.changed.connect(self.adjustSceneRect)
 
         self.ui.graphicsView.setScene(self.Scene)
         self.ui.graphicsView.setRenderHint(QPainter.Antialiasing)
         self.ui.graphicsView.setDragMode(QGraphicsView.RubberBandDrag)
         #JH try self.ui.graphicsView.setMouseTracking(True)
         self.ui.graphicsView.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
-       # JH self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
+        #self.ui.graphicsView.setTransformationAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
+        
         #TODO: Make this image centre until scrollwheel zooming is fixed
-        self.ui.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        #self.ui.graphicsView.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
+        
         # JH self.ui.graphicsView.setResizeAnchor(self.ui.graphicsView.ViewportAnchor.AnchorUnderMouse)
 
         # Create a status bar
@@ -2532,8 +2541,23 @@ class MainWindow(QMainWindow):
         else:
             self.fileName = ""
 
-        #Start the autosave process (after the window is drawn)
+        #Start the autosave process (after the window is drawn, otherwise reloads don't draw)
         QTimer.singleShot(1, lambda: setattr(self,"autoSave", autoSaver(self.action_FileSave, self.action_FileOpen, interval = prefs.AutoSaveMins, cycleSize = prefs.AutoSaveCycleSize, statusBar=self.statusBar) ))
+
+    def adjustSceneRect(self, region: QList[QRectF]):
+        """ 
+            Check if the `sceneRect needs expanding
+            (Gemini base)
+        """
+        sceneBoundingRect = self.Scene.itemsBoundingRect()
+        currentSize = self.baseSceneRect.united(sceneBoundingRect)
+
+        #Add space for the scrollbars/ ...
+        scrollBarSize = 20 #Who knows?
+        currentSize.adjust(-scrollBarSize,-scrollBarSize,scrollBarSize,scrollBarSize)
+
+        if self.Scene.sceneRect() != currentSize:
+            self.Scene.setSceneRect(currentSize)  
 
     #GraphicsView/ scene handling
     def setZoom(self, value):
@@ -2541,9 +2565,21 @@ class MainWindow(QMainWindow):
         chatGPT
         Slot to set the zoom level of the QGraphicsView.
         """
+        """
         scale = value / 100.0  # Convert to 0.1 - 4.0
         self.ui.graphicsView.resetTransform()          # Reset any existing zoom
         self.ui.graphicsView.scale(scale, scale)       # Apply new zoom
+        self.zoom_label.setText(f"Zoom: {value}%")
+        """
+        #Scale without breaking current transform
+        targetScale = value / 100.0
+        # the current absolute horizontal scale factor from the view matrix
+        currentScale = self.ui.graphicsView.transform().m11()
+        if currentScale <= 0: 
+            currentScale = 1.0
+
+        relativeScale = targetScale / currentScale
+        self.ui.graphicsView.scale(relativeScale,relativeScale)
         self.zoom_label.setText(f"Zoom: {value}%")
 
     def search(self, text):
@@ -3103,10 +3139,10 @@ class MainWindow(QMainWindow):
         eItem = self.Scene.findItemByIdx(eItemID)
         if sItem == None:
             #TODO - this should be in a try-except, since this means the file is corrupt
-            print(f"WARNING! - Start Item ID {sItemID} not found ")
+            ErrorMessage(f"Error reading edge from file:\nStart Item ID {sItemID} not found ")
             #return None
         if eItem == None:
-            print(f"WARNING! - End Item ID {eItemID} not found ")
+            ErrorMessage(f"Error reading edge from file:\nEnd Item ID {eItemID} not found ")
             #return None
         
         #Add the port
@@ -3252,7 +3288,7 @@ class MainWindow(QMainWindow):
             if aNode.tag == "start":
                 s = int(aNode.attrib.get("source", 0))
                 if not s:
-                    print(f"ERROR: can't find source in {aNode}")
+                    ErrorMessage(f"ERROR: can't find source in {aNode}")
                     return None
                 #TODO: refactor `oldToNewID` to work purely on int's!
                 #print(f"Start node {s} --> {self.oldToNewID[str(s)]}")
@@ -3269,7 +3305,7 @@ class MainWindow(QMainWindow):
             if aNode.tag == "end":
                 e = int(aNode.attrib.get("target", 0))
                 if not e:
-                    print(f"ERROR: can't find target in {aNode}")
+                    ErrorMessage(f"ERROR: can't find target in {aNode}")
                     return None
                 #print(f"end node {e} --> {self.oldToNewID[str(e)]}")
                 e = self.oldToNewID[e]
@@ -3503,7 +3539,7 @@ class MainWindow(QMainWindow):
                 higraphStr = graphFile.read()
 
         except FileNotFoundError:
-            print(f"Error, file not found: {graphFile}")
+            ErrorMessage(f"Error, file not found: {graphFile}")
             raise FileNotFoundError(f"Error, file not found: {graphFile}")
 
 
@@ -3679,7 +3715,7 @@ class MainWindow(QMainWindow):
                 graphStr = graphFile.read()
 
         except FileNotFoundError:
-            print(f"Error, file not found: {graphFile}")
+            ErrorMessage(f"Error, file not found: {graphFile}")
             raise FileNotFoundError(f"Error, file not found: {graphFile}")
 
 
@@ -4040,16 +4076,16 @@ class MainWindow(QMainWindow):
             # Get the full scene rectangle
             #sceneRect = self.Scene.sceneRect()
             sceneRect = self.Scene.itemsBoundingRect() 
-            print(f"actPrint {sceneRect =}, {self.Scene.itemsBoundingRect()=}")
+            #print(f"actPrint {sceneRect =}, {self.Scene.itemsBoundingRect()=}")
 
             # Compute scale to fit scene onto the page
             #TODO: Apply a human brain to this scaling - this gives weird results.
             pageRect = printer.pageRect(QPrinter.DevicePixel).toRect()
-            print(f"actPrint {pageRect =}")
+            #print(f"actPrint {pageRect =}")
             xScale = pageRect.width() / sceneRect.width()
             yScale = pageRect.height() / sceneRect.height()
             scale = min(xScale, yScale)
-            print(f"{scale =}")
+            #print(f"{scale =}")
             #scale = scale/5 #needs tweaking
 
             # Center the scene on the page

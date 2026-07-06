@@ -394,7 +394,7 @@ class HermiteSplineItem(QGraphicsItem):
                 self._t[i] = (QPointF(dx,dy),QPointF(dx,dy))                
 
         else:
-            print(f"Must have tangents set!!!\n{p=}\n{t=}")
+            ErrorMessage(f"HermiteSpline creation: Must have tangents set!!!\n{p=}\n{t=}")
             pass
 
         #To keep selection code sane, have empty lists
