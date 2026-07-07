@@ -4326,10 +4326,78 @@ class MainWindow(QMainWindow):
         #QGuiApplication.clipboard().setPixmap(pixmap)
 
     def action_EditCut(self):
-        print("Edit>Cut")
-        #TODO: Edit cut
-        #Edit->Copy
-        #Delete selected?
+        selectedItems = self.Scene.selectedItems()
+        if not selectedItems:
+            return
+
+        mimeData = QMimeData()
+
+        #graphml - pastable format
+        #=========================
+
+        # Code similar to action_FileOpen. Use that as the "master" copy.
+        #Positions only updated on PASTE
+        #TODO: Create a function `initialiseGraphml` with all this boilerplate
+
+        graphml = ET.Element("graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
+        graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
+        graphml.set("xmlns:sys", "http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0")
+        graphml.set("xmlns:x", "http://www.yworks.com/xml/yfiles-common/markup/2.0")
+        graphml.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+        graphml.set("xmlns:y", "http://www.yworks.com/xml/graphml")
+        graphml.set("xmlns:yed", "http://www.yworks.com/xml/yed/3")
+        graphml.set("xmlns:h", "http://www.isijingi.co.za/higraph")
+        graphml.set(
+            "xsi:schemaLocation",
+            "http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd",
+        )
+
+        # Adding some implementation specific keys for identifying urls, descriptions
+        nodeKey = ET.SubElement(graphml, "key", id="data_node")
+        nodeKey.set("for", "node")
+        nodeKey.set("yfiles.type", "nodegraphics")
+
+        blobKey = ET.SubElement(graphml, "key", id="data_blob")
+        blobKey.set("for", "blob")
+        blobKey.set("higraph.type", "blobgraphics")
+        
+        edgeKey = ET.SubElement(graphml, "key", id="data_edge")
+        edgeKey.set("for", "edge")
+        edgeKey.set("yfiles.type", "edgegraphics")
+        graph = ET.SubElement(graphml, "graph", id="clipboard")
+
+        #Add the nodes & edges
+        for sItem in selectedItems:
+            if sItem.data(KEY_ROLE) in [ROLE_NODE,ROLE_BLOB] :
+                graph.append(sItem.toXML(graph))
+            if sItem.data(KEY_ROLE) == ROLE_EDGE:
+                #TODO: Check the semantics here - does this make sense
+                #only copy edges if all ends are in the selection
+                includeEdge=True
+                for startN in sItem.startNodes:
+                    if startN[0] not in selectedItems:
+                        includeEdge=False
+                        break
+                if includeEdge==True:
+                    for endN in sItem.endNodes:
+                        if endN[0] not in selectedItems:
+                            includeEdge=False
+                            break
+                if includeEdge==True:
+                #if sItem.startNode[0] in selectedItems and sItem.endNode[0] in selectedItems:
+                    graph.append(sItem.toXML(graph))
+
+        #graphmlData = yGr.stringify_graph()
+        rawStr = ET.tostring(graphml)
+        #This parse step is not critical, but it does ensure that the XML is correct
+        prettyStr = minidom.parseString(rawStr).toprettyxml()
+
+        mimeData.setData("application/xml", prettyStr.encode("utf-8"))
+        #mimeData.setImageData(image)
+        QGuiApplication.clipboard().setMimeData(mimeData)
+
+        self.action_EditDelete()
+
 
     def action_EditPaste(self):
         #print("Edit>Paste")
@@ -4343,6 +4411,7 @@ class MainWindow(QMainWindow):
 
         # Check and extract XML if available
         if mimeData.hasFormat("application/xml"):
+            print("happening")
             xmlBytes = mimeData.data("application/xml")  # returns QByteArray
             graphStr = bytes(xmlBytes).decode("utf-8")
         else:
