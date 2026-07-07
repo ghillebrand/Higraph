@@ -1347,10 +1347,10 @@ class grScene(QGraphicsScene):
                 if itm:
                     #For now, disallow self edges/ loops
                     #TODO: When they are allowed, note that tangent calc breaks.
-                    if self.tmpEdgeSt != itm:
-                        self.tmpEdgeEnd = itm 
-                        self.endPoint = mPos
-                        self.endRubberLine()
+                    #if self.tmpEdgeSt != itm:
+                    self.tmpEdgeEnd = itm 
+                    self.endPoint = mPos
+                    self.endRubberLine()
 
                 #Clean up
                 self.resetRubberLine()
