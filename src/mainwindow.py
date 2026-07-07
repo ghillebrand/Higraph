@@ -1173,9 +1173,10 @@ class grScene(QGraphicsScene):
             # createContextMenu(mouseEvent, listOfTuples option:action)->action??
             cxMenu = None
             if len(selItem) == 1:
-                item = selItem[0]
-                
+                item = selItem[0]                
                 if item.data(KEY_ROLE) == ROLE_EDGE:
+                    item.setSelected(False)
+                    item._deleteHandles()
                     #Where to do the handles update for these?
                     cxMenu = [  (posText, None),
                                 ("Add Point","addPt" ),
