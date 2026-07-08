@@ -1,0 +1,52 @@
+@startuml packages
+set namespaceSeparator none
+package "src" as src {
+}
+package "src.Edges" as src.Edges {
+}
+package "src.EditPreferences" as src.EditPreferences {
+}
+package "src.EditVisItemDialog" as src.EditVisItemDialog {
+}
+package "src.GraphicsSupport" as src.GraphicsSupport {
+}
+package "src.HGConstants" as src.HGConstants {
+}
+package "src.Nodes" as src.Nodes {
+}
+package "src.PolyLineItemHG" as src.PolyLineItemHG {
+}
+package "src.Ui_HelpAbout" as src.Ui_HelpAbout {
+}
+package "src.WarningMessage" as src.WarningMessage {
+}
+package "src.autosaver" as src.autosaver {
+}
+package "src.coreGraph" as src.coreGraph {
+}
+package "src.dlgCredits" as src.dlgCredits {
+}
+package "src.dlgHelpAbout" as src.dlgHelpAbout {
+}
+package "src.formTreeList" as src.formTreeList {
+}
+package "src.mainwindow" as src.mainwindow {
+}
+package "src.testCoreGraph" as src.testCoreGraph {
+}
+package "src.ui_Credits" as src.ui_Credits {
+}
+package "src.ui_form" as src.ui_form {
+}
+package "src.ui_formTree" as src.ui_formTree {
+}
+package "src.ui_formTreeList" as src.ui_formTreeList {
+}
+src.Edges --> src.PolyLineItemHG
+src.GraphicsSupport --> src.coreGraph
+src.mainwindow --> src.PolyLineItemHG
+src.mainwindow --> src.Ui_HelpAbout
+src.mainwindow --> src.ui_Credits
+src.mainwindow --> src.ui_formTree
+src.testCoreGraph --> src.coreGraph
+@enduml
