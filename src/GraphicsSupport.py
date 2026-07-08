@@ -91,6 +91,55 @@ class TransparentTextItem(QGraphicsTextItem):
         else:
             super().mouseDoubleClickEvent(event)
 
+
+
+class NameTextItem(QGraphicsTextItem):
+    def __init__(self, text, parent):
+        super().__init__(text, parent)
+
+        self.setPos(-NODESIZE, -NODESIZE) #position set in hyperedge paint (or itemchange)
+        self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
+        self.document().contentsChanged.connect(self.textChanged)
+        self.setDefaultTextColor(QColor('black'))
+        self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
+        #self.setTextWidth(width)
+        #self.setTextWidth(30)
+        self.setFlag(QGraphicsTextItem.ItemIsMovable)
+        #self.setTabChangesFocus(True)
+        self.document().setUndoRedoEnabled(False)
+        #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
+   
+    def textChanged(self):
+        
+        newName=self.toPlainText()
+        itemToUpdate=self.parentItem()
+        itemToUpdate.dispText=newName
+        itemToUpdate.metadata['name']=newName
+        if itemToUpdate.data(KEY_ROLE) == ROLE_EDGE:
+            itemToUpdate.model.Gr.edgeD[itemToUpdate.edgeNum].metadata['name'] = newName
+            twItems=itemToUpdate.treeWidget.findItems(str(itemToUpdate.edgeNum), Qt.MatchRecursive, 1)
+        else: #Assumes NODE or BLOB
+            itemToUpdate.model.Gr.nodeD[itemToUpdate.nodeNum].metadata['name'] = newName
+            twItems=itemToUpdate.treeWidget.findItems(str(itemToUpdate.nodeNum), Qt.MatchRecursive, 1)
+        for twItem in twItems:
+            twItem.setText(0,newName)
+        return
+
+    def keyPressEvent(self, event):
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            self.clearFocus()
+            event.accept()
+        else:
+            super().keyPressEvent(event)
+
+    def focusOutEvent(self, event):
+        if self.textCursor().hasSelection:
+            cursor=self.textCursor()
+            cursor.clearSelection()
+            self.setTextCursor(cursor)
+        super().focusOutEvent(event)
+
+
 class ArrowHeadItem(QGraphicsItem):
     """An arrowhead. 
         position updates are driven from the parent item

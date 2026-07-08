@@ -210,55 +210,6 @@ class BlobTextItem(QGraphicsTextItem):
         else:
             super().mouseDoubleClickEvent(event)
 
-class NameTextItem(QGraphicsTextItem):
-    def __init__(self, text, width, parent):
-        super().__init__(text, parent)
-
-        if type(self.parentItem())==VisNodeItem:
-            self.setPos(-NODESIZE/2, -NODESIZE*2)
-        else:
-            self.setPos(-NODESIZE/2, -NODESIZE*1.5)
-        self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
-        self.document().contentsChanged.connect(self.textChanged)
-        self.setDefaultTextColor(QColor('black'))
-        self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
-        #self.setTextWidth(width)
-        #self.setTextWidth(30)
-        self.setFlag(QGraphicsTextItem.ItemIsMovable)
-        #self.setTabChangesFocus(True)
-        self.document().setUndoRedoEnabled(False)
-        #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
-   
-    def textChanged(self):
-        
-        newName=self.toPlainText()
-        nodeToUpdate=self.parentItem()
-        nodeToUpdate.dispText=newName
-        nodeToUpdate.metadata['name']=newName
-        nodeToUpdate.model.Gr.nodeD[nodeToUpdate.nodeNum].metadata['name'] = newName
-        twItems=nodeToUpdate.treeWidget.findItems(str(nodeToUpdate.nodeNum), Qt.MatchRecursive, 1)
-        for twItem in twItems:
-            twItem.setText(0,newName)
-        return
-    
-    def keyPressEvent(self, event):
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            """if self.textCursor().hasSelection:
-                cursor=self.textCursor()
-                cursor.clearSelection()
-                self.setTextCursor(cursor)"""
-            self.clearFocus()
-            event.accept()
-        else:
-            super().keyPressEvent(event)
-
-    def focusOutEvent(self, event):
-        if self.textCursor().hasSelection:
-            cursor=self.textCursor()
-            cursor.clearSelection()
-            self.setTextCursor(cursor)
-        super().focusOutEvent(event)
-
 class VisNodeItem(QGraphicsObject):
     """ Create a new node - both Graph Model and Visual ("graphics") 
     This connects visual Rect to model and list 
@@ -299,8 +250,14 @@ class VisNodeItem(QGraphicsObject):
         self.blobDescription=""   #needed for blobs
 
         self.dispText = self.model.Gr.nodeD[int(self.nodeNum)].metadata['name']
-        containerName = NameTextItem(self.dispText, 100, self)
-        self.nameText=containerName
+        containerName = NameTextItem(self.dispText, self)
+        containerName.setPos(-NODESIZE/2, -NODESIZE*2)
+        self.nameText = containerName
+        xOffset =  self.metadataAttributes['name'].get('xOffset')
+        yOffset =  self.metadataAttributes['name'].get('yOffset')
+        if xOffset and yOffset:
+            self.nameText.setPos(QPointF(float(xOffset),float(yOffset)))
+
         #a place to display metadata
         self.metaDisplay = TransparentTextItem("", parent=self)
         self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2))  #NODESIZE/2,0))
@@ -382,6 +339,10 @@ class VisNodeItem(QGraphicsObject):
         #if self.metadata['name']!=self.nameText.toPlainText():  #shouldn't need?
         #    self.metadata['name']=self.nameText.toPlainText()
         nodeLabel.text = self.metadata['name']
+        #TODO: Put this in nameTextItem.itemChange?
+        #Store the (x,y) offset of the name
+        self.metadataAttributes['name'].update({"xOffset": self.nameText.pos().x()})
+        self.metadataAttributes['name'].update({"yOffset": self.nameText.pos().y()})
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
         
@@ -656,6 +617,7 @@ class VisBlobItem(VisNodeItem):
                     height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
            NB: `parent` is the (visual) Qt parent, `parents` is the (abstract) core Graph blob parent """
+
         super().__init__(posn, model, treeWidget, parent=parent, nameP =nameP, id=id,
                     metadata=metadata, metadataAttributes=metadataAttributes,ports=ports)
 
@@ -669,6 +631,9 @@ class VisBlobItem(VisNodeItem):
         self.node.setData(KEY_ROLE,ROLE_BLOB)
         self.setData(KEY_ROLE, ROLE_BLOB)
 
+        if len(metadataAttributes) == 0: #Creating a new blob
+            self.nameText.setPos(NODESIZE/2, -NODESIZE*1.5)
+        
         self.setAcceptHoverEvents(True)
         self.isHovered=False
         self._baseColor = DRAWING_COLOUR
@@ -676,9 +641,8 @@ class VisBlobItem(VisNodeItem):
         self._selectColor = SELECT_COLOUR
         self.parents = parents
         self.children = children
-
+        
         #Node constructor doesn't take parents & children, so add now
-
         #Remove the nodeShape set in the parent - first reparent ports
         for port in self._Ports:
             port.setParentItem(self)
@@ -751,6 +715,10 @@ class VisBlobItem(VisNodeItem):
         if self.metadata['name']!=self.nameText.toPlainText():
             self.metadata['name']=self.nameText.toPlainText()
         blobLabel.text = self.metadata['name']
+        #TODO: Put this in nameTextItem.itemChange?
+        #Store the (x,y) offset of the name
+        self.metadataAttributes['name'].update({"xOffset": self.nameText.pos().x()})
+        self.metadataAttributes['name'].update({"yOffset": self.nameText.pos().y()})
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
         #update metadata from blobDescription
@@ -813,7 +781,7 @@ class VisBlobItem(VisNodeItem):
         super().hoverLeaveEvent(event)
 
     def paint(self, painter: QPainter, option: QStyleOptionGraphicsItem, widget=None):
-        if self.metadataAttributes['name']['display']!=True:
+        if self.metadataAttributes['name']['display'] != True:
             self.nameText.setVisible(False)
         else:
             self.nameText.setVisible(True)

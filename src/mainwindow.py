@@ -2270,8 +2270,11 @@ def mouseMoveEvent(self, event):
             #  Default 50 is too high
             self.ensureVisible(boundingRect, 10,10)
         else:
+            #TODO: event.pos() is deprecated, but the replacement doesn't work quite the same way.
+            # Needs fiddling with to work properly.
+            #mRect = QRectF(event.scenePosition(),QPointF(10,10))
             mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
-            self.ensureVisible(mRect, 10,10)
+            self.ensureVisible(mRect, 50,50)
 QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
 #end monkeypatch    
@@ -2992,16 +2995,17 @@ class MainWindow(QMainWindow):
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
                     nodeName = nodeLable.text.strip()
+                    nodeMetadataAttributes['name'] = {}
                     if newID:
-                        nodeName="*"+nodeName
+                        #Make copied names clear
+                        nodeName=nodeName+prefs.copySuffix
                     for nodeNameAttribs in nodeLable.iter("metadataAttribute"):
                         #nodeMetadataAttributes['name'] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
                         #Deal with Boolean for display (This is why you should use the proper key types!)
                         if nodeNameAttribs.attrib.get("key") == 'display':
-                            nodeMetadataAttributes['name'] = {'display':nodeNameAttribs.attrib.get("value") == "True"}
+                            nodeMetadataAttributes['name'].update({'display':nodeNameAttribs.attrib.get("value") == "True"})
                         else:
-                            nodeMetadataAttributes['name'] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
-
+                            nodeMetadataAttributes['name'].update({nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")})
             #TODO: Add in error processing for corrupt/ odd files
         # Look for a metadata node
         for metaEl in xNode.iter("metadata"):
@@ -3068,15 +3072,16 @@ class MainWindow(QMainWindow):
                 blobLabel = shapeBlob.find("BlobLabel")
                 if blobLabel is not None:
                     blobName = blobLabel.text.strip()
+                    blobMetadataAttributes['name'] = {}
                     if newID:
-                        blobName="*"+blobName
+                        blobName = blobName+prefs.copySuffix
                     for blobNameAttribs in blobLabel.iter("metadataAttribute"):
                         #nodeMetadataAttributes['name'] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
                         #Deal with Boolean for display (This is why you should use the proper key types!)
                         if blobNameAttribs.attrib.get("key") == 'display':
-                            blobMetadataAttributes['name'] = {'display':blobNameAttribs.attrib.get("value") == "True"}
+                            blobMetadataAttributes['name'].update( {'display':blobNameAttribs.attrib.get("value") == "True"})
                         else:
-                            blobMetadataAttributes['name'] = {blobNameAttribs.attrib.get("key"): blobNameAttribs.attrib.get("value")}
+                            blobMetadataAttributes['name'].update({blobNameAttribs.attrib.get("key"): blobNameAttribs.attrib.get("value")})
 
             #TODO: Add in error processing for corrupt/ odd files
         # Look for a metadata node
@@ -3488,7 +3493,7 @@ class MainWindow(QMainWindow):
         edgeName = edgeMetadata['name']
         #TODO: This is for copies - needs a better check for file read ID changes
         if newID:
-            edgeName="*"+edgeName
+            edgeName = edgeName + prefs.copySuffix
         #All the data read, create the edge
         newEdge = VisHyperEdgeItem(self.model, self.Scene, self.ui.treeWidget, sItem, eItem, 
                                 directed=directed,  nameP=edgeName, id = id,
@@ -4413,7 +4418,6 @@ class MainWindow(QMainWindow):
 
         # Check and extract XML if available
         if mimeData.hasFormat("application/xml"):
-            print("happening")
             xmlBytes = mimeData.data("application/xml")  # returns QByteArray
             graphStr = bytes(xmlBytes).decode("utf-8")
         else:
