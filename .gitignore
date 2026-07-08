@@ -1,62 +1,14 @@
 __pycache__/
 src/__pycache__/
-src/__pycache__/coreGraph.cpython-311.pyc
-src/__pycache__/EditVisItemDialog.cpython-311.pyc
-src/__pycache__/Edges.cpython-311.pyc
-src/__pycache__/HGConstants.cpython-311.pyc
-src/__pycache__/Nodes.cpython-311.pyc
-src/__pycache__/ui_Credits.cpython-311.pyc
-src/__pycache__/Ui_HelpAbout.cpython-311.pyc
 *.pyc
-savefile.graphml
-src/__pycache__/coreGraph.cpython-311.pyc
-src/__pycache__/Edges.cpython-311.pyc
-src/__pycache__/EditVisItemDialog.cpython-311.pyc
-src/__pycache__/GraphicsSupport.cpython-311.pyc
-src/__pycache__/HGConstants.cpython-311.pyc
-src/__pycache__/Nodes.cpython-311.pyc
-src/__pycache__/PolyLineItemHG.cpython-311.pyc
-src/__pycache__/ui_Credits.cpython-311.pyc
-src/__pycache__/ui_form.cpython-311.pyc
-src/__pycache__/Ui_HelpAbout.cpython-311.pyc
-src/__pycache__/coreGraph.cpython-311.pyc
-src/__pycache__/coreGraph.cpython-311.pyc
-src/__pycache__/coreGraph.cpython-311.pyc
+
+# The packaging 
 src/dist/
 src/build/
-src/savefile2.graphml
-src/savefile3.graphml
-src/savefile4.graphml
-src/savefile5.graphml
-src/BlobShapePortCheckN1.graphml
-src/testfile.graphml
-src/blobParentsXML2.graphml
-src/blobParentTest2.graphml
-src/Jtest1.graphml
-src/NodeInBlobDisappearTest2.graphml
-src/NodeInBlobDisappearTest3.graphml
-src/testfile nesting.graphml
-src/__pycache__/PolyLineItemHG.cpython-311.pyc
-src/testfile nesting 2.graphml
-src/Glymphatic System.graphml
-src/g1.graphml
-src/test.graphml
-src/updateLineTest.graphml
-src/movetest.graphml
-src/test2.graphml
-src/test3.graphml
-src/test4.graphml
-src/test5.graphml
-src/test6.graphml
-src/test7.graphml
-src/moreedges.graphml
-src/oneedge.graphml
-src/test8.graphml
-src/test9.graphml
-src/testcase.graphml
-src/twonodes.higraphml
-src/asT1.higraphml
-src/asT1(1).higraphml
-src/strtLineArrow.higraphml
-src/testing.higraphml
-src/biggish.higraphml
+
+#local working
+#scraps/
+#oldModels/
+
+#Previous versions
+#oldCode/
