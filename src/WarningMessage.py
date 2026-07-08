@@ -26,7 +26,7 @@ def ErrorMessage(msg:str, infoText = "", detailText = ""):
     msgBox.setIcon(QMessageBox.Icon.Critical)
     msgBox.setText(msg)
     if infoText: msgBox.setInformativeText(infoText)
-    detailTrailer = "\nemail details to higraph@isijingi.co.za"
+    detailTrailer = "\nPlease check any errors in the console window, \nand email details to higraph@isijingi.co.za"
     #TODO: Add this once the repo is public
     #  or log an issue on github https://github.com/ghillebrand/Higraph/issues"
     msgBox.setDetailedText(detailText+detailTrailer)

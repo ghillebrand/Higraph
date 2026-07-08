@@ -105,6 +105,9 @@ class UserPreferences:
     AutoSaveMins:int = 1
     AutoSaveCycleSize:int = 10
 
+    #How to indicate copied names, to avoid confusion
+    copySuffix = "+"
+
     def _get_settings_handle(self) -> QSettings:
         """Returns the OS-specific settings handle."""
         return QSettings("isijingi", APP_NAME)

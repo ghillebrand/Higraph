@@ -39,7 +39,7 @@ from PySide6.QtCore import (QLineF, QPointF,QPoint, QRect, QRectF,
 
 import os
 
-class EdgeNameTextItem(QGraphicsTextItem):
+class XXEdgeNameTextItem(QGraphicsTextItem):
     def __init__(self, text, parent):
         super().__init__(text, parent)
 
@@ -667,7 +667,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #self.textItem = QGraphicsTextItem(self.model.Gr.edgeD[self.edgeNum].metadata['name'], parent=self)
         # chatGPT's suggestion to avoid shape() not selecting it - TransparentTextItem
         #self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
-        containerName = EdgeNameTextItem(self.metadata['name'],self)
+        containerName = NameTextItem(self.metadata['name'],self)
         self.nameText=containerName
         #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
