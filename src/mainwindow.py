@@ -4005,7 +4005,9 @@ class MainWindow(QMainWindow):
                     f.write(pretty_str)
 
             # Mark current state as saved
-            self.Scene.undoStack.setClean() 
+            #Unless it was an autosave
+            if not autoSaveName:
+                self.Scene.undoStack.setClean() 
             #TODO: Set window title in the header to clean
 
         else:

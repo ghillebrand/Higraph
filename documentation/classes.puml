@@ -1,0 +1,1041 @@
+@startuml classes
+set namespaceSeparator none
+class "ArrowHeadItem" as src.GraphicsSupport.ArrowHeadItem {
+  polygon
+  size
+  __init__(size, parent)
+  boundingRect()
+  paint(painter, option, widget)
+}
+class "BlobTextItem" as src.Nodes.BlobTextItem {
+  yOffset : int
+  __init__(text, width, parent)
+  boundingRect()
+  mouseDoubleClickEvent(event)
+  mousePressEvent(event)
+  mouseReleaseEvent(event)
+  paint(painter, option, widget)
+  setTextSize(parent)
+  textChanged()
+}
+class "CodeExecDialog" as src.mainwindow.CodeExecDialog {
+  codeEdit
+  outputEdit
+  scene : NoneType
+  __init__(parent, scene)
+  runCode()
+}
+class "EdgeNameTextItem" as src.Edges.EdgeNameTextItem {
+  __init__(text, parent)
+  focusOutEvent(event)
+  keyPressEvent(event)
+  textChanged()
+}
+class "EditPreferences" as src.EditPreferences.EditPreferences {
+  button_box
+  cb_display_desc
+  cb_display_name
+  cb_font_resizable
+  cb_is_digraph
+  cb_name_on_top
+  combo_edge_type
+  loaded_colors : dict
+  prefs
+  sbAutoSaveCycleSize
+  sbAutoSaveTime
+  sb_font_size
+  tabs
+  __init__(prefs, parent)
+  _create_color_tab() -> QWidget
+  _create_display_tab() -> QWidget
+  _create_sizing_tab() -> QWidget
+  _make_color_picker_slot(attr_name: str, button: QPushButton)
+  _update_button_swatch(button: QPushButton, color: QColor)
+  accept()
+}
+class "EditVisEdgeItemDialog" as src.EditVisItemDialog.EditVisEdgeItemDialog {
+  buttonBox
+  directedCheckbox
+  edgeMetadata
+  edgeMetadataAttributes
+  edgeNumLabel
+  edgeTypeCombo
+  endNodeLabel
+  metadataWidget
+  startNodeLabel
+  visEdgeItem
+  __init__(visEdgeItem, parent)
+  accept()
+}
+class "EditVisHyperEdgeItemDialog" as src.EditVisItemDialog.EditVisHyperEdgeItemDialog {
+  buttonBox
+  directedCheckbox
+  edgeMetadata
+  edgeMetadataAttributes
+  edgeNumLabel
+  edgeTypeCombo
+  endNodeLabel
+  metadataWidget
+  startNodeLabel
+  visEdgeItem
+  __init__(visEdgeItem, parent)
+  accept()
+}
+class "EditVisNodeItemDialog" as src.EditVisItemDialog.EditVisNodeItemDialog {
+  buttonBox
+  childrenLabel
+  endsEdgesLabel
+  metadataWidget
+  nodeMetadata
+  nodeMetadataAttributes
+  nodeNumLabel
+  parentsLabel
+  startsEdgesLabel
+  visNodeItem
+  __init__(visNodeItem, parent)
+  accept()
+}
+class "Graph" as src.coreGraph.Graph {
+  IDsUsed : set
+  __str__
+  edgeD : dict
+  isDirected
+  metadataKeys : dict
+  nextID : int
+  nodeD : dict
+  __init__()
+  __repr__()
+  addEdge(start, end, name, id) -> int | None
+  addNode(name, id) -> int
+  addNodeChild(nodeID: int, childID: int)
+  delEdge(edgeID: int)
+  delNode(nodeID: int)
+  delNodeFromEdge(nodeID: int, edgeID: int) -> bool
+  getDescendents(nodeID)
+  resetChildren(nodeID: int, childrenList)
+  resetIDs()
+  resetParents(nodeID: int, parentList)
+  updateEdge(edgeID: int, oldID: int, end: str, newID: int)
+}
+class "HandleItem" as src.GraphicsSupport.HandleItem {
+  _onMoveCallback : NoneType
+  centre
+  handleShape : str
+  lastChanged : NoneType
+  lastChangedbyCentre
+  suppressItemChange : bool
+  __init__(center: QPointF, hSize, color, handleShape, parent)
+  clearMoveCallback()
+  itemChange(change, value)
+  paint(painter: QPainter, option, widget)
+  setMoveCallback(callback)
+}
+class "HermiteSplineItem" as src.PolyLineItemHG.HermiteSplineItem {
+  IDsUsed : set
+  _baseColor
+  _boundingRect
+  _hoverColor
+  _p : List
+  _pHandles : list
+  _path
+  _selectColor
+  _t : list
+  _tHandles : list
+  isHovered : bool
+  lineNum
+  linesPerSegment : int
+  nextID : int
+  pen
+  scaleFactor
+  suppressItemChange : bool
+  __init__(p: List, t: List, parent, id)
+  __repr__()
+  _createHandles()
+  _createHermitePath() -> QPainterPath
+  _deleteHandles()
+  _hermiteInterp(p0, t0, p1, t1, t: float) -> QPointF
+  _updateFromHandles(moved)
+  addPoint(newP: QPointF)
+  boundingRect() -> QRectF
+  deletePoint(delP: QPointF)
+  endAngle()
+  hoverEnterEvent(event)
+  hoverLeaveEvent(event)
+  isSelected() -> bool
+  itemChange(change, value)
+  moveMidPoints(delta)
+  paint(painter: QPainter, option, widget)
+  setP(n: int, p: QPointF, nodeType)
+  shape()
+  split(newP: QPointF)
+  textPos(t: float) -> QPointF
+  updatePath()
+}
+class "MainWindow" as src.mainwindow.MainWindow {
+  BLOB_ICON
+  EDGE_ICON
+  NODE_ICON
+  Scene
+  actionEditRedo
+  actionEditUndo
+  baseSceneRect
+  codeDialog
+  execCodeAction
+  execEditPrefsAction
+  fileName : NoneType, str
+  model
+  oldToNewID : dict
+  prefsDialog
+  searchbar
+  ui
+  undoStack
+  zoom_label
+  zoom_slider
+  ORIG_action_FileSave()
+  ORIG_action_FileSaveAs()
+  __init__(parent)
+  actionListSelectChange()
+  actionNewBlob()
+  actionNewEdge()
+  actionNewHyperEdge()
+  actionNewNode()
+  actionPointer()
+  action_DebugPrint()
+  action_EditCopy()
+  action_EditCut()
+  action_EditDelete()
+  action_EditPaste()
+  action_EditSelectAll()
+  action_EditSelectNone()
+  action_EditZoomIn()
+  action_EditZoomOut()
+  action_FileClose()
+  action_FileExport()
+  action_FileNew()
+  action_FileOpen(checked, inFile)
+  action_FileOpen_Graphml(fileName)
+  action_FileSave(autoSaveName)
+  action_FileSaveAs()
+  action_HelpAbout()
+  action_HelpCredits()
+  action_Print()
+  addTreeNode(newNode, nodeType)
+  adjustSceneRect(region: QList[QRectF])
+  askForFileSave()
+  blobFromXML(xBlob, newID) -> VisBlobItem
+  closeEvent(event)
+  delEdge(delIdx)
+  delHyperEdge(delIdx)
+  delNode(delIdx)
+  edgeFromXML(xEdge, newID, newStartID, newEndID) -> VisEdgeItem
+  hyperEdgeFromXML(xEdge, newID) -> VisHyperEdgeItem
+  listClick(item)
+  listDblClicked(item)
+  nodeFromXML(xNode, newID) -> VisNodeItem
+  search(text)
+  setCurrentTreeItems(idx, flag)
+  setZoom(value)
+  showCodeDialog()
+  showEditEdgeDialog(visEdgeItem)
+  showEditNodeDialog(visNodeItem)
+  showEditPrefsDialog()
+  updateSceneText(item)
+}
+class "MetadataEditorWidget" as src.EditVisItemDialog.MetadataEditorWidget {
+  _metadata : dict
+  table
+  __init__(metadata: dict, metadataAttributes: dict, parent)
+  _addRow(key, value, display)
+  _isProtectedRow(row: int) -> bool
+  _populateTable(metadata: dict, metadataAttributes: dict)
+  addRow()
+  keyPressEvent(event)
+  removeSelectedRow()
+  setMetadataAndAttributes(visItem)
+}
+class "NameTextItem" as src.Nodes.NameTextItem {
+  __init__(text, width, parent)
+  focusOutEvent(event)
+  keyPressEvent(event)
+  textChanged()
+}
+class "QRoundedRectItem" as src.Nodes.QRoundedRectItem {
+  _baseColor
+  _basePath
+  _hoverColor
+  _mode
+  _pen
+  _penWidth : float
+  _rect
+  _selectColor
+  _xRadius : Optional[float]
+  _yRadius : Optional[float]
+  isHovered : bool
+  __init__(rect: QRectF, xRadius: Optional[float], yRadius: Optional[float], mode, parent)
+  boundingRect() -> QRectF
+  hoverEnterEvent(event)
+  hoverLeaveEvent(event)
+  mousePressEvent(event)
+  paint(painter: QPainter, option: QStyleOptionGraphicsItem, widget)
+  setPen(pen)
+  setRoundedRect(rect: QRectF)
+  shape() -> QPainterPath
+}
+class "RestoreFileDialog" as src.autosaver.RestoreFileDialog {
+  list_widget
+  result_value : str
+  __init__(file_names: list[str], parent) -> str
+  _handle_cancel()
+  _handle_delete_all()
+  _handle_ok()
+}
+class "StraightLineItem" as src.PolyLineItemHG.StraightLineItem {
+  IDsUsed : set
+  _baseColor
+  _boundingRect
+  _hoverColor
+  _p : List[QPointF]
+  _pHandles : list
+  _path
+  _selectColor
+  isHovered : bool
+  lineNum : NoneType
+  nextID : int
+  pen
+  suppressItemChange : bool
+  __init__(p: List[QPointF], parent, id)
+  __repr__()
+  _createHandles()
+  _createPolyPath()
+  _deleteHandles()
+  _updateFromHandles(moved)
+  addPoint(point: QPointF)
+  boundingRect()
+  deletePoint(point: QPointF)
+  endAngle()
+  hoverEnterEvent(event)
+  hoverLeaveEvent(event)
+  isSelected() -> bool
+  itemChange(change, value)
+  moveMidPoints(delta)
+  paint(painter: QPainter, option, widget)
+  setP(n: int, p: QPointF, nodeType)
+  shape()
+  split(newP: QPointF)
+  textPos(t: float) -> QPointF
+  updatePath()
+}
+class "TransparentTextItem" as src.GraphicsSupport.TransparentTextItem {
+  __init__(text: str, parent)
+  mouseDoubleClickEvent(event)
+  mousePressEvent(event)
+  mouseReleaseEvent(event)
+  paint(painter, option, widget)
+}
+class "Ui_MainWindow" as src.formTreeList.Ui_MainWindow {
+  actionClose
+  actionCopy
+  actionCut
+  actionExport
+  actionNewBlob
+  actionNewEdge
+  actionNewNode
+  actionPaste
+  actionPointer
+  actionPrint
+  actionSave
+  actionSave_As
+  actionSelect_All
+  actionSelect_None
+  actionZoomIn
+  actionZoomOut
+  action_About
+  action_Credits
+  action_Delete
+  action_New
+  action_Open
+  actionsdsd
+  centralwidget
+  graphicsView
+  horizontalLayout
+  listWidget
+  menuEdit
+  menuFile
+  menuHelp
+  menuTools
+  menubar
+  splitter
+  statusbar
+  sys_toolBar
+  treeWidget
+  retranslateUi(MainWindow)
+  setupUi(MainWindow)
+}
+class "Ui_MainWindow" as src.ui_form.Ui_MainWindow {
+  actionClose
+  actionCopy
+  actionCut
+  actionExport
+  actionNewBlob
+  actionNewEdge
+  actionNewNode
+  actionPaste
+  actionPointer
+  actionPrint
+  actionSave
+  actionSave_As
+  actionSelect_All
+  actionSelect_None
+  actionZoomIn
+  actionZoomOut
+  action_About
+  action_Credits
+  action_Delete
+  action_New
+  action_Open
+  actionsdsd
+  centralwidget
+  graphicsView
+  horizontalLayout
+  listWidget
+  menuEdit
+  menuFile
+  menuHelp
+  menuTools
+  menubar
+  splitter
+  statusbar
+  sys_toolBar
+  retranslateUi(MainWindow)
+  setupUi(MainWindow)
+}
+class "Ui_MainWindow" as src.ui_formTree.Ui_MainWindow {
+  actionClose
+  actionCopy
+  actionCut
+  actionExport
+  actionNewBlob
+  actionNewEdge
+  actionNewNode
+  actionPaste
+  actionPointer
+  actionPrint
+  actionSave
+  actionSave_As
+  actionSelect_All
+  actionSelect_None
+  actionZoomIn
+  actionZoomOut
+  action_About
+  action_Credits
+  action_Delete
+  action_New
+  action_Open
+  actionsdsd
+  centralwidget
+  graphicsView
+  horizontalLayout
+  icon11
+  icon8
+  icon9
+  menuEdit
+  menuFile
+  menuHelp
+  menuTools
+  menubar
+  splitter
+  statusbar
+  sys_toolBar
+  treeWidget
+  retranslateUi(MainWindow)
+  setupUi(MainWindow)
+}
+class "Ui_MainWindow" as src.ui_formTreeList.Ui_MainWindow {
+  actionClose
+  actionCopy
+  actionCut
+  actionExport
+  actionNewBlob
+  actionNewEdge
+  actionNewNode
+  actionPaste
+  actionPointer
+  actionPrint
+  actionSave
+  actionSave_As
+  actionSelect_All
+  actionSelect_None
+  actionZoomIn
+  actionZoomOut
+  action_About
+  action_Credits
+  action_Delete
+  action_New
+  action_Open
+  actionsdsd
+  centralwidget
+  graphicsView
+  horizontalLayout
+  listWidget
+  menuEdit
+  menuFile
+  menuHelp
+  menuTools
+  menubar
+  splitter
+  statusbar
+  sys_toolBar
+  treeview
+  retranslateUi(MainWindow)
+  setupUi(MainWindow)
+}
+class "Ui_dlgAbout" as src.dlgHelpAbout.Ui_dlgAbout {
+  actionHelpAbout
+  buttonBox
+  textBrowser
+  retranslateUi(dlgAbout)
+  setupUi(dlgAbout)
+}
+class "Ui_dlgAbout" as src.Ui_HelpAbout.Ui_dlgAbout {
+  buttonBox
+  textBrowser
+  retranslateUi(dlgAbout)
+  setupUi(dlgAbout)
+}
+class "Ui_dlgCredits" as src.dlgCredits.Ui_dlgCredits {
+  Credits
+  buttonBox
+  retranslateUi(dlgCredits)
+  setupUi(dlgCredits)
+}
+class "Ui_dlgCredits" as src.ui_Credits.Ui_dlgCredits {
+  Credits
+  buttonBox
+  retranslateUi(dlgCredits)
+  setupUi(dlgCredits)
+}
+class "UserPreferences" as src.HGConstants.UserPreferences {
+  AutoSaveCycleSize : int
+  AutoSaveMins : int
+  BLOB_FONT_IS_RESIZABLE : bool
+  BLOB_FONT_SIZE : int
+  BLOB_NAME_ON_TOP : bool
+  DEFAULT_EDGE : int
+  DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT : bool
+  DISPLAY_NAME_BY_DEFAULT : bool
+  ISDIGRAPH : bool
+  __str__
+  __init__(self, DISPLAY_NAME_BY_DEFAULT: bool, DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT: bool, BLOB_FONT_SIZE: int, BLOB_FONT_IS_RESIZABLE: bool, BLOB_NAME_ON_TOP: bool, ISDIGRAPH: bool, DEFAULT_EDGE: int, AutoSaveMins: int, AutoSaveCycleSize: int) -> None
+  __repr__()
+  _get_settings_handle() -> QSettings
+  load()
+  save()
+}
+class "VisBlobItem" as src.Nodes.VisBlobItem {
+  BL : int
+  BR : int
+  TL : int
+  TR : int
+  _Handles : list
+  __str__
+  _baseColor
+  _basePath
+  _height
+  _hoverColor
+  _polygon
+  _radMode
+  _rect
+  _selectColor
+  _width
+  _xRadius : int
+  _yRadius : int
+  blobDescription
+  childGroup : NoneType
+  children : list
+  isHovered : bool
+  isOnlySelected : bool
+  nodeShape
+  parents : list
+  suppressItemChange : bool
+  XXpositionToParameter(mousePos: QPointF) -> float
+  __init__(posn, model, treeWidget, parent, nameP, id, metadata, metadataAttributes, ports, height, width, xRadius, yRadius, radMode, parents, children)
+  __repr__()
+  _closestTOnSegment(a: QPointF, b: QPointF, p: QPointF) -> float
+  _createHandles()
+  _deleteHandles()
+  _updateFromHandles(pos)
+  boundingRect()
+  getChildList(blob) -> list
+  hoverEnterEvent(event)
+  hoverLeaveEvent(event)
+  itemChange(change, value)
+  mousePressEvent(event)
+  paint(painter: QPainter, option: QStyleOptionGraphicsItem, widget)
+  parameterToPosition(t: float) -> QPointF
+  positionToParameter(scenePos: QPointF) -> float
+  removeGroup(groupName)
+  shape()
+  toXML(Xparent)
+  updatePorts()
+}
+class "VisEdgeItem" as src.Edges.VisEdgeItem {
+  _baseColor
+  _hoverColor
+  _polyEdge
+  _selectColor
+  bRect
+  edge
+  edgeLine
+  edgeNum
+  endH : NoneType
+  endNode : tuple
+  endShape : NoneType
+  isDirected : str
+  isHovered : bool
+  isOnlySelected : bool
+  metaDisplay
+  metadata
+  metadataAttributes : dict
+  model
+  requestEdit
+  stH : NoneType
+  startNode : tuple
+  suppressItemChange : bool
+  textItem
+  treeWidget
+  __init__(model, treeWidget, sItem, eItem, directed, parent, nameP, id, polyLineType, points, tangents, metadata, metadataAttributes)
+  __repr__()
+  boundingRect()
+  hoverEnterEvent(event)
+  hoverLeaveEvent(event)
+  itemChange(change, value)
+  mouseDoubleClickEvent(mouseEvent)
+  paint(painter, option, widget)
+  setDirected(isDirected: bool)
+  setEnd(end)
+  setMetadataDisplay()
+  setPolylineType(lineType: int)
+  setStart(start)
+  shape()
+  toXML(Xparent)
+  updateLine(source)
+}
+class "VisHyperEdgeItem" as src.Edges.VisHyperEdgeItem {
+  Scene
+  _baseColor
+  _hoverColor
+  _polyEdge : NoneType
+  _selectColor
+  bRect
+  dummyNodes : list
+  edge
+  edgeLines : list
+  edgeNum
+  endH : NoneType
+  endNodes : list
+  endShape : list
+  isDirected : str
+  isHovered : bool
+  isOnlySelected : bool
+  metaDisplay
+  metadata
+  metadataAttributes : dict
+  model
+  nameText
+  requestEdit
+  stH : NoneType
+  startNodes : list
+  suppressItemChange : bool
+  tgtScaleFactor
+  treeWidget
+  __init__(model, Scene, treeWidget, sItem, eItem, directed, parent, nameP, id, polyLineType, points, tangents, metadata, metadataAttributes, dummyNodes, edgeLines, hyperEdgeGraph)
+  __repr__()
+  _createHandles()
+  _deleteHandles()
+  addSegment(edgeLine, newNode, start, nodePt, splitPoint: QPointF)
+  boundingRect()
+  delSegment(delEdgeLine)
+  edgeLineAt(pos)
+  hoverEnterEvent(event)
+  hoverLeaveEvent(event)
+  hyperEdgeGraph(idX) -> dict
+  itemChange(change, value)
+  mouseDoubleClickEvent(mouseEvent)
+  paint(painter, option, widget)
+  setDirected(isDirected: bool)
+  setEnd(end, edgeLine)
+  setMetadataDisplay()
+  setPolylineType(lineType: int)
+  setStart(start, edgeLine)
+  shape()
+  toXML(Xparent)
+  updateLine(source, edgeLine)
+}
+class "VisNodeItem" as src.Nodes.VisNodeItem {
+  _Ports : list
+  __str__
+  _baseColor
+  _hoverColor
+  _nextPort : int
+  _selectColor
+  blobDescription : str
+  childGroup : NoneType
+  children : list
+  dispText
+  endsEdges : list
+  isHovered : bool
+  metaDisplay
+  metadata
+  metadataAttributes : dict
+  model
+  nameText
+  node
+  nodeNum
+  nodeShape
+  parents : list
+  requestEdit
+  startsEdges : list
+  suppressItemChange : bool
+  treeWidget
+  __init__(posn, model, treeWidget, parent, nameP, id, metadata, metadataAttributes, ports, parents)
+  __repr__()
+  boundingRect()
+  createPort(screenPos) -> int
+  deletePort(delPort: port)
+  findPort(screenPos) -> int
+  hoverEnterEvent(event)
+  hoverLeaveEvent(event)
+  itemChange(change, value)
+  mouseDoubleClickEvent(mouseEvent)
+  paint(painter, option, widget)
+  parameterToPosition(t: float) -> QPointF
+  portFromIndex(Xindex) -> port
+  positionToParameter(screenPos: QPointF) -> float
+  setMetadataDisplay()
+  toXML(Xparent)
+  updatePort(p: port, pos: QPointF)
+  updatePortEdges()
+  updatePorts()
+}
+class "action_Aboutdlg" as src.mainwindow.action_Aboutdlg {
+  dlg
+  __init__(parent)
+}
+class "action_CreditsDlg" as src.mainwindow.action_CreditsDlg {
+  uidlgCred
+  __init__(parent)
+}
+class "addSegmentCommand" as src.Edges.addSegmentCommand {
+  edgeLineNum
+  edgeNum
+  exTerminatorEdgeLineNum
+  newEdgeCreated : NoneType, bool
+  newEdgeEnd : NoneType
+  newEdgeLineNum : NoneType
+  newEdgeStart : NoneType
+  newNodeNum
+  nodePt
+  scene
+  segmentDeleted : bool
+  splitPoint
+  start
+  __init__(scene, edge, edgeLine, newNode, start, nodePt, splitPoint: QPointF)
+  redo()
+  undo()
+}
+class "autoSaver" as src.autosaver.autoSaver {
+  autosaveDir : str
+  baseFileName : str
+  cycleCount : int
+  cycleSize : int
+  interval : int
+  openFunc
+  saveFunc
+  statusBar : NoneType
+  timer
+  updateInterval
+  __init__(saveFn: callable, openFn: callable, interval: int, cycleSize: int, statusBar)
+  autoSave()
+  checkForAutoSaves()
+  clearAutoSaves()
+  setCycleSize(CycleSize: int)
+  setFileName(fileName: str)
+  setInterval(newInterval: int)
+}
+class "createEdgeCommand" as src.mainwindow.createEdgeCommand {
+  edge : NoneType, int
+  edgeNum : int
+  endNode : tuple
+  endNodeNum
+  endPortIndex
+  endPortPos
+  endPortT
+  model
+  scene
+  startNode : tuple
+  startNodeNum
+  startPortIndex
+  startPortPos
+  startPortT
+  treeWidget
+  __init__(edge, scene, model, treeWidget, startNode, endNode, parent)
+  redo()
+  undo()
+}
+class "createNodeCommand" as src.mainwindow.createNodeCommand {
+  height : int
+  model
+  nType
+  node : NoneType
+  nodeName : str
+  nodeNum : int
+  posn
+  scene
+  treeWidget
+  width : int
+  xRadius : int
+  yRadius : int
+  __init__(posn, scene, model, treeWidget, width, height, xRadius, yRadius, nType)
+  redo()
+  undo()
+}
+class "delSegmentCommand" as src.Edges.delSegmentCommand {
+  edgeLineNum
+  edgeNum
+  exTerminatorEdgeLineNum : NoneType
+  newNodeNum : NoneType
+  nodePt : NoneType
+  scene
+  segmentDeleted : NoneType, bool
+  splitPoint : NoneType
+  start : NoneType
+  __init__(scene, edge, edgeLine)
+  redo()
+  undo()
+}
+class "deleteEdgeCommand" as src.mainwindow.deleteEdgeCommand {
+  _polyEdge
+  dNParameters : list
+  dummyNodeEndsEdgeLines : dict
+  dummyNodeStartsEdgeLines : dict
+  edge
+  edgeLineParameters : list
+  edgeNum
+  endNodeNums : list
+  endNodes : list
+  endPortIndex : list
+  endPortPos : list
+  endPortT : list
+  endsEdgeLines : dict
+  isDirected
+  metadata : dict
+  metadataAttributes : dict
+  model
+  points : list
+  scene
+  startNodeNums : list
+  startNodes : list
+  startPortIndex : list
+  startPortPos : list
+  startPortT : list
+  startsEdgeLines : dict
+  tangentPoints : list
+  treeWidget
+  __init__(edge, scene, model, treeWidget, startNodes, endNodes, parent)
+  redo()
+  undo()
+}
+class "deleteNodeCommand" as src.mainwindow.deleteNodeCommand {
+  children : list
+  eList : list
+  edges : list
+  height
+  metadata : dict
+  metadataAttributes : dict
+  model
+  node
+  nodeNum
+  parents : list
+  points : list
+  ports : list
+  posn
+  scene
+  tangentPoints : list
+  treeWidget
+  type
+  width
+  xRadius
+  yRadius
+  __init__(node, posn, scene, model, treeWidget, type, parent)
+  redo()
+  undo()
+}
+class "dummyNodeItem" as src.GraphicsSupport.dummyNodeItem {
+  suppressItemChange : bool
+  __init__(center: QPointF, parent, id)
+  _updateFromHandles(pos)
+  itemChange(change, value)
+}
+class "dummyNodeRoot" as src.GraphicsSupport.dummyNodeRoot {
+  IDsUsed : set
+  endsEdgeLines : list
+  nextID : int
+  nodeNum
+  startsEdgeLines : list
+  suppressItemChange : bool
+  __init__(center: QPointF, parent, id)
+  boundingRect()
+  {abstract}paint(painter: QPainter, option, widget)
+}
+class "edge" as src.coreGraph.Graph.edge {
+  __str__
+  edgeID : NoneType, int
+  endNodes : list
+  metadata : dict | None
+  startNodes : list
+  __init__(start: int, end: int, metadata: dict | None, id)
+  __repr__()
+  updateMeta(metadata: list[dict])
+}
+class "grScene" as src.mainwindow.grScene {
+  DOUBLECLICK
+  DRAGGING
+  EdgeEnd : str
+  GrRubberLine : NoneType
+  INSERTBLOB
+  INSERTEDGE
+  INSERTEDGE2CLICK
+  INSERTHYPEREDGE
+  INSERTNODE
+  MOVEEDGEEND
+  MOVEHANDLE
+  POINTER
+  _lastMouseClickPos
+  _lastMousePos
+  blobInsidePoints : list
+  changedByCode : bool
+  dragEdge : NoneType
+  edgeEditRequested
+  endPoint : NoneType
+  groupedItems : list
+  handle : NoneType, list
+  lastBlobPosn : NoneType
+  lastHovered : NoneType
+  mainwindow
+  model
+  mouseMode
+  mouseModeDic : dict
+  movingBlob : NoneType
+  nodeEditRequested
+  oldTermItem : NoneType
+  onlySelected : NoneType
+  rubberLine : NoneType
+  savedPositionList : list
+  startPoint : NoneType
+  thisHandleObjectSelected : NoneType
+  tmpEdgeEnd : NoneType
+  tmpEdgeSt : NoneType
+  treeWidget
+  undoStack
+  MoveEdgeEnd(edge, mPos)
+  __init__(model, treeWidget, undoStack, mainwindow)
+  _on_finalize(item_repr)
+  clearSelection()
+  contextMenu(mouseEvent, menuElts: List[tuple])
+  deleteItemAndChildren(item)
+  endRubberLine()
+  findItemByIdx(idx)
+  finishMovingEdgeEnd(edge, mPos, mouseEvent)
+  getContainmentMap(blob)
+  getDirectChildDic()
+  getDirectContainmentGraph(containmentMap)
+  getDirectParentDic()
+  getSceneMousePos()
+  itemsHere(pos: QPointF, size: QSizeF, itemRoles: List[int], hitRect)
+  mouseDoubleClickEvent(mouseEvent: QGraphicsSceneMouseEvent) -> None
+  mouseMoveEvent(mouseEvent)
+  mousePressEvent(mouseEvent)
+  mouseReleaseEvent(mouseEvent)
+  pickItemAt(mouseEvent, size: QSizeF, itemRoles: List[int])
+  qtListToListOfIdxs(qtList)
+  qtTreeToListOfIdxs(qtList)
+  rePosition(infoList)
+  resetRubberLine()
+  savePosition(selection)
+  signalTest()
+  snapToShape(mouseEvent, selItem, pos: QPointF, size: QSizeF, hitRect)
+  startMovingEdgeEnd(edge, handle)
+  startRubberLine(mPos)
+  stretchRubberLine(mPos)
+  update()
+  updateBlobParenting()
+}
+class "graphModel" as src.mainwindow.graphModel {
+  Gr
+  __str__
+  isDigraph
+  isDirected
+  __init__()
+  __repr__()
+  addGMEdge(sItem, eItem, nameP, id)
+  addGMNode(posn, nameP, id)
+  clear()
+  delEdge(delIdx)
+  delNode(delIdx)
+  edgesAtNode(itm)
+  findItemByIdx(idx)
+  findRowByIdx(idx)
+  getGMNodes()
+  getModelItems()
+  itemName(itm) -> str
+}
+class "moveNodeCommand" as src.mainwindow.moveNodeCommand {
+  currentPosition
+  lastPosition
+  model
+  scene
+  treeWidget
+  __init__(lastPosition, currentPosition, scene, model, treeWidget)
+  redo()
+  undo()
+}
+class "node" as src.coreGraph.Graph.node {
+  __str__
+  children : list
+  endsEdges : list
+  metadata : NoneType
+  nodeID : NoneType, int
+  parents : list
+  startsEdges : list
+  __init__(metadata, id, parents, children)
+  __repr__()
+  addChild(child)
+  addEnds(edge)
+  addParent(parent)
+  addStarts(edge)
+  delChild(child)
+  delParent(parent)
+  resetChildren(childList)
+  resetParents(parentList)
+}
+class "port" as src.GraphicsSupport.port {
+  index : int
+  t : float
+  XXitemChange(change, value)
+  __init__(center: QPointF, t: float, index: int, parent)
+  orthogonalSlope() -> tuple
+}
+src.GraphicsSupport.dummyNodeItem --|> src.GraphicsSupport.dummyNodeRoot
+src.GraphicsSupport.port --|> src.GraphicsSupport.dummyNodeRoot
+src.Nodes.VisBlobItem --|> src.Nodes.VisNodeItem
+src.EditVisItemDialog.MetadataEditorWidget --* src.EditVisItemDialog.EditVisEdgeItemDialog : metadataWidget
+src.EditVisItemDialog.MetadataEditorWidget --* src.EditVisItemDialog.EditVisHyperEdgeItemDialog : metadataWidget
+src.EditVisItemDialog.MetadataEditorWidget --* src.EditVisItemDialog.EditVisNodeItemDialog : metadataWidget
+src.Nodes.QRoundedRectItem --* src.Nodes.VisBlobItem : nodeShape
+src.mainwindow.CodeExecDialog --* src.mainwindow.MainWindow : codeDialog
+src.mainwindow.grScene --* src.mainwindow.MainWindow : Scene
+src.mainwindow.graphModel --* src.mainwindow.MainWindow : model
+src.Edges.EdgeNameTextItem --o src.Edges.VisHyperEdgeItem : nameText
+src.Nodes.BlobTextItem --o src.Nodes.VisBlobItem : blobDescription
+src.Nodes.NameTextItem --o src.Nodes.VisNodeItem : nameText
+@enduml
