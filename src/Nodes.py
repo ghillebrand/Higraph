@@ -888,9 +888,9 @@ class VisBlobItem(VisNodeItem):
                             if hitrect.contains(QPointF(p)):
                                 #self.scene().blobInsidePoints.append((i.edgeNum, eL.lineNum, countP+1))
                                 self.scene().blobInsidePoints.append((i, eL.lineNum, countP+1))
-            #if value == 1 and len(self.children) > 0 and self.isOnlySelected: #when selected
-            if value == 1 and self.isOnlySelected: #when selected
-            #if value == 1 and len(self.scene().selectedItems())==1: #this is better, but stops select all working
+
+            #if value == 1 and self.isOnlySelected: #when selected
+            if value == 1:
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
                 if self.childGroup not in self.scene().items():
