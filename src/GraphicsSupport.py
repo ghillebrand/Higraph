@@ -97,7 +97,7 @@ class NameTextItem(QGraphicsTextItem):
     def __init__(self, text, parent):
         super().__init__(text, parent)
 
-        self.setPos(-NODESIZE, -NODESIZE) #position set in hyperedge paint (or itemchange)
+        self.setPos(-NODESIZE, -NODESIZE) #edge position set in hyperedge paint (or itemchange)
         self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
         self.document().contentsChanged.connect(self.textChanged)
         self.setDefaultTextColor(QColor('black'))

@@ -675,6 +675,10 @@ class VisBlobItem(VisNodeItem):
             blobText="*"
         containerDescription = BlobTextItem(blobText, width, self)
         self.blobDescription=containerDescription
+        #Name display position
+        if 'xOffset' not in self.metadataAttributes['name'] or 'yOffset' not in self.metadataAttributes['name']:
+            if not prefs.BLOB_NAME_ON_TOP:
+                self.nameText.setPos(5,5)
         #Metadata disply position
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
 
