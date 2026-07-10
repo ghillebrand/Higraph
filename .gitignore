@@ -12,3 +12,8 @@ src/build/
 
 #Previous versions
 #oldCode/
+src/testfile.higraphml
+src/testfile2.higraphml
+src/testfile3.higraphml
+src/testfile4.higraphml
+.gitignore
