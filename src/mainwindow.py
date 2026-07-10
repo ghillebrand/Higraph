@@ -2412,7 +2412,7 @@ class MainWindow(QMainWindow):
         self.ui.actionZoomOut.setShortcut(QCoreApplication.translate("MainWindow", u"Ctrl+-", None))
         #TODO: Put in the `isWindowModified()` code
         #TODO: Use the Qt QApplication options
-        self.setWindowTitle(APP_NAME + " " + APP_VERSION)
+        self.setWindowTitle("[untitled] "+ APP_NAME + " " + APP_VERSION)
 
         #Where the data lives
         self.model = graphModel()
@@ -2422,7 +2422,7 @@ class MainWindow(QMainWindow):
         self.ui.treeWidget.itemDoubleClicked.connect(self.listDblClicked)
         
         self.undoStack=QUndoStack()
-
+        self.undoStack.cleanChanged.connect(self.updateTitleBar)
         #Setup the graphicsView, linking model,scene and list. Scene needs to know the mainwindow to call dialogs, etc
         self.Scene = grScene(self.model, self.ui.treeWidget, self.undoStack, self)
         #self.Scene.selectionChanged.connect(self.actionSceneSelectChange)
@@ -2902,6 +2902,9 @@ class MainWindow(QMainWindow):
                     self.model.Gr.nodeD[eachC].addParent(newNode.nodeNum)
                     self.model.Gr.nodeD[newNode.nodeNum].addChild(eachC)
 
+    def updateTitleBar(self, clean):
+        if clean==False:
+            self.setWindowTitle("*"+self.windowTitle())
 
     #Menu-like Actions
     def action_FileNew(self):
@@ -2922,13 +2925,11 @@ class MainWindow(QMainWindow):
         self.action_EditSelectNone()
         
         #clear window vars
-        self.setWindowTitle(APP_NAME +"[*]")
+        self.setWindowTitle("[untitled] " + APP_NAME + " " + APP_VERSION )
         self.fileName = ""
 
         #clear model
         self.model.clear()
-        #clear ListW
-        #self.ui.listWidget.clear()
         self.ui.treeWidget.clear()
         #Clear Scene
         #TODO: Reset the temp vars for odd reloads
@@ -3832,7 +3833,7 @@ class MainWindow(QMainWindow):
 
         self.Scene.update()
 
-        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + "[*]")
+        self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
         self.oldToNewID.clear()
 
         #self.setZoom(100)
@@ -4013,7 +4014,7 @@ class MainWindow(QMainWindow):
             #Unless it was an autosave
             if not autoSaveName:
                 self.Scene.undoStack.setClean() 
-            #TODO: Set window title in the header to clean
+                self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
 
         else:
             self.action_FileSaveAs()
