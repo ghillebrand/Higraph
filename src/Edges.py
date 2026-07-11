@@ -567,7 +567,7 @@ class VisHyperEdgeItem(QGraphicsObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP="", id=None,
+    def __init__(self,model, Scene, treeWidget,sItem, eItem, directed='', parent=None, nameP=None, id=None,
                     polyLineType = None, points=[],tangents=[],metadata={}, metadataAttributes={},
                     dummyNodes=None,edgeLines=None, hyperEdgeGraph=None):
 
@@ -608,7 +608,11 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.dummyNodes = [] if dummyNodes is None else dummyNodes
 
         #option to set a default name. 
-        defName = "" #just the ID
+        #defName = "" #just the ID
+        if nameP != None:
+            defName = nameP
+        else:
+            defName = ""
 
         #Create an abstract edge, and keep the index as well
         #Simple edge
@@ -643,7 +647,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #TODO: This overwrites in metadata['name'] value, but it should be the same?
         #self.model.Gr.edgeD[self.edgeNum].metadata.update({'name':f"{self.edgeNum} {self.model.Gr.edgeD[self.edgeNum].metadata['name']}"})
         #self.metadata['name'] = f"{self.edgeNum} {self.metadata['name']}"
-        if nameP:
+        if nameP != None:
             #self.edge,self.edgeNum = self.model.addGMEdge(sItem,eItem,nameP=nameP)
             self.metadata['name'] = nameP
         else:
