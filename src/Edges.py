@@ -642,10 +642,12 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #TODO: This overwrites in metadata['name'] value, but it should be the same?
         #self.model.Gr.edgeD[self.edgeNum].metadata.update({'name':f"{self.edgeNum} {self.model.Gr.edgeD[self.edgeNum].metadata['name']}"})
-        self.metadata['name'] = f"{self.edgeNum} {self.metadata['name']}"
+        #self.metadata['name'] = f"{self.edgeNum} {self.metadata['name']}"
         if nameP:
             #self.edge,self.edgeNum = self.model.addGMEdge(sItem,eItem,nameP=nameP)
             self.metadata['name'] = nameP
+        else:
+            self.metadata['name'] = f"{self.edgeNum}"
                 
         #add to the text list
         #TODO: Should this not be driven from the model?
