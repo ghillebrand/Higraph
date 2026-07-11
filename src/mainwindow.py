@@ -2260,8 +2260,10 @@ def mouseMoveEvent(self, event):
     _original_mouseMoveEvent(self, event)
     #If something is dragged off the edge, track it
     if event.buttons() & Qt.LeftButton:
-        sIlist = self.scene().selectedItems()
-
+        #sIlist = self.scene().selectedItems()
+        #This causes weird behaviour on dragging back _into_ the window
+        #  There may be some clever way around this
+        """
         if sIlist: #all the selected items
             boundingRect = sIlist[0].sceneBoundingRect()
             for item in sIlist[1:]:
@@ -2273,8 +2275,9 @@ def mouseMoveEvent(self, event):
             #TODO: event.pos() is deprecated, but the replacement doesn't work quite the same way.
             # Needs fiddling with to work properly.
             #mRect = QRectF(event.scenePosition(),QPointF(10,10))
-            mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
-            self.ensureVisible(mRect, 50,50)
+        """
+        mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
+        self.ensureVisible(mRect, 10,10)
 QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
 #end monkeypatch    
@@ -2351,7 +2354,7 @@ class CodeExecDialog(QDialog):
         self.outputEdit.setPlainText(output)
 
 
-def zoomToFitWithMargin(view, margin=0.1):
+def zoomToFitWithMargin(view, margin=0.05):
     """ chatGpt. Pass in a QGraphicsView and a margin multiplier  """
     # Get bounding rect of all items
     sceneRect = view.scene().itemsBoundingRect()
@@ -3088,14 +3091,14 @@ class MainWindow(QMainWindow):
         for metaEl in xBlob.iter("metadata"):
             metaKey = metaEl.attrib.get("key")
             blobMetadata[metaKey] = metaEl.attrib.get("value").strip()
+            blobMetadataAttributes[metaKey] = {}
             for blobNameAttribs in metaEl.iter("metadataAttribute"):
                 #Deal with Boolean for display (This is why you should use the proper key types!)
                 #TODO: Get the boolean value into the XML
                 if blobNameAttribs.attrib.get("key") == 'display':
-                    blobMetadataAttributes[metaKey] = {'display':blobNameAttribs.attrib.get("value") == "True"}
+                    blobMetadataAttributes[metaKey].update( {'display':blobNameAttribs.attrib.get("value") == "True"} )
                 else:
-                    blobMetadataAttributes[metaKey] = {blobNameAttribs.attrib.get("key"): blobNameAttribs.attrib.get("value")}
-
+                    blobMetadataAttributes[metaKey].update( {blobNameAttribs.attrib.get("key"): blobNameAttribs.attrib.get("value")} )
         newBlob =  VisBlobItem(QPointF(blobX,blobY),self.model, self.ui.treeWidget, width=blobWidth,\
                                height=blobHeight, xRadius=blobXRadius, yRadius=blobYRadius,\
                                 nameP=blobName, id = id, \
@@ -3688,7 +3691,7 @@ class MainWindow(QMainWindow):
         #zoomToFitWithMargin(self.ui.graphicsView, margin=0.2)
 
     def action_FileOpen_Graphml(self, fileName=None):
-        """ Open 'old style' v0300 file 
+        """ Open 'old style' v020n file 
             Deprecated - just here to port the old test files over
             TODO: revert to being able to import "genuine" yEd/ graphml files
         """
