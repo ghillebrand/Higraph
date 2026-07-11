@@ -2272,8 +2272,8 @@ def mouseMoveEvent(self, event):
         else:
             #TODO: event.pos() is deprecated, but the replacement doesn't work quite the same way.
             # Needs fiddling with to work properly.
-            #mRect = QRectF(event.scenePosition(),QPointF(10,10))
-            mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
+            mRect = QRectF(event.globalPosition(),QPointF(10,10))
+            #mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
             self.ensureVisible(mRect, 50,50)
 QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
