@@ -345,7 +345,8 @@ class VisNodeItem(QGraphicsObject):
         self.metadataAttributes['name'].update({"yOffset": self.nameText.pos().y()})
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
-        
+
+      
         #add metadata other than name
         if len(self.metadata) >= 2:
             for k, v in self.metadata.items():
@@ -630,10 +631,13 @@ class VisBlobItem(VisNodeItem):
         #TODO: Revisit the value the model adds
         self.node.setData(KEY_ROLE,ROLE_BLOB)
         self.setData(KEY_ROLE, ROLE_BLOB)
-
-        if len(metadataAttributes) == 0: #Creating a new blob
-            self.nameText.setPos(NODESIZE/2, -NODESIZE*1.5)
         
+        #print(f"init node {len(metadataAttributes)=}")
+        #Note: `name` attributes are _always_ set in `node`- just adjust
+        if 'xOffset' not in self.metadataAttributes['name'] or 'yOffset' not in self.metadataAttributes['name']:
+            if not prefs.BLOB_NAME_ON_TOP: #creation defaults to on top
+                self.nameText.setPos(NODESIZE/1, -NODESIZE*0)
+
         self.setAcceptHoverEvents(True)
         self.isHovered=False
         self._baseColor = DRAWING_COLOUR
@@ -664,7 +668,7 @@ class VisBlobItem(VisNodeItem):
         # give ports back to the nodeshape
         for port in self._Ports:
             port.setParentItem(self.nodeShape)
-        #blob text 
+        #blob description - Unique to blob: initial setting must be here too.
         if 'description' not in self.metadataAttributes:
             self.metadataAttributes['description']={'display':prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
             self.metadata['description']='*'
@@ -672,14 +676,20 @@ class VisBlobItem(VisNodeItem):
         if 'description' in self.metadata:
             blobText=self.metadata['description']
         else:
-            blobText="*"
+            blobText="" #was "*"
         containerDescription = BlobTextItem(blobText, width, self)
         self.blobDescription=containerDescription
+        xOffset =  self.metadataAttributes['description'].get('xOffset')
+        yOffset =  self.metadataAttributes['description'].get('yOffset')
+        if xOffset and yOffset:
+            self.blobDescription.setPos(QPointF(float(xOffset),float(yOffset)))
+        else:
+            #TODO: Calculate this from something like self.nameText.document().textHeight() *1.1
+            self.blobDescription.setPos(0, NODESIZE*1.2)                    
         #Name display position
-        if 'xOffset' not in self.metadataAttributes['name'] or 'yOffset' not in self.metadataAttributes['name']:
-            if not prefs.BLOB_NAME_ON_TOP:
-                self.nameText.setPos(5,5)
+
         #Metadata disply position
+        #TODO: Make repositionable
         self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
 
         #Placeholder for drag handles
@@ -725,10 +735,15 @@ class VisBlobItem(VisNodeItem):
         self.metadataAttributes['name'].update({"yOffset": self.nameText.pos().y()})
         for atK,atV in self.metadataAttributes['name'].items():
             metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":atK,"value":str(atV)})
+
         #update metadata from blobDescription
         if 'description' in self.metadata \
                 and self.metadata['description']!=self.blobDescription.toPlainText():
             self.metadata['description']=self.blobDescription.toPlainText()
+        #Get the description text position
+        self.metadataAttributes['description'].update({"xOffset": self.blobDescription.pos().x()})
+        self.metadataAttributes['description'].update({"yOffset": self.blobDescription.pos().y()}) 
+
         #add metadata other than name
         if len(self.metadata) >= 2:
             for k, v in self.metadata.items():

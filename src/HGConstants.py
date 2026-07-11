@@ -57,18 +57,6 @@ PASTE_OFFSET = 100
 BLOB_CORNER_RADIUS = 10
 TANGENT_SCALE_FACTOR = 20
 
-#TODO: Use the prefs version
-#DISPLAY_NAME_BY_DEFAULT = True
-#DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT = False
-#BLOB_FONT_SIZE = 9
-#BLOB_FONT_IS_RESIZABLE = True
-#BLOB_NAME_ON_TOP = False
-
-#Model level default for edges
-#ISDIGRAPH = True
-
-#DEFAULT_EDGE = SPLINE #SPLINE #STRAIGHT 
-
 #options and defaults
 from PySide6.QtGui import QColor
 
