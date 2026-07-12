@@ -4,7 +4,7 @@
   <Metadata productVersion="1.6.1" projectFileVersion="2.0"/>
   <ProductInformation>
     <Name>Higraph</Name>
-    <Version>V03rc1</Version>
+    <Version>V030</Version>
     <CompanyName>isijingi</CompanyName>
     <WebURI>https://isijingi.co.za/wp/category/higraph/</WebURI>
   </ProductInformation>
@@ -32,11 +32,9 @@
       <VisualStyle isEnabled="true"/>
     </UserInterface>
     <InstallationFiles defaultInstallationPath="&lt;ProgramFiles&gt;\&lt;Company&gt;\&lt;AppName&gt;\" isDefaultInstallationPathAlterable ="true">
-      <InstallationFile size="2.2 MB" type="exe">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\dist\higraph\higraph.exe</InstallationFile>
-      <InstallationFile size="N/A" type="[Folder]">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\dist\higraph\_internal\</InstallationFile>
-      <InstallationFile size="10.2 KB" type="higraphml">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\t2.higraphml</InstallationFile>
-      <InstallationFile size="8.2 KB" type="higraphml">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\example.higraphml</InstallationFile>
-      <InstallationFile size="5.2 KB" type="higraphml">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\src\t1.higraphml</InstallationFile>
+      <InstallationFile size="2.1 MB" type="exe">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg03\Higraph\src\dist\higraph\higraph.exe</InstallationFile>
+      <InstallationFile size="N/A" type="[Folder]">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg03\Higraph\src\dist\higraph\_internal\</InstallationFile>
+      <InstallationFile size="9.1 KB" type="higraphml">C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg03\Higraph\src\example.higraphml</InstallationFile>
     </InstallationFiles>
     <Languages/>
     <Variables/>
@@ -78,7 +76,7 @@
     <Program executableFilePath="" isLaunchEnabled="false" isTerminationEnabled="false"/>
   </VisualUpdateConfiguration>
   <BuildConfiguration>
-    <SetupFilePath>C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg02c\Higraph\hg03rc1.exe</SetupFilePath>
+    <SetupFilePath>C:\Users\g.hillebrand\Documents\Programming\HiGraph\hg2\hg03\Higraph\hg03.exe</SetupFilePath>
     <SetupIconPath>..\icons\ancient.ico</SetupIconPath>
     <UninstallerIconPath>..\icons\ancient.ico</UninstallerIconPath>
     <Compression method="0" level="2"/>

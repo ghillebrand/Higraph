@@ -9,7 +9,7 @@ SPLINE = 1
 
 APP_NAME = "Higraph"
 # Attempt to follow semantic versioning https://semver.org/spec/v2.0.0.html
-APP_VERSION = "0.3.0"
+APP_VERSION = "0.3.1"
 
 # Indices for Qt Item metadata tags 
 from PySide6.QtCore import Qt

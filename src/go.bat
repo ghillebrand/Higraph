@@ -1,1 +1,2 @@
-py mainwindow.py
+call ..\..\Scripts\activate
+python mainwindow.py
