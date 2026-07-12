@@ -904,8 +904,13 @@ class VisBlobItem(VisNodeItem):
                                 #self.scene().blobInsidePoints.append((i.edgeNum, eL.lineNum, countP+1))
                                 self.scene().blobInsidePoints.append((i, eL.lineNum, countP+1))
 
+            onlyBlobsSelected=True
+            for i in self.scene().selectedItems():
+                if type(i) != VisBlobItem:
+                    onlyBlobsSelected=False
+                    break
             #if value == 1 and self.isOnlySelected: #when selected
-            if value == 1:
+            if value == 1 and onlyBlobsSelected:
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
                 if self.childGroup not in self.scene().items():
