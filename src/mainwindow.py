@@ -2276,14 +2276,11 @@ def mouseMoveEvent(self, event):
             # Needs fiddling with to work properly.
             #mRect = QRectF(event.scenePosition(),QPointF(10,10))
         """
-        #mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
-        #self.ensureVisible(mRect, 10,10)
+        #TODO: use global, since event.pos() is depracated
         #mRect = QRectF(event.globalPosition(),QPointF(10,10))
-        mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
+        #mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
+        mRect = QRectF(self.mapToScene(event.pos()),QSizeF(1,1))
         self.ensureVisible(mRect, 10,10)
-        #mRect = QRectF(event.globalPosition(),QPointF(10,10))
-        #mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
-        #self.ensureVisible(mRect, 50,50)
 QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
 #end monkeypatch    
@@ -2575,16 +2572,6 @@ class MainWindow(QMainWindow):
 
     #GraphicsView/ scene handling
     def setZoom(self, value):
-        """
-        chatGPT
-        Slot to set the zoom level of the QGraphicsView.
-        """
-        """
-        scale = value / 100.0  # Convert to 0.1 - 4.0
-        self.ui.graphicsView.resetTransform()          # Reset any existing zoom
-        self.ui.graphicsView.scale(scale, scale)       # Apply new zoom
-        self.zoom_label.setText(f"Zoom: {value}%")
-        """
         #Scale without breaking current transform
         targetScale = value / 100.0
         # the current absolute horizontal scale factor from the view matrix
