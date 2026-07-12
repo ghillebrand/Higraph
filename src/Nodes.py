@@ -253,6 +253,9 @@ class VisNodeItem(QGraphicsObject):
         containerName = NameTextItem(self.dispText, self)
         containerName.setPos(-NODESIZE/2, -NODESIZE*2)
         self.nameText = containerName
+        #Put the name on top of any other text to be able to move
+        self.nameText.setZValue(10)
+        #Position - default or read in
         xOffset =  self.metadataAttributes['name'].get('xOffset')
         yOffset =  self.metadataAttributes['name'].get('yOffset')
         if xOffset and yOffset:
@@ -260,7 +263,13 @@ class VisNodeItem(QGraphicsObject):
 
         #a place to display metadata
         self.metaDisplay = TransparentTextItem("", parent=self)
-        self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2))  #NODESIZE/2,0))
+        #self.metaDisplay = NameTextItem("",self)  
+        self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2.1))  #NODESIZE/2,0))
+        #Set the text to italic to differentiate it from name and description
+        metaDisplayFont = QFont()
+        metaDisplayFont.setItalic(True)
+        self.metaDisplay.setFont(metaDisplayFont)
+
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsFocusable, False)
         #populate it
@@ -636,7 +645,7 @@ class VisBlobItem(VisNodeItem):
         #Note: `name` attributes are _always_ set in `node`- just adjust
         if 'xOffset' not in self.metadataAttributes['name'] or 'yOffset' not in self.metadataAttributes['name']:
             if not prefs.BLOB_NAME_ON_TOP: #creation defaults to on top
-                self.nameText.setPos(NODESIZE/1, -NODESIZE*0)
+                self.nameText.setPos(NODESIZE*0.1, -NODESIZE*0)
 
         self.setAcceptHoverEvents(True)
         self.isHovered=False
@@ -671,7 +680,7 @@ class VisBlobItem(VisNodeItem):
         #blob description - Unique to blob: initial setting must be here too.
         if 'description' not in self.metadataAttributes:
             self.metadataAttributes['description']={'display':prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT}
-            self.metadata['description']='*'
+            self.metadata['description']=''
        # if prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT:
         if 'description' in self.metadata:
             blobText=self.metadata['description']
