@@ -2281,7 +2281,9 @@ def mouseMoveEvent(self, event):
         #mRect = QRectF(event.globalPosition(),QPointF(10,10))
         mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
         self.ensureVisible(mRect, 10,10)
-
+        #mRect = QRectF(event.globalPosition(),QPointF(10,10))
+        #mRect = QRectF(self.mapToScene(event.pos()),QPointF(10,10))
+        #self.ensureVisible(mRect, 50,50)
 QGraphicsView.mouseMoveEvent = mouseMoveEvent
 
 #end monkeypatch    
