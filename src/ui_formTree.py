@@ -106,10 +106,10 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.treeWidget = QTreeWidget(self.centralwidget)
-        self.treeWidget.setObjectName(u"treeWidget")
+        #self.treeWidget = QTreeWidget(self.centralwidget)
+        #self.treeWidget.setObjectName(u"treeWidget")
 
-        self.horizontalLayout.addWidget(self.treeWidget)
+        #self.horizontalLayout.addWidget(self.treeWidget)
 
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
@@ -119,6 +119,17 @@ class Ui_MainWindow(object):
         sizePolicy.setHeightForWidth(self.splitter.sizePolicy().hasHeightForWidth())
         self.splitter.setSizePolicy(sizePolicy)
         self.splitter.setOrientation(Qt.Orientation.Horizontal)
+
+        self.treeWidget = QTreeWidget(self.splitter)
+        self.treeWidget.setObjectName(u"treeWidget")
+        sizePolicyTreeWidget = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        sizePolicyTreeWidget.setHorizontalStretch(5)
+        sizePolicyTreeWidget.setVerticalStretch(0)
+        #sizePolicyTreeWidget.setHeightForWidth(self.graphicsView.sizePolicy().hasHeightForWidth())
+        self.treeWidget.setSizePolicy(sizePolicyTreeWidget)
+        #self.graphicsView.setMinimumSize(QSize(400, 0))
+        self.splitter.addWidget(self.treeWidget)
+        
         self.graphicsView = QGraphicsView(self.splitter)
         self.graphicsView.setObjectName(u"graphicsView")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -128,6 +139,8 @@ class Ui_MainWindow(object):
         self.graphicsView.setSizePolicy(sizePolicy1)
         self.graphicsView.setMinimumSize(QSize(400, 0))
         self.splitter.addWidget(self.graphicsView)
+
+
 
         self.horizontalLayout.addWidget(self.splitter)
 
