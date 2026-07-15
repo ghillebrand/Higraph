@@ -10,7 +10,7 @@ Figure 7 from Harel's paper, drawn in the tool. The item dictionary is on the le
 There is an accessible underlying graph model which can be interactively accessed via a Python shell. 
 All items have Python dictionaries for metadata, allowing flexibility of application.
 
-**Hyperedges** are supported as n-ary directed or undirected edges. **Blobs** are nodes extended to sets, and are aware of their parent and child relationships. 
+**Hyperedges** are supported as n-ary directed or undirected edges. **Blobs** are nodes extended to sets, and are aware of their parent and child relationships, derived from the drawing, displayed in the dictionary hierarchy. 
 Multiple parents are supported.
 
 Data is stored in XML files, loosely based on `graphml` files.
