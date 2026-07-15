@@ -4,7 +4,7 @@ It maintains a structured dictionary of the elements of the graph, and their rel
 <p align="center">  
 <img width="800" height="578" alt="image" src="https://github.com/user-attachments/assets/9fa0df31-608b-4ebf-b0fc-503e4f632364" />
 </p>
-Figure 7 from Harel's paper, drawn in the tool. The item dictionary on the left, and the visually editable model on the right.
+Figure 7 from Harel's paper, drawn in the tool. The item dictionary is on the left, and the visually editable model on the right.
 
 
 There is an accessible underlying graph model which can be interactively accessed via a Python shell. 
