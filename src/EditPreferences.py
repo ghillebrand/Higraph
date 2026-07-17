@@ -1,5 +1,5 @@
 #import sys
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTabWidget,
+from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QLineEdit,
                                  QWidget, QFormLayout, QSpinBox, QCheckBox,
                                  QComboBox, QPushButton, QColorDialog, QDialogButtonBox)
 from PySide6.QtGui import QColor
@@ -70,6 +70,9 @@ class EditPreferences(QDialog):
         self.cb_display_desc = QCheckBox("Show blob descriptions automatically", checked=self.prefs.DISPLAY_BLOB_DESCRIPTION_BY_DEFAULT)
         self.cb_font_resizable = QCheckBox("Allow text scaling on resize", checked=self.prefs.BLOB_FONT_IS_RESIZABLE)
         self.cb_name_on_top = QCheckBox("Blob name on top (or inside)", checked=self.prefs.BLOB_NAME_ON_TOP)
+
+        #The text to append to copies
+        self.le_CopySuffix = QLineEdit(self.prefs.copySuffix)
         
         # Typography Size
         self.sb_font_size = QSpinBox(minimum=4, maximum=144, value=self.prefs.BLOB_FONT_SIZE)
@@ -79,6 +82,7 @@ class EditPreferences(QDialog):
         layout.addRow("Base Blob Text Font Size:", self.sb_font_size)
         layout.addRow("Blob Text Resizing:", self.cb_font_resizable)
         layout.addRow("Blob Name Position:", self.cb_name_on_top)
+        layout.addRow("Suffix to append to items on copy:" , self.le_CopySuffix)
         
         return widget
 
@@ -162,6 +166,7 @@ class EditPreferences(QDialog):
         self.prefs.BLOB_FONT_SIZE = self.sb_font_size.value()
         self.prefs.BLOB_FONT_IS_RESIZABLE = self.cb_font_resizable.isChecked()
         self.prefs.BLOB_NAME_ON_TOP = self.cb_name_on_top.isChecked()
+        self.prefs.copySuffix = self.le_CopySuffix.text()
 
         # 4. Extract Staged Color Items
         for attr_name, color_obj in self.loaded_colors.items():
