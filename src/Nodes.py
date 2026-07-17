@@ -218,7 +218,7 @@ class VisNodeItem(QGraphicsObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,posn,model, treeWidget, parent=None, nameP ="", id=None,
+    def __init__(self,posn,model, treeWidget, parent=None, nameP = None, id=None,
                     metadata={}, metadataAttributes={},ports = [], parents=[]):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
@@ -232,9 +232,12 @@ class VisNodeItem(QGraphicsObject):
 
         #WHERE it must appear
         self.setPos(posn)
-
+        if nameP != None:
+            defName = nameP
+        else:
+            defName = ""
         #Create an abstract node, and keep the index as well
-        self.node,self.nodeNum = self.model.addGMNode(posn,nameP=nameP,id=id)
+        self.node,self.nodeNum = self.model.addGMNode(posn,nameP=defName,id=id)
 
         #Additional graph-relevant node data
         self.metadata = self.model.Gr.nodeD[self.nodeNum].metadata
