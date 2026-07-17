@@ -112,12 +112,7 @@ class graphModel(QStandardItemModel):
 
         # Make the coreGraph node
         n = self.Gr.addNode(name=nameP, id=id)
-        #self.Gr.nodeD[n].metadata.update({'name':nameP })
-        #Default name is node number
-        if nameP=="":
-            self.Gr.nodeD[n].metadata.update({'name': f"n{n}"})
-        else:
-            self.Gr.nodeD[n].metadata.update({'name': nameP})
+        self.Gr.nodeD[n].metadata.update({'name': nameP})
 
         #Make the Qt Item with text n
         item = QStandardItem(str(n))
@@ -1728,7 +1723,7 @@ class createNodeCommand(QUndoCommand):
         #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.nodeNum = 0 #placeholder
-        self.nodeName="" #placeholder
+        self.nodeName=None #placeholder
         self.nType=nType
         if nType==ROLE_BLOB:
             self.width=width
@@ -2992,6 +2987,9 @@ class MainWindow(QMainWindow):
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
                     nodeName = nodeLable.text.strip()
+                    #Check for empty names, which are allowed
+                    if nodeName == '': 
+                        nodeName = None
                     nodeMetadataAttributes['name'] = {}
                     if newID:
                         #Make copied names clear
