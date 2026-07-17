@@ -163,6 +163,9 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.metaDisplay = TransparentTextItem("", parent=self)
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsFocusable, False)
+        metaDisplayFont = QFont()
+        metaDisplayFont.setItalic(True)
+        self.metaDisplay.setFont(metaDisplayFont)
         #populate it
         self.setMetadataDisplay()
 
