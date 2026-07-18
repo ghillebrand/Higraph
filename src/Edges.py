@@ -72,13 +72,17 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Hyper Step 1: just make this work with 1 elt lists of start/ end
         if type(sItem) is list:
             self.startNodes = sItem
-        else:
-            self.startNodes = [sItem]
+        else: # file import
+            startPort = sItem.createPort(sItem.scenePos())         
+            self.startNodes = []
+            self.startNodes.append((sItem, startPort))
 
         if type(eItem) is list:
             self.endNodes = eItem
-        else:
-            self.endNodes = [eItem]
+        else: # file import
+            endPort = eItem.createPort(eItem.scenePos())
+            self.endNodes=[]
+            self.endNodes.append((eItem, endPort))
 
         #Store the edgeLines aka segments (>1 for hyperEdges) 
         #NOTE! parameter edgeLine (and dummyNode) is mutable, and will store previous call values
@@ -192,7 +196,7 @@ class VisHyperEdgeItem(QGraphicsObject):
      
         #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML` *AND undo*)
         #if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None: JH
-        if len(self.edgeLines)==0 and hyperEdgeGraph is None:
+        if len(self.edgeLines)==0 and (hyperEdgeGraph is None or hyperEdgeGraph=={}):
             #print(f"he: simple creation {len(dummyNodes)=}")
             stN = self.startNodes[0]
             endN = self.endNodes[0]

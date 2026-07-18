@@ -2529,6 +2529,9 @@ class MainWindow(QMainWindow):
         self.execEditPrefsAction = QAction("Edit preferences", self)
         self.execEditPrefsAction.triggered.connect(self.showEditPrefsDialog)
         self.ui.menuTools.addAction(self.execEditPrefsAction)
+        self.actionFileImport = QAction("Import test", self)
+        self.actionFileImport.triggered.connect(self.action_FileImport)
+        self.ui.menuTools.addAction(self.actionFileImport)
 
         """
         self.selectColourDefaultsAction = QAction("Select Colours", self)
@@ -3302,9 +3305,12 @@ class MainWindow(QMainWindow):
                 #Track real nodes to differentiate from dummys later
                 sNodes.append(s)
                 p = int(aNode.attrib.get("sourceport", 0))
-                pItm = sItm.portFromIndex(p)
-                #This assumes portIDs don't/ won't change - should be OK - local to nodes
-                sItem.append( (sItm,pItm) )
+                if p != -1:   #file import
+                    pItm = sItm.portFromIndex(p)
+                    #This assumes portIDs don't/ won't change - should be OK - local to nodes
+                    sItem.append( (sItm,pItm) )
+                else:
+                    sItem=sItm
 
             if aNode.tag == "end":
                 e = int(aNode.attrib.get("target", 0))
@@ -3317,9 +3323,12 @@ class MainWindow(QMainWindow):
                 #Track real nodes
                 eNodes.append(e)
                 p = int(aNode.attrib.get("targetport", 0))
-                pItm = eItm.portFromIndex(p)
-                #This assumes portIDs don't/ won't change
-                eItem.append( (eItm,pItm) )
+                if p != -1:  #file import
+                    pItm = eItm.portFromIndex(p)
+                    #This assumes portIDs don't/ won't change
+                    eItem.append( (eItm,pItm) )
+                else:
+                    eItem=eItm
 
         #dummyNodes - read, and instantiate
         dNList = []
@@ -3355,7 +3364,8 @@ class MainWindow(QMainWindow):
         #Note that if edgeLine ID's change, nodes will auto-update them during creation. I think.
         edgeLineList = []
         hyperEdgeGraph = dict() #An ordinary digraph of the hyperedge
-        
+        points=[]
+        tangents=[]
         oldToNewEL = {}  #Track any edgeLineID changes
         for eL in xEdge.find("edgeLineList"):
             #print(f"edgeLine: {eL.attrib}")
@@ -4035,6 +4045,192 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
             self.action_FileSave()
                  
+    def action_FileImport(self):
+        print("runs")
+        outFIleName="NumbersBasic1.higraphml"
+        nodeDic={}
+        #if self.fileName:
+            #Temporary - update filetype (Not sure this will work with any directory info
+        #    if self.fileName.split(".")[-1] == "graphml":
+        #        self.fileName = ".".join(self.fileName.split('.')[:-1]+['higraphml'])
+        self.fileName=outFIleName
+        if self.fileName:
+            #Generate the graph header info
+            # Creating XML structure in Graphml format
+            # Reference: yEdxFileOnly: construct_graphml
+            higraphml = ET.Element("higraphml")
+
+            #Allow some form of backwards compatibility
+            higraphml.set("version", APP_VERSION)
+
+            #Store the current scene view bounding rect to restore
+            vC = self.ui.graphicsView.viewport().rect()
+            vC = self.ui.graphicsView.mapToScene(vC)
+
+            viewCoords = ET.SubElement(higraphml, "saveViewCoords" )
+
+            viewCoords.set("x",str(vC[0].x()) )
+            viewCoords.set("y",str(vC[1].y()) )
+            viewCoords.set("width" ,str(vC[2].x() - vC[0].x()) )
+            viewCoords.set("height",str(vC[3].y() - vC[1].y()) )
+
+            graphml = ET.SubElement(higraphml, "graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
+            graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
+            graphml.set("xmlns:sys", "http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0")
+            graphml.set("xmlns:x", "http://www.yworks.com/xml/yfiles-common/markup/2.0")
+            graphml.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+            graphml.set("xmlns:y", "http://www.yworks.com/xml/graphml")
+            graphml.set("xmlns:yed", "http://www.yworks.com/xml/yed/3")
+            graphml.set("xmlns:h", "http://www.isijingi.co.za/higraph")
+            graphml.set(
+                "xsi:schemaLocation",
+                "http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd",
+            )
+
+            # Adding some implementation specific keys for identifying urls, descriptions
+            nodeKey = ET.SubElement(graphml, "key", id="data_node")
+            nodeKey.set("for", "node")
+            nodeKey.set("yfiles.type", "nodegraphics")
+
+            blobKey = ET.SubElement(graphml, "key", id="data_blob")
+            blobKey.set("for", "blob")
+            blobKey.set("higraph.type", "blobgraphics")
+
+            edgeKey = ET.SubElement(graphml, "key", id="data_edge")
+            edgeKey.set("for", "edge")
+            edgeKey.set("yfiles.type", "edgegraphics")
+
+            # Graph node containing actual objects
+            if self.model.isDigraph:
+                directed = 'directed'
+            else:
+                directed = 'undirected'
+            graph = ET.SubElement(graphml, "graph", edgedefault=directed, id="G")
+
+        #open input file
+        infile=open("NumberBasics.map", "r",encoding="utf-8")
+        processingNodes=False
+        processingEdges=False
+        for inline in infile:
+            if processingNodes==True:
+                if "/*ORGANISE THE GROUPS*/" in inline:
+                    processingEdges=True
+                    processingNodes=False
+                else:
+                    inline = inline.strip()
+                    if inline != "":
+                        nodeName=inline[0:inline.find(" ")]
+                        nodeType=inline[inline.find("type=")+6: inline.find(",")-1]
+                        nodeDesc=inline[inline.find("label=")+7: -2]
+                        nodeDesc.replace("'\n'",' ')
+                        # create xml
+                        nodeId=getGUID()
+                        xmlNode = ET.Element("node", id=str(nodeId))
+                        nodeDic[nodeName]=nodeId   #needed for edge start and end nodes
+                        data = ET.SubElement(xmlNode, "data", key="data_node")
+                        shape = ET.SubElement(data, "y:" + "ShapeNode")
+                        ET.SubElement(shape, "y:Geometry", {'x':str(nodePosX), 'y':str(nodePosY)})
+                        #for p in self._Ports:    
+                        #    ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
+
+                        nodeLabel = ET.SubElement(shape, "y:NodeLabel")
+                        nodeLabel.text = nodeName
+                        metaAtt = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":"display","value":str(True)})
+                        metaAtt1 = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":"xOffset","value":str(-NODESIZE/2)})
+                        metaAtt2 = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":"yOffset","value":str(-NODESIZE*2)})
+                        metaEl  = ET.SubElement(xmlNode, "h:metadata", {"key":"type","value":str(nodeType)})
+                        metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
+                        #print("Name", nodeName, "Type", nodeType, "Label", nodeLabel)
+                        graph.append(xmlNode)
+                        nodePosX+=NODESIZE*6
+                        if nodePosX > 200:
+                            nodePosX=-200
+                            nodePosY+=NODESIZE*6
+            elif processingEdges==True:
+                if "/*DEPENDENCIES LINKED TO ONE OF THE OTHER BIG MATHS GROUPS*/" in inline:
+                    processingEdges=False
+                    processingNodes=False
+                else:
+                    inline = inline.strip()
+                    if "->" in inline:
+                        startNodeName=inline[0:inline.find(" ")]
+                        restOfLine=inline[inline.find(">")+2:]
+
+                        done=False
+                        while not done:
+                            if "->" in restOfLine:  # there is another link coming
+                                endNodeName=restOfLine[0:restOfLine.find(" ")]
+                                #restOfLine=restOfLine[restOfLine.find(">")+2:]
+                            else:
+                                endNodeName=restOfLine
+                                done=True
+                            #print(startNodeName, endNodeName)
+                            if startNodeName not in nodeDic or endNodeName not in nodeDic:
+                                print("Error processing", inline)
+                                done=True
+                            else:
+                                # create xml
+                                edgenum=getGUID()
+                                xmlEdge = ET.Element("hyperedge", id=str(edgenum))   #let hyperedge init give number
+                                xmlEdge.set("directed", "true") 
+                                ET.SubElement(xmlEdge, "y:Arrows", {'source':"none", 'target':"standard"})  
+                                xmlEdge.set("lineType", "Spline")
+                                nL = ET.SubElement(xmlEdge,"h:nodeList")
+                                ET.SubElement(nL,"start" , source= str(nodeDic[startNodeName]), sourceport=str(-1))
+                                ET.SubElement(nL,"end", target = str(nodeDic[endNodeName]), targetport=str(-1))
+                                metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":"name","value":""})
+                                metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
+                                dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
+                                eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
+                                graph.append(xmlEdge)
+                                if not done:
+                                    startNodeName=endNodeName
+                                    restOfLine=restOfLine[restOfLine.find(">")+2:]
+
+            #Add the edgelines
+            """eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
+            eLL.append(comment)
+
+            for eL in self.edgeLines:
+                #edgeLine id=<eLineID> source=<nID> sourceport=<portID> target=<nID> targetport=<portID>
+                eLelt =  ET.SubElement(eLL,"edgeLine", id=str(eL.lineNum), 
+                                    source=str(hStarts[eL.lineNum][0]), sourceport=str(hStarts[eL.lineNum][1]), 
+                                    target=str(hEnds[eL.lineNum][0]), targetport=str(hEnds[eL.lineNum][1])  )
+                #Add in the points   
+                points = eL._p
+                if len(points) > 0:
+                    path = ET.SubElement(eLelt,"y:Path ") #No ports yet
+                    pathElts = []
+                    for p in points[1:-1]:
+                        pathElts.append(ET.SubElement(path, "y:Point", {"x":str(p.x()),"y":str(p.y())}))
+                    #Tangents 
+                    if self._polyEdge == SPLINE:
+                        tangents = eL._t
+
+                        if len(tangents) > 0:
+                            ET.SubElement(path,"h:StartTangent", {"x":str(tangents[0][1].x()),
+                                                                "y":str(tangents[0][1].y())})
+                            for i,pElt in enumerate(pathElts):
+                                ET.SubElement(pElt,"h:Tangent",
+                                                    {"leftx":str(tangents[i+1][0].x()), "lefty":str(tangents[i+1][0].y()), 
+                                                    "rightx":str(tangents[i+1][1].x()),"righty":str(tangents[i+1][1].y())})
+
+                            ET.SubElement(path,"h:EndTangent", {"x":str(tangents[-1][0].x()),"y":str(tangents[-1][0].y())})"""
+
+
+            #print(inline.strip())  # .strip() to remove newline characters
+            if "/*DECLARE ALL NODES BY GROUPS MEMBERSHIP*/" in inline:
+                processingNodes=True
+                nodePosX=-200
+                nodePosY=-300
+
+        #content=infile.read()
+        infile.close()
+        #Write to file
+        raw_str = ET.tostring(higraphml)
+        pretty_str = minidom.parseString(raw_str).toprettyxml()
+        with open(self.fileName, "w") as f:
+            f.write(pretty_str)
 
 
     def action_FileClose(self):

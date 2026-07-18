@@ -1,0 +1,758 @@
+/* CONCEPT MAP: NUMBER BASICS, INCLUDING THE NUMBER SYSTEM */
+
+MNUMBERSMAP [type="group", label="Numbers (The Basics)"] {
+  /*DECLARE ALL 'Group' NODES; INDENTED Groups are Subgroups!*/ 
+  /* Note: Groups are formally created using { } notation later in the file*/
+  MNUMS000     [type="group", label="Number Facts & Skills"]
+    MNUMS001   [type="group", label="Basic Facts &\nRepresenations"]
+    MNUMS002   [type="group", label="Decimal Facts"]
+    MNUMS003   [type="group", label="Fraction\nFacts & Skills"]
+      MNUMS004 [type="group", label="Non-negative Fractions\nFacts & Skills"]
+      MNUMS005 [type="group", label="Negative Fractions\nFacts & Skills"]
+    MNUMS006   [type="group", label="Important Types\nOf Numbers"]
+    MNUMS007   [type="group", label="Factors, Multiples &\nPrime Factorisation"]
+      MNUMS008 [type="group", label="Highest Common\nFactor (HCF)"]
+      MNUMS009 [type="group", label="Lowest Common\nMultiple (LCM)"]
+    MNUMS010   [type="group", label="The Number Line,\nComparing Numbers\n& Inequalities"]
+    MNUMS011   [type="group", label="Surds Facts and Skills"]
+      MNUMS012 [type="group", label="Surds with Square &\nCube Roots Only"]
+    MNUMS013   [type="group", label="Appropriate Meaning\nOf Numbers"]
+      
+  MNUMS020   [type="group", label="Sets & Set Notation"]
+    MNUMS021 [type="group", label="Sets"]
+    MNUMS022 [type="group", label="Set Notation"]
+    MNUMS023 [type="group", label="Sets on\nThe Number Line"]
+    
+  MNUMS030     [type="group", label="The Number System"]
+    MNUMS031   [type="group", label="Natural & Whole Numbers"]
+    MNUMS032   [type="group", label="Integers"]
+    MNUMS033   [type="group", label="Rational Numbers"]
+      MNUMS034 [type="group", label="Rational Numbers\nAs Fractions"]
+    MNUMS035   [type="group", label="Irrational Numbers"]
+    MNUMS036   [type="group", label="Real Numbers,\nNon-Reals & Others"]
+    
+  MNUMS040   [type="group", label="Ratio &\nProportion"]
+    MNUMS041 [type="group", label="Ratios"]
+    MNUMS042 [type="group", label="Proportions"]
+    MNUMS043 [type="group", label="Rates"]
+    
+  MNUMS050     [type="group", label="Percentages"]
+  
+  
+  
+  /*DECLARE ALL NODES BY GROUPS MEMBERSHIP*/
+  MNUMS101 [type="concept", label="Numerical\nFactorisation\ne.g. 20 = 4*5"]
+  MNUMS102 [type="concept", label="Find all\nFactors for a\nNumber < 100"]
+  
+  MNUMS110 [type="concept", label="Place Values:\nUnits, Tens, Hundreds, etc.\n(No Decimals Places)"]
+  MNUMS111 [type="fact", label="Numbers up to 100\n(e.g., Count to 100)"]
+  MNUMS112 [type="concept", label="Expand a\nNumber:\n54 = 5*10 + 4*1"]
+  MNUMS113 [type="fact", label="Numbers up to 1000\n(e.g., Count to 1000)"]
+  MNUMS114 [type="concept", label="Order of Numbers up to 100\n(Which is larger: 54 or 23?)"]
+  MNUMS1141 [type="fact", label="'Numerical\nOrder'"]
+  MNUMS1142 [type="fact", label="'Ascending\nOrder'"]
+  MNUMS1143 [type="fact", label="'Descending\nOrder'"]
+  MNUMS115 [type="fact", label="Multiplication\nFacts"]
+  MNUMS116 [type="concept", label="Scientific Notation\n For Numbers >= 1"]
+  MNUMS117 [type="scase", label="Numbers\nBetween 1 & 10:\n2.3 = 2.3 x 10^0"]
+  MNUMS118 [type="concept", label="Scientific Notation\n For Numbers < 1"]
+  MNUMS119 [type="concept", label="Convert Standard\nNotation Numbers into\nScientific Notation"]
+  MNUMS120 [type="concept", label="Convert Scientific\nNotation Numbers into\nStandard Notation"]
+  MNUMS144 [type="concept", label="Order\nLarge Numbers\n(ie., Which is larger:\n42832 or 39008?)"]
+  MNUMS180 [type="concept", label="Order\nScientific Notation\nValues (i.e., Which is larger:\n3.4*10^3 or 5.6*10^2"]
+  MNUMS181 [type="fact", label="'Constant'\nA value which does\nnot change"]
+
+  
+  MNUMS123 [type="fact", label="'Repeating'/'Recurring'\nDecimals & Use of '...'\nvs\n'Terminating' Decimals"]
+  MNUMS124 [type="fact", label="Overbar\noverdot\n(repeating decis)"]
+  MNUMS125 [type="concept", label="Decimal\nPlace Values:\nTenths, Hundredths, etc."]
+  MNUMS126 [type="concept", label="Meaning of\nDecimals, e.g.,\n4.25 = 4.00 & 0.20 & 0.05\n(no recurring\nDecimals)"]
+  MNUMS128 [type="scase", label="4 = 4.0"]
+  MNUMS129 [type="scase", label="4.2 = 4.20000..."]
+  MNUMS122 [type="concept", label="Compare\n2 Non-negative\nDecimal Numbers\n(greater/less than)"]
+  MNUMS121 [type="concept", label="Compare\n2 Negative\nDecimal Numbers\n(greater/less than)"]
+  
+  
+  MNUMS130 [type="fact", label="'Numerator'\n'Denominator'"]
+  MNUMS131 [type="concept", label="Meaning of\nFractions:\nParts of a Whole\n(no Mixed numbers)"]
+  MNUMS132 [type="concept", label="Write a Fraction\nBased on a Picture"]
+  MNUMS133 [type="concept", label="Draw a Picture\nTo Represent\nA Fraction"]
+  MNUMS134 [type="concept", label="Fraction as\na Ratio"]
+  MNUMS135 [type="concept", label="Fraction Bar\nIs Division"]
+  MNUMS136 [type="concept", label="Reducing\nFractions\n(Simplification)"]
+  MNUMS137 [type="concept", label="Proper vs.\nImproper Fractions\n(Distinguish Them)"]
+  MNUMS138 [type="concept", label="Mixed\nNumbers"]
+  MNUMS139 [type="miscon", label="1/a = a\n(e.g. 1/4 = 4)"]
+  MNUMS140 [type="scase", label="a/1 = a\n(e.g. 4/1 = 4))"]
+  MNUMS141 [type="scase", label="a/a = 1\n(e.g. 4/4 = 1)"]
+  MNUMS142 [type="concept", label="Equivalent\nFractions\ne.g., 1/2 same fraction as 2/4"]
+  MNUMS143 [type="fact", label="'Reciprocal'\n(Only a/b -> b/a,\nNot Mult. Inverse)"]
+  
+  MNUMS145 [type="concept", label="Position of\nPositive Fractions\non the Number Line"]
+  MNUMS146 [type="concept", label="Convert Positive\nImproper Fractions\ninto Mixed Numbers"]
+  MNUMS147 [type="concept", label="Convert Positive\nMixed Number\ninto Improper Fractions"]
+  MNUMS148 [type="concept", label="Compare 2\nNon-negative Fractions\n(greater/less than)"]
+
+  MNUMS150 [type="concept", label="Position of\nNegative Fractions\non the Number Line"]
+  MNUMS151 [type="concept", label="Convert Negative\nImproper Fractions\ninto Mixed Numbers"]
+  MNUMS152 [type="concept", label="Convert Negative\nMixed Number\ninto Improper Fractions"]
+  MNUMS153 [type="concept", label="-a/b = (-a)/b = a/(-b)"]
+  MNUMS154 [type="miscon", label="Misunderstand the\nNegative with\nMixed Numbers:\n-2 1/3 = -2 + 1/3 = -5/3"]
+  MNUMS155 [type="concept", label="Compare 2\nNegative Fractions\n(greater/less than)"]
+  
+  
+  MNUMS160 [type="concept", label="Even & Odd"]
+  MNUMS161 [type="fact", label="'Consecutive'\n'Successive'\n(Non-Negative Numbers,\nLetters, etc)"]
+  MNUMS162 [type="concept", label="Square\nNumbers"]
+  MNUMS163 [type="concept", label="Composite\nNumbers"]
+  MNUMS164 [type="concept", label="Prime\nNumbers"]
+  MNUMS165 [type="miscon", label="Zero is\nNot Even"]
+  MNUMS166 [type="concept", label="Cube\nNumbers"]
+  MNUMS167 [type="concept", label="Identify/Know Prime\nNumbers up to 100"]
+  MNUMS1671 [type="fact", label="There are an\nInfinite Number of\nPrime Numbers"]
+  MNUMS1672 [type="scase", label="1 is not a\nPrime Number"]
+
+  MNUMS169 [type="concept", label="Meaning\nOf Multiple"]
+  MNUMS168 [type="concept", label="List Multiples or\nFind a specific Multiple\nFor a Given Number"]
+  MNUMS170 [type="concept", label="Factor"]
+  MNUMS1701 [type="concept", label="Given one\nFactor & a Product,\nFind the other\nFactor"]
+  MNUMS1702 [type="concept", label="Given a Number,\nIdentify 1 Factor"]
+  MNUMS1710 [type="concept", label="Meaning of\nHighest Common Factor;\n'HCF'"]
+  MNUMS171 [type="concept", label="Determine the\nHighest Common Factor\n(HCF) of 2 Whole Nos"]
+  MNUMS1711 [type="scase", label="HCF of\n2 Nums is 1\n(Mutually Prime)"]
+  MNUMS1720 [type="concept", label="Meaning of\nLowest Common Multiple\n'LCM'"]
+  MNUMS172 [type="concept", label="Determine the\nLowest Common Multiple\n(LCM) of 2 Whole Nos"]
+  MNUMS1721 [type="scase", label="LCM of 2 Numbers\nis Equal to one of\nThe Numbers"]
+  MNUMS1722 [type="miscon", label="LCM of 2 Numbers\nIs equal to the Product\nOf the Numbers"]
+  MNUMS173 [type="concept", label="HCF of 3+\Whole Nos"]
+  MNUMS174 [type="concept", label="LCM of 3+\nWhole Nos"]
+  MNUMS175 [type="concept", label="Prime Factorisation\nFor Whole Nos < 100"]
+  MNUMS1751 [type="concept", label="Write Prime\nFactorisation in\nConventional\n(Expo) Form"]
+  MNUMS176 [type="concept", label="Prime Factorisation\nFor Whole Nos > 100"]
+  MNUMS177 [type="concept", label="Prime Factorisation\nFor Negative Numbers"]
+  
+  
+  MNUMS190 [type="concept", label="Basic Structure\nof the Number Line\nOn Non-negative Side\n(Whole Numbers Only)"]
+  MNUMS191 [type="concept", label="Extended Structure\nof the Number Line\nTo the Negative Side\n(Integers Only)"]
+  MNUMS192 [type="concept", label="Meaning of:\n'<', '>' & '≠'\n'Less than'\n'Greater than'\n'Not Equal to'"]
+  MNUMS193 [type="concept", label="Comparing Two\nWhole Numbers\ne.g. 4 < 8"]
+  MNUMS194 [type="concept", label="Comparing A\nNegative Number\nto a Whole Number\ne.g. -4 < 2"]
+  MNUMS195 [type="miscon", label="Ignoring\nNegative Sign:\ne.g. 4 < -8"]
+  MNUMS196 [type="concept", label="Comparing Two\nNegative Numbers\ne.g. -4 > -8"]
+  MNUMS1961 [type="concept", label="Arrange 3+\nNon-Positive Integers\nin Order"]
+  MNUMS197 [type="concept", label="Decimal Breakdown\nOf the Number Line\nFor Non-Negative Side"]
+  MNUMS198 [type="concept", label="Decimal Breakdown\nOf the Number Line\nFor Negative Side"]
+  MNUMS292 [type="concept", label="Meaning\nof Infinity"]
+  MNUMS293 [type="fact", label="Symbol for\nInfinity: ∞"]
+  MNUMS294 [type="concept", label="Negative\nInfinity"]
+  MNUMS297 [type="fact", label="On Number\nLine: Numbers to right\nget Larger, to left\nget Smaller"]
+
+  MNUMS650 [type="concept", label="Scale of a\nNumber Line;\nIdentify scale on a\nNumber Line"]
+  MNUMS651 [type="concept", label="Apply a Scale\nto a Number Line\n(can include Integers)"]
+  MNUMS652 [type="concept", label="Infinite Number\nof Numbers on the\nNumber line"]
+  MNUMS653 [type="miscon", label="Number of Numbers\non Number Line is\nLimited to what\nis Labelled"]
+  MNUMS655 [type="concept", label="Find Distance\nBetween 2 Numbers on the\nNumber Line by Counting,\nWhole Numbers Only"]
+  MNUMS656 [type="concept", label="Find Distance\nBetween 2 Numbers on the\nNumber Line by Counting,\nIntegers Only"]
+  MNUMS657 [type="concept", label="Find Distance\nBetween 2 Numbers on the\nNumber Line by Subtracting,\nWhole Numbers Only"]
+  MNUMS658 [type="concept", label="Find Distance\nBetween 2 Numbers on the\nNumber Line by Subtracting,\nIntegers Only"]
+  MNUMS659 [type="concept", label="Find Distance\nBetween 2 Numbers on the\nNumber Line by Subtracting,\nDecimals > 0 Included"]
+
+  MNUMS670 [type="concept", label="Write a Set\nof Numbers based on\n a Number Line Graph,\nWhole Nos. only"]
+  MNUMS671 [type="concept", label="Graph a Set\nof Whole Numbers on\nThe Number Line"]
+  MNUMS672 [type="concept", label="Write a Set\nof Numbers based on\na Number Line Graph,\nIncluding Integers"]
+  MNUMS673 [type="concept", label="Graph a Set\nof Integers on the\nNumber Line"]
+  MNUMS674 [type="concept", label="Graph a Set\nOf Decis/Fractions\nOn the Number Line"]
+
+
+  MNUMS295 [type="concept", label="Position of Non-negative\nDecimals Numbers on\nthe Number Line"]
+  MNUMS296 [type="concept", label="Position of Negative\nDecimals Numbers on\nthe Number Line"]
+  
+  MNUMS200 [type="concept", label="Meaning of:\n'≤' & '≥'\n'Less than or Equal to'\n'Greater than or Equal to'"]
+  MNUMS203 [type="concept", label="Inequality with\nA Variable and\nAn Integer, e.g.\nx ≤ 10 or x > -2"]
+  MNUMS2031 [type="concept", label="Apply Inequalities\nto Real-World\nScenarios"]
+  MNUMS204 [type="scase", label="x < 0\nMeans x is\nNegative"]
+  MNUMS205 [type="scase", label="x > 0\nMeans x is\nPositive"]
+  MNUMS206 [type="scase", label="x ≠ integer\n(e.g. x < 1/2)"]
+  MNUMS207 [type="fact", label="Open dot: Not Included\nClosed dot: Included"]
+  MNUMS208 [type="concept", label="Representing\nAn Inequality\n(With Integers Only)\nOn the Number Line"]
+  MNUMS209 [type="concept", label="Compound\nInequalities\n(With Integers Only):\n2 < x ≤ 10"]
+  MNUMS240 [type="concept", label="Representing a\nCompound Inequality\n(With Integers Only)\nOn the Number Line"]
+  MNUMS241 [type="miscon", label="2 ≤ 3\nIs False"]
+  MNUMS242 [type="concept", label="Representing a\nInterval (from Interval Notation)\n(With Integers Only) On\nthe Number Line"]
+  MNUMS2430 [type="concept", label="Interpret Inequality\nGraphs (Identify nums\nIncluded/Excluded)"] 
+  MNUMS243 [type="concept", label="Write an Inequality\nBased on a Number\nLine Graph"]
+  MNUMS2431 [type="fact", label="An Inequality Graph\nShows an Infinite\nNumber of numbers"]
+  MNUMS2432 [type="scase", label="Determine if\nInequality Boundary Value(s)\nis Included/Excluded"]
+  MNUMS244 [type="concept", label="Write a\nCompound Inequality\nBased on a Number\nLine Graph"]
+  MNUMS245 [type="concept", label="Write an Interval\nBased on a Number\nLine Graph"]
+
+  MNUMS210 [type="fact", label="'Set'\n'Element'"]
+  MNUMS211 [type="concept", label="Set As\nA Group"]
+  MNUMS212 [type="concept", label="Defintion of\nUnion (∪)"]
+  MNUMS213 [type="concept", label="Subset"]
+  MNUMS214 [type="concept", label="Defintion of\nIntersection (∩)"]
+  
+  MNUMS220 [type="concept", label="Special Symbols\nFor Sets, e.g., ℍ"]
+  MNUMS221 [type="concept", label="\{ \}\n∈"]
+  MNUMS222 [type="concept", label="'Such that'\nSymbol, ':' or '|'"]
+  MNUMS223 [type="concept", label="Basic Set Notation:\nℍ = \{x: x > 5\}\n(No Compound Inequalities)"]
+  MNUMS224 [type="concept", label="Advanced Set Notation:\nℍ = \{x: 0 < x < 10\}\n(e.g., with Compound Inequalities)"]
+  MNUMS225 [type="concept", label="Sets as a List\nof items, e.g.,\n\{ 1 ; 3 ; 5 ; 8 \}"]
+
+  MNUMS230 [type="concept", label="Interpret\nVenn Diagrams of 2\nGroups"]
+  MNUMS231 [type="scase", label="Venn Diagram\nwith no Overlap"]
+  MNUMS232 [type="scase", label="Venn Diagram\nwith one Group\nInside the Other\n(Subset)"]
+  MNUMS233 [type="miscon", label="Circles\n(or whatever shapes)\nare to scale in a\nVenn Diagram"]
+  MNUMS234 [type="concept", label="Interpret\nVenn Diagrams\nof 3 Groups"]
+  MNUMS235 [type="concept", label="Identify\nthe Complete Combo\nof 2 groups on a\nVenn Diagram\n(Union)"]
+  MNUMS236 [type="concept", label="Identify the\nOverlap of 2 groups\non a Venn Diagram\n(Intersection)"]
+  MNUMS2370 [type="concept", label="Fill in Values\nOn an Empty Venn\nDiagram Given Groups"] 
+  MNUMS237 [type="concept", label="Draw a\nVenn Diagram Based on\n2 groups"]
+  MNUMS238 [type="concept", label="Draw a\nVenn Diagram Based on\n3 groups"]
+  MNUMS239a [type="concept", label="ID a value\nIn a Specific region\nOn Venn Diagram\n2 event sets"]
+  MNUMS239b [type="concept", label="Give a Subset of values\nIn a Specific region\nOn Venn Diagram\n3 event sets"]
+  
+  
+  
+  
+  MNUMS298 [type="concept", label="Venn Diagram\nOf The Number\nSystem: ℕ, ℕ₀ & ℤ"]
+  MNUMS299 [type="concept", label="Venn Diagram\nOf The Number\nSystem: ℕ, ℕ₀, ℤ & ℚ"]
+  MNUMS300 [type="concept", label="Complete\nVenn Diagram\nOf The Number\nSystem"]
+  MNUMS301 [type="scase", label="Unique\nPosition of Zero\n(Venn Diagram of\nNumber System)"]
+  
+  MNUMS250 [type="concept", label="Meaning\nof 'Surd'"]
+  MNUMS251 [type="concept", label="Identify Surds\nWith Square Roots\n(Not a Perfect Square)"]
+  MNUMS252 [type="concept", label="Identify Surds\nWith Cube Roots\n(Not a Perfect Cube)"]
+  MNUMS253 [type="concept", label="Estimate\nSquare Root Surds\n(e.g. sqrt(10) ≈ 3,1)"]
+  MNUMS254 [type="concept", label="Estimate\nCube Root Surds\n(e.g. cbrt(10) ≈ 2,2)"]
+  MNUMS255 [type="concept", label="Simplify Square\nRoot Surds, e.g.:\nsqrt(20) = 2*sqrt(5)"]
+  MNUMS256 [type="concept", label="Simplify Cube\nRoot Surds, e.g.:\ncbrt(24) = 2*cbrt(3)"]
+  MNUMS260 [type="concept", label="Estimate & Simplify\nSurds With Roots\nHigher than Cube"]
+
+  MNUMS600 [type="concept", label="Interpret\nA Number in\nContext (State Meaning\nof the Number)"]
+  MNUMS601 [type="concept", label="Judge Reasonableness\nOf a Positive Number\nAccording to Type,\nWhole vs Non-Whole"]
+  MNUMS602 [type="concept", label="Judge Reasonableness\nOf a Number\nAccording to Sign,\nNeg vs Pos"]
+  MNUMS603 [type="concept", label="Judge Reasonableness\nOf a Positive Number\nAccording to Size"]
+  MNUMS604 [type="concept", label="Judge Reasonableness\nOf a Number by Comparing\nTo a Graph"]
+  MNUMS605 [type="concept", label="Judge Reasonableness\nOf a Calculated Answer\nin Any Context"]
+  
+  MNUMS310 [type="fact", label="Symbol ℕ\n'Natural Numbers'"]
+  MNUMS311 [type="concept", label="Definition of\nNatural Nos:\n\{1 ; 2 ; 3 ; ... \}"]
+  MNUMS312 [type="fact", label="Symbol ℕ₀\n'Whole/Counting\nNumbers'"]
+  MNUMS313 [type="concept", label="Definition of\nWhole/Counting Nos:\n\{0 ; 1 ; 2 ; 3 ; ... \}"]
+  MNUMS314 [type="miscon", label="2.0, 5,000, etc. are\nnot Natural or\nWhole Numbers"]
+  MNUMS315 [type="miscon", label="2/1, 6/2, etc. are\nnot Natural or\nWhole Numbers"]
+  MNUMS320 [type="fact", label="Symbol ℤ\n'Integers'"]
+  MNUMS321 [type="concept", label="Definition:\n\{ ... ; -2 ; -1 ; 0 ; 1 ; 2 ; ... \}"]  
+  MNUMS322 [type="miscon", label="-2.0, 5,000, etc. are\nnot Integers"]
+  MNUMS323 [type="miscon", label="-2/1, 10/2, etc. are\nnot Integers"]  
+  MNUMS324 [type="concept", label="Identify\nConsecutive\nIntegers"]
+
+  MNUMS330 [type="fact", label="Symbol ℚ\n'Rational Numbers'"]
+  MNUMS331 [type="fact", label="Rational Numbers\nCan be Written\nAs Fractions or Decimals which\nTerminate or Recur"]
+  MNUMS332 [type="concept", label="Convert Fractions\nInto Decimals"]
+  MNUMS333 [type="concept", label="Convert\nRecurring Decimals\nInto Fractions"]
+  MNUMS334 [type="concept", label="Convert\nTerminating Decimals\nInto Fractions"]
+  MNUMS335 [type="scase", label="Fraction\nconverts to a\nrepeating decimal"]
+  MNUMS336 [type="scase", label="0,999... = 1"]
+  MNUMS337 [type="concept", label="Proof that\n0,999... = 1"]
+  
+  MNUMS340 [type="concept", label="Definition:\n\{ a/b: a,b in ℤ, b != 0 \}"]
+  MNUMS341 [type="scase", label="a/0\n(b=0)"]
+  MNUMS342 [type="scase", label="4/1 = 4\nIs in ℚ"]
+  MNUMS343 [type="miscon", label="8/6 & 4/3\nAre Two Different Elements\n(Not a single number)"]
+  MNUMS344 [type="miscon", label="4 is\nNot in ℚ"]  
+  MNUMS350 [type="fact", label="Symbol ℚ`\n'Irrational Numbers'"]
+  MNUMS351 [type="concept", label="Irrationals:\nDefinition as\nNon-Rationals"]   
+  MNUMS352 [type="fact", label="Irrationals are:\n'Non-Repeating'\n'Non-Recurring'\n'Non-Terminating'\nDecimals"]
+  MNUMS353 [type="scase", label="Irrationals\nwith patterns, e.g.:\n1,23456789101112...\n2,468101214..."]
+  MNUMS354 [type="scase", label="π as an\nIrrational\nNumber"]
+  MNUMS355 [type="scase", label="Root which\ncannot be\nsimplified to\nan integer"]
+
+  MNUMS356 [type="concept", label="Determine\nif a number or\nexpression is rational,\nirrational or neither"]
+  
+  MNUMS360 [type="fact", label="Symbol ℝ\n'Real Numbers'"]
+  MNUMS361 [type="concept", label="Definition:\nAll ℚ and ℚ`"]
+  MNUMS362 [type="scase", label="Non_Real\nOutside of ℝ"]   
+  MNUMS363 [type="scase", label="Undefined\nNot in the Number System"]  
+  
+  MNUMS410 [type="concept", label="Meaning of Ratio\nas a Comparison"]
+  MNUMS411 [type="concept", label="Write Ratios\nAs Fractions"]
+  MNUMS412 [type="concept", label="Non-fraction\nWays to Write Ratios:\n'3:4' & '3 to 4'"]
+  MNUMS413 [type="concept", label="Ratio\nEquivalence:\n2:4 <-> 1:2\n2/4 <-> 1/2"]
+  MNUMS414 [type="concept", label="Part-to-part\nvs.\nPart-to-Whole\nRatios"]
+  MNUMS415 [type="concept", label="Ratios\nFor scales,\ne.g. Scale Models\nBuilding Plans"]
+  MNUMS416 [type="concept", label="Multi-part\nRatios, e.g.\n3:5:2"]
+  MNUMS417 [type="concept", label="Multi-part\nRatio Equivalence, e.g.\n3:5:2 <-> 6:10:4"]
+  
+  MNUMS420 [type="fact", label="Definition\nof Proportion:\nTwo Equal\nRatios"] 
+  MNUMS421 [type="concept", label="Notation:\na/b = c/d\na:b = c:d"] 
+  MNUMS422 [type="concept", label="Solve a\nProportion for\nAn Unknown\n(From any form)"]
+  MNUMS423 [type="concept", label="Meaning of\n'Proportional'\n'In Proportion'"]
+  MNUMS424 [type="concept", label="Proportional\nNumerically"]
+  MNUMS425 [type="concept", label="Proportional\nPictorally\n(similar shapes without\n'similar')"]
+  MNUMS426 [type="concept", label="Write a\nProportion (Equation)\nBased on Proportional\nShapes"]
+  MNUMS427 [type="concept", label="'Direct proportion'\n'Direct Variation'"]
+  MNUMS428 [type="concept", label="'Indirect proportion'\n'Indirect Variation'"]
+  MNUMS429 [type="concept", label="Determine if\nTwo Quantities Vary\nDirectly or Indirectly\nGiven Values"]
+  MNUMS435 [type="concept", label="Proportionality\nConstant"]
+  MNUMS436 [type="fact", label="Symbol for\nProportionality, ∝"]
+  MNUMS437 [type="concept", label="Interpret or\n Write a Statement or\nEquation For a\nDirect Proportionality:\nx ∝ y OR x = ky"]
+  MNUMS438 [type="concept", label="Interpret or\n Write a Statement or\nEquation For a\nIndirect Proportionality:\nx ∝ 1/y OR x = k/y"]
+
+  MNUMS430 [type="fact", label="Rate: a\nRatio Comparing\nTwo Quantities which\nhave Units"]
+  MNUMS431 [type="fact", label="Unit Rate: a\nRate with a\nDenominator Equal\nto 1"]
+  MNUMS432 [type="concept", label="Use a Given\nRate To Calculate\na Final Amount of\nSomething"]
+  MNUMS433 [type="concept", label="Speed as a\n'Rate' or 'Ratio' of\nDistance per Time"]
+  MNUMS434 [type="concept", label="d = rt\nEquation & the\nRelationship between\nThe 3 Quantities"]
+  MNUMS440 [type="concept", label="Use d = rt\nTo find Distance\nGiven Speed & Time"]
+  MNUMS441 [type="concept", label="Use d = rt\n To find Rate\nor Time Given\nOther Values"]
+  MNUMS442 [type="concept", label="Solve Word\nProblems using\nd = rt"]
+
+  MNUMS500 [type="concept", label="'Percent' as\n'per 100', Meaning\nof Percent, &\n Symbol: %"]
+  MNUMS501 [type="concept", label="Convert\nPercentage to\na Raw Fraction\n(out of 100)"]
+  MNUMS502 [type="concept", label="Convert\nPercentage to\na Decimal"]
+  MNUMS504 [type="concept", label="Convert\nFraction to\na Percentage"]
+  MNUMS505 [type="concept", label="Convert\nDecimal to\na Percentage"]
+  MNUMS506 [type="concept", label="Convert\nPercentage to\na Simplified Fraction"]
+  MNUMS507 [type="concept", label="Calculate Percent\nof an Amount, e.g.,\n'40% of 200' via\nFractions:\n'40/100 × 200'"]
+  MNUMS508 [type="concept", label="Calculate Percent\nof an Amount, e.g.,\n'40% of 200' via\nDecimals:\n'0.4 × 200'"]
+  MNUMS512 [type="concept", label="Calculate Percent\nof an Amount, e.g.,\n'40% of 200'\n(any method)"]
+  MNUMS509 [type="concept", label="Determine a\nPercentage, e.g., '18 out\nof 30 is what Percentage?'\nvia Decimals:\n18/30 = 0.6 = 60%"]
+  MNUMS510 [type="concept", label="'Percentage Change'\nAKA\n'Percent Change'"]
+  MNUMS511 [type="concept", label="Determine a\nPercentage, e.g., '18 out\nof 30 is what Percentage?'\nvia Equivalent Fractions:\n18/30 = x/100"]
+  
+  
+  /*ORGANISE THE GROUPS*/ 
+  MNUMS000 {     /*THIS IS THE "Number Facts & Skills" GROUP, WHICH CONTAINS MANY SUBGROUPS*/
+
+  
+    MNUMS001 {  /*THIS IS THE "Basic Facts &\nRepresenations" GROUP*/
+      MNUMS110 -> MNUMS112
+      MNUMS110 -> MNUMS116 -> MNUMS117
+      MNUMS111 -> MNUMS110
+      MNUMS111 -> MNUMS113
+      MNUMS111 -> MNUMS114 -> MNUMS144 -> MNUMS180
+      MNUMS111 -> MNUMS115
+      MNUMS111 -> MNUMS181
+      MNUMS114 -> MNUMS1141 -> MNUMS1142
+      MNUMS1141 -> MNUMS1143
+      MNUMS116 -> MNUMS119
+      MNUMS116 -> MNUMS120
+      MNUMS118 -> MNUMS119
+      MNUMS118 -> MNUMS120
+      MNUMS116 -> MNUMS180
+      MNUMS118 -> MNUMS180
+    }
+  
+    MNUMS002 {   /*THIS IS THE "Decimal Facts" GROUP*/
+      MNUMS126 -> MNUMS123 
+      MNUMS123 -> MNUMS124
+      MNUMS125 -> MNUMS126 -> MNUMS128
+      MNUMS126 -> MNUMS129
+    }
+    MNUMS197 -> MNUMS295
+    MNUMS198 -> MNUMS296
+    
+    MNUMS003 {   /*THIS IS THE "Fraction Facts & Skills" GROUP*/
+      MNUMS131 -> MNUMS130 
+      MNUMS131 -> MNUMS134
+      MNUMS130 -> MNUMS143
+      MNUMS131 -> MNUMS132 -> MNUMS133
+      MNUMS132 -> MNUMS142 -> MNUMS136 -> MNUMS140
+      MNUMS135 -> MNUMS136 -> MNUMS139
+      MNUMS136 -> MNUMS141
+      MNUMS131 -> MNUMS137
+      MNUMS131 -> MNUMS138
+      MNUMS004 {    /*THIS IS THE "Positive Fractions\nFacts & Skills" GROUP*/
+	      MNUMS146
+	      MNUMS147
+      }
+      MNUMS005 {    /*THIS IS THE "Negative Fraction Facts & Skills" GROUP*/
+      	      MNUMS151
+	      MNUMS152
+	      MNUMS153
+	      MNUMS154
+      }
+      
+    MNUMS137 -> MNUMS146 -> MNUMS151
+    MNUMS137 -> MNUMS147 -> MNUMS152 -> MNUMS154
+    MNUMS138 -> MNUMS146
+    MNUMS138 -> MNUMS147
+    MNUMS130 -> MNUMS132
+    }
+    MNUMS133 -> MNUMS145
+    
+    
+    MNUMS006 {    /*THIS IS THE "Important Types\nOf Numbers" GROUP*/
+      MNUMS160 -> MNUMS165
+      MNUMS161
+      MNUMS162
+      MNUMS163 -> MNUMS164 -> MNUMS167 -> MNUMS1671
+      MNUMS167 -> MNUMS1672
+      MNUMS166
+    }
+    
+    MNUMS101 -> MNUMS163
+    MNUMS102 -> MNUMS167
+
+    MNUMS007 {    /*THIS IS THE "Factors, Multiples &\nPrime Factorisation" GROUP*/
+      MNUMS008 {
+	      MNUMS1710 -> MNUMS171 -> MNUMS1711
+	      MNUMS171 -> MNUMS173
+      }	
+      MNUMS009 {
+	      MNUMS1720 -> MNUMS172 -> MNUMS174
+	      MNUMS172 -> MNUMS1721
+        MNUMS172 -> MNUMS1722
+      }
+      MNUMS169 -> MNUMS170 -> MNUMS1701 -> MNUMS1702 -> MNUMS101
+      MNUMS101 -> MNUMS102 -> MNUMS1710
+      MNUMS169 -> MNUMS168 -> MNUMS1720
+      MNUMS175 -> MNUMS176
+      MNUMS175 -> MNUMS177
+      MNUMS175 -> MNUMS1751
+    } 
+    
+    MNUMS010 {
+      MNUMS190 -> MNUMS191 -> MNUMS198
+      MNUMS190 -> MNUMS197 -> MNUMS198
+      MNUMS190 -> MNUMS292 -> MNUMS293
+      MNUMS190 -> MNUMS650 -> MNUMS651
+      MNUMS190 -> MNUMS655 -> MNUMS656 -> MNUMS658
+      MNUMS190 -> MNUMS297 -> MNUMS193
+      MNUMS655 -> MNUMS657 -> MNUMS658
+      MNUMS657 -> MNUMS659
+      MNUMS292 -> MNUMS294
+      MNUMS292 -> MNUMS652 -> MNUMS653
+      MNUMS652 -> MNUMS2431
+      MNUMS191 -> MNUMS294
+      MNUMS192 -> MNUMS193 -> MNUMS194 -> MNUMS195
+      MNUMS191 -> MNUMS194 -> MNUMS196 -> MNUMS1961
+      MNUMS191 -> MNUMS243
+      MNUMS191 -> MNUMS651
+      MNUMS192 -> MNUMS200 -> MALG938 -> MNUMS2031
+      MNUMS203 -> MNUMS209 -> MNUMS244 -> MNUMS240 -> MNUMS242 
+      MNUMS193 -> MALG938
+      MNUMS193 -> MNUMS122 -> MNUMS121
+      MNUMS193 -> MNUMS148
+      MNUMS200 -> MNUMS241
+      MNUMS200 -> MNUMS207
+      MNUMS203 -> MNUMS204
+      MNUMS203 -> MNUMS205
+      MNUMS203 -> MNUMS206
+      MNUMS203 -> MNUMS243 -> MNUMS208
+      MNUMS208 -> MNUMS244 -> MNUMS245 -> MNUMS242
+      MNUMS207 -> MNUMS2430 -> MNUMS243
+      MNUMS2430 -> MNUMS2431
+      MNUMS2430 -> MNUMS2432
+      MNUMS145 -> MNUMS148 -> MNUMS155
+      MNUMS145 -> MNUMS150 -> MNUMS155
+      MNUMS295
+      MNUMS296
+    }
+    
+    MNUMS011 {
+      MNUMS250
+      MNUMS012 {
+        MNUMS251 -> MNUMS252
+        MNUMS251 -> MNUMS253
+        MNUMS252 -> MNUMS254
+        MNUMS251 -> MNUMS255
+        MNUMS252 -> MNUMS256
+      }
+      MNUMS250 -> MNUMS251
+      MNUMS253 -> MNUMS260
+      MNUMS254 -> MNUMS260
+      MNUMS255 -> MNUMS260
+      MNUMS256 -> MNUMS260
+    }
+  
+    MNUMS013 {
+      MNUMS600 -> MNUMS601 -> MNUMS605
+      MNUMS600 -> MNUMS602 -> MNUMS605
+      MNUMS600 -> MNUMS603 -> MNUMS605
+      MNUMS600 -> MNUMS604 -> MNUMS605
+    }
+
+  MNUMS114 -> MNUMS190
+  MNUMS114 -> MNUMS192
+  MNUMS190 -> MNUMS145
+  MNUMS191 -> MNUMS150
+  MNUMS115 -> MNUMS169
+  MNUMS162 -> MNUMS251
+  MNUMS166 -> MNUMS252
+  MNUMS167 -> MNUMS175
+  MNUMS171 -> MNUMS136
+  MNUMS114 -> MNUMS137
+  MNUMS111 -> MNUMS161
+  MNUMS111 -> MNUMS160
+
+  MNUMS114 -> MNUMS600
+  MNUMS114 -> MNUMS1751
+  MNUMS144 -> MNUMS603
+  MNUMS126 -> MNUMS601
+  MNUMS194 -> MNUMS602
+  }
+  
+  MNUMS411 -> MNUMS134
+  MNUMS126 -> MNUMS197 
+  MNUMS126 -> MNUMS118
+  
+  
+
+  
+  MNUMS020 {   /*THIS IS THE "Sets & Set Notation" GROUP*/
+    MNUMS230 -> MNUMS231
+    MNUMS230 -> MNUMS232
+    MNUMS230 -> MNUMS233
+    MNUMS230 -> MNUMS234
+    MNUMS230 -> MNUMS235 -> MNUMS2370 -> MNUMS237
+    MNUMS230 -> MNUMS236 -> MNUMS2370
+    MNUMS234 -> MNUMS238
+    MNUMS237 -> MNUMS238
+    MNUMS230 -> MNUMS239a -> MNUMS239b
+    MNUMS212 -> MNUMS239a
+    MNUMS214 -> MNUMS239a
+    MNUMS213 -> MNUMS239b
+    
+    MNUMS021 {    /*THIS IS THE "Sets" GROUP*/
+      MNUMS210 -> MNUMS211 -> MNUMS212
+      MNUMS211 -> MNUMS214
+      MNUMS211 -> MNUMS213
+    }
+      
+    MNUMS022 {    /*THIS IS THE "Set Notation" GROUP*/
+      MNUMS220 -> MNUMS223 -> MNUMS224
+      MNUMS221 -> MNUMS223
+      MNUMS221 -> MNUMS225
+      MNUMS222 -> MNUMS223
+    }
+
+    MNUMS023 {    /*THIS IS THE "Sets on the Number Line" GROUP*/
+      MNUMS670 -> MNUMS671 -> MNUMS673 -> MNUMS674 
+      MNUMS670 -> MNUMS672 -> MNUMS673
+    }
+
+    MNUMS211 -> MNUMS022
+    MNUMS235 -> MNUMS212
+    MNUMS236 -> MNUMS214 
+    MNUMS232 -> MNUMS213
+    MNUMS225 -> MNUMS670
+  }    
+  
+  MNUMS030 { /*THIS IS THE "The Number System" GROUP*/
+    MNUMS298 -> MNUMS299 -> MNUMS300
+    MNUMS298 -> MNUMS301
+    
+    MNUMS031 {    /*THIS IS THE "Natural & Whole Numbers" GROUP*/
+      MNUMS311 ->MNUMS310
+      MNUMS311 -> MNUMS314
+      MNUMS311 -> MNUMS315
+      MNUMS313 -> MNUMS312
+      MNUMS313 -> MNUMS314
+      MNUMS313 -> MNUMS315
+    }
+    MNUMS032 {    /*THIS IS THE ""Integers GROUP*/
+      MNUMS321 -> MNUMS320
+      MNUMS321 -> MNUMS322
+      MNUMS321 -> MNUMS323
+      MNUMS321 -> MNUMS324
+    }
+    MNUMS033 {    /*THIS IS THE "Rational Numbers" GROUP*/
+    
+      MNUMS330
+      MNUMS332 -> MNUMS331
+      MNUMS332 -> MNUMS335
+      MNUMS333 -> MNUMS331
+      MNUMS333 -> MNUMS336 -> MNUMS337
+      MNUMS334 -> MNUMS331
+      MNUMS340 -> MNUMS331
+      
+      MNUMS034 {    /*THIS IS THE "Rational Numbers\nAs Fractions" GROUP*/
+	      MNUMS340 -> MNUMS341
+	      MNUMS340 -> MNUMS342
+	      MNUMS340 -> MNUMS343
+	      MNUMS340 -> MNUMS344
+      }	
+      
+    }
+    MNUMS320 -> MNUMS340
+    MNUMS321 -> MNUMS340
+    
+    MNUMS035 {    /*THIS IS THE ""Irrational Numbers GROUP*/
+      MNUMS350
+      MNUMS351 -> MNUMS352 -> MNUMS353
+      MNUMS352 -> MNUMS354
+      MNUMS352 -> MNUMS355
+    }
+    MNUMS330 -> MNUMS350
+    MNUMS331 -> MNUMS351
+    MNUMS036 {    /*THIS IS THE "Real Numbers,\nNon-Reals & Others" GROUP*/
+      MNUMS360
+      MNUMS361 -> MNUMS362
+      MNUMS361 -> MNUMS363
+    }
+    MNUMS351 -> MNUMS361
+    MNUMS340 -> MNUMS361
+    MNUMS352 -> MNUMS356
+  }
+  MNUMS220 -> MNUMS360
+  
+  MNUMS234 -> MNUMS298 
+  MNUMS213 -> MNUMS298
+  MNUMS031 -> MNUMS298
+  MNUMS032 -> MNUMS298
+  MNUMS033 -> MNUMS299
+  MNUMS035 -> MNUMS300
+  MNUMS036 -> MNUMS300
+  MNUMS136 -> MNUMS343
+  
+  MNUMS220 -> MNUMS310
+  MNUMS220 -> MNUMS312
+  MNUMS220 -> MNUMS320
+  MNUMS220 -> MNUMS330
+  MNUMS220 -> MNUMS350
+  MNUMS225 -> MNUMS311
+  MNUMS225 -> MNUMS313
+  MNUMS225 -> MNUMS321
+  
+  MNUMS222 -> MNUMS340
+  MNUMS125 -> MNUMS334
+  
+  MNUMS123 -> MNUMS333
+  MNUMS123 -> MNUMS352
+  MNUMS134 -> MNUMS330
+  
+  MNUMS671 -> MNUMS208
+  MNUMS190 -> MNUMS670
+  MNUMS191 -> MNUMS672
+  MNUMS296 -> MNUMS674
+  MNUMS150 -> MNUMS674
+
+
+  MNUMS040 {
+    MNUMS041 {
+      MNUMS410 -> MNUMS411 -> MNUMS413 -> MNUMS417
+      MNUMS410 -> MNUMS412 -> MNUMS413
+      MNUMS410 -> MNUMS414
+      MNUMS411 -> MNUMS415
+      MNUMS412 -> MNUMS415
+      MNUMS412 -> MNUMS416 -> MNUMS417 
+    }
+    MNUMS042 {
+      MNUMS420 -> MNUMS421 -> MNUMS422
+      MNUMS421 -> MNUMS426
+      MNUMS420 -> MNUMS423 -> MNUMS424  -> MNUMS429
+      MNUMS423 -> MNUMS425 -> MNUMS426
+      MNUMS423 -> MNUMS427 -> MNUMS429
+      MNUMS423 -> MNUMS428 -> MNUMS429
+      MNUMS423 -> MNUMS435 -> MNUMS437
+      MNUMS423 -> MNUMS436 -> MNUMS437
+      MNUMS424 -> MNUMS437
+      MNUMS424 -> MNUMS438
+      MNUMS427 -> MNUMS437
+      MNUMS428 -> MNUMS438
+      MNUMS435 -> MNUMS438
+      MNUMS436 -> MNUMS438
+    }
+     MNUMS043 {
+        MNUMS430 -> MNUMS431
+        MNUMS430 -> MNUMS432 -> MNUMS434 -> MNUMS440 -> MNUMS441 -> MNUMS442
+        MNUMS430 -> MNUMS433 -> MNUMS434
+    }
+  MNUMS413 -> MNUMS420
+  MNUMS411 -> MNUMS430
+  }
+
+  MNUMS171 -> MNUMS413
+  MNUMS411 -> MNUMS330
+  MNUMS203 -> MNUMS223
+  MNUMS209 -> MNUMS224
+  
+  MNUMS050 {
+    MNUMS500 -> MNUMS501
+    MNUMS500 -> MNUMS502 -> MNUMS508 -> MNUMS512
+    MNUMS501 -> MNUMS506 -> MNUMS504 -> MNUMS510
+    MNUMS502 -> MNUMS505
+    MNUMS501 -> MNUMS507 -> MNUMS512
+    MNUMS505 -> MNUMS509
+    MNUMS504 -> MNUMS511
+  }
+  MNUMS111 -> MNUMS050
+  MNUMS111 -> MNUMS131
+  MNUMS126 -> MNUMS502
+  MNUMS131 -> MNUMS501
+  MNUMS136 -> MNUMS506
+  MNUMS332 -> MNUMS509
+  MNUMS111 -> MNUMS410
+  MNUMS295 -> MNUMS122
+  MNUMS296 -> MNUMS121
+  MNUMS161 -> MNUMS324
+  MNUMS122 -> MNUMS180
+  MNUMS181 -> MNUMS435
+}
+  
+  
+  /*DEPENDENCIES LINKED TO ONE OF THE OTHER BIG MATHS GROUPS*/
+  MOPS111 /*[type="concept", label="Subtraction of Two\nNon-Negative Numbers\n(and symbol '-')"]*/ -> MNUMS657
+  MOPS113 /*[type="concept", label="Division of Two\nNon-Negative Numbers"]*/ -> MNUMS135
+  MOPS1143 /*[type="concept", label="Convert between Exponential Form & Expanded Form, Whole-Number Base"]*/ -> MNUMS1751
+  MOPS115 /*[type="concept", label="Roots of\nNon-Negative Numbers\n(No Surds)"]*/ -> MNUMS250
+  MOPS1151 /*[type="concept", label="Compare Square\n& Cube Roots to\nWhole Nums based on\nSquare/Cube Numbers"]*/ -> MNUMS253
+  MOPS1151 -> MNUMS254
+  MOPS119 /*[type="concept", label="Negative\nExponents\n(Whole No. Bases Only)"]*/ -> MNUMS118
+  MOPS122 /*[type="fact", label="'Square Root'"]*/ -> MNUMS251
+  MOPS127 /*[type="fact", label="'Cube Root'"]*/ -> MNUMS252
+  MOPS128 /*[type="scase", label="'Square' as\nExponent\nof 2"]*/ -> MNUMS162
+  MOPS129 /*[type="scase", label="'Cube' as\nExponent\nof 3"]*/ -> MNUMS166
+  MOPS123 /*[type="scase", label="Division\nBy Zero\n'Undefined'"]*/ -> MNUMS363
+  MOPS124 /*[type="scase", label="a^0 = 1\n(a != 0)"]*/ -> MNUMS117
+  MOPS150 /*[type="concept", label="Addition &\nSubtraction with\nNon-Negative Decimals"]*/ -> MNUMS333
+  MOPS150 -> MNUMS659
+  MOPS160 /*[type="concept", label="Addition &\nSubtraction\nwith Integers\n(Double Signs)"]*/ -> MNUMS658
+  MOPS161 /*[type="concept", label="Multiplication &\nDivision with\nIntegers\n(Sign Rules)"]*/ -> MNUMS153
+  MOPS161 -> MNUMS177
+  MOPS164 /*[type="scase", label="Non-real"]*/ -> MNUMS362
+
+
+  MNUMS126 -> MOPS005 /*[type="group", label="Operations with\nNon-Negative Decimals"]*/
+  MNUMS110 -> MOPS103 /*[type="concept", label="Rounding to\nN, Z, 'tens', etc."]*/
+  MNUMS125 -> MOPS102 /*[type="concept", label="Rounding to\nDecimal Places"]*/
+  MNUMS143 -> MOPS143 /*[type="concept", label="Division with\nNon-Negative Fractions\n(Mult. by Reciprocal)"]*/
+  MOPS130 /*[type="concept", label="Fourth &\nHigher order\nRoots"]*/ -> MNUMS260
+  MOPS113 /*[type="concept", label="Division of Two\nNon-Negative Numbers"]*/ -> MNUMS332
+  MOPS141 /*[type="concept", label="Multiplication with\nNon-Negative Fractions"]*/ -> MNUMS507
+  MOPS151 /*[type="concept", label="Multiplication with\nNon-Negative Decimals"]*/ -> MNUMS508
+  
+  MNUMS162 -> MALG117 /*[type="scase", label="DOTs\n a²-b²"]*/
+  MNUMS166 -> MALG119 /*[type="scase", label="DOC   a³-b³"]*/
+  MNUMS166 -> MALG121 /*[type="scase", label="Sum Of\ntwo cubes:\na³ + b³"] */
+  MNUMS171 -> MALG175 /*[type="concept", label=" HCF of two\nmonomials"]*/
+  MNUMS173 -> MALG276 /*[type="concept", label=" HCF of\nthree or more\nmonomials"]*/
+  MNUMS181 -> MALG104 /*[type="concept", label="Constant in a term"]*/
+
+  MNUMS181 -> MCALC109 /*[type="scase", label="Limit of a\nConstant, e.g.,\nlim x -> 1 of 10"]*/
+
+  MNUMS181 -> MPAT181 /*[type="fact", label="Second\nDifference is Constant\nfor Quadratic\nPatterns"]*/
+
+  MALG299 /*[type="fact", label="'Variable'\nA letter representing\na number"]*/ -> MNUMS203
+  MALG418 /*[type="concept", label="Linear ax+B = c \n no fractions\nSolve with inverses"]*/ -> MNUMS333
+  MALG133 /*[type="concept", label="Linear w 2 terms"]*/ -> MNUMS333
+  MNUMS203 -> MALG917 /*[type="group", label="Solve linear inequalities"]*/
+  MNUMS209 -> MALG913 /*[type="fact", label="Interval Notation:\n'(' -excl , '['-incl" ]*/
+  MNUMS293 -> MALG916 /*[type="scase", label="Interval with\ninfinity"]*/
+  MNUMS294 -> MALG916 
+  MALG912 /*[type="fact", label="Interval notation\n(-2;5]"]*/ -> MNUMS245
+  MALG418 /*[type="concept", label="Linear ax+B = c \n no fractions\nSolve with inverses"]*/ -> MNUMS422
+  MALG603 /*[type="concept", label="Substitute\nwith N numbers"]*/ -> MNUMS440
+
+  MNUMS181 -> MCP128 /*[type="concept", label="Constant\nGraph"]*/  
+  MCP108 /*[type="concept", label="Plot Points\nOn the Cartesian Plane\nGiven (x ; y)"]*/ -> MNUMS604
+
+  MCG302 /*[type="fact", label="Pi = 3.1415269..."]*/ -> MNUMS354
+  
+  PMK401 /*[type="fact",label="Definition of Speed"]*/ -> MNUMS433
+  "OUTUnits" [type="todo", label="LINK IN:\nUnits (basic)\nidea)"] -> MNUMS430
+  "OUTPHYS001" [type="todo", label="FROM PHYSICS:\ndistance"] -> MNUMS655
+  
