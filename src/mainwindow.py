@@ -4073,7 +4073,6 @@ class MainWindow(QMainWindow):
             
             # Choose the restrictive scaling factor to preserve aspect ratio
             scale = min(scaleX, scaleY)
-            print(f"mw print {scale=} {scaleX=}, {scaleY}")
             # If the items are smaller than the page (scale > 1.0), force 100% scale (1.0)
             # If they are larger than the page, 'scale' remains < 1.0 to shrink them down to fit.
             if scale > 1.0:
