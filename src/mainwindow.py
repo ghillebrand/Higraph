@@ -14,6 +14,7 @@ import copy
 import math
 import re
 import traceback 
+import networkx as nx
 
 #For file handling and clipboard
 import xml.etree.ElementTree as ET
@@ -2356,6 +2357,101 @@ class CodeExecDialog(QDialog):
 
         self.outputEdit.setPlainText(output)
 
+class ForceDirectedLayout():
+    # https://thesnowyxgit.github.io/CodeSight/graphs/fruchterman-reingold
+    def __init__(self, Scene=None):
+        self.Scene=Scene
+        self.cRep=100
+        self.cSpring=2
+        self.el=NODESIZE*2
+        self.maxIterations=5
+        self.iterations=0
+        self.nodePositionsDic={}
+        self.nodesConnected={}
+        for item in Scene.items():
+            if type(item)==VisNodeItem:
+                self.nodePositionsDic[item.nodeNum]=[item.scenePos().x(), item.scenePos().y()]
+                self.nodesConnected[item.nodeNum]=[]
+                for edge in item.startsEdges:
+                    for node in edge.endNodes:
+                        self.nodesConnected[item.nodeNum].append(node[0].nodeNum)
+                for edge in item.endsEdges:
+                    for node in edge.startNodes:
+                        self.nodesConnected[item.nodeNum].append(node[0].nodeNum)
+                print("connected", item.nodeNum, self.nodesConnected[item.nodeNum])
+        self.nodePositions=[*self.nodePositionsDic]  #returns the keys in a list
+
+    def calculateRepulsiveForce(self, u, v) -> list:
+        uVector=self.nodePositionsDic[u]
+        vVector=self.nodePositionsDic[v]
+        directionVector=[a - b for a, b in zip(vVector, uVector)]
+        print("direction", directionVector,)
+        magnitudeDirectionVector = math.sqrt(sum(x**2 for x in directionVector))
+        normalizedVectorVU = [x / magnitudeDirectionVector for x in directionVector]
+        #magnitudeVU=math.sqrt(sum(x**2 for x in directionVector))
+        magnitudeVU=magnitudeDirectionVector
+        print("magnitude", magnitudeVU)
+        a=self.cRep/(magnitudeVU*magnitudeVU)
+        repulsiveForce = [x * a for x in normalizedVectorVU]
+        return(repulsiveForce)
+     
+
+    def calculateAttractiveForce(self, u, v) -> list:
+        uVector=self.nodePositionsDic[u]
+        vVector=self.nodePositionsDic[v]
+        dirVector=[x - y for x, y in zip(uVector, vVector)]
+        magnitudeUV = math.sqrt(sum(x**2 for x in dirVector))
+        normalizedVectorUV = [x / magnitudeUV for x in dirVector]
+        attractiveForce=[x * self.cSpring*math.log(magnitudeUV/self.el) for x in normalizedVectorUV]
+        return(attractiveForce)
+
+    def calculateForce(self, u) -> list:
+        forces=[0,0]
+        k=self.nodePositions.index(u)
+        #for v in self.nodePositionsDic.keys():
+        for v in self.nodePositions[k+1:]:
+            if u != v:
+                repulse=self.calculateRepulsiveForce(u,v)
+                print("repulse",u,v,repulse)
+                forces=[x + y for x, y in zip(forces, repulse)]
+                #nodeV=self.Scene.findItemByIdx(v)
+                #for edge in nodeV.startsEdges:
+                #    if edge in nodeU.endsEdges:
+                if v in self.nodesConnected[u]:
+                    attract=self.calculateAttractiveForce(u,v)
+                    print("attract",u,v,attract)
+                    forces=[x + y for x, y in zip(forces, attract)]
+
+        return(forces)
+
+
+    def calculateForces(self):
+        newForceDic={}
+        #for u in self.nodePositionsDic.keys():
+        for u in self.nodePositions:
+            newForceDic[u]=self.calculateForce(u)
+        return(newForceDic)
+
+    def processOneStep(self):
+        print("In one step", self.iterations)
+        newForceDic=self.calculateForces()
+        maxForceMagnitude=0
+        for u in self.nodePositionsDic.keys():
+            self.nodePositionsDic[u]=[x+y for x,y in zip(self.nodePositionsDic[u], newForceDic[u])]
+        self.iterations+=1
+        
+        #// Calculate the maximum force magnitude across all vertices
+        
+        #// Return the maximum force magnitude   
+
+    def processAllSteps(self, reps):
+        self.iterations=0
+        maxForceMagnitude=0
+        for i in range(0, reps):
+            self.processOneStep()
+        #// Repeat until the maximum force magnitude is below the threshold or until the maximum iterations is reached:
+        #//     Calculate the maximum force magnitude using processOneStep
+        return(self.nodePositionsDic)
 
 def zoomToFitWithMargin(view, margin=0.05):
     """ chatGpt. Pass in a QGraphicsView and a margin multiplier  """
@@ -2532,6 +2628,9 @@ class MainWindow(QMainWindow):
         self.actionFileImport = QAction("Import test", self)
         self.actionFileImport.triggered.connect(self.action_FileImport)
         self.ui.menuTools.addAction(self.actionFileImport)
+        self.actionOptimise = QAction("Omptimise Layout", self)
+        self.actionOptimise.triggered.connect(self.action_Optimise)
+        self.ui.menuTools.addAction(self.actionOptimise)
 
         """
         self.selectColourDefaultsAction = QAction("Select Colours", self)
@@ -4046,7 +4145,6 @@ class MainWindow(QMainWindow):
             self.action_FileSave()
                  
     def action_FileImport(self):
-        print("runs")
         outFIleName="NumbersBasic1.higraphml"
         nodeDic={}
         #if self.fileName:
@@ -4187,37 +4285,6 @@ class MainWindow(QMainWindow):
                                     startNodeName=endNodeName
                                     restOfLine=restOfLine[restOfLine.find(">")+2:]
 
-            #Add the edgelines
-            """eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
-            eLL.append(comment)
-
-            for eL in self.edgeLines:
-                #edgeLine id=<eLineID> source=<nID> sourceport=<portID> target=<nID> targetport=<portID>
-                eLelt =  ET.SubElement(eLL,"edgeLine", id=str(eL.lineNum), 
-                                    source=str(hStarts[eL.lineNum][0]), sourceport=str(hStarts[eL.lineNum][1]), 
-                                    target=str(hEnds[eL.lineNum][0]), targetport=str(hEnds[eL.lineNum][1])  )
-                #Add in the points   
-                points = eL._p
-                if len(points) > 0:
-                    path = ET.SubElement(eLelt,"y:Path ") #No ports yet
-                    pathElts = []
-                    for p in points[1:-1]:
-                        pathElts.append(ET.SubElement(path, "y:Point", {"x":str(p.x()),"y":str(p.y())}))
-                    #Tangents 
-                    if self._polyEdge == SPLINE:
-                        tangents = eL._t
-
-                        if len(tangents) > 0:
-                            ET.SubElement(path,"h:StartTangent", {"x":str(tangents[0][1].x()),
-                                                                "y":str(tangents[0][1].y())})
-                            for i,pElt in enumerate(pathElts):
-                                ET.SubElement(pElt,"h:Tangent",
-                                                    {"leftx":str(tangents[i+1][0].x()), "lefty":str(tangents[i+1][0].y()), 
-                                                    "rightx":str(tangents[i+1][1].x()),"righty":str(tangents[i+1][1].y())})
-
-                            ET.SubElement(path,"h:EndTangent", {"x":str(tangents[-1][0].x()),"y":str(tangents[-1][0].y())})"""
-
-
             #print(inline.strip())  # .strip() to remove newline characters
             if "/*DECLARE ALL NODES BY GROUPS MEMBERSHIP*/" in inline:
                 processingNodes=True
@@ -4231,6 +4298,34 @@ class MainWindow(QMainWindow):
         pretty_str = minidom.parseString(raw_str).toprettyxml()
         with open(self.fileName, "w") as f:
             f.write(pretty_str)
+
+    def action_Optimise(self):
+        print("Running")
+        G = nx.Graph()
+        edges=[]
+        nodes={}
+        for item in self.Scene.items():
+            if type(item) is VisHyperEdgeItem:
+                #working with edges just having one start and end node
+                edges.append((item.startNodes[0][0].nodeNum, item.endNodes[0][0].nodeNum))
+            elif type(item) is VisNodeItem:
+                nodes[item.nodeNum]=(item.scenePos().x(), item.scenePos().y())
+
+        G.add_edges_from(edges)
+
+        newPositions = nx.spring_layout(G, k=NODESIZE*4, pos=nodes, iterations=50, scale=None)
+        for nodeId in [*newPositions]:
+            node=self.Scene.findItemByIdx(nodeId)
+            node.setPos(QPointF(newPositions[nodeId][0],newPositions[nodeId][1]))
+        """optimiser=ForceDirectedLayout(self.Scene)
+        newPositions=optimiser.processAllSteps(5)
+        print("Returned and updating", len(newPositions.keys()))
+        for nodeItem in newPositions.keys():
+            node=self.Scene.findItemByIdx(nodeItem)
+            newX=node.scenePos().x()+newPositions[nodeItem][0]
+            newY=node.scenePos().y()+newPositions[nodeItem][1]
+            node.setPos(QPointF(newX,newY))"""
+        print("Done")
 
 
     def action_FileClose(self):

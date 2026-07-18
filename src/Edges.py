@@ -72,13 +72,17 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Hyper Step 1: just make this work with 1 elt lists of start/ end
         if type(sItem) is list:
             self.startNodes = sItem
-        else: # file import
+        elif type(sItem) is tuple: 
+            self.startNodes = [sItem]
+        else:   # file import and no port
             startPort = sItem.createPort(sItem.scenePos())         
             self.startNodes = []
             self.startNodes.append((sItem, startPort))
 
         if type(eItem) is list:
             self.endNodes = eItem
+        elif type(eItem) is tuple: 
+            self.endNodes = [eItem]      
         else: # file import
             endPort = eItem.createPort(eItem.scenePos())
             self.endNodes=[]
