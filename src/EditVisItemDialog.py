@@ -550,7 +550,9 @@ class MetadataEditorWidget(QWidget):
             display = dispItem.checkState() == Qt.Checked if dispItem else True
             visItem.metadata[key] = value
             visItem.metadataAttributes[key] = {'display':display}
-        if 'description' in visItem.metadata and visItem.metadata['description'] != visItem.blobDescription.toPlainText():
+        if 'description' in visItem.metadata and \
+                visItem.data(KEY_ROLE) == ROLE_BLOB and \
+                visItem.metadata['description'] != visItem.blobDescription.toPlainText():
             visItem.blobDescription.setPlainText(visItem.metadata['description'])
         if visItem.metadata['name'] != visItem.nameText.toPlainText():
             visItem.nameText.setPlainText(visItem.metadata['name'])            
