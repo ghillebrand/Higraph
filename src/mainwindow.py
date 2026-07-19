@@ -106,12 +106,11 @@ class graphModel(QStandardItemModel):
         return [f"{self.item(i).text()}::{self.item(i).data(KEY_INDEX)} ({self.item(i).data(KEY_ROLE)})" \
             for i in range(self.rowCount())]
 
-    def addGMNode(self,posn,nameP="",id=None):
+    def addGMNode(self, posn, nameP=None, id=None):
         """Make a Graph Model NODE item, return the item and the index number (item,n) """
 
         # Make the coreGraph node
         n = self.Gr.addNode(name=nameP, id=id)
-        self.Gr.nodeD[n].metadata.update({'name': nameP})
 
         #Make the Qt Item with text n
         item = QStandardItem(str(n))
@@ -2984,9 +2983,7 @@ class MainWindow(QMainWindow):
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
                     nodeName = nodeLable.text.strip()
-                    #Check for empty names, which are allowed
-                    if nodeName == '': 
-                        nodeName = None
+
                     nodeMetadataAttributes['name'] = {}
                     if newID:
                         #Make copied names clear with suffix
