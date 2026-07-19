@@ -40,8 +40,8 @@ class EditVisNodeItemDialog(QDialog):
         form.addRow("Children:", self.childrenLabel)
 
         # Start Edges Index (read-only)
-        startsEdgestr = ",".join([str(ed.edgeNum) for ed in visNodeItem.startsEdges])
-        endsEdgestr = ",".join([str(ed.edgeNum) for ed in visNodeItem.endsEdges])
+        startsEdgestr = ",".join([ed.nameText.toPlainText()+f" ({ed.edgeNum})" for ed in visNodeItem.startsEdges])
+        endsEdgestr = ",".join([ed.nameText.toPlainText()+f" ({ed.edgeNum})" for ed in visNodeItem.endsEdges])
 
         self.startsEdgesLabel = QLabel(startsEdgestr)
         self.endsEdgesLabel = QLabel(endsEdgestr)
@@ -50,8 +50,9 @@ class EditVisNodeItemDialog(QDialog):
 
         #Add in the metadata
         #update metadata for description from textbox
-        if 'description' in self.visNodeItem.metadata \
-                and self.visNodeItem.metadata['description']!=self.visNodeItem.blobDescription.toPlainText():
+        if 'description' in self.visNodeItem.metadata  and\
+                self.visNodeItem.data(KEY_ROLE) == ROLE_BLOB and \
+                self.visNodeItem.metadata['description']!=self.visNodeItem.blobDescription.toPlainText():
             self.visNodeItem.metadata['description']=self.visNodeItem.blobDescription.toPlainText()
         #self.visNodeItem.metadata['name']=self.visNodeItem.nameText.toPlainText()
         self.nodeMetadata = self.visNodeItem.metadata
