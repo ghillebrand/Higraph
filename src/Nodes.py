@@ -229,15 +229,18 @@ class VisNodeItem(QGraphicsObject):
 
         #WHERE it must appear
         self.setPos(posn)
-        if nameP != None:
-            defName = nameP
-        else:
-            defName = ""
+
         #Create an abstract node, and keep the index as well
-        self.node,self.nodeNum = self.model.addGMNode(posn,nameP=defName,id=id)
+        self.node,self.nodeNum = self.model.addGMNode(posn,nameP=nameP,id=id)
 
         #Additional graph-relevant node data
         self.metadata = self.model.Gr.nodeD[self.nodeNum].metadata
+
+        if nameP == None:
+            self.metadata.update({'name': f"n{self.nodeNum}"})
+        else:
+            self.metadata.update({'name': nameP})
+
         #How to display each metadata item
         #"deep copy" the dict
         for k,v in metadata.items():
@@ -626,7 +629,7 @@ class VisBlobItem(VisNodeItem):
     BR = 2
     BL = 3
 
-    def __init__(self,posn, model, treeWidget, parent=None, nameP ="", id=None,
+    def __init__(self,posn, model, treeWidget, parent=None, nameP =None, id=None,
                     metadata={}, metadataAttributes={}, ports = [],
                     height=NODESIZE, width=NODESIZE,xRadius=0, yRadius=0, radMode = Qt.AbsoluteSize, parents=[],children=[]): 
         """  posn is the topleft, size is width and height, Radii are corner curves
