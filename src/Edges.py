@@ -171,6 +171,9 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.metaDisplay = TransparentTextItem("", parent=self)
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsSelectable, False)
         self.metaDisplay.setFlag(QGraphicsItem.ItemIsFocusable, False)
+        metaDisplayFont = QFont()
+        metaDisplayFont.setItalic(True)
+        self.metaDisplay.setFont(metaDisplayFont)
         #populate it
         self.setMetadataDisplay()
 
@@ -444,11 +447,15 @@ class VisHyperEdgeItem(QGraphicsObject):
         
     def setMetadataDisplay(self):
         metaStr = ''
+        toolTipStr = ''
         for k,v in self.metadata.items():
-            if k != 'name':
+            if k != 'name':                
                 if self.metadataAttributes[k]['display']:
                     metaStr += "\n"+k +" : "+v
+                else:
+                    toolTipStr += k +" : "+v+"\n"
         self.metaDisplay.setPlainText(metaStr)
+        self.setToolTip(toolTipStr[:-1])
 
     def boundingRect(self):
         """ edges boundingRect """

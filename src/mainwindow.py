@@ -113,12 +113,7 @@ class graphModel(QStandardItemModel):
 
         # Make the coreGraph node
         n = self.Gr.addNode(name=nameP, id=id)
-        #self.Gr.nodeD[n].metadata.update({'name':nameP })
-        #Default name is node number
-        if nameP=="":
-            self.Gr.nodeD[n].metadata.update({'name': f"n{n}"})
-        else:
-            self.Gr.nodeD[n].metadata.update({'name': nameP})
+        self.Gr.nodeD[n].metadata.update({'name': nameP})
 
         #Make the Qt Item with text n
         item = QStandardItem(str(n))
@@ -1729,7 +1724,7 @@ class createNodeCommand(QUndoCommand):
         #self.listWidget=listWidget
         self.treeWidget=treeWidget
         self.nodeNum = 0 #placeholder
-        self.nodeName="" #placeholder
+        self.nodeName=None #placeholder
         self.nType=nType
         if nType==ROLE_BLOB:
             self.width=width
@@ -3094,6 +3089,9 @@ class MainWindow(QMainWindow):
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
                     nodeName = nodeLable.text.strip()
+                    #Check for empty names, which are allowed
+                    if nodeName == '': 
+                        nodeName = None
                     nodeMetadataAttributes['name'] = {}
                     if newID:
                         #Make copied names clear
@@ -4350,7 +4348,7 @@ class MainWindow(QMainWindow):
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setRenderHint(QPainter.TextAntialiasing)
             
-            # 2. Get the EXACT bounding box of just your items
+            # 2. Get the bounding box of just your items
             # (If your canvas is empty, fallback to the base sceneRect to prevent errors)
             sourceRect = self.Scene.itemsBoundingRect()
             if sourceRect.isEmpty():
@@ -4358,42 +4356,30 @@ class MainWindow(QMainWindow):
                 
             # 3. Get the physical printable area of the page
             targetRect = QRectF(printer.pageRect(QPrinter.DevicePixel))
+
+            # Cap Zoom Scale at 100% max ---
+            # Calculate the scale factor required to fit the page on both axes
+            scaleX = targetRect.width() / sourceRect.width()
+            scaleY = targetRect.height() / sourceRect.height()
             
-            # 4. Render directly! 
+            # Choose the restrictive scaling factor to preserve aspect ratio
+            scale = min(scaleX, scaleY)
+            # If the items are smaller than the page (scale > 1.0), force 100% scale (1.0)
+            # If they are larger than the page, 'scale' remains < 1.0 to shrink them down to fit.
+            if scale > 1.0:
+                scale = 1.0
+                
+            # Calculate the exact dimensions the printout should occupy on the page
+            printWidth = sourceRect.width() * scale
+            printHeight = sourceRect.height() * scale
+            
+            # Center the 100% scale (or downscaled) output inside the printable page bounds
+            left = targetRect.left() + (targetRect.width() - printWidth) / 2.0
+            top = targetRect.top() + (targetRect.height() - printHeight) / 2.0
+            finalTargetRect = QRectF(left, top, printWidth, printHeight)
+
             # Passing targetRect and sourceRect tells Qt to scale and center automatically
-            self.Scene.render(painter, targetRect, sourceRect)
-            
-            painter.end()
-
-
-        if False: #printDialog.exec() == QPrintDialog.Accepted:
-            #hatGPT. Slot to print the entire QGraphicsScene.
-            painter = QPainter(printer)
-            
-            # Get the full scene rectangle
-            #sceneRect = self.Scene.sceneRect()
-            sceneRect = self.Scene.itemsBoundingRect() 
-            #print(f"actPrint {sceneRect =}, {self.Scene.itemsBoundingRect()=}")
-
-            # Compute scale to fit scene onto the page
-            #TODO: Apply a human brain to this scaling - this gives weird results.
-            pageRect = printer.pageRect(QPrinter.DevicePixel).toRect()
-            #print(f"actPrint {pageRect =}")
-            xScale = pageRect.width() / sceneRect.width()
-            yScale = pageRect.height() / sceneRect.height()
-            scale = min(xScale, yScale)
-            #print(f"{scale =}")
-            #scale = scale/5 #needs tweaking
-
-            # Center the scene on the page
-            #xOffset = (pageRect.width() - sceneRect.width() * scale) / 2
-            #yOffset = (pageRect.height() - sceneRect.height() * scale) / 2
-
-            #painter.translate(xOffset, yOffset)
-            painter.scale(scale, scale)
-        
-            # Render the scene
-            self.Scene.render(painter)
+            self.Scene.render(painter, finalTargetRect, sourceRect)
 
             painter.end()
 
@@ -4438,7 +4424,7 @@ class MainWindow(QMainWindow):
         generator.setFileName(filePath)
         #TODO: bounding box still not snug, but workable.
         generator.setSize(self.Scene.sceneRect().size().toSize())  #itemsBoundingRect().size().toSize())
-
+        #generator.setSize(self.Scene.itemsBoundingRect().size().toSize())
         #TODO: Why is there a lot of white space at the top left?
         generator.setTitle(f"{APP_NAME} Export")
 

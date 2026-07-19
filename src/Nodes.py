@@ -135,16 +135,13 @@ class BlobTextItem(QGraphicsTextItem):
             self.yOffset=0
         self.setPos(0, self.yOffset)
         #self.setPos(x, y)
-        # 1. Enable editing and selection
         self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
         self.document().contentsChanged.connect(self.textChanged)
         #self.setOpenExternalLinks(True)
-        # 2. Appearance tweaks
         self.setDefaultTextColor(QColor("#2c3e50"))
         self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
         #self.setTextWidth(width)
         self.setTextSize(parent)
-        # 3. Make the item movable within the scene
         self.setFlag(QGraphicsTextItem.ItemIsMovable)
         #self.setFlag(QGraphicsTextItem.ItemIsSelectable)
     
@@ -218,7 +215,7 @@ class VisNodeItem(QGraphicsObject):
     #Create the signal for editing
     requestEdit = Signal(object)  
 
-    def __init__(self,posn,model, treeWidget, parent=None, nameP ="", id=None,
+    def __init__(self,posn,model, treeWidget, parent=None, nameP = None, id=None,
                     metadata={}, metadataAttributes={},ports = [], parents=[]):
         #print(f"In VisNodeItem {posn =}")
         super().__init__(parent)
@@ -232,9 +229,12 @@ class VisNodeItem(QGraphicsObject):
 
         #WHERE it must appear
         self.setPos(posn)
-
+        if nameP != None:
+            defName = nameP
+        else:
+            defName = ""
         #Create an abstract node, and keep the index as well
-        self.node,self.nodeNum = self.model.addGMNode(posn,nameP=nameP,id=id)
+        self.node,self.nodeNum = self.model.addGMNode(posn,nameP=defName,id=id)
 
         #Additional graph-relevant node data
         self.metadata = self.model.Gr.nodeD[self.nodeNum].metadata
@@ -379,11 +379,15 @@ class VisNodeItem(QGraphicsObject):
         """
         #TODO: This needs to be called by itemChange somehow.
         metaStr = ''
+        toolTipStr = ''
         for k,v in self.metadata.items():
+            if k != 'name' and not self.metadataAttributes[k]['display']:
+                toolTipStr += k +":"+v+"\n"
             if k != 'name' and k != 'description':
                 if self.metadataAttributes[k]['display']:
                     metaStr += "\n"+k +":"+v
         self.metaDisplay.setPlainText(metaStr)
+        self.setToolTip(toolTipStr[:-1])
 
     def boundingRect(self):
 
