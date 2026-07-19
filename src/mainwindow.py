@@ -108,7 +108,6 @@ class graphModel(QStandardItemModel):
 
     def addGMNode(self,posn,nameP="",id=None):
         """Make a Graph Model NODE item, return the item and the index number (item,n) """
-        #NB: The order in the lists (Gr, listView and model MUST BE MAINTAINED.
 
         # Make the coreGraph node
         n = self.Gr.addNode(name=nameP, id=id)
@@ -2299,9 +2298,9 @@ class CodeExecDialog(QDialog):
         mainLayout = QVBoxLayout()
         inputLabel = QLabel("Python Code ('S' is scene, 'M' is model, 'G' is Graph):")
         self.codeEdit = QTextEdit()
-        self.codeEdit.setText("#Examples - No. of Scene items: \nresult = str(len(S.items()))\n" +
+        self.codeEdit.setText("#Examples - No. of Scene items: \nresult = 'Scene items:' + str(len(S.items()))\n" +
                                 "nC = len(G.nodeD)\neC = len(G.edgeD)\n" +
-                                "result += f'\\n Node Count: {nC}, Edge Count {eC}\\n{G.IDsUsed=} , {G.nextID=}' " +
+                                "result += f'\\n Node Count: {nC}, Edge Count {eC}\\n'" +
                                 "#Directed or not:\nresult += f'\\n{M.isDigraph == False =}\\n' \n" +
                                 "#Graph Model contents:\nresult += f'{M.getModelItems() =}\\n' \n"+
                                 "#Abstract Graph G:\nresult += f'{G =}'")
@@ -2979,10 +2978,8 @@ class MainWindow(QMainWindow):
                 
                 #Get ports
                 for nextP, p in enumerate(shapeNode.iter("port")):
-                    #print(p.attrib)
                     tmpP = port(QPointF(float(p.get("x")),float(p.get("y"))), t=float(p.get("t")), index = int(p.get("name"))  ) 
                     nodePorts.append(tmpP)
-                #print(f"{id=},{nextP=}")
 
                 nodeLable = shapeNode.find("NodeLabel")
                 if nodeLable is not None:
@@ -2992,8 +2989,12 @@ class MainWindow(QMainWindow):
                         nodeName = None
                     nodeMetadataAttributes['name'] = {}
                     if newID:
-                        #Make copied names clear
-                        nodeName=nodeName+prefs.copySuffix
+                        #Make copied names clear with suffix
+                        #nodeName=nodeName+prefs.copySuffix
+                        if nodeName:
+                            nodeName=nodeName+prefs.copySuffix
+                        else:
+                            nodeName=prefs.copySuffix
                     for nodeNameAttribs in nodeLable.iter("metadataAttribute"):
                         #nodeMetadataAttributes['name'] = {nodeNameAttribs.attrib.get("key"): nodeNameAttribs.attrib.get("value")}
                         #Deal with Boolean for display (This is why you should use the proper key types!)

@@ -154,7 +154,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         # chatGPT's suggestion to avoid shape() not selecting it - TransparentTextItem
         #self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
         containerName = NameTextItem(self.metadata['name'],self)
-        self.nameText=containerName
+        self.nameText = containerName
         
         #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
@@ -295,7 +295,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.bRect = self.bRect.united(edgeLine.boundingRect())
 
         #Selection and editing vars:
-        #TODO: will need a list of st & end handles
         #edit Handles
         self.stH = None
         self.endH = None
@@ -459,13 +458,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         for edgeLine in self.edgeLines[1:]:
             bRect = bRect.united(edgeLine.boundingRect().normalized()).normalized()
         return bRect        
-        
-        """
-        self.bRect = self.edgeLines[0].boundingRect().normalized()
-        for edgeLine in self.edgeLines[1:]:
-            self.bRect = self.bRect.united(edgeLine.boundingRect().normalized()).normalized()
-        return self.bRect
-        """
 
     def paint(self, painter, option, widget=None):
         #print(f" Paint {self.edgeNum =}")
