@@ -3645,6 +3645,7 @@ class MainWindow(QMainWindow):
 
         #Load the .higraphml file as a string
         higraphStr = ""
+        self.encoding="default"
         try:
             with open(self.fileName, "r") as graphFile:
                 higraphStr = graphFile.read()
@@ -3652,6 +3653,12 @@ class MainWindow(QMainWindow):
         except FileNotFoundError:
             ErrorMessage(f"Error, file not found: {graphFile}")
             raise FileNotFoundError(f"Error, file not found: {graphFile}")
+        except UnicodeDecodeError:
+            graphFile.close()
+            with open(self.fileName, "r", encoding='utf-8') as graphFile:
+                higraphStr = graphFile.read()
+            self.encoding='utf-8'
+
 
 
         # Preprocessing of file for ease of parsing
@@ -4106,13 +4113,20 @@ class MainWindow(QMainWindow):
             #Write to file
             raw_str = ET.tostring(higraphml)
             pretty_str = minidom.parseString(raw_str).toprettyxml()
-            if autoSaveName:
-                with open(autoSaveName, "w") as f:
-                    f.write(pretty_str)
-            else:
-                with open(self.fileName, "w") as f:
-                    f.write(pretty_str)
-
+            if self.encoding=='default':
+                if autoSaveName:
+                    with open(autoSaveName, "w") as f:
+                        f.write(pretty_str)
+                else:
+                    with open(self.fileName, "w") as f:
+                        f.write(pretty_str)
+            elif self.encoding=='utf-8':
+                if autoSaveName:
+                    with open(autoSaveName, "w", encoding=self.encoding) as f:
+                        f.write(pretty_str)
+                else:
+                    with open(self.fileName, "w", encoding=self.encoding) as f:
+                        f.write(pretty_str)
             # Mark current state as saved
             #Unless it was an autosave
             if not autoSaveName:
@@ -4143,7 +4157,7 @@ class MainWindow(QMainWindow):
             self.action_FileSave()
                  
     def action_FileImport(self):
-        outFIleName="NumbersBasic1.higraphml"
+        outFIleName="NumbersBasictest.higraphml"
         nodeDic={}
         #if self.fileName:
             #Temporary - update filetype (Not sure this will work with any directory info
@@ -4214,11 +4228,13 @@ class MainWindow(QMainWindow):
                     processingNodes=False
                 else:
                     inline = inline.strip()
+                    inlineText = bytes(inline, 'utf-8').decode('utf-8')
+                    inline = inlineText.strip()
                     if inline != "":
                         nodeName=inline[0:inline.find(" ")]
                         nodeType=inline[inline.find("type=")+6: inline.find(",")-1]
                         nodeDesc=inline[inline.find("label=")+7: -2]
-                        nodeDesc.replace("'\n'",' ')
+                        nodeDesc.replace('\n',' ')
                         # create xml
                         nodeId=getGUID()
                         xmlNode = ET.Element("node", id=str(nodeId))
@@ -4236,7 +4252,9 @@ class MainWindow(QMainWindow):
                         metaAtt2 = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":"yOffset","value":str(-NODESIZE*2)})
                         metaEl  = ET.SubElement(xmlNode, "h:metadata", {"key":"type","value":str(nodeType)})
                         metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
-                        #print("Name", nodeName, "Type", nodeType, "Label", nodeLabel)
+                        metaE2  = ET.SubElement(xmlNode, "h:metadata", {"key":"description","value":str(nodeDesc)})
+                        metaAtt = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"display","value":str(False)})
+                        print("Name", nodeName, "Type", nodeType, "Label", nodeDesc)
                         graph.append(xmlNode)
                         nodePosX+=NODESIZE*6
                         if nodePosX > 200:
@@ -4292,9 +4310,9 @@ class MainWindow(QMainWindow):
         #content=infile.read()
         infile.close()
         #Write to file
-        raw_str = ET.tostring(higraphml)
+        raw_str = ET.tostring(higraphml, encoding="unicode")
         pretty_str = minidom.parseString(raw_str).toprettyxml()
-        with open(self.fileName, "w") as f:
+        with open(self.fileName, "w", encoding="utf-8") as f:
             f.write(pretty_str)
 
     def action_Optimise(self):
