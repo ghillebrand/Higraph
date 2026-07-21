@@ -155,6 +155,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         #self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
         containerName = NameTextItem(self.metadata['name'],self)
         self.nameText = containerName
+        #Put the name on top of any other text to be able to move
+        self.nameText.setZValue(5000)
         
         #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
@@ -465,16 +467,17 @@ class VisHyperEdgeItem(QGraphicsObject):
         #painter.drawRect(self.bRect)
         #use the textBRect to adjust exact display position on the line (can be a [0,1] multiplier)
         ##change textItem to nameText
-        self.nameText.setVisible(self.metadataAttributes['name']['display'])
-        textBRect = self.nameText.boundingRect()
+        #self.nameText.setVisible(self.metadataAttributes['name']['display'])
+        #textBRect = self.nameText.boundingRect()
+        
         #HACK: Putting the text at the middle of the first segment. Where should it go?
-        #  This code should be in itemChanged, not paint
-        midPt = self.edgeLines[0].textPos(0.4)
+        #  This code should be in itemChanged,-- but iC is never called?
+        #midPt = self.edgeLines[0].textPos(0.4)
         #painter.drawEllipse(midPt,2,2)
-        textWid = self.nameText.textWidth()
-        self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
-                             midPt.y() - textBRect.height()/2 + NODESIZE)
-        self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+        #textWid = self.nameText.textWidth()
+        #self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
+        #                     midPt.y() - textBRect.height()/2 + NODESIZE)
+        #self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
         #painter.drawRect(self.textItem.boundingRect())
        
         if self.isSelected():
@@ -491,12 +494,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.metaDisplay.setDefaultTextColor(self._baseColor)
 
         #TODO: Move this to itemChanged?
-
-
-        #self.edgeLine.paint(painter,option,widget)
-
-        #painter.drawText(QPoint(0,0),self.textItem.toPlainText())
-        #painter.drawText(tPos,self.dispText) #textItem.toPlainText())
 
         #Debug - draw the shape path
         #painter.drawPath(self.shape())
@@ -566,9 +563,10 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #Select the children
                 for child in self.childItems():
                     child.setSelected(value)
-
+                
             # Change the display text - what would the <change> be? Using ToolTip as the closest
             #TODO: Fix the `change` value to something more meanigful
+            #  >>> There is a  `textChanged` method...
             ##if change == QGraphicsItem.GraphicsItemChange.ItemToolTipChange:
             ##    self.nameText.setPlainText(self.model.Gr.edgeD[self.edgeNum].metadata['name'] )
         
@@ -721,7 +719,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #print("source", source)
                 pass
 
-
         #Draw the arrow/ end shape
         #Currently, endshapes have no managed relationship to the end nodes - they are just allocated out
         if len(self.endShape) > 0:
@@ -742,6 +739,27 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #If needed move all the polyline points - updatePath handles this.
         edgeLine.updatePath()
+        #now place the text based on the new line
+        self.updateTextPos()
+    
+    def updateTextPos(self,newPos:QPointF | None = None):
+        """
+            newPos == None will recalculate pos based on the new spline shape
+            else: recalculate the pos params
+        """
+        #Update the position of the text
+        print(f"VHE updateTextPos")
+        self.nameText.setVisible(self.metadataAttributes['name']['display'])
+        textBRect = self.nameText.boundingRect()
+        if newPos is None:
+            print(f"VHE - no recalc")
+            #midPt = self.edgeLines[0].textPos(0.4)
+            #textWid = self.nameText.textWidth()
+            #self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
+            #                     midPt.y() - textBRect.height()/2 + NODESIZE)
+            #self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+        else:
+            print(f"VHE - recalc textpos")
 
     def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):
         """ Adds another segment to a hyperedge, between `newNode` and the segment `edgeLine`, 

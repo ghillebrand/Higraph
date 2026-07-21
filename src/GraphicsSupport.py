@@ -100,6 +100,7 @@ class NameTextItem(QGraphicsTextItem):
         self.setPos(-NODESIZE, -NODESIZE) #edge position set in hyperedge paint (or itemchange)
         self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
         self.document().contentsChanged.connect(self.textChanged)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setDefaultTextColor(QColor('black'))
         self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
         #self.setTextWidth(width)
@@ -124,6 +125,17 @@ class NameTextItem(QGraphicsTextItem):
         for twItem in twItems:
             twItem.setText(0,newName)
         return
+
+    def itemChange(self, change, value):
+        # Fired AFTER the item position has updated
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            # 'value' is the new QPointF position in local parent space
+            #
+            if self.parentItem() and self.parentItem().data(KEY_ROLE) == ROLE_EDGE:
+                print(f"edge Text item moved to: {value}")
+                self.parentItem().updateTextPos(value)
+            
+        return super().itemChange(change, value)
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
