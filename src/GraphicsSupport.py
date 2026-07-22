@@ -132,7 +132,7 @@ class NameTextItem(QGraphicsTextItem):
             # 'value' is the new QPointF position in local parent space
             #
             if self.parentItem() and self.parentItem().data(KEY_ROLE) == ROLE_EDGE:
-                print(f"edge Text item moved to: {value}")
+                #print(f"edge Text item moved to: {value}")
                 self.parentItem().updateTextPos(value)
             
         return super().itemChange(change, value)

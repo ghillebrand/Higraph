@@ -157,7 +157,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.nameText = containerName
         #Put the name on top of any other text to be able to move
         self.nameText.setZValue(5000)
-        
+        #Default pos set _after_ edgeLine creation
+
         #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
 
@@ -295,6 +296,16 @@ class VisHyperEdgeItem(QGraphicsObject):
             edgeLine.setData(KEY_ROLE,ROLE_POLYLINE)
             edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
             self.bRect = self.bRect.united(edgeLine.boundingRect())
+
+        #Initial default pos - will be updated on 1st updateLine()
+        # posTR is position in (t,r) coords t = param along spline, r = radius (perp distance) from spline)
+        #The edgeLine which the text pos is calulated from
+        self.nameText.edgeLine = edgeLines[0]
+        #How far along the line (parameter, t)
+        self.nameText.posT = 0.4
+        #How far from the line (perp distance which is radius)
+        self.nameText.posR = NODESIZE
+        
 
         #Selection and editing vars:
         #edit Handles
@@ -747,19 +758,34 @@ class VisHyperEdgeItem(QGraphicsObject):
             newPos == None will recalculate pos based on the new spline shape
             else: recalculate the pos params
         """
+        #Avoid funky call looping/ ...
+        if self.suppressItemChange:
+            return
+
         #Update the position of the text
-        print(f"VHE updateTextPos")
         self.nameText.setVisible(self.metadataAttributes['name']['display'])
-        textBRect = self.nameText.boundingRect()
-        if newPos is None:
-            print(f"VHE - no recalc")
-            #midPt = self.edgeLines[0].textPos(0.4)
-            #textWid = self.nameText.textWidth()
-            #self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
-            #                     midPt.y() - textBRect.height()/2 + NODESIZE)
-            #self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
-        else:
-            print(f"VHE - recalc textpos")
+        #TODO: Only update if visiblility changed
+        if self.metadataAttributes['name']['display']:
+            textBRect = self.nameText.boundingRect()
+            # nameText has not moved relative to edges - recalc (x,y) based on line geom
+            if newPos is None:
+                #print(f"VHE - no recalc")
+                #midPt = self.edgeLines[0].textPos(0.4)
+                textPt = self.nameText.edgeLine.textPos(self.nameText.posT)
+                textWid = self.nameText.textWidth()
+                self.nameText.setPos(textPt.x() - textBRect.width()/2  + NODESIZE, \
+                                    textPt.y() - textBRect.height()/2 + NODESIZE)
+                self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+            else: #relative position _has_ changed.
+                print(f"VHE - recalc textpos to {newPos}")
+                #Find the closest edgeLine to `newPos`
+
+                #use the `addPoint` closest code
+                #NOTE: Straight line != Spline
+                #??? Refactor `addPoint` to have a `closestPointTo`
+
+                #Find the distance from 
+
 
     def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):
         """ Adds another segment to a hyperedge, between `newNode` and the segment `edgeLine`, 
