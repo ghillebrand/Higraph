@@ -38,7 +38,7 @@ from PySide6.QtWidgets import ( QAbstractItemView, QApplication, QWidget, QMainW
 from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
-            QPainterPath, QPainterPathStroker, QCursor, QTextCursor, QUndoStack, QUndoCommand,
+            QPainterPath, QPainterPathStroker, QCursor, QTextCursor, QUndoStack, QUndoCommand, QPalette,
             QGuiApplication, QImage, QPixmap)
 
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
@@ -4787,6 +4787,14 @@ if __name__ == "__main__":
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
     
+    #Make sure this will work on "dark Mode" themes
+    # This is a patch to force the colour scheme
+    app.setStyle("Fusion")
+    lightModeWindowColor=QtGui.QColor.fromRgbF(0.941176, 0.941176, 0.941176, 1.000000)
+    lightModeButtonColor=QtGui.QColor.fromRgbF(0.941176, 0.941176, 0.941176, 1.000000)
+    newPalette = QPalette(lightModeButtonColor, lightModeWindowColor)
+    app.setPalette(newPalette)
+
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
     app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icons\\icon2.ico')))  #'qtpyGraphEdit.ico')))
     MainWin = MainWindow()
