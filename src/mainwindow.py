@@ -2544,7 +2544,8 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, lambda: self.action_FileOpen(inFile = startFile))
         else:
             self.fileName = ""
-
+        self.encoding ='default'
+        
         #Start the autosave process (after the window is drawn, otherwise reloads don't draw)
         QTimer.singleShot(1, lambda: setattr(self,"autoSave", autoSaver(self.action_FileSave, self.action_FileOpen, interval = prefs.AutoSaveMins, cycleSize = prefs.AutoSaveCycleSize, statusBar=self.statusBar) ))
 
@@ -2916,6 +2917,7 @@ class MainWindow(QMainWindow):
         #clear window vars
         self.setWindowTitle("[untitled] " + APP_NAME + " " + APP_VERSION )
         self.fileName = ""
+        self.encoding ='default'
 
         #clear model
         self.model.clear()
@@ -3541,7 +3543,11 @@ class MainWindow(QMainWindow):
         except FileNotFoundError:
             ErrorMessage(f"Error, file not found: {graphFile}")
             raise FileNotFoundError(f"Error, file not found: {graphFile}")
-
+        except UnicodeDecodeError:
+            graphFile.close()
+            with open(self.fileName, "r", encoding='utf-8') as graphFile:
+                higraphStr = graphFile.read()
+            self.encoding='utf-8'
 
         # Preprocessing of file for ease of parsing
         #TODO: Check how this will mess with multiline metadata
@@ -3707,8 +3713,7 @@ class MainWindow(QMainWindow):
         self.fileName = fileName
 
         #Load the .graphml file as a string
-        #Key elements from 
-        #fileReading: yEd xml_to_simple_string()
+        self.encoding="default"
         graphStr = ""
         try:
             with open(fileName, "r") as graphFile:
@@ -3717,7 +3722,11 @@ class MainWindow(QMainWindow):
         except FileNotFoundError:
             ErrorMessage(f"Error, file not found: {graphFile}")
             raise FileNotFoundError(f"Error, file not found: {graphFile}")
-
+        except UnicodeDecodeError:
+            graphFile.close()
+            with open(self.fileName, "r", encoding='utf-8') as graphFile:
+                higraphStr = graphFile.read()
+            self.encoding='utf-8'
 
         # Preprocessing of file for ease of parsing
         #TODO: Check how this will mess with multiline metadata
@@ -3995,12 +4004,20 @@ class MainWindow(QMainWindow):
             #Write to file
             raw_str = ET.tostring(higraphml)
             pretty_str = minidom.parseString(raw_str).toprettyxml()
-            if autoSaveName:
-                with open(autoSaveName, "w") as f:
-                    f.write(pretty_str)
-            else:
-                with open(self.fileName, "w") as f:
-                    f.write(pretty_str)
+            if self.encoding=='default':
+                if autoSaveName:
+                    with open(autoSaveName, "w") as f:
+                        f.write(pretty_str)
+                else:
+                    with open(self.fileName, "w") as f:
+                        f.write(pretty_str)
+            elif self.encoding=='utf-8':
+                if autoSaveName:
+                    with open(autoSaveName, "w", encoding=self.encoding) as f:
+                        f.write(pretty_str)
+                else:
+                    with open(self.fileName, "w", encoding=self.encoding) as f:
+                        f.write(pretty_str)
 
             # Mark current state as saved
             #Unless it was an autosave
