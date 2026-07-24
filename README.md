@@ -53,7 +53,7 @@ For other platforms:
 - ideally, create a virtual enviroment  `python -m venv C:\path\to\new\virtual\environment` (and make it active with `scripts\activate`)
 - install PySide with `pip install PySide6`
 - copy all the code from here (`git clone https://github.com/ghillebrand/Higraph.git`) or download the zip from the [Releases](https://github.com/ghillebrand/Higraph/releases) page.
-- Run `python mainwindow.py`
+- Run `python src\mainwindow.py`
 
 
 
