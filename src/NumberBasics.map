@@ -493,7 +493,7 @@ MNUMBERSMAP [type="group", label="Numbers (The Basics)"] {
   MNUMS144 -> MNUMS603
   MNUMS126 -> MNUMS601
   MNUMS194 -> MNUMS602
-  }
+  
   
   MNUMS411 -> MNUMS134
   MNUMS126 -> MNUMS197 

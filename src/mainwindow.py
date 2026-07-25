@@ -40,7 +40,7 @@ from PySide6 import (QtCore, QtWidgets, QtGui )
 from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter,
             QTransform, QFont, QFontMetrics, QAction, QCursor, QPen,QBrush,
             QPainterPath, QPainterPathStroker, QCursor, QTextCursor, QUndoStack, QUndoCommand,
-            QGuiApplication, QImage, QPixmap)
+            QGuiApplication, QImage, QPixmap, QStyleHints, QPalette)
 
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
             QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent,
@@ -2646,6 +2646,7 @@ class MainWindow(QMainWindow):
             QTimer.singleShot(0, lambda: self.action_FileOpen(inFile = startFile))
         else:
             self.fileName = ""
+        self.encoding = "default"
 
         #Start the autosave process (after the window is drawn, otherwise reloads don't draw)
         QTimer.singleShot(1, lambda: setattr(self,"autoSave", autoSaver(self.action_FileSave, self.action_FileOpen, interval = prefs.AutoSaveMins, cycleSize = prefs.AutoSaveCycleSize, statusBar=self.statusBar) ))
@@ -3018,7 +3019,7 @@ class MainWindow(QMainWindow):
         #clear window vars
         self.setWindowTitle("[untitled] " + APP_NAME + " " + APP_VERSION )
         self.fileName = ""
-
+        self.encoding = "default"
         #clear model
         self.model.clear()
         self.ui.treeWidget.clear()
@@ -4154,13 +4155,10 @@ class MainWindow(QMainWindow):
             self.setWindowTitle(str(os.path.basename(self.fileName)) + " " + APP_NAME + " " + APP_VERSION)
             self.action_FileSave()
                  
-    def action_FileImport(self):
-        outFIleName="NumbersBasictest.higraphml"
+    def OLDaction_FileImport(self):
+        outFIleName="NumbersBasic3.higraphml"
         nodeDic={}
-        #if self.fileName:
-            #Temporary - update filetype (Not sure this will work with any directory info
-        #    if self.fileName.split(".")[-1] == "graphml":
-        #        self.fileName = ".".join(self.fileName.split('.')[:-1]+['higraphml'])
+
         self.fileName=outFIleName
         if self.fileName:
             #Generate the graph header info
@@ -4312,6 +4310,336 @@ class MainWindow(QMainWindow):
         pretty_str = minidom.parseString(raw_str).toprettyxml()
         with open(self.fileName, "w", encoding="utf-8") as f:
             f.write(pretty_str)
+
+    def action_FileImport(self):
+        #outFIleName="Numeracy.higraphml"
+        outFIleName="NumberBasics6.higraphml"
+        self.fileName=outFIleName
+        if self.fileName:
+            #Generate the graph header info
+            # Creating XML structure in Graphml format
+            # Reference: yEdxFileOnly: construct_graphml
+            higraphml = ET.Element("higraphml")
+
+            #Allow some form of backwards compatibility
+            higraphml.set("version", APP_VERSION)
+
+            #Store the current scene view bounding rect to restore
+            vC = self.ui.graphicsView.viewport().rect()
+            vC = self.ui.graphicsView.mapToScene(vC)
+
+            viewCoords = ET.SubElement(higraphml, "saveViewCoords" )
+
+            viewCoords.set("x",str(vC[0].x()) )
+            viewCoords.set("y",str(vC[1].y()) )
+            viewCoords.set("width" ,str(vC[2].x() - vC[0].x()) )
+            viewCoords.set("height",str(vC[3].y() - vC[1].y()) )
+
+            graphml = ET.SubElement(higraphml, "graphml", xmlns="http://graphml.graphdrawing.org/xmlns")
+            graphml.set("xmlns:java", "http://www.yworks.com/xml/yfiles-common/1.0/java")
+            graphml.set("xmlns:sys", "http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0")
+            graphml.set("xmlns:x", "http://www.yworks.com/xml/yfiles-common/markup/2.0")
+            graphml.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+            graphml.set("xmlns:y", "http://www.yworks.com/xml/graphml")
+            graphml.set("xmlns:yed", "http://www.yworks.com/xml/yed/3")
+            graphml.set("xmlns:h", "http://www.isijingi.co.za/higraph")
+            graphml.set(
+                "xsi:schemaLocation",
+                "http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd",
+            )
+
+            # Adding some implementation specific keys for identifying urls, descriptions
+            nodeKey = ET.SubElement(graphml, "key", id="data_node")
+            nodeKey.set("for", "node")
+            nodeKey.set("yfiles.type", "nodegraphics")
+
+            blobKey = ET.SubElement(graphml, "key", id="data_blob")
+            blobKey.set("for", "blob")
+            blobKey.set("higraph.type", "blobgraphics")
+
+            edgeKey = ET.SubElement(graphml, "key", id="data_edge")
+            edgeKey.set("for", "edge")
+            edgeKey.set("yfiles.type", "edgegraphics")
+
+            # Graph node containing actual objects
+            if self.model.isDigraph:
+                directed = 'directed'
+            else:
+                directed = 'undirected'
+            graph = ET.SubElement(graphml, "graph", edgedefault=directed, id="G")
+
+
+        #open input file
+        #infile=open("Numeracy.map", "r",encoding="utf-8")
+        infile=open("NumberBasics.map", "r",encoding="utf-8")
+        nodeXrefDic={}
+        nodeInfoDic={}
+        blobXrefDic={}
+        blobInfoDic={}
+        vertexStyle='blob'
+        processingGroups=False
+        processingNodes=False
+        processingEdges=False
+        for inline in infile:
+            if processingGroups==True:
+                if "/*DECLARE ALL NODES BY GROUPS MEMBERSHIP*/" in inline:
+                #if "/*DECLARE ALL NODES CLUSTERED BY GROUP*/" in inline:
+                    print("processing nodes")
+                    processingNodes=True
+                    processingGroups=False
+                else:
+                    inline = inline.strip()
+                    if inline != "":
+                        groupName=inline[0:inline.find(" ")]
+                        print("processing group name", groupName)
+                        groupType=inline[inline.find("type=")+6: inline.find(",")-1]
+                        groupDesc=inline[inline.find("label=")+7: -2]
+                        #groupDesc.replace('\\n',' ')
+                        newdesc=""
+                        skip=False
+                        for i in range(0, len(groupDesc)):
+                            if not skip:
+                                if groupDesc[i]=='\\' and groupDesc[i+1]=='n':
+                                    skip=True
+                                else:
+                                    newdesc+=groupDesc[i]
+                            else:
+                                newdesc+=' '
+                                skip=False
+                        groupDesc=newdesc
+                        #create a blob for the group
+                        blobId=getGUID()
+                        blobXrefDic[groupName]=blobId   #needed for edge start and end nodes
+                        blobInfoDic[blobId]={'name':groupName, 'type':groupType, 'desc':groupDesc}
+
+            if processingNodes==True:
+                if "/*ORGANISE THE GROUPS*/" in inline:
+                    print("processing edges")
+                    processingEdges=True
+                    processingNodes=False
+                    maxBlobHeight=0
+                    hierarchy=[]
+                    optimiseEdges={}
+                    optimiseNodes={}
+                    level=-1
+                    blobPosx=-1000
+                    blobPosy=-1000
+                else:
+                    inline = inline.strip()
+                    if inline != "":
+                        nodeName=inline[0:inline.find(" ")]
+                        nodeType=inline[inline.find("type=")+6: inline.find(",")-1]
+                        nodeDesc=inline[inline.find("label=")+7: -2]
+                        #nodeDesc.replace('\n',' ')
+                        newdesc=""
+                        skip=False
+                        for i in range(0, len(nodeDesc)):
+                            if not skip:
+                                if nodeDesc[i]=='\\' and nodeDesc[i+1]=='n':
+                                    skip=True
+                                else:
+                                    newdesc+=nodeDesc[i]
+                            else:
+                                newdesc+=' '
+                                skip=False
+                        nodeDesc=newdesc
+                        # create a node
+                        nodeId=getGUID()
+                        nodeXrefDic[nodeName]=nodeId   #needed for edge start and end nodes
+                        nodeInfoDic[nodeId]={'name':nodeName, 'type':nodeType, 'desc':nodeDesc, 'placed':'N'}
+
+            elif processingEdges==True:
+                if "/*DEPENDENCIES LINKED TO ONE OF THE OTHER BIG MATHS GROUPS*/" in inline:
+                    print("all done")
+                    processingEdges=False
+                    processingNodes=False
+
+                else:
+
+                    inline = inline.strip()
+                    if "{" in inline:
+                        level+=1
+
+                        groupNodeName=inline[0:inline.find(" ")]
+                        #print("going in level", level, groupNodeName)
+                        hierarchy.append(blobXrefDic[groupNodeName])
+                        optimiseEdges[level]=[]
+                        optimiseNodes[level]=[]                       
+                    elif "}" in inline:
+                        #print("going out level", level)
+                        # just going to oversimplify to start
+                        optimiseNodesDic={}
+                        positionX=NODESIZE*3
+                        positionY=NODESIZE*3
+                        #print("level", level, optimiseNodes)
+                        if len(optimiseNodes[level])!=0:
+                            rowlength=int(math.sqrt(len(optimiseNodes[level])))
+                            for node in optimiseNodes[level]:
+                                optimiseNodesDic[node]=(positionX, positionY)
+                                if vertexStyle=='node':
+                                    positionX+=NODESIZE*6
+                                    if positionX >= rowlength*NODESIZE*6:
+                                        positionX=NODESIZE*3
+                                        positionY+=NODESIZE*6
+                                else:
+                                    positionX+=NODESIZE*11
+                                    if positionX >= rowlength*NODESIZE*11:
+                                        positionX=NODESIZE*2
+                                        positionY+=NODESIZE*6
+                                nodeInfoDic[node]['placed']='Y'
+                            #optimise layout
+                            G = nx.Graph()
+                            G.add_edges_from(optimiseEdges[level])
+                            #newPositions = nx.spring_layout(G, k=NODESIZE*10, pos=optimiseNodesDic, \
+                             #                               iterations=10, scale=None)
+                            newPositions=optimiseNodesDic
+                            #place nodes in blob position and write xml
+                            width=0
+                            height=0
+
+                            for node in [*newPositions]:
+                                posn=newPositions[node]
+                                if newPositions[node][0]>width:
+                                    width=newPositions[node][0]
+                                if newPositions[node][1]>height:
+                                    height=newPositions[node][1]
+                                if vertexStyle=='node':
+                                    # create xml
+                                    nodeId=node
+                                    xmlNode = ET.Element("node", id=str(nodeId))
+                                    data = ET.SubElement(xmlNode, "data", key="data_node")
+                                    shape = ET.SubElement(data, "y:" + "ShapeNode")
+                                    ET.SubElement(shape, "y:Geometry", {'x':str(posn[0]+blobPosx), 'y':str(posn[1]+blobPosy)})
+                                    #for p in self._Ports:    
+                                    #    ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
+
+                                    nodeLabel = ET.SubElement(shape, "y:NodeLabel")
+                                    
+                                    nodeLabel.text = nodeInfoDic[nodeId]['name']
+                                    metaAtt = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":"display","value":str(True)})
+                                    metaAtt1 = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":"xOffset","value":str(-NODESIZE/2)})
+                                    metaAtt2 = ET.SubElement(nodeLabel, "h:metadataAttribute", {"key":"yOffset","value":str(-NODESIZE*2)})
+                                    metaEl  = ET.SubElement(xmlNode, "h:metadata", {"key":"type","value":str(nodeInfoDic[nodeId]['type'])})
+                                    metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
+                                    metaE2  = ET.SubElement(xmlNode, "h:metadata", {"key":"description","value":str(nodeInfoDic[nodeId]['desc'])})
+                                    metaAtt = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"display","value":str(False)})
+                                    graph.append(xmlNode)   
+                                elif vertexStyle=='blob' :
+                                    nodeId=node
+                                    xmlBlob = ET.Element("h:blob", id=str(nodeId))
+                                    data = ET.SubElement(xmlBlob, "data", key="data_blob")
+                                    shape = ET.SubElement(data, "h:" + "ShapeBlob")
+                                    ET.SubElement(shape, "h:Geometry", {'x':str(posn[0]+blobPosx), 'y':str(posn[1]+blobPosy), 'width':str(NODESIZE*6), 'height':str(NODESIZE*3), \
+                                            'xRadius':str(10),'yRadius':str(10)})
+                                    #for p in self._Ports:    
+                                    #    ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
+
+                                    blobLabel = ET.SubElement(shape, "h:BlobLabel")
+                                    blobLabel.text = nodeInfoDic[nodeId]['name']
+                                    metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"display","value":str(False)})
+                                    metaAtt1 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"xOffset","value":str(-NODESIZE/2)})
+                                    metaAtt2 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"yOffset","value":str(-NODESIZE*2)})
+                                    metaEl  = ET.SubElement(xmlBlob, "h:metadata", {"key":"type","value":str(nodeInfoDic[nodeId]['type'])})
+                                    metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
+                                    metaE2  = ET.SubElement(xmlBlob, "h:metadata", {"key":"description","value":str(nodeInfoDic[nodeId]['desc'])})
+                                    metaAtt = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"display","value":str(True)})
+                                    metaAtt1 = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"xOffset","value":str(0)})
+                                    metaAtt2 = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"yOffset","value":str(0)})
+                                    graph.append(xmlBlob) 
+                        # a group is finished. it must be optimised, blob sized and moved to its parent
+                        #now with all optimism we are going to make a containing blob
+                        if height>maxBlobHeight:
+                            maxBlobHeight=height
+                        blobId=hierarchy[level]
+                        xmlBlob = ET.Element("h:blob", id=str(blobId))
+
+                        data = ET.SubElement(xmlBlob, "data", key="data_blob")
+                        shape = ET.SubElement(data, "h:" + "ShapeBlob")
+                        ET.SubElement(shape, "h:Geometry", {'x':str(blobPosx-5),\
+                            'y':str(blobPosy-5), 'width':str(width+NODESIZE*8), 'height':str(height+NODESIZE*6), \
+                                'xRadius':str(10),'yRadius':str(10)})
+                        #for p in self._Ports:    
+                        #    ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
+
+                        blobLabel = ET.SubElement(shape, "h:BlobLabel")
+                        blobLabel.text = blobInfoDic[blobId]['name']
+                        metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"display","value":str(True)})
+                        metaAtt1 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"xOffset","value":str(-NODESIZE/2)})
+                        metaAtt2 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"yOffset","value":str(-NODESIZE*2)})
+                        metaEl  = ET.SubElement(xmlBlob, "h:metadata", {"key":"type","value":str(blobInfoDic[blobId]['type'])})
+                        metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
+                        metaE2  = ET.SubElement(xmlBlob, "h:metadata", {"key":"description","value":str(blobInfoDic[blobId]['desc'])})
+                        metaAtt = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"display","value":str(True)})
+                        graph.append(xmlBlob) 
+                        hierarchy.pop()
+                        level-=1
+                                                
+                        blobPosx+=width+NODESIZE*3+NODESIZE*6
+                        if blobPosx > 1000:
+                            blobPosx= -1000
+                            blobPosy+=maxBlobHeight+NODESIZE*12  
+                            maxBlobHeight=0
+                    elif "->" in inline:
+                        startNodeName=inline[0:inline.find(" ")]
+                        restOfLine=inline[inline.find(">")+2:]
+                        #if startNodeName=="MNUMS133":
+                        #    break
+                        done=False
+                        while not done:
+                            if "->" in restOfLine:  # there is another link coming
+                                endNodeName=restOfLine[0:restOfLine.find(" ")]
+                            else:
+                                endNodeName=restOfLine
+                                done=True
+                            #print(startNodeName, endNodeName)
+                            if startNodeName not in nodeXrefDic or endNodeName not in nodeXrefDic:
+                                print("Error processing", inline)
+                                done=True
+                            else:
+                            # create xml
+                                edgenum=getGUID()
+                                xmlEdge = ET.Element("hyperedge", id=str(edgenum))   #let hyperedge init give number
+                                xmlEdge.set("directed", "true") 
+                                ET.SubElement(xmlEdge, "y:Arrows", {'source':"none", 'target':"standard"})  
+                                xmlEdge.set("lineType", "Spline")
+                                nL = ET.SubElement(xmlEdge,"h:nodeList")
+                                ET.SubElement(nL,"start" , source= str(nodeXrefDic[startNodeName]), sourceport=str(-1))
+                                ET.SubElement(nL,"end", target = str(nodeXrefDic[endNodeName]), targetport=str(-1))
+                                metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":"name","value":""})
+                                metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
+                                dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
+                                eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
+                                graph.append(xmlEdge)
+                                print("level", level)
+                                optimiseEdges[level].append((nodeXrefDic[startNodeName],nodeXrefDic[endNodeName]))
+
+                                if nodeInfoDic[nodeXrefDic[startNodeName]]['placed']=='N' and \
+                                        nodeXrefDic[startNodeName] not in optimiseNodes[level]:
+                                    #print("placing", startNodeName, nodeXrefDic[startNodeName])
+                                    optimiseNodes[level].append(nodeXrefDic[startNodeName])
+                                if nodeInfoDic[nodeXrefDic[endNodeName]]['placed']=='N' and \
+                                        nodeXrefDic[endNodeName] not in optimiseNodes[level]:
+                                    #print("placing", endNodeName, nodeXrefDic[endNodeName])
+                                    optimiseNodes[level].append(nodeXrefDic[endNodeName])
+                                if not done:
+                                    startNodeName=endNodeName
+                                    restOfLine=restOfLine[restOfLine.find(">")+2:]
+
+            #print(inline.strip())  # .strip() to remove newline characters
+            if "/*DECLARE ALL 'Group' NODES; INDENTED Groups are Subgroups!*/" in inline:
+                print("processing groups")
+                processingGroups=True
+                #blobPosX=-200
+                #blobPosY=-300
+
+        #content=infile.read()
+        infile.close()
+        #Write to file
+        raw_str = ET.tostring(higraphml)
+        pretty_str = minidom.parseString(raw_str).toprettyxml()
+        with open(self.fileName, "w", encoding="utf-8") as f:
+            f.write(pretty_str)
+
 
     def action_Optimise(self):
         print("Running")
@@ -5092,14 +5420,19 @@ if __name__ == "__main__":
     prefs.load()
 
     app = QApplication(sys.argv)
+    app.setStyle("Fusion")
     app.setOrganizationName("isijingi")
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
-    
+    lightModeWindowColor=QtGui.QColor.fromRgbF(0.941176, 0.941176, 0.941176, 1.000000)
+    lightModeButtonColor=QtGui.QColor.fromRgbF(0.941176, 0.941176, 0.941176, 1.000000)
+    newPalette = QPalette('grey', lightModeWindowColor)
+    app.setPalette(newPalette)
+
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
     app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icons\\icon2.ico')))  #'qtpyGraphEdit.ico')))
     MainWin = MainWindow()
-    MainWin.resize(1000, 700)
+    MainWin.resize(1000, 600)
     MainWin.show()
     #cProfile.run('sys.exit(app.exec())')
     sys.exit(app.exec())

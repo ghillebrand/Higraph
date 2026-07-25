@@ -75,7 +75,60 @@ class VisHyperEdgeItem(QGraphicsObject):
         elif type(sItem) is tuple: 
             self.startNodes = [sItem]
         else:   # file import and no port
-            startPort = sItem.createPort(sItem.scenePos())         
+            startPortPosition=0
+            endPortPosition=0
+            #find position closest to endnode
+            if type(sItem) is VisNodeItem:
+                startCentre=sItem.scenePos()
+            else:
+                startCentre=QPointF(sItem.scenePos().x()+sItem._width/2, sItem.scenePos().y()+sItem._height/2)
+            #find centre of end node
+            if type(eItem) is VisNodeItem:
+                endCentre=eItem.scenePos()
+            else:
+                endCentre=QPointF(eItem.scenePos().x()+eItem._width/2, eItem.scenePos().y()+eItem._height/2)
+            straightLine=QLineF(startCentre, endCentre)
+            if type(sItem) is VisNodeItem:
+                nodeAngle=straightLine.angle()
+                y=math.sin(nodeAngle)/(NODESIZE/2)
+                x=math.cos(nodeAngle)/(NODESIZE/2)
+                startPortPosition=startCentre+QPointF(x,y)
+            if type(eItem) is VisNodeItem:
+                nodeAngle=straightLine.angle()
+                y=math.sin(nodeAngle)/(NODESIZE/2)
+                x=math.cos(nodeAngle)/(NODESIZE/2)
+                endPortPosition=startCentre+QPointF(-x,-y)
+            if type(sItem) is VisBlobItem:
+                topLeft=sItem.scenePos()
+                topRight=QPointF(sItem.scenePos().x()+sItem._width, sItem.scenePos().y())
+                bottomRight=QPointF(sItem.scenePos().x()+sItem._width,sItem.scenePos().y()+sItem._height)
+                bottomLeft=QPointF(sItem.scenePos().x(), sItem.scenePos().y()+sItem._height)
+                sides = [QLineF(topLeft, topRight), QLineF(topRight, bottomRight),\
+                        QLineF(bottomRight, bottomLeft), QLineF(bottomLeft, topLeft)]
+                for s in sides:
+                    valid, intPoint = straightLine.intersects(s)
+                    if valid==QLineF.IntersectionType.BoundedIntersection:
+                        startPortPosition=intPoint
+                        break
+                    if startPortPosition==0:
+                        print("error no instersection found")
+            if type(eItem) is VisBlobItem:
+                topLeft=eItem.scenePos()
+                topRight=QPointF(eItem.scenePos().x()+eItem._width, eItem.scenePos().y())
+                bottomRight=QPointF(eItem.scenePos().x()+eItem._width,eItem.scenePos().y()+eItem._height)
+                bottomLeft=QPointF(eItem.scenePos().x(), eItem.scenePos().y()+eItem._height)
+                sides = [QLineF(topLeft, topRight), QLineF(topRight, bottomRight),\
+                        QLineF(bottomRight, bottomLeft), QLineF(bottomLeft, topLeft)]
+                for s in sides:
+                    valid, intPoint = straightLine.intersects(s)
+                    if valid==QLineF.IntersectionType.BoundedIntersection:
+                        endPortPosition=intPoint
+                        break
+
+
+            #startPort = sItem.createPort(sItem.scenePos()) 
+            print("creating ports", sItem)        
+            startPort = sItem.createPort(startPortPosition)
             self.startNodes = []
             self.startNodes.append((sItem, startPort))
 
@@ -84,7 +137,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         elif type(eItem) is tuple: 
             self.endNodes = [eItem]      
         else: # file import
-            endPort = eItem.createPort(eItem.scenePos())
+            #endPort = eItem.createPort(QPointF(eItem.scenePos().x()-5, eItem.scenePos().y()))
+            endPort = eItem.createPort(endPortPosition)
             self.endNodes=[]
             self.endNodes.append((eItem, endPort))
 
