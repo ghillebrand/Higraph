@@ -304,9 +304,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         #How far along the line (parameter, t)
         self.nameText.posT = 0.4
         #How far from the line (perp distance which is radius)
-        self.nameText.posR = NODESIZE
+        self.nameText.posD = NODESIZE
         
-
         #Selection and editing vars:
         #edit Handles
         self.stH = None
@@ -327,6 +326,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.isOnlySelected = False
         #disable the guard
         self.suppressItemChange = False  # enable itemChange normally
+        #Actually compute and set the text position
+        self.updateTextPos()
 
     def __repr__(self):
         #TODO: fix for hyperedges
@@ -753,6 +754,27 @@ class VisHyperEdgeItem(QGraphicsObject):
         #now place the text based on the new line
         self.updateTextPos()
     
+    def textPosfromTD(self, edgeLine, t:float, d:float ) -> QPoint:
+        """ take the parametric distance `t` along `edgeLine`, and distance `d` from the line, and return the QPoint, in local coords
+            Positive d is above on a left-right line, negative is below
+        """
+        print(f"el,t,d -> pt{edgeLine.lineNum}, {t=} {d=}")
+
+        return self.nameText.edgeLine.textPos(t)
+
+    def textTDfromXY(self, pt:QPoint)-> tuple:
+        """ take a (object local) point, and return (el,t,d)
+            the parametric distance `t` along the closest `edgeLine`, 
+            and distance `d` from the line
+            Positive d is above on a left-right line, negative is below
+        """
+        print(f"pt -> el, t, d {pt}")
+        el = self.edgeLines[0]
+        t = 0.4
+        d  = NODESIZE
+
+        return (el,t,d)
+
     def updateTextPos(self,newPos:QPointF | None = None):
         """
             newPos == None will recalculate pos based on the new spline shape
@@ -771,13 +793,16 @@ class VisHyperEdgeItem(QGraphicsObject):
             if newPos is None:
                 #print(f"VHE - no recalc")
                 #midPt = self.edgeLines[0].textPos(0.4)
-                textPt = self.nameText.edgeLine.textPos(self.nameText.posT)
-                textWid = self.nameText.textWidth()
-                self.nameText.setPos(textPt.x() - textBRect.width()/2  + NODESIZE, \
-                                    textPt.y() - textBRect.height()/2 + NODESIZE)
+                #textPt = self.nameText.edgeLine.textPos(self.nameText.posT)
+                textPt = self.textPosfromTD(self.edgeLines[0], self.nameText.posT, self.nameText.posD)
+                #textWid = self.nameText.textWidth()
+                #self.nameText.setPos(textPt.x() - textBRect.width()/2  + NODESIZE, \
+                #                    textPt.y() - textBRect.height()/2 + NODESIZE)
+                self.nameText.setPos(textPt)
                 self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
             else: #relative position _has_ changed.
-                print(f"VHE - recalc textpos to {newPos}")
+                #print(f"VHE - recalc textpos to {newPos}")
+                el,t,d = self.textTDfromXY(newPos)
                 #Find the closest edgeLine to `newPos`
 
                 #use the `addPoint` closest code
