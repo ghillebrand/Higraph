@@ -199,7 +199,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML` *AND undo*)
         #if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None: JH
         if len(self.edgeLines)==0 and hyperEdgeGraph is None:
-            #print(f"he: simple creation {len(dummyNodes)=}")
+            print(f"he: simple creation")
             stN = self.startNodes[0]
             endN = self.endNodes[0]
             if len(points) == 0: #just start with a 2-pt line from the port coords
@@ -209,7 +209,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             if self._polyEdge == STRAIGHT:
                 self.edgeLines.append(StraightLineItem(ptList,parent=self))
-            else: #Assume spline! Error checking later!
+            else: #spline
                 #If no tangents given, and start/end are on a blob, make tangent at right angles to blob
                 #The spline constructor default doesn't (can't) do the orthogonal tangents. Do them here.
                 if len(tangents) == 0:
@@ -223,7 +223,8 @@ class VisHyperEdgeItem(QGraphicsObject):
                                     QPointF(0,0)))
 
                 self.edgeLines.append(HermiteSplineItem(p=ptList,t=tangents,parent=self))
-            
+            print(f"VHE gui create {len(self.edgeLines)=}")
+
             #Link up the topology for the visual graph - tell the start & end nodes about the edge
             #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
             for stN in self.startNodes: #Loops are redundant - handled in hyperedge else:
@@ -265,6 +266,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             for e in self.edgeLines:
                 e.setParentItem(self)
         else:  #called from undo stack
+            print(f"VHI init from undo stack")
             for stN in self.startNodes: 
                 stN[0].startsEdges.append(self) 
             for endN in self.endNodes:
@@ -300,7 +302,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Initial default pos - will be updated on 1st updateLine()
         # posTR is position in (t,r) coords t = param along spline, r = radius (perp distance) from spline)
         #The edgeLine which the text pos is calulated from
-        self.nameText.edgeLine = edgeLines[0]
+        self.nameText.edgeLine = self.edgeLines[0]
         #How far along the line (parameter, t)
         self.nameText.posT = 0.4
         #How far from the line (perp distance which is radius)
@@ -769,7 +771,41 @@ class VisHyperEdgeItem(QGraphicsObject):
             Positive d is above on a left-right line, negative is below
         """
         print(f"pt -> el, t, d {pt}")
-        el = self.edgeLines[0]
+        #Find closest edgeLine (1st containing or nearest bounding Rect)
+        el = None
+        #contains
+        for el in self.edgeLines:
+            if el.contains(pt):
+                break
+        
+        if not el: 
+            #TODO: something better than line 0!
+            el = self.edgeLines[0]
+
+        #Find the perp closest point
+        if self._polyEdge == STRAIGHT:
+            minD = math.inf
+            for i in range(el._path.elementCount()-1):
+                newP,newD = closestPointOnLine(QPointF(el._path.elementAt(i)),
+                                                QPointF(el._path.elementAt(i+1)),pt)
+                if newD < minD:
+                    closestP,minD,idx = newP,newD,i
+        else: #SPLINE
+            minD = math.inf 
+            idx, xc, yc = 0,0,0
+            for i in range(el._path.elementCount()):
+                xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
+                newD = math.sqrt((pt.x() - xo)**2+ (pt.y() - yo)**2)
+                if newD < minD:
+                    closestP = el._path.elementAt(i)
+                    idx = i
+                    xc, yc = xo,yo
+                    minD = newD
+        #TODO: minD Above or or below?!
+        print(f"TDfromXY {closestP=}, {idx=}, {minD=}")
+
+
+        #el = self.edgeLines[0]
         t = 0.4
         d  = NODESIZE
 
@@ -803,6 +839,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             else: #relative position _has_ changed.
                 #print(f"VHE - recalc textpos to {newPos}")
                 el,t,d = self.textTDfromXY(newPos)
+                self.nameText.edgeLine = el
                 #Find the closest edgeLine to `newPos`
 
                 #use the `addPoint` closest code
