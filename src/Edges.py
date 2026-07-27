@@ -760,7 +760,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         """ take the parametric distance `t` along `edgeLine`, and distance `d` from the line, and return the QPoint, in local coords
             Positive d is above on a left-right line, negative is below
         """
-        print(f"el,t,d -> pt{edgeLine.lineNum}, {t=} {d=}")
+        print(f"posFromTD:: el,t,d -> pt{edgeLine.lineNum}, {t=} {d=}")
 
         return self.nameText.edgeLine.textPos(t)
 
@@ -770,16 +770,16 @@ class VisHyperEdgeItem(QGraphicsObject):
             and distance `d` from the line
             Positive d is above on a left-right line, negative is below
         """
-        print(f"pt -> el, t, d {pt}")
+        print(f"TDfromPos:: pt -> el, t, d {pt}")
         #Find closest edgeLine (1st containing or nearest bounding Rect)
         el = None
         #contains
         for el in self.edgeLines:
-            if el.contains(pt):
+            if el.boundingRect().contains(pt):
                 break
         
         if not el: 
-            #TODO: something better than line 0!
+            #TODO: something better than line 0! (Find the closest br)
             el = self.edgeLines[0]
 
         #Find the perp closest point
@@ -790,23 +790,38 @@ class VisHyperEdgeItem(QGraphicsObject):
                                                 QPointF(el._path.elementAt(i+1)),pt)
                 if newD < minD:
                     closestP,minD,idx = newP,newD,i
+            t = 0.4
         else: #SPLINE
             minD = math.inf 
-            idx, xc, yc = 0,0,0
+            idx = 0 #Index of closest
+            #Current 
+            xc, yc = 0,0 
+            #old
+            xo,yo = 0,0
             for i in range(el._path.elementCount()):
                 xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
                 newD = math.sqrt((pt.x() - xo)**2+ (pt.y() - yo)**2)
                 if newD < minD:
-                    closestP = el._path.elementAt(i)
+                    #closestP = el._path.elementAt(i)
                     idx = i
                     xc, yc = xo,yo
                     minD = newD
+
+            #Find the length to the closest point
+            sLength = 0 #Track how far we are along
+            xo, yo = el._path.elementAt(0).x, el._path.elementAt(0).y
+            for i in range(1,idx):
+                sLength += math.sqrt((el._path.elementAt(i).x - xo)**2 + (el._path.elementAt(i).y - yo)**2)
+                xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
+            #And thus t
+            t = sLength /el._path.length()  ##el._path.percentAtLength
+
         #TODO: minD Above or or below?!
-        print(f"TDfromXY {closestP=}, {idx=}, {minD=}")
+        #print(f"TDfromXY {el.lineNum=}, {sLength=}, {el._path.length()=}, {t=}, {idx=}, {minD=}")
 
 
         #el = self.edgeLines[0]
-        t = 0.4
+        #t = 0.4
         d  = NODESIZE
 
         return (el,t,d)
@@ -827,25 +842,23 @@ class VisHyperEdgeItem(QGraphicsObject):
             textBRect = self.nameText.boundingRect()
             # nameText has not moved relative to edges - recalc (x,y) based on line geom
             if newPos is None:
-                #print(f"VHE - no recalc")
+                print(f"VHE - no recalc")
                 #midPt = self.edgeLines[0].textPos(0.4)
                 #textPt = self.nameText.edgeLine.textPos(self.nameText.posT)
-                textPt = self.textPosfromTD(self.edgeLines[0], self.nameText.posT, self.nameText.posD)
+                ##textPt = self.textPosfromTD(self.edgeLines[0], self.nameText.posT, self.nameText.posD)
                 #textWid = self.nameText.textWidth()
                 #self.nameText.setPos(textPt.x() - textBRect.width()/2  + NODESIZE, \
                 #                    textPt.y() - textBRect.height()/2 + NODESIZE)
+
+                textPt = self.textPosfromTD(self.nameText.edgeLine, self.nameText.posT, self.nameText.posD)
                 self.nameText.setPos(textPt)
                 self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
             else: #relative position _has_ changed.
-                #print(f"VHE - recalc textpos to {newPos}")
+                print(f"VHE - recalc textpos to {newPos}")
+                #NOTE: Could the functions not set these directly???
                 el,t,d = self.textTDfromXY(newPos)
                 self.nameText.edgeLine = el
-                #Find the closest edgeLine to `newPos`
-
-                #use the `addPoint` closest code
-                #NOTE: Straight line != Spline
-                #??? Refactor `addPoint` to have a `closestPointTo`
-
+                self.nameText.posT = t
                 #Find the distance from 
 
 
