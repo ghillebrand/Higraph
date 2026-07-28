@@ -199,7 +199,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML` *AND undo*)
         #if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None: JH
         if len(self.edgeLines)==0 and hyperEdgeGraph is None:
-            print(f"he: simple creation")
             stN = self.startNodes[0]
             endN = self.endNodes[0]
             if len(points) == 0: #just start with a 2-pt line from the port coords
@@ -223,7 +222,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                                     QPointF(0,0)))
 
                 self.edgeLines.append(HermiteSplineItem(p=ptList,t=tangents,parent=self))
-            print(f"VHE gui create {len(self.edgeLines)=}")
 
             #Link up the topology for the visual graph - tell the start & end nodes about the edge
             #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
@@ -266,7 +264,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             for e in self.edgeLines:
                 e.setParentItem(self)
         else:  #called from undo stack
-            print(f"VHI init from undo stack")
             for stN in self.startNodes: 
                 stN[0].startsEdges.append(self) 
             for endN in self.endNodes:
@@ -760,9 +757,17 @@ class VisHyperEdgeItem(QGraphicsObject):
         """ take the parametric distance `t` along `edgeLine`, and distance `d` from the line, and return the QPoint, in local coords
             Positive d is above on a left-right line, negative is below
         """
-        print(f"posFromTD:: el,t,d -> pt{edgeLine.lineNum}, {t=} {d=}")
+        #print(f"posFromTD:: el,t,d -> pt{edgeLine.lineNum}, {t=} {d=}")
+        newPos = self.nameText.edgeLine.textPos(t)
+        #Offset by d
 
-        return self.nameText.edgeLine.textPos(t)
+        m = edgeLine._path.slopeAtPercent(t)
+        angle = math.atan(m + math.pi/2)
+        dx = d*math.cos(angle)
+        dy = d*math.sin(angle)
+        print(f"posfrom TD a={math.degrees(angle):5.2f} d={d:4.2f} {dx:4.2f},  {dy:4.2f} ")
+        #print(f" {dx:4.2f},  {dy:4.2f}")
+        return newPos + QPointF(dx,dy)
 
     def textTDfromXY(self, pt:QPoint)-> tuple:
         """ take a (object local) point, and return (el,t,d)
@@ -770,7 +775,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             and distance `d` from the line
             Positive d is above on a left-right line, negative is below
         """
-        print(f"TDfromPos:: pt -> el, t, d {pt}")
+        #print(f"TDfromXY:: pt -> el, t, d {pt}")
         #Find closest edgeLine (1st containing or nearest bounding Rect)
         el = None
         #contains
@@ -800,7 +805,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             xo,yo = 0,0
             for i in range(el._path.elementCount()):
                 xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
-                newD = math.sqrt((pt.x() - xo)**2+ (pt.y() - yo)**2)
+                dx = pt.x() - xo
+                dy = pt.y() - yo
+                newD = math.sqrt(dx**2+ dy**2)
                 if newD < minD:
                     #closestP = el._path.elementAt(i)
                     idx = i
@@ -811,19 +818,33 @@ class VisHyperEdgeItem(QGraphicsObject):
             sLength = 0 #Track how far we are along
             xo, yo = el._path.elementAt(0).x, el._path.elementAt(0).y
             for i in range(1,idx):
-                sLength += math.sqrt((el._path.elementAt(i).x - xo)**2 + (el._path.elementAt(i).y - yo)**2)
+                sLength += math.sqrt((el._path.elementAt(i).x - xo)**2 + 
+                            (el._path.elementAt(i).y - yo)**2)
                 xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
             #And thus t
             t = sLength /el._path.length()  ##el._path.percentAtLength
 
-        #TODO: minD Above or or below?!
-        #print(f"TDfromXY {el.lineNum=}, {sLength=}, {el._path.length()=}, {t=}, {idx=}, {minD=}")
+            #Calc the "sign" of minD
 
+            # is minD left or right of the path
+            # It feels like the dot product should be able to do this, but ...
+            #path vector at element
+            if idx == el._path.elementCount(): idx -= 1
+            ex = el._path.elementAt(idx+1).x - el._path.elementAt(idx).x
+            ey = el._path.elementAt(idx+1).y - el._path.elementAt(idx).y
+            #vector to pt
+            px = pt.x() - el._path.elementAt(idx).x
+            py = pt.y() - el._path.elementAt(idx).y
+            # Angle between them, with sign
+            eAng = math.atan2(ey,ex)
+            pAng = math.atan2(py,px)
+            angle = pAng - eAng
+            #print( f" {eAng=}, {pAng=}, angle between is {angle}")
+            if angle < 0:
+                minD = -minD
 
-        #el = self.edgeLines[0]
-        #t = 0.4
-        d  = NODESIZE
-
+        d  = minD
+        print(f"TD from XY {el.lineNum}, {t:4.2f}, {d:4.2f}")
         return (el,t,d)
 
     def updateTextPos(self,newPos:QPointF | None = None):
@@ -854,12 +875,12 @@ class VisHyperEdgeItem(QGraphicsObject):
                 self.nameText.setPos(textPt)
                 self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
             else: #relative position _has_ changed.
-                print(f"VHE - recalc textpos to {newPos}")
+                print(f"VHE - recalc")
                 #NOTE: Could the functions not set these directly???
                 el,t,d = self.textTDfromXY(newPos)
                 self.nameText.edgeLine = el
                 self.nameText.posT = t
-                #Find the distance from 
+                self.nameText.posD = d
 
 
     def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):

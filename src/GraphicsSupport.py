@@ -130,9 +130,11 @@ class NameTextItem(QGraphicsTextItem):
         # Fired AFTER the item position has updated
         if change == QGraphicsItem.ItemPositionHasChanged:
             # 'value' is the new QPointF position in local parent space
-            #
-            if self.parentItem() and self.parentItem().data(KEY_ROLE) == ROLE_EDGE:
-                #print(f"edge Text item moved to: {value}")
+            # usUnderMouse() tells us the nameText is being moved directly, 
+            # not as a consequence of the edge moving
+            if self.parentItem() and self.parentItem().data(KEY_ROLE) == ROLE_EDGE \
+                and self.isUnderMouse():
+                print(f"NTI ")
                 self.parentItem().updateTextPos(value)
             
         return super().itemChange(change, value)
@@ -186,11 +188,11 @@ class ArrowHeadItem(QGraphicsItem):
             if self.parentItem().isSelected():
                 self.setSelected(True)
                 #print("Setting arrow as selected")
-                painter.setBrush(QBrush(Qt.blue))
-                painter.setPen(QPen(Qt.blue,1,Qt.DashLine)) 
+                painter.setBrush(QBrush(SELECT_COLOUR))
+                painter.setPen(QPen(SELECT_COLOUR,1,Qt.DashLine)) 
             else:
-                painter.setBrush(QBrush(Qt.black))
-                painter.setPen(QPen(Qt.black))
+                painter.setBrush(QBrush(DRAWING_COLOUR))
+                painter.setPen(QPen(DRAWING_COLOUR))
 
         painter.drawPolygon(self.polygon)
         painter.restore()
