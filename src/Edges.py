@@ -761,10 +761,11 @@ class VisHyperEdgeItem(QGraphicsObject):
         newPos = self.nameText.edgeLine.textPos(t)
         #Offset by d
 
-        m = edgeLine._path.slopeAtPercent(t)
-        angle = math.atan(m + math.pi/2)
-        dx = d*math.cos(angle)
-        dy = d*math.sin(angle)
+        #m = edgeLine._path.slopeAtPercent(t)
+        #angle = math.atan(m + math.pi/2)
+        angle = math.radians(edgeLine._path.angleAtPercent(t))
+        dx = d*math.sin(angle)
+        dy = d*math.cos(angle)
         print(f"posfrom TD a={math.degrees(angle):5.2f} d={d:4.2f} {dx:4.2f},  {dy:4.2f} ")
         #print(f" {dx:4.2f},  {dy:4.2f}")
         return newPos + QPointF(dx,dy)
