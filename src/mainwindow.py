@@ -881,7 +881,9 @@ class grScene(QGraphicsScene):
             self.mouseMode = self.POINTER
             mouseEvent.accept()
             return
+            
         if (mouseEvent.button() == Qt.MouseButton.LeftButton):
+            
             if mouseEvent.modifiers() == Qt.KeyboardModifier.ControlModifier and \
                     self.mouseMode==self.POINTER and len(self.selectedItems())>0:
                 selItem = self.itemsHere(mPos,QSize(HITSIZE,HITSIZE),[ROLE_EDGE,ROLE_NODE,ROLE_BLOB])
@@ -2283,7 +2285,7 @@ QGraphicsView.mouseMoveEvent = mouseMoveEvent
 #Some global helper functions
 class CodeExecDialog(QDialog):
     """Let the user run arbitrary Python code against the model 
-        Prototype. Replace with PyConsole in 040
+        Prototype. Replace with IDLE??
     """
     def __init__(self, parent=None, scene=None):
         super().__init__(parent)

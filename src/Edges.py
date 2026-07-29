@@ -758,11 +758,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             Positive d is above on a left-right line, negative is below
         """
         #print(f"posFromTD:: el,t,d -> pt{edgeLine.lineNum}, {t=} {d=}")
+        #TODO: call percentAt directly - this wrapper is dangerous
         newPos = self.nameText.edgeLine.textPos(t)
         #Offset by d
-
-        #m = edgeLine._path.slopeAtPercent(t)
-        #angle = math.atan(m + math.pi/2)
         angle = math.radians(edgeLine._path.angleAtPercent(t))
         dx = d*math.sin(angle)
         dy = d*math.cos(angle)
@@ -780,6 +778,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Find closest edgeLine (1st containing or nearest bounding Rect)
         el = None
         #contains
+        """
         for el in self.edgeLines:
             if el.boundingRect().contains(pt):
                 break
@@ -787,34 +786,45 @@ class VisHyperEdgeItem(QGraphicsObject):
         if not el: 
             #TODO: something better than line 0! (Find the closest br)
             el = self.edgeLines[0]
-
-        #Find the perp closest point
+        """
+        # search all edgeLines by distance here, not above.
+        minD = math.inf 
+        idx = 0 #Index of closest
+        #Current 
+        xc, yc = 0,0 
+        #old
+        xo,yo = 0,0
+        for el in self.edgeLines:
+            #Find the perp closest point
+            if self._polyEdge == STRAIGHT:
+                minD = math.inf
+                for i in range(el._path.elementCount()-1):
+                    newP,newD = closestPointOnLine(QPointF(el._path.elementAt(i)),
+                                                    QPointF(el._path.elementAt(i+1)),pt)
+                    if newD < minD:
+                        closestP,minD,idx = newP,newD,i
+                        closestEL = el
+                
+            else: #SPLINE
+                for i in range(el._path.elementCount()):
+                    xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
+                    dx = pt.x() - xo
+                    dy = pt.y() - yo
+                    newD = math.sqrt(dx**2+ dy**2)
+                    if newD < minD:
+                        #closestP = el._path.elementAt(i)
+                        closestEL = el
+                        idx = i
+                        xc, yc = xo,yo
+                        minD = newD
+        #Found the closest edgeLine & point
+        # work out (t,d)
+        el = closestEL  #Funny naming is a consequence of refactoring...
         if self._polyEdge == STRAIGHT:
-            minD = math.inf
-            for i in range(el._path.elementCount()-1):
-                newP,newD = closestPointOnLine(QPointF(el._path.elementAt(i)),
-                                                QPointF(el._path.elementAt(i+1)),pt)
-                if newD < minD:
-                    closestP,minD,idx = newP,newD,i
             t = 0.4
-        else: #SPLINE
-            minD = math.inf 
-            idx = 0 #Index of closest
-            #Current 
-            xc, yc = 0,0 
-            #old
-            xo,yo = 0,0
-            for i in range(el._path.elementCount()):
-                xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
-                dx = pt.x() - xo
-                dy = pt.y() - yo
-                newD = math.sqrt(dx**2+ dy**2)
-                if newD < minD:
-                    #closestP = el._path.elementAt(i)
-                    idx = i
-                    xc, yc = xo,yo
-                    minD = newD
+            minD = 10
 
+        else: #SPLINE
             #Find the length to the closest point
             sLength = 0 #Track how far we are along
             xo, yo = el._path.elementAt(0).x, el._path.elementAt(0).y
@@ -825,12 +835,11 @@ class VisHyperEdgeItem(QGraphicsObject):
             #And thus t
             t = sLength /el._path.length()  ##el._path.percentAtLength
 
-            #Calc the "sign" of minD
-
-            # is minD left or right of the path
+            #Calc the "sign" of minD: is minD left or right of the path
             # It feels like the dot product should be able to do this, but ...
             #path vector at element
-            if idx == el._path.elementCount(): idx -= 1
+            if idx == el._path.elementCount(): 
+                idx -= 1
             ex = el._path.elementAt(idx+1).x - el._path.elementAt(idx).x
             ey = el._path.elementAt(idx+1).y - el._path.elementAt(idx).y
             #vector to pt
@@ -857,6 +866,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         if self.suppressItemChange:
             return
 
+        print(f"updateTextPos {newPos=}")
         #Update the position of the text
         self.nameText.setVisible(self.metadataAttributes['name']['display'])
         #TODO: Only update if visiblility changed
@@ -1300,6 +1310,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             delGUID(dNItem.nodeNum)
 
 
+        #will we need to recalculate the `nameText` position after deletion?
+        reCalcNameTextPos = self.nameText.edgeLine == delEdgeLine
+
         #remove item from edgeLines & scene
         #print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
         #print(f"delSeg {delEdgeLine.lineNum=}")
@@ -1314,9 +1327,17 @@ class VisHyperEdgeItem(QGraphicsObject):
         #print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False
+        
+        #Has to be _after_ `suppressItemChange`
+        if reCalcNameTextPos:
+            p = self.nameText.pos()
+            print(f"delSeg recalc {p}")
+            self.updateTextPos(p)        
         #Tidy up the arrows
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
+
+
         self.updateLine()
         return(eLNew, node, start, portPos, splitPoint)
 
