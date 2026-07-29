@@ -621,6 +621,11 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             self.setSelected(False)
             self.scene().thisHandleObjectSelected=None
+
+            #reset the edgeLine of the nameText
+            p = self.nameText.pos()
+            self.updateTextPos(p)   
+            
             self.updateLine()
             #TODO: Arrows are not being recalculated
 
@@ -797,7 +802,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         for el in self.edgeLines:
             #Find the perp closest point
             if self._polyEdge == STRAIGHT:
-                minD = math.inf
                 for i in range(el._path.elementCount()-1):
                     newP,newD = closestPointOnLine(QPointF(el._path.elementAt(i)),
                                                     QPointF(el._path.elementAt(i+1)),pt)
@@ -817,12 +821,12 @@ class VisHyperEdgeItem(QGraphicsObject):
                         idx = i
                         xc, yc = xo,yo
                         minD = newD
+
         #Found the closest edgeLine & point
         # work out (t,d)
         el = closestEL  #Funny naming is a consequence of refactoring...
         if self._polyEdge == STRAIGHT:
             t = 0.4
-            minD = 10
 
         else: #SPLINE
             #Find the length to the closest point
