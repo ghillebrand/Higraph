@@ -439,6 +439,10 @@ class VisHyperEdgeItem(QGraphicsObject):
         #for atK,atV in self.metadataAttributes['name'].items():
         #    metaAtt = ET.SubElement(label, "h:metadataAttribute", {"key":atK,"value":str(atV)})
 
+        #Store the (eL,t,d) offset of the name
+        self.metadataAttributes['name'].update({"edgeLine": self.nameText.edgeLine.lineNum})
+        self.metadataAttributes['name'].update({"t": self.nameText.posT})
+        self.metadataAttributes['name'].update({"d": self.nameText.posD})
         #add metadata (including than name)
         if len(self.metadata) >= 1:
             for k, v in self.metadata.items():
