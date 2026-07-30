@@ -305,6 +305,19 @@ class VisHyperEdgeItem(QGraphicsObject):
         #How far from the line (perp distance which is radius)
         self.nameText.posD = NODESIZE
         
+        #If there are values set from the file/ ...
+        if self.metadataAttributes['name'].get('edgeLine'):
+            for e in self.edgeLines:
+                if e.lineNum == self.metadataAttributes['name']['edgeLine']:
+                    self.nameText.edgeLine = e
+                    print(f"VHE init {e.lineNum=}")
+                    break
+
+        if self.metadataAttributes['name'].get('t'):
+            self.nameText.posT = float(self.metadataAttributes['name']['t'])
+        if self.metadataAttributes['name'].get('d'):
+            self.nameText.posD = float(self.metadataAttributes['name']['d']  )      
+
         #Selection and editing vars:
         #edit Handles
         self.stH = None
@@ -773,7 +786,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         angle = math.radians(edgeLine._path.angleAtPercent(t))
         dx = d*math.sin(angle)
         dy = d*math.cos(angle)
-        print(f"posfrom TD a={math.degrees(angle):5.2f} d={d:4.2f} {dx:4.2f},  {dy:4.2f} ")
+        #print(f"posfrom TD a={math.degrees(angle):5.2f} d={d:4.2f} {dx:4.2f},  {dy:4.2f} ")
         #print(f" {dx:4.2f},  {dy:4.2f}")
         return newPos + QPointF(dx,dy)
 
@@ -862,7 +875,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                 minD = -minD
 
         d  = minD
-        print(f"TD from XY {el.lineNum}, {t:4.2f}, {d:4.2f}")
+        #print(f"TD from XY {el.lineNum}, {t:4.2f}, {d:4.2f}")
         return (el,t,d)
 
     def updateTextPos(self,newPos:QPointF | None = None):
@@ -882,26 +895,17 @@ class VisHyperEdgeItem(QGraphicsObject):
             textBRect = self.nameText.boundingRect()
             # nameText has not moved relative to edges - recalc (x,y) based on line geom
             if newPos is None:
-                print(f"VHE - no recalc")
-                #midPt = self.edgeLines[0].textPos(0.4)
-                #textPt = self.nameText.edgeLine.textPos(self.nameText.posT)
-                ##textPt = self.textPosfromTD(self.edgeLines[0], self.nameText.posT, self.nameText.posD)
-                #textWid = self.nameText.textWidth()
-                #self.nameText.setPos(textPt.x() - textBRect.width()/2  + NODESIZE, \
-                #                    textPt.y() - textBRect.height()/2 + NODESIZE)
-
                 textPt = self.textPosfromTD(self.nameText.edgeLine, self.nameText.posT, self.nameText.posD)
                 self.nameText.setPos(textPt)
                 self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
             else: #relative position _has_ changed.
-                print(f"VHE - recalc")
                 #NOTE: Could the functions not set these directly???
                 el,t,d = self.textTDfromXY(newPos)
                 self.nameText.edgeLine = el
                 self.nameText.posT = t
                 self.nameText.posD = d
-
-
+                #Also update the metadata pos
+                self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
     def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):
         """ Adds another segment to a hyperedge, between `newNode` and the segment `edgeLine`, 
             with `start` being the "Node" or the "Edge"
@@ -1337,10 +1341,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.suppressItemChange = False
         
         #Has to be _after_ `suppressItemChange`
-        if reCalcNameTextPos:
-            p = self.nameText.pos()
-            print(f"delSeg recalc {p}")
-            self.updateTextPos(p)        
+        self.updateTextPos(self.nameText.pos())        
+        
         #Tidy up the arrows
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)

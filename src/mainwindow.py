@@ -3449,6 +3449,8 @@ class MainWindow(QMainWindow):
                 newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=iD)
             elif polyLineType == STRAIGHT:
                 newEdgeLine = StraightLineItem(p=points,  id=iD)
+            if newEdgeLine.lineNum != iD: 
+                print(f" hyperEdge lineNum change: {newEdgeLine.lineNum} != {iD}")
             oldToNewEL[eLID] = newEdgeLine.lineNum
             #print(f"heX {eLID=} -> {oldToNewEL[eLID]}")
             #TODO: What has to be updated if eLID changes!?@?
@@ -3478,12 +3480,16 @@ class MainWindow(QMainWindow):
         for metaEl in xEdge.iter("metadata"):
             metaKey = metaEl.attrib.get("key")
             edgeMetadata[metaKey] = metaEl.attrib.get("value")
+            edgeMetadataAttributes[metaKey] = {}
             for edgeNameAttribs in metaEl.iter("metadataAttribute"):
                 #Deal with Boolean for display (This is why you should use the proper key types!)
                 if edgeNameAttribs.attrib.get("key") == 'display':
-                    edgeMetadataAttributes[metaKey] = {'display':edgeNameAttribs.attrib.get("value") == "True"}
+                    edgeMetadataAttributes[metaKey].update({'display':edgeNameAttribs.attrib.get("value") == "True"})
+                elif edgeNameAttribs.attrib.get("key") == 'edgeLine':
+                    #Replace changed edgeLine ID's
+                    edgeMetadataAttributes[metaKey].update({edgeNameAttribs.attrib.get("key"): oldToNewEL[int(edgeNameAttribs.attrib.get("value"))] } )
                 else:
-                    edgeMetadataAttributes[metaKey] = {edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")}
+                    edgeMetadataAttributes[metaKey].update({edgeNameAttribs.attrib.get("key"): edgeNameAttribs.attrib.get("value")})
         
         edgeName = edgeMetadata['name']
         #TODO: This is for copies - needs a better check for file read ID changes
