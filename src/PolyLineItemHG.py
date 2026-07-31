@@ -432,7 +432,9 @@ class HermiteSplineItem(QGraphicsItem):
 
     def boundingRect(self) -> QRectF:
         adjust = 2
-        self._boundingRect = self._boundingRect.united (self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust))
+        self._boundingRect = self._path.boundingRect().adjusted(-adjust, -adjust, adjust, adjust)
+        #TODO: THis includes (0,0) from a child. WHich one!
+        #self._boundingRect = self._boundingRect.united (self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust))
         return self._boundingRect
     def shape(self):
         outlinePath = QPainterPathStroker()
@@ -495,6 +497,7 @@ class HermiteSplineItem(QGraphicsItem):
             #painter.setPen(QPen(Qt.black,1))
 
         painter.drawPath(self._path)
+        #painter.drawRect(self.boundingRect())
 
     def textPos(self,t:float = 0.5)->QPointF:
         """ returns the QPointF coord of t in [0,1] along the line 

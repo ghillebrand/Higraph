@@ -155,7 +155,10 @@ class VisHyperEdgeItem(QGraphicsObject):
         #self.textItem = TransparentTextItem(self.metadata['name'], parent=self) 
         containerName = NameTextItem(self.metadata['name'],self)
         self.nameText = containerName
-        
+        #Put the name on top of any other text to be able to move
+        self.nameText.setZValue(5000)
+        #Default pos set _after_ edgeLine creation
+
         #self.textItem.setFlag(QGraphicsItem.ItemIsSelectable, False)
         #self.textItem.setFlag(QGraphicsItem.ItemIsFocusable, False)
 
@@ -196,7 +199,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         #Simple edge, created interactively (no hyperEdgeGraph, which is _only_ created in `fromXML` *AND undo*)
         #if len(self.startNodes) == 1 and len(self.endNodes) == 1 and hyperEdgeGraph is None: JH
         if len(self.edgeLines)==0 and hyperEdgeGraph is None:
-            #print(f"he: simple creation {len(dummyNodes)=}")
             stN = self.startNodes[0]
             endN = self.endNodes[0]
             if len(points) == 0: #just start with a 2-pt line from the port coords
@@ -206,7 +208,7 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             if self._polyEdge == STRAIGHT:
                 self.edgeLines.append(StraightLineItem(ptList,parent=self))
-            else: #Assume spline! Error checking later!
+            else: #spline
                 #If no tangents given, and start/end are on a blob, make tangent at right angles to blob
                 #The spline constructor default doesn't (can't) do the orthogonal tangents. Do them here.
                 if len(tangents) == 0:
@@ -220,7 +222,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                                     QPointF(0,0)))
 
                 self.edgeLines.append(HermiteSplineItem(p=ptList,t=tangents,parent=self))
-            
+
             #Link up the topology for the visual graph - tell the start & end nodes about the edge
             #Initially, there will only be one edgeLine ([0]) per edge. Others added one by one.
             for stN in self.startNodes: #Loops are redundant - handled in hyperedge else:
@@ -294,6 +296,27 @@ class VisHyperEdgeItem(QGraphicsObject):
             edgeLine.setFlag(QGraphicsItem.ItemIsSelectable, False)
             self.bRect = self.bRect.united(edgeLine.boundingRect())
 
+        #Initial default pos - will be updated on 1st updateLine()
+        # posTR is position in (t,r) coords t = param along spline, r = radius (perp distance) from spline)
+        #The edgeLine which the text pos is calulated from
+        self.nameText.edgeLine = self.edgeLines[0]
+        #How far along the line (parameter, t)
+        self.nameText.posT = 0.4
+        #How far from the line (perp distance which is radius)
+        self.nameText.posD = NODESIZE
+        
+        #If there are values set from the file/ ...
+        if self.metadataAttributes['name'].get('edgeLine'):
+            for e in self.edgeLines:
+                if e.lineNum == self.metadataAttributes['name']['edgeLine']:
+                    self.nameText.edgeLine = e
+                    break
+
+        if self.metadataAttributes['name'].get('t'):
+            self.nameText.posT = float(self.metadataAttributes['name']['t'])
+        if self.metadataAttributes['name'].get('d'):
+            self.nameText.posD = float(self.metadataAttributes['name']['d']  )      
+
         #Selection and editing vars:
         #edit Handles
         self.stH = None
@@ -314,6 +337,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.isOnlySelected = False
         #disable the guard
         self.suppressItemChange = False  # enable itemChange normally
+        #Actually compute and set the text position
+        self.updateTextPos()
 
     def __repr__(self):
         #TODO: fix for hyperedges
@@ -426,6 +451,10 @@ class VisHyperEdgeItem(QGraphicsObject):
         #for atK,atV in self.metadataAttributes['name'].items():
         #    metaAtt = ET.SubElement(label, "h:metadataAttribute", {"key":atK,"value":str(atV)})
 
+        #Store the (eL,t,d) offset of the name
+        self.metadataAttributes['name'].update({"edgeLine": self.nameText.edgeLine.lineNum})
+        self.metadataAttributes['name'].update({"t": self.nameText.posT})
+        self.metadataAttributes['name'].update({"d": self.nameText.posD})
         #add metadata (including than name)
         if len(self.metadata) >= 1:
             for k, v in self.metadata.items():
@@ -465,16 +494,17 @@ class VisHyperEdgeItem(QGraphicsObject):
         #painter.drawRect(self.bRect)
         #use the textBRect to adjust exact display position on the line (can be a [0,1] multiplier)
         ##change textItem to nameText
-        self.nameText.setVisible(self.metadataAttributes['name']['display'])
-        textBRect = self.nameText.boundingRect()
+        #self.nameText.setVisible(self.metadataAttributes['name']['display'])
+        #textBRect = self.nameText.boundingRect()
+        
         #HACK: Putting the text at the middle of the first segment. Where should it go?
-        #  This code should be in itemChanged, not paint
-        midPt = self.edgeLines[0].textPos(0.4)
+        #  This code should be in itemChanged,-- but iC is never called?
+        #midPt = self.edgeLines[0].textPos(0.4)
         #painter.drawEllipse(midPt,2,2)
-        textWid = self.nameText.textWidth()
-        self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
-                             midPt.y() - textBRect.height()/2 + NODESIZE)
-        self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+        #textWid = self.nameText.textWidth()
+        #self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
+        #                     midPt.y() - textBRect.height()/2 + NODESIZE)
+        #self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
         #painter.drawRect(self.textItem.boundingRect())
        
         if self.isSelected():
@@ -491,12 +521,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             self.metaDisplay.setDefaultTextColor(self._baseColor)
 
         #TODO: Move this to itemChanged?
-
-
-        #self.edgeLine.paint(painter,option,widget)
-
-        #painter.drawText(QPoint(0,0),self.textItem.toPlainText())
-        #painter.drawText(tPos,self.dispText) #textItem.toPlainText())
 
         #Debug - draw the shape path
         #painter.drawPath(self.shape())
@@ -566,9 +590,10 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #Select the children
                 for child in self.childItems():
                     child.setSelected(value)
-
+                
             # Change the display text - what would the <change> be? Using ToolTip as the closest
             #TODO: Fix the `change` value to something more meanigful
+            #  >>> There is a  `textChanged` method...
             ##if change == QGraphicsItem.GraphicsItemChange.ItemToolTipChange:
             ##    self.nameText.setPlainText(self.model.Gr.edgeD[self.edgeNum].metadata['name'] )
         
@@ -612,6 +637,11 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             self.setSelected(False)
             self.scene().thisHandleObjectSelected=None
+
+            #reset the edgeLine of the nameText
+            p = self.nameText.pos()
+            self.updateTextPos(p)   
+            
             self.updateLine()
             #TODO: Arrows are not being recalculated
 
@@ -721,7 +751,6 @@ class VisHyperEdgeItem(QGraphicsObject):
                 #print("source", source)
                 pass
 
-
         #Draw the arrow/ end shape
         #Currently, endshapes have no managed relationship to the end nodes - they are just allocated out
         if len(self.endShape) > 0:
@@ -742,6 +771,129 @@ class VisHyperEdgeItem(QGraphicsObject):
 
         #If needed move all the polyline points - updatePath handles this.
         edgeLine.updatePath()
+        #now place the text based on the new line
+        self.updateTextPos()
+    
+    def textPosfromTD(self, edgeLine, t:float, d:float ) -> QPoint:
+        """ take the parametric distance `t` along `edgeLine`, and distance `d` from the line, and return the QPoint, in local coords
+            Positive d is above on a left-right line, negative is below
+        """
+        #print(f"posFromTD:: el,t,d -> pt{edgeLine.lineNum}, {t=} {d=}")
+        #TODO: call percentAt directly - this wrapper is dangerous
+        newPos = self.nameText.edgeLine.textPos(t)
+        #Offset by d
+        angle = math.radians(edgeLine._path.angleAtPercent(t))
+        dx = d*math.sin(angle)
+        dy = d*math.cos(angle)
+        #print(f"posfrom TD a={math.degrees(angle):5.2f} d={d:4.2f} {dx:4.2f},  {dy:4.2f} ")
+        #print(f" {dx:4.2f},  {dy:4.2f}")
+        return newPos + QPointF(dx,dy)
+
+    def textTDfromXY(self, pt:QPoint)-> tuple:
+        """ take a (object local) point, and return (el,t,d)
+            the parametric distance `t` along the closest `edgeLine`, 
+            and distance `d` from the line
+            Positive d is above on a left-right line, negative is below
+        """
+        #Find closest edgeLine (1st containing or nearest bounding Rect)
+        # search all edgeLines by distance here, not above.
+        minD = math.inf 
+        idx = 0 #Index of closest
+        #Current 
+        xc, yc = 0,0 
+        #old
+        xo,yo = 0,0
+        for el in self.edgeLines:
+            #Find the perp closest point
+            if self._polyEdge == STRAIGHT:
+                for i in range(el._path.elementCount()-1):
+                    newP,newD = closestPointOnLine(QPointF(el._path.elementAt(i)),
+                                                    QPointF(el._path.elementAt(i+1)),pt)
+                    if newD < minD:
+                        closestP,minD,idx = newP,newD,i
+                        closestEL = el
+                
+            else: #SPLINE
+                for i in range(el._path.elementCount()):
+                    xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
+                    dx = pt.x() - xo
+                    dy = pt.y() - yo
+                    newD = math.sqrt(dx**2+ dy**2)
+                    if newD < minD:
+                        closestEL = el
+                        idx = i
+                        xc, yc = xo,yo
+                        minD = newD
+                        
+        #Found the closest edgeLine & point
+        #Now work out (t,d)
+        el = closestEL  #Funny naming is a consequence of refactoring...
+        
+        #Find the length to the closest point
+        sLength = 0 #Track how far we are along
+        xo, yo = el._path.elementAt(0).x, el._path.elementAt(0).y
+        for i in range(1,idx+1):
+            sLength += math.sqrt((el._path.elementAt(i).x - xo)**2 + 
+                        (el._path.elementAt(i).y - yo)**2)
+            xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
+        
+        if self._polyEdge == STRAIGHT:
+            #Add the distance along the last seg
+            segD = math.hypot( closestP.x()-el._path.elementAt(idx).x,
+                                closestP.y()-el._path.elementAt(idx).y)
+            sLength += segD
+        
+        t = sLength /el._path.length()  ##el._path.percentAtLength
+
+        #Calc the "sign" of minD: is minD left or right of the path
+        # It feels like the dot product should be able to do this, but ...
+        #path vector at element
+        if idx == el._path.elementCount(): 
+            idx -= 1
+        ex = el._path.elementAt(idx+1).x - el._path.elementAt(idx).x
+        ey = el._path.elementAt(idx+1).y - el._path.elementAt(idx).y
+        #vector to pt
+        px = pt.x() - el._path.elementAt(idx).x
+        py = pt.y() - el._path.elementAt(idx).y
+        # Angle between them, with sign
+        eAng = math.atan2(ey,ex)
+        pAng = math.atan2(py,px)
+        angle = pAng - eAng
+        #print( f" {eAng=}, {pAng=}, angle between is {angle}")
+        if angle < 0:
+            minD = -minD
+
+        d  = minD
+        #print(f"TD from XY {el.lineNum}, {t:4.2f}, {d:4.2f}")
+        return (el,t,d)
+
+    def updateTextPos(self,newPos:QPointF | None = None):
+        """
+            newPos == None will recalculate pos based on the new spline shape
+            else: recalculate the pos params
+        """
+        #Avoid funky call looping/ ...
+        if self.suppressItemChange:
+            return
+
+        #Update the position of the text
+        self.nameText.setVisible(self.metadataAttributes['name']['display'])
+        #TODO: Only update if visiblility changed
+        if self.metadataAttributes['name']['display']:
+            textBRect = self.nameText.boundingRect()
+            # nameText has not moved relative to edges - recalc (x,y) based on line geom
+            if newPos is None:
+                textPt = self.textPosfromTD(self.nameText.edgeLine, self.nameText.posT, self.nameText.posD)
+                self.nameText.setPos(textPt)
+                self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+            else: #relative position _has_ changed.
+                #NOTE: Could the functions not set these directly???
+                el,t,d = self.textTDfromXY(newPos)
+                self.nameText.edgeLine = el
+                self.nameText.posT = t
+                self.nameText.posD = d
+                #Also update the metadata pos
+                self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
 
     def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):
         """ Adds another segment to a hyperedge, between `newNode` and the segment `edgeLine`, 
@@ -1159,6 +1311,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             delGUID(dNItem.nodeNum)
 
 
+        #will we need to recalculate the `nameText` position after deletion?
+        reCalcNameTextPos = self.nameText.edgeLine == delEdgeLine
+
         #remove item from edgeLines & scene
         #print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
         #print(f"delSeg {delEdgeLine.lineNum=}")
@@ -1173,9 +1328,14 @@ class VisHyperEdgeItem(QGraphicsObject):
         #print(f"delseg heg2: {self.hyperEdgeGraph()}")
 
         self.suppressItemChange = False
+        
+        #Has to be _after_ `suppressItemChange`
+        self.updateTextPos(self.nameText.pos())        
+
         #Tidy up the arrows
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
+
         self.updateLine()
         return(eLNew, node, start, portPos, splitPoint)
 

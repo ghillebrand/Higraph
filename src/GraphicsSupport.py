@@ -100,6 +100,7 @@ class NameTextItem(QGraphicsTextItem):
         self.setPos(-NODESIZE, -NODESIZE) #edge position set in hyperedge paint (or itemchange)
         self.setTextInteractionFlags(Qt.TextEditorInteraction|Qt.LinksAccessibleByMouse)
         self.document().contentsChanged.connect(self.textChanged)
+        self.setFlag(QGraphicsItem.ItemSendsGeometryChanges, True)
         self.setDefaultTextColor(QColor('black'))
         self.setFont(QFont("Arial", prefs.BLOB_FONT_SIZE))
         #self.setTextWidth(width)
@@ -124,6 +125,19 @@ class NameTextItem(QGraphicsTextItem):
         for twItem in twItems:
             twItem.setText(0,newName)
         return
+
+    def itemChange(self, change, value):
+        # Fired AFTER the item position has updated
+        if change == QGraphicsItem.ItemPositionHasChanged:
+            # 'value' is the new QPointF position in local parent space
+            # usUnderMouse() tells us the nameText is being moved directly, 
+            # not as a consequence of the edge moving
+            # Don't update `value` if parent is selected
+            if self.parentItem() and self.parentItem().data(KEY_ROLE) == ROLE_EDGE \
+                and self.isUnderMouse() and not self.parentItem().isSelected():
+                self.parentItem().updateTextPos(value)
+            
+        return super().itemChange(change, value)
 
     def keyPressEvent(self, event):
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
@@ -174,11 +188,11 @@ class ArrowHeadItem(QGraphicsItem):
             if self.parentItem().isSelected():
                 self.setSelected(True)
                 #print("Setting arrow as selected")
-                painter.setBrush(QBrush(Qt.blue))
-                painter.setPen(QPen(Qt.blue,1,Qt.DashLine)) 
+                painter.setBrush(QBrush(SELECT_COLOUR))
+                painter.setPen(QPen(SELECT_COLOUR,1,Qt.DashLine)) 
             else:
-                painter.setBrush(QBrush(Qt.black))
-                painter.setPen(QPen(Qt.black))
+                painter.setBrush(QBrush(DRAWING_COLOUR))
+                painter.setPen(QPen(DRAWING_COLOUR))
 
         painter.drawPolygon(self.polygon)
         painter.restore()
