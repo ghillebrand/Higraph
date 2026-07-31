@@ -135,7 +135,6 @@ class NameTextItem(QGraphicsTextItem):
             # Don't update `value` if parent is selected
             if self.parentItem() and self.parentItem().data(KEY_ROLE) == ROLE_EDGE \
                 and self.isUnderMouse() and not self.parentItem().isSelected():
-                print(f"NTI ")
                 self.parentItem().updateTextPos(value)
             
         return super().itemChange(change, value)

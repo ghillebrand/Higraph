@@ -310,7 +310,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             for e in self.edgeLines:
                 if e.lineNum == self.metadataAttributes['name']['edgeLine']:
                     self.nameText.edgeLine = e
-                    print(f"VHE init {e.lineNum=}")
                     break
 
         if self.metadataAttributes['name'].get('t'):
@@ -796,19 +795,7 @@ class VisHyperEdgeItem(QGraphicsObject):
             and distance `d` from the line
             Positive d is above on a left-right line, negative is below
         """
-        #print(f"TDfromXY:: pt -> el, t, d {pt}")
         #Find closest edgeLine (1st containing or nearest bounding Rect)
-        el = None
-        #contains
-        """
-        for el in self.edgeLines:
-            if el.boundingRect().contains(pt):
-                break
-        
-        if not el: 
-            #TODO: something better than line 0! (Find the closest br)
-            el = self.edgeLines[0]
-        """
         # search all edgeLines by distance here, not above.
         minD = math.inf 
         idx = 0 #Index of closest
@@ -833,46 +820,48 @@ class VisHyperEdgeItem(QGraphicsObject):
                     dy = pt.y() - yo
                     newD = math.sqrt(dx**2+ dy**2)
                     if newD < minD:
-                        #closestP = el._path.elementAt(i)
                         closestEL = el
                         idx = i
                         xc, yc = xo,yo
                         minD = newD
-
+                        
         #Found the closest edgeLine & point
-        # work out (t,d)
+        #Now work out (t,d)
         el = closestEL  #Funny naming is a consequence of refactoring...
+        
+        #Find the length to the closest point
+        sLength = 0 #Track how far we are along
+        xo, yo = el._path.elementAt(0).x, el._path.elementAt(0).y
+        for i in range(1,idx+1):
+            sLength += math.sqrt((el._path.elementAt(i).x - xo)**2 + 
+                        (el._path.elementAt(i).y - yo)**2)
+            xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
+        
         if self._polyEdge == STRAIGHT:
-            t = 0.4
+            #Add the distance along the last seg
+            segD = math.hypot( closestP.x()-el._path.elementAt(idx).x,
+                                closestP.y()-el._path.elementAt(idx).y)
+            sLength += segD
+        
+        t = sLength /el._path.length()  ##el._path.percentAtLength
 
-        else: #SPLINE
-            #Find the length to the closest point
-            sLength = 0 #Track how far we are along
-            xo, yo = el._path.elementAt(0).x, el._path.elementAt(0).y
-            for i in range(1,idx):
-                sLength += math.sqrt((el._path.elementAt(i).x - xo)**2 + 
-                            (el._path.elementAt(i).y - yo)**2)
-                xo, yo = el._path.elementAt(i).x, el._path.elementAt(i).y
-            #And thus t
-            t = sLength /el._path.length()  ##el._path.percentAtLength
-
-            #Calc the "sign" of minD: is minD left or right of the path
-            # It feels like the dot product should be able to do this, but ...
-            #path vector at element
-            if idx == el._path.elementCount(): 
-                idx -= 1
-            ex = el._path.elementAt(idx+1).x - el._path.elementAt(idx).x
-            ey = el._path.elementAt(idx+1).y - el._path.elementAt(idx).y
-            #vector to pt
-            px = pt.x() - el._path.elementAt(idx).x
-            py = pt.y() - el._path.elementAt(idx).y
-            # Angle between them, with sign
-            eAng = math.atan2(ey,ex)
-            pAng = math.atan2(py,px)
-            angle = pAng - eAng
-            #print( f" {eAng=}, {pAng=}, angle between is {angle}")
-            if angle < 0:
-                minD = -minD
+        #Calc the "sign" of minD: is minD left or right of the path
+        # It feels like the dot product should be able to do this, but ...
+        #path vector at element
+        if idx == el._path.elementCount(): 
+            idx -= 1
+        ex = el._path.elementAt(idx+1).x - el._path.elementAt(idx).x
+        ey = el._path.elementAt(idx+1).y - el._path.elementAt(idx).y
+        #vector to pt
+        px = pt.x() - el._path.elementAt(idx).x
+        py = pt.y() - el._path.elementAt(idx).y
+        # Angle between them, with sign
+        eAng = math.atan2(ey,ex)
+        pAng = math.atan2(py,px)
+        angle = pAng - eAng
+        #print( f" {eAng=}, {pAng=}, angle between is {angle}")
+        if angle < 0:
+            minD = -minD
 
         d  = minD
         #print(f"TD from XY {el.lineNum}, {t:4.2f}, {d:4.2f}")
@@ -887,7 +876,6 @@ class VisHyperEdgeItem(QGraphicsObject):
         if self.suppressItemChange:
             return
 
-        print(f"updateTextPos {newPos=}")
         #Update the position of the text
         self.nameText.setVisible(self.metadataAttributes['name']['display'])
         #TODO: Only update if visiblility changed
@@ -906,6 +894,7 @@ class VisHyperEdgeItem(QGraphicsObject):
                 self.nameText.posD = d
                 #Also update the metadata pos
                 self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+
     def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):
         """ Adds another segment to a hyperedge, between `newNode` and the segment `edgeLine`, 
             with `start` being the "Node" or the "Edge"
@@ -1342,11 +1331,10 @@ class VisHyperEdgeItem(QGraphicsObject):
         
         #Has to be _after_ `suppressItemChange`
         self.updateTextPos(self.nameText.pos())        
-        
+
         #Tidy up the arrows
         self.setDirected(not self.isDirected)
         self.setDirected(not self.isDirected)
-
 
         self.updateLine()
         return(eLNew, node, start, portPos, splitPoint)

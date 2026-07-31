@@ -3449,11 +3449,8 @@ class MainWindow(QMainWindow):
                 newEdgeLine = HermiteSplineItem(p=points, t=tangents, id=iD)
             elif polyLineType == STRAIGHT:
                 newEdgeLine = StraightLineItem(p=points,  id=iD)
-            if newEdgeLine.lineNum != iD: 
-                print(f" hyperEdge lineNum change: {newEdgeLine.lineNum} != {iD}")
             oldToNewEL[eLID] = newEdgeLine.lineNum
             #print(f"heX {eLID=} -> {oldToNewEL[eLID]}")
-            #TODO: What has to be updated if eLID changes!?@?
 
             #Put this into the hyperEdgeGraph for this edge
             #print(f"   heFX edge {id} edgeLine {eLID=}  ({sItm.nodeNum}, {spItm.nodeNum}) : ({eItm.nodeNum},{epItm.nodeNum})")
