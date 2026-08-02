@@ -2,10 +2,8 @@
 Higraph is a pure Python and PySide6 GUI to edit node-and-edge graphs, including hypergraphs and David Harel's extensions of nodes to sets, which he called "[Higraphs](https://dl.acm.org/doi/10.1145/42411.42414)".
 It maintains a structured dictionary of the elements of the graph, and their relationships, whilst allowing the graphical editing and layout of the graph and the elements.
 <p align="center">  
-<img width="800" height="578" alt="image" src="https://github.com/user-attachments/assets/9fa0df31-608b-4ebf-b0fc-503e4f632364" />
+<img width="729" height="738" alt="image" src="https://github.com/user-attachments/assets/ed9448bf-2751-4256-b8fd-b43502b260d3" />
 </p>
-Figure 7 from Harel's paper, drawn in the tool. The item dictionary is on the left, and the visually editable model on the right.
-
 
 There is an accessible underlying graph model which can be interactively accessed via a Python shell. 
 All items have Python dictionaries for metadata, allowing flexibility of application.
@@ -14,6 +12,12 @@ All items have Python dictionaries for metadata, allowing flexibility of applica
 Multiple parents are supported.
 
 Data is stored in XML files, loosely based on `graphml` files.
+<p align="center"> 
+<img width="800" height="578" alt="image" src="https://github.com/user-attachments/assets/9fa0df31-608b-4ebf-b0fc-503e4f632364" />
+</p>
+Figure 7 from Harel's paper, drawn in the tool. The item dictionary is on the left, and the visually editable model on the right.
+
+
 
 ## Usage
 The tool _aims_ to be easy to use for non-mathematicians and non-programmers! 
