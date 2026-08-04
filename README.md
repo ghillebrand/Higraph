@@ -5,7 +5,7 @@ It maintains a structured dictionary of the elements of the graph, and their rel
 <img width="729" height="738" alt="image" src="https://github.com/user-attachments/assets/ed9448bf-2751-4256-b8fd-b43502b260d3" />
 </p>
 
-There is an accessible underlying graph model which can be interactively accessed via a Python shell. 
+There is an underlying abstract graph model which can be interactively accessed via a Python shell. 
 All items have Python dictionaries for metadata, allowing flexibility of application.
 
 **Hyperedges** are supported as n-ary directed or undirected edges. **Blobs** are nodes extended to sets, and are aware of their parent and child relationships, derived from the drawing, displayed in the dictionary hierarchy. 
@@ -54,7 +54,7 @@ For Windows, there is a binary release [here](https://github.com/ghillebrand/Hig
 
 For other platforms:
 - create a folder, 
-- ideally, create a virtual enviroment  `python -m venv C:\path\to\new\virtual\environment` (and make it active with `scripts\activate`)
+- ideally, create a virtual enviroment  `python -m venv path\to\new\virtual\environment` (and make it active with `scripts\activate`)
 - install PySide with `pip install PySide6`
 - copy all the code from here (`git clone https://github.com/ghillebrand/Higraph.git`) or download the zip from the [Releases](https://github.com/ghillebrand/Higraph/releases) page.
 - Run `python src\mainwindow.py`
