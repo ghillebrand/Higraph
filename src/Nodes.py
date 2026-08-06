@@ -267,7 +267,7 @@ class VisNodeItem(QGraphicsObject):
         #a place to display metadata
         self.metaDisplay = TransparentTextItem("", parent=self)
         #self.metaDisplay = NameTextItem("",self)  
-        self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2.1))  #NODESIZE/2,0))
+        self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2.5))  #NODESIZE/2,0))
         #Set the text to italic to differentiate it from name and description
         metaDisplayFont = QFont()
         metaDisplayFont.setItalic(True)
@@ -706,7 +706,7 @@ class VisBlobItem(VisNodeItem):
 
         #Metadata disply position
         #TODO: Make repositionable
-        self.metaDisplay.setPos(QPointF(NODESIZE/4, -NODESIZE/4))  
+        self.metaDisplay.setPos(QPointF(NODESIZE/4, NODESIZE/4))  
 
         #Placeholder for drag handles
         self._Handles = []

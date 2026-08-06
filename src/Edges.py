@@ -303,7 +303,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #How far along the line (parameter, t)
         self.nameText.posT = 0.4
         #How far from the line (perp distance which is radius)
-        self.nameText.posD = NODESIZE
+        self.nameText.posD = 0 #NODESIZE
         
         #If there are values set from the file/ ...
         if self.metadataAttributes['name'].get('edgeLine'):
@@ -492,21 +492,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         #print(f" Paint {self.edgeNum =}")
         #painter.setPen(Qt.red)
         #painter.drawRect(self.bRect)
-        #use the textBRect to adjust exact display position on the line (can be a [0,1] multiplier)
-        ##change textItem to nameText
-        #self.nameText.setVisible(self.metadataAttributes['name']['display'])
-        #textBRect = self.nameText.boundingRect()
-        
-        #HACK: Putting the text at the middle of the first segment. Where should it go?
-        #  This code should be in itemChanged,-- but iC is never called?
-        #midPt = self.edgeLines[0].textPos(0.4)
-        #painter.drawEllipse(midPt,2,2)
-        #textWid = self.nameText.textWidth()
-        #self.nameText.setPos(midPt.x() - textBRect.width()/2  + NODESIZE, \
-        #                     midPt.y() - textBRect.height()/2 + NODESIZE)
-        #self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
-        #painter.drawRect(self.textItem.boundingRect())
-       
+
         if self.isSelected():
             painter.setPen(QPen(self._selectColor,1,Qt.DashLine))
             self.nameText.setDefaultTextColor(self._selectColor)   
@@ -1295,8 +1281,6 @@ class VisHyperEdgeItem(QGraphicsObject):
 
             #remove the 2 old eLs
             for e in eLold:
-                ##??? Somehow a pointer is being missed in this loop, causing the second-delete error
-                # and also that the item isn't bein removed from the scene/ edge
                 #Remove the pointers from start/endNode to the OLD edgeLines
                 #print(f"delSeg ==3 removing {e.lineNum=}")
                 e.setParentItem(None)
@@ -1309,10 +1293,6 @@ class VisHyperEdgeItem(QGraphicsObject):
             dNItem.setParentItem(None)
             self.Scene.removeItem(dNItem)
             delGUID(dNItem.nodeNum)
-
-
-        #will we need to recalculate the `nameText` position after deletion?
-        reCalcNameTextPos = self.nameText.edgeLine == delEdgeLine
 
         #remove item from edgeLines & scene
         #print(f"delSeg end edgeLines: {[e.lineNum for e in self.edgeLines]}")
