@@ -1,0 +1,839 @@
+<?xml version="1.0" ?>
+<higraphml version="0.3.1">
+	<saveViewCoords x="-378.0" y="-239.0" width="506.0" height="477.0"/>
+	<graphml xmlns="http://graphml.graphdrawing.org/xmlns" xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java" xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0" xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:y="http://www.yworks.com/xml/graphml" xmlns:yed="http://www.yworks.com/xml/yed/3" xmlns:h="http://www.isijingi.co.za/higraph" xsi:schemaLocation="http://graphml.graphdrawing.org/xmlns http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+		<key id="data_node" for="node" yfiles.type="nodegraphics"/>
+		<key id="data_blob" for="blob" higraph.type="blobgraphics"/>
+		<key id="data_edge" for="edge" yfiles.type="edgegraphics"/>
+		<graph edgedefault="directed" id="G">
+			<hyperedge id="277" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="34" sourceport="-1"/>
+					<end target="36" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="278" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="34" sourceport="-1"/>
+					<end target="43" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="279" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="43" sourceport="-1"/>
+					<end target="44" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="280" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="35" sourceport="-1"/>
+					<end target="34" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="281" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="35" sourceport="-1"/>
+					<end target="37" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="282" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="35" sourceport="-1"/>
+					<end target="38" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="283" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="38" sourceport="-1"/>
+					<end target="48" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="284" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="48" sourceport="-1"/>
+					<end target="49" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="285" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="35" sourceport="-1"/>
+					<end target="42" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="286" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="35" sourceport="-1"/>
+					<end target="50" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="287" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="38" sourceport="-1"/>
+					<end target="39" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="288" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="39" sourceport="-1"/>
+					<end target="40" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="289" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="39" sourceport="-1"/>
+					<end target="41" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="290" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="43" sourceport="-1"/>
+					<end target="46" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="291" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="43" sourceport="-1"/>
+					<end target="47" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="292" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="45" sourceport="-1"/>
+					<end target="46" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="293" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="45" sourceport="-1"/>
+					<end target="47" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="294" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="43" sourceport="-1"/>
+					<end target="49" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="295" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="45" sourceport="-1"/>
+					<end target="49" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<h:blob id="34">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-955" y="-955" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS110
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Place Values: Units, Tens, Hundreds, etc. (No Decimals Places)">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="36">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-790" y="-955" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS112
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Expand a Number: 54 = 5*10 + 4*1">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="43">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-625" y="-955" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS116
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Scientific Notation  For Numbers &gt;= 1">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="44">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-460" y="-955" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS117
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="scase">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Numbers Between 1 &amp; 10: 2.3 = 2.3 x 10^0">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="35">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-970" y="-865" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS111
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Numbers up to 100 (e.g., Count to 100)">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="37">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-805" y="-865" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS113
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Numbers up to 1000 (e.g., Count to 1000)">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="38">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-640" y="-865" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS114
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Order of Numbers up to 100 (Which is larger: 54 or 23?)">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="48">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-475" y="-865" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS144
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Order Large Numbers (ie., Which is larger: 42832 or 39008?)">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="49">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-970" y="-775" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS180
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Order Scientific Notation Values (i.e., Which is larger: 3.4*10^3 or 5.6*10^2">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="42">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-805" y="-775" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS115
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Multiplication Facts">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="50">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-640" y="-775" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS181
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="'Constant' A value which does not change">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="39">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-475" y="-775" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS1141
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="'Numerical Order'">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="40">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-970" y="-685" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS1142
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="'Ascending Order'">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="41">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-805" y="-685" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS1143
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="'Descending Order'">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="46">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-640" y="-685" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS119
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Convert Standard Notation Numbers into Scientific Notation">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="47">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-475" y="-685" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS120
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Convert Scientific Notation Numbers into Standard Notation">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="45">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-970" y="-595" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS118
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Scientific Notation  For Numbers &lt; 1">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="2">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-1005" y="-1005" width="660" height="495" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS001
+							<h:metadataAttribute key="display" value="True"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="group">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Basic Facts &amp; Represenations">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</h:blob>
+			<hyperedge id="296" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="54" sourceport="-1"/>
+					<end target="51" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="297" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="51" sourceport="-1"/>
+					<end target="52" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="298" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="53" sourceport="-1"/>
+					<end target="54" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="299" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="54" sourceport="-1"/>
+					<end target="55" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<hyperedge id="300" directed="true" lineType="Spline">
+				<y:Arrows source="none" target="standard"/>
+				<h:nodeList>
+					<start source="54" sourceport="-1"/>
+					<end target="56" targetport="-1"/>
+				</h:nodeList>
+				<h:metadata key="name" value="">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:dummyNodeList/>
+				<h:edgeLineList/>
+			</hyperedge>
+			<h:blob id="54">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-280" y="-955" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS126
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Meaning of Decimals, e.g., 4.25 = 4.00 &amp; 0.20 &amp; 0.05 (no recurring Decimals)">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="51">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-115" y="-955" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS123
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="'Repeating'/'Recurring' Decimals &amp; Use of '...' vs 'Terminating' Decimals">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="52">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-295" y="-865" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS124
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="fact">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Overbar overdot (repeating decis)">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="53">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-130" y="-865" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS125
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="concept">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Decimal Place Values: Tenths, Hundredths, etc.">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="55">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-295" y="-775" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS128
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="scase">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="4 = 4.0">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="56">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-130" y="-775" width="90" height="45" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS129
+							<h:metadataAttribute key="display" value="False"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="scase">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="4.2 = 4.20000...">
+					<h:metadataAttribute key="display" value="True"/>
+					<h:metadataAttribute key="xOffset" value="0"/>
+					<h:metadataAttribute key="yOffset" value="0"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="3">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-330" y="-1005" width="330" height="315" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS002
+							<h:metadataAttribute key="display" value="True"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="group">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Decimal Facts">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</h:blob>
+			<h:blob id="1">
+				<data key="data_blob">
+					<h:ShapeBlob>
+						<h:Geometry x="-1005" y="-1005" width="1140" height="495" xRadius="10" yRadius="10"/>
+						<h:BlobLabel>
+							MNUMS000
+							<h:metadataAttribute key="display" value="True"/>
+							<h:metadataAttribute key="xOffset" value="-7.5"/>
+							<h:metadataAttribute key="yOffset" value="-30"/>
+						</h:BlobLabel>
+					</h:ShapeBlob>
+				</data>
+				<h:metadata key="type" value="group">
+					<h:metadataAttribute key="display" value="False"/>
+				</h:metadata>
+				<h:metadata key="description" value="Number Facts &amp; Skills">
+					<h:metadataAttribute key="display" value="True"/>
+				</h:metadata>
+			</h:blob>
+		</graph>
+	</graphml>
+</higraphml>

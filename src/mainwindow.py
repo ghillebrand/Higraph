@@ -2929,6 +2929,53 @@ class MainWindow(QMainWindow):
                     #if sItem.data(KEY_INDEX) == idx: # iNum:
                     self.Scene.listWidget.setCurrentItem(sItem)"""
 
+    def buildNodeTree(self):
+        directChildDic=self.Scene.getDirectChildDic()  
+        allChildrenList=[]
+        topLevelItems=[]
+        nodeTypeDic={}
+        for k,v in directChildDic.items():
+            for eachV in v:
+                if eachV not in allChildrenList:
+                    allChildrenList.append(eachV)
+        for newNode in self.Scene.items():
+            if newNode.data(KEY_ROLE) in [ROLE_BLOB, ROLE_NODE]:
+                nodeTypeDic[newNode.nodeNum]=newNode.data(KEY_ROLE)
+                nodeType=newNode.data(KEY_ROLE)
+                if newNode.nodeNum not in allChildrenList:  #it has no parents therefore top level
+                    tWitem = QTreeWidgetItem([self.model.Gr.nodeD[newNode.nodeNum].metadata['name'],str(newNode.nodeNum)])
+                    if nodeType==ROLE_NODE:
+                        tWitem.setIcon(2,self.Scene.mainwindow.NODE_ICON)
+                    else:
+                        tWitem.setIcon(2,self.Scene.mainwindow.BLOB_ICON)
+                    tWitem.setData(0, KEY_INDEX,newNode.nodeNum)
+                    tWitem.setData(0, KEY_ROLE, nodeType)
+                    self.ui.treeWidget.addTopLevelItem(tWitem) 
+                    topLevelItems.append(newNode.nodeNum)
+        for topLevelItem in topLevelItems:
+            self.build(topLevelItem, directChildDic, nodeTypeDic)
+        return
+
+    def build(self, upperLevelItem, directChildDic, nodeTypeDic):
+        if upperLevelItem in directChildDic:
+            for childItem in directChildDic[upperLevelItem]:
+                nodeType=nodeTypeDic[childItem]
+                self.model.Gr.nodeD[childItem].addParent(upperLevelItem)
+                self.model.Gr.nodeD[upperLevelItem].addChild(childItem)
+                tWitem = QTreeWidgetItem([self.model.Gr.nodeD[childItem].metadata['name'],str(childItem)])
+                if nodeType==ROLE_NODE:
+                    tWitem.setIcon(2,self.Scene.mainwindow.NODE_ICON)
+                else:
+                    tWitem.setIcon(2,self.Scene.mainwindow.BLOB_ICON)
+                tWitem.setData(0, KEY_INDEX, childItem)
+                tWitem.setData(0, KEY_ROLE, nodeType)
+                upperLevelItems=self.ui.treeWidget.findItems(str(upperLevelItem), Qt.MatchRecursive, 1)
+                for u in upperLevelItems:
+                    u.addChild(tWitem) 
+                self.build(childItem, directChildDic, nodeTypeDic)
+        return
+
+
     def addTreeNode(self, newNode, nodeType):
         #this code still has bugs on very complex blob nesting structures
         directChildDic=self.Scene.getDirectChildDic()   #this is basically the updateblobparenting code
@@ -3700,7 +3747,6 @@ class MainWindow(QMainWindow):
         #Track the old -> new IDs to deal with string IDs, and hook up edges
         #Hyperedges are complex, so make it accessible to hyperEdgeFromXML
         self.oldToNewID = {}
-
         #Nodes
         for xNode in graphStr.iter("node"):
             #print(f"FileOpen - nodes: {ET.tostring(xNode)=}")
@@ -3720,7 +3766,7 @@ class MainWindow(QMainWindow):
             #    print(f"WARNING: node id {fileID=} changed on load")
             
             self.Scene.addItem(GItem)
-            self.addTreeNode(GItem, ROLE_NODE)
+            #self.addTreeNode(GItem, ROLE_NODE)
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
 
@@ -3743,10 +3789,10 @@ class MainWindow(QMainWindow):
             #    print(f"WARNING: node id {fileID=} changed on load")
             
             self.Scene.addItem(GItem)
-            self.addTreeNode(GItem, ROLE_BLOB)
+            #self.addTreeNode(GItem, ROLE_BLOB)
             GItem.setFlag(QGraphicsItem.ItemIsSelectable, True)
             GItem.setFlag(QGraphicsItem.ItemIsMovable, True)    
-
+        self.buildNodeTree()
         #Edges
         for xEdge in graphStr.iter("edge"):
             #TODO: Deprecate this code - edges are never created.
@@ -4313,7 +4359,7 @@ class MainWindow(QMainWindow):
 
     def action_FileImport(self):
         #outFIleName="Numeracy.higraphml"
-        outFIleName="NumberBasics6.higraphml"
+        outFIleName="NumberBasics9.higraphml"
         self.fileName=outFIleName
         if self.fileName:
             #Generate the graph header info
@@ -4376,6 +4422,7 @@ class MainWindow(QMainWindow):
         nodeInfoDic={}
         blobXrefDic={}
         blobInfoDic={}
+        levelDic={}
         vertexStyle='blob'
         processingGroups=False
         processingNodes=False
@@ -4384,7 +4431,6 @@ class MainWindow(QMainWindow):
             if processingGroups==True:
                 if "/*DECLARE ALL NODES BY GROUPS MEMBERSHIP*/" in inline:
                 #if "/*DECLARE ALL NODES CLUSTERED BY GROUP*/" in inline:
-                    print("processing nodes")
                     processingNodes=True
                     processingGroups=False
                 else:
@@ -4394,7 +4440,6 @@ class MainWindow(QMainWindow):
                         print("processing group name", groupName)
                         groupType=inline[inline.find("type=")+6: inline.find(",")-1]
                         groupDesc=inline[inline.find("label=")+7: -2]
-                        #groupDesc.replace('\\n',' ')
                         newdesc=""
                         skip=False
                         for i in range(0, len(groupDesc)):
@@ -4414,7 +4459,6 @@ class MainWindow(QMainWindow):
 
             if processingNodes==True:
                 if "/*ORGANISE THE GROUPS*/" in inline:
-                    print("processing edges")
                     processingEdges=True
                     processingNodes=False
                     maxBlobHeight=0
@@ -4424,6 +4468,9 @@ class MainWindow(QMainWindow):
                     level=-1
                     blobPosx=-1000
                     blobPosy=-1000
+                    blobDimensions={}
+                    blobDimensions[level]=[blobPosx, blobPosy, 0, 0]
+                    lastLevel=-1
                 else:
                     inline = inline.strip()
                     if inline != "":
@@ -4450,28 +4497,29 @@ class MainWindow(QMainWindow):
 
             elif processingEdges==True:
                 if "/*DEPENDENCIES LINKED TO ONE OF THE OTHER BIG MATHS GROUPS*/" in inline:
-                    print("all done")
                     processingEdges=False
                     processingNodes=False
-
                 else:
-
                     inline = inline.strip()
                     if "{" in inline:
                         level+=1
-
                         groupNodeName=inline[0:inline.find(" ")]
-                        #print("going in level", level, groupNodeName)
+                        if groupNodeName=="MNUMS040":
+                            print("Processing MNUMS040")
+                            print("hierarchy", hierarchy, "level", level, "lastlevel", lastLevel)
                         hierarchy.append(blobXrefDic[groupNodeName])
+                        levelDic[blobXrefDic[groupNodeName]]=[]
                         optimiseEdges[level]=[]
-                        optimiseNodes[level]=[]                       
+                        optimiseNodes[level]=[]
+                        if level > lastLevel:
+                            blobDimensions[level]=[blobDimensions[level-1][0], blobDimensions[level-1][1], 0, 0]
+                        lastLevel=level
                     elif "}" in inline:
-                        #print("going out level", level)
-                        # just going to oversimplify to start
+                        if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                            print("MNUMS040 found on outgoing. hierarchy", hierarchy, "level", level)
                         optimiseNodesDic={}
-                        positionX=NODESIZE*3
-                        positionY=NODESIZE*3
-                        #print("level", level, optimiseNodes)
+                        positionX=NODESIZE*2   #these are normalised positions (needed if optimising)
+                        positionY=NODESIZE*5
                         if len(optimiseNodes[level])!=0:
                             rowlength=int(math.sqrt(len(optimiseNodes[level])))
                             for node in optimiseNodes[level]:
@@ -4485,18 +4533,31 @@ class MainWindow(QMainWindow):
                                     positionX+=NODESIZE*11
                                     if positionX >= rowlength*NODESIZE*11:
                                         positionX=NODESIZE*2
-                                        positionY+=NODESIZE*6
+                                        positionY+=NODESIZE*5
                                 nodeInfoDic[node]['placed']='Y'
+                            optimiseNodes[level]=[]
                             #optimise layout
-                            G = nx.Graph()
-                            G.add_edges_from(optimiseEdges[level])
+                            #G = nx.Graph()
+                            #G.add_edges_from(optimiseEdges[level])
                             #newPositions = nx.spring_layout(G, k=NODESIZE*10, pos=optimiseNodesDic, \
                              #                               iterations=10, scale=None)
                             newPositions=optimiseNodesDic
                             #place nodes in blob position and write xml
                             width=0
                             height=0
-
+                            # if there are also groups inside this group place nodes after them
+                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                print("level dic etc", levelDic[hierarchy[level]])
+                            if len(levelDic[hierarchy[level]]) >0:  #this is over simplified
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                    print("blob dimensions a", blobDimensions[level])
+                                thisSectionX=levelDic[hierarchy[level]][0]['x']
+                                thisSectionY=levelDic[hierarchy[level]][-1]['y']+levelDic[hierarchy[level]][-1]['height']+NODESIZE*2
+                            else:
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                    print("blob dimensions b", blobDimensions[level])
+                                thisSectionX=blobDimensions[level][0]
+                                thisSectionY=blobDimensions[level][1]
                             for node in [*newPositions]:
                                 posn=newPositions[node]
                                 if newPositions[node][0]>width:
@@ -4529,10 +4590,9 @@ class MainWindow(QMainWindow):
                                     xmlBlob = ET.Element("h:blob", id=str(nodeId))
                                     data = ET.SubElement(xmlBlob, "data", key="data_blob")
                                     shape = ET.SubElement(data, "h:" + "ShapeBlob")
-                                    ET.SubElement(shape, "h:Geometry", {'x':str(posn[0]+blobPosx), 'y':str(posn[1]+blobPosy), 'width':str(NODESIZE*6), 'height':str(NODESIZE*3), \
+
+                                    ET.SubElement(shape, "h:Geometry", {'x':str(posn[0]+thisSectionX), 'y':str(posn[1]+thisSectionY), 'width':str(NODESIZE*6), 'height':str(NODESIZE*3), \
                                             'xRadius':str(10),'yRadius':str(10)})
-                                    #for p in self._Ports:    
-                                    #    ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
 
                                     blobLabel = ET.SubElement(shape, "h:BlobLabel")
                                     blobLabel.text = nodeInfoDic[nodeId]['name']
@@ -4546,17 +4606,115 @@ class MainWindow(QMainWindow):
                                     metaAtt1 = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"xOffset","value":str(0)})
                                     metaAtt2 = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"yOffset","value":str(0)})
                                     graph.append(xmlBlob) 
-                        # a group is finished. it must be optimised, blob sized and moved to its parent
-                        #now with all optimism we are going to make a containing blob
-                        if height>maxBlobHeight:
-                            maxBlobHeight=height
+                        # process completed group
+                            if len(levelDic[hierarchy[level]])==0:  # there are no subgroups
+                                blobDimensions[level][2]=width+NODESIZE*2
+                                blobDimensions[level][3]=height
+                                if height>maxBlobHeight:
+                                    maxBlobHeight=height
+                                if len(hierarchy)>1:
+                                    levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':blobDimensions[level][2], 'height':blobDimensions[level][3]})
+                            else:   #there are included groups 
+                                extraWidth=width
+                                extraHeight=height
+                                width=0
+                                height=0
+                                blobRowHeight=[0]
+                                x=math.inf
+                                y=math.inf
+                                for i in levelDic[hierarchy[level]]:
+                                    blobRows=0
+                                    #if i['width'] > width:
+                                    width+=i['width'] + NODESIZE*5
+                                    if width > 2000:
+                                        blobRows+=1
+                                        blobRowHeight.append(0)
+                                        width=i['width']+ NODESIZE*5
+                                    if i['height'] > blobRowHeight[blobRows]:
+                                        blobRowHeight[blobRows] = i['height']
+                                    if i['x'] < x:
+                                        x=i['x']
+                                    if i['y'] < y:
+                                        y=i['y']
+                                if blobRows>0:
+                                    width=2000
+                                    height=0
+                                    for b in blobRowHeight:
+                                        height+=b
+                                else:
+                                    height=blobRowHeight[0]
+                                print("subgroups AND nodes extra", extraWidth, extraHeight, "groups", width, height )
+                                width1=max(width, extraWidth)+NODESIZE*3
+                                width=width1
+                                height+=extraHeight
+                                height+=NODESIZE*2
+                                if height>maxBlobHeight:
+                                    maxBlobHeight=height
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                    print("new width and height", width, height)
+                                blobDimensions[level][0]=x
+                                blobDimensions[level][1]=y
+                                blobDimensions[level][2]=width
+                                blobDimensions[level][3]=height
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                    print("blobd now", blobDimensions[level])
+                                if len(hierarchy)>1:
+                                    levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':width, 'height':height})
+                                    if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                        print("leveldic now", levelDic[hierarchy[-2]], hierarchy[-2], hierarchy[level-1])
+                                
+                        else: #this is an outer level with no loose nodes
+                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                print("no nodes")
+                            #width=levelDic[hierarchy[level]][0]['width']
+                            #height=levelDic[hierarchy[level]][0]['height']
+                            #x=levelDic[hierarchy[level]][0]['x']
+                            #y=levelDic[hierarchy[level]][0]['y']
+                            width=0
+                            #height=0
+                            blobRowHeight=[0]
+                            x=math.inf
+                            y=math.inf
+                            for i in levelDic[hierarchy[level]]:
+                                blobRows=0
+                                #if i['width'] > width:
+                                width+=i['width']+NODESIZE*5
+                                if width > 2000:
+                                    blobRows+=1
+                                    blobRowHeight.append(0)
+                                    width=i['width'] + NODESIZE*5
+                                if i['height'] > blobRowHeight[blobRows]:
+                                    blobRowHeight[blobRows] = i['height']
+                                if i['x'] < x:
+                                    x=i['x']
+                                if i['y'] < y:
+                                    y=i['y']
+                            if blobRows>0:
+                                width=2000
+                                height=0
+                                for b in blobRowHeight:
+                                    height+=b
+                            else:
+                                height=blobRowHeight[0]
+                            height+=NODESIZE*2
+                            if height>maxBlobHeight:
+                                    maxBlobHeight=height
+                            blobDimensions[level][0]=x
+                            blobDimensions[level][1]=y
+                            blobDimensions[level][2]=width
+                            blobDimensions[level][3]=height
+                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                print("blobd now", blobDimensions[level])
+                            if len(hierarchy)>1:
+                                levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':width, 'height':height})
                         blobId=hierarchy[level]
                         xmlBlob = ET.Element("h:blob", id=str(blobId))
 
                         data = ET.SubElement(xmlBlob, "data", key="data_blob")
                         shape = ET.SubElement(data, "h:" + "ShapeBlob")
-                        ET.SubElement(shape, "h:Geometry", {'x':str(blobPosx-5),\
-                            'y':str(blobPosy-5), 'width':str(width+NODESIZE*8), 'height':str(height+NODESIZE*6), \
+                        ET.SubElement(shape, "h:Geometry", {'x':str(blobDimensions[level][0]+(5*level)),\
+                            'y':str(blobDimensions[level][1]+(5*level)), 'width':str(blobDimensions[level][2]+NODESIZE*5-5*level),\
+                                  'height':str(blobDimensions[level][3]+NODESIZE*5-5*level), \
                                 'xRadius':str(10),'yRadius':str(10)})
                         #for p in self._Ports:    
                         #    ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
@@ -4564,21 +4722,33 @@ class MainWindow(QMainWindow):
                         blobLabel = ET.SubElement(shape, "h:BlobLabel")
                         blobLabel.text = blobInfoDic[blobId]['name']
                         metaAtt = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"display","value":str(True)})
-                        metaAtt1 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"xOffset","value":str(-NODESIZE/2)})
-                        metaAtt2 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"yOffset","value":str(-NODESIZE*2)})
+                        metaAtt1 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"xOffset","value":str(NODESIZE/2)})
+                        metaAtt2 = ET.SubElement(blobLabel, "h:metadataAttribute", {"key":"yOffset","value":str(NODESIZE/4)})
                         metaEl  = ET.SubElement(xmlBlob, "h:metadata", {"key":"type","value":str(blobInfoDic[blobId]['type'])})
                         metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
                         metaE2  = ET.SubElement(xmlBlob, "h:metadata", {"key":"description","value":str(blobInfoDic[blobId]['desc'])})
                         metaAtt = ET.SubElement(metaE2, "h:metadataAttribute", {"key":"display","value":str(True)})
                         graph.append(xmlBlob) 
+
                         hierarchy.pop()
-                        level-=1
-                                                
-                        blobPosx+=width+NODESIZE*3+NODESIZE*6
-                        if blobPosx > 1000:
+
+                        if blobInfoDic[blobId]['name']=="MNUMS040":
+                            print("blobPosx", blobPosx, width, blobDimensions[level])
+                        blobPosx=blobDimensions[level][0]
+                        #blobPosy=blobDimensions[level][1]
+                        blobPosx+=width+NODESIZE*8
+                        if blobPosx > 1000 and level==1:
+                            #blobDimensions[level-1][2]=1000
                             blobPosx= -1000
-                            blobPosy+=maxBlobHeight+NODESIZE*12  
+                            blobPosy+=maxBlobHeight+NODESIZE*10 
                             maxBlobHeight=0
+                        #else:
+                        blobDimensions[level]=[blobPosx, blobPosy, 0, 0]
+                        if blobInfoDic[blobId]['name']=="MNUMS040":
+                            print("and finishing off blob d", blobDimensions[level])
+                        
+                        level-=1
+
                     elif "->" in inline:
                         startNodeName=inline[0:inline.find(" ")]
                         restOfLine=inline[inline.find(">")+2:]
@@ -4610,7 +4780,6 @@ class MainWindow(QMainWindow):
                                 dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
                                 eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
                                 graph.append(xmlEdge)
-                                print("level", level)
                                 optimiseEdges[level].append((nodeXrefDic[startNodeName],nodeXrefDic[endNodeName]))
 
                                 if nodeInfoDic[nodeXrefDic[startNodeName]]['placed']=='N' and \
@@ -4624,6 +4793,15 @@ class MainWindow(QMainWindow):
                                 if not done:
                                     startNodeName=endNodeName
                                     restOfLine=restOfLine[restOfLine.find(">")+2:]
+                    elif inline != "":  #this is just a node with no edge
+                        startNodeName=inline
+                        if startNodeName not in nodeXrefDic:
+                            print("Error processing", inline, startNodeName)
+                        else:
+                            if nodeInfoDic[nodeXrefDic[startNodeName]]['placed']=='N' and \
+                                    nodeXrefDic[startNodeName] not in optimiseNodes[level]:
+                                #print("placing", startNodeName, nodeXrefDic[startNodeName])
+                                optimiseNodes[level].append(nodeXrefDic[startNodeName])
 
             #print(inline.strip())  # .strip() to remove newline characters
             if "/*DECLARE ALL 'Group' NODES; INDENTED Groups are Subgroups!*/" in inline:

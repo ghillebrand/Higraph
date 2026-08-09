@@ -110,8 +110,10 @@ class VisHyperEdgeItem(QGraphicsObject):
                     if valid==QLineF.IntersectionType.BoundedIntersection:
                         startPortPosition=intPoint
                         break
-                    if startPortPosition==0:
-                        print("error no instersection found")
+                if startPortPosition==0:
+                    print("error no intersection found", sItem.nodeNum)
+                    startPortPosition=QPointF(sItem.scenePos().x()+sItem._width,sItem.scenePos().y()+sItem._height)
+                       # os.system("pause")
             if type(eItem) is VisBlobItem:
                 topLeft=eItem.scenePos()
                 topRight=QPointF(eItem.scenePos().x()+eItem._width, eItem.scenePos().y())
@@ -124,10 +126,12 @@ class VisHyperEdgeItem(QGraphicsObject):
                     if valid==QLineF.IntersectionType.BoundedIntersection:
                         endPortPosition=intPoint
                         break
+            if endPortPosition==0:
+                    print("error no intersection found", eItem.nodeNum)
+                    endPortPosition=QPointF(eItem.scenePos().x()+eItem._width,eItem.scenePos().y()+eItem._height)
+ 
 
-
-            #startPort = sItem.createPort(sItem.scenePos()) 
-            print("creating ports", sItem)        
+            #startPort = sItem.createPort(sItem.scenePos())       
             startPort = sItem.createPort(startPortPosition)
             self.startNodes = []
             self.startNodes.append((sItem, startPort))
@@ -368,7 +372,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.setZValue(0)
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._baseColor = DRAWING_COLOUR
+        self._baseColor = "red"
         self._hoverColor = HOVER_COLOUR
         self._selectColor = SELECT_COLOUR
         
