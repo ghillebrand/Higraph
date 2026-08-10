@@ -4359,7 +4359,7 @@ class MainWindow(QMainWindow):
 
     def action_FileImport(self):
         #outFIleName="Numeracy.higraphml"
-        outFIleName="NumberBasics9.higraphml"
+        outFIleName="NumberBasics10.higraphml"
         self.fileName=outFIleName
         if self.fileName:
             #Generate the graph header info
@@ -4523,18 +4523,19 @@ class MainWindow(QMainWindow):
                         if len(optimiseNodes[level])!=0:
                             rowlength=int(math.sqrt(len(optimiseNodes[level])))
                             for node in optimiseNodes[level]:
-                                optimiseNodesDic[node]=(positionX, positionY)
-                                if vertexStyle=='node':
-                                    positionX+=NODESIZE*6
-                                    if positionX >= rowlength*NODESIZE*6:
-                                        positionX=NODESIZE*3
-                                        positionY+=NODESIZE*6
-                                else:
-                                    positionX+=NODESIZE*11
-                                    if positionX >= rowlength*NODESIZE*11:
-                                        positionX=NODESIZE*2
-                                        positionY+=NODESIZE*5
-                                nodeInfoDic[node]['placed']='Y'
+                                if nodeInfoDic[node]['placed'] != 'Y':
+                                    optimiseNodesDic[node]=(positionX, positionY)
+                                    if vertexStyle=='node':
+                                        positionX+=NODESIZE*6
+                                        if positionX >= rowlength*NODESIZE*6:
+                                            positionX=NODESIZE*3
+                                            positionY+=NODESIZE*6
+                                    else:
+                                        positionX+=NODESIZE*11
+                                        if positionX >= rowlength*NODESIZE*11:
+                                            positionX=NODESIZE*2
+                                            positionY+=NODESIZE*5
+                                    nodeInfoDic[node]['placed']='Y'
                             optimiseNodes[level]=[]
                             #optimise layout
                             #G = nx.Graph()
@@ -4552,7 +4553,13 @@ class MainWindow(QMainWindow):
                                 if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
                                     print("blob dimensions a", blobDimensions[level])
                                 thisSectionX=levelDic[hierarchy[level]][0]['x']
-                                thisSectionY=levelDic[hierarchy[level]][-1]['y']+levelDic[hierarchy[level]][-1]['height']+NODESIZE*2
+                                #find tallest blob height
+                                tallest=-math.inf
+                                for b in levelDic[hierarchy[level]]:
+                                    if b['y'] + b['height'] > tallest:
+                                        tallest = b['y'] + b['height']
+                                #thisSectionY=levelDic[hierarchy[level]][-1]['y']+levelDic[hierarchy[level]][-1]['height']+NODESIZE*2
+                                thisSectionY=tallest+NODESIZE*2
                             else:
                                 if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
                                     print("blob dimensions b", blobDimensions[level])
@@ -4615,18 +4622,26 @@ class MainWindow(QMainWindow):
                                 if len(hierarchy)>1:
                                     levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':blobDimensions[level][2], 'height':blobDimensions[level][3]})
                             else:   #there are included groups 
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
+                                    print("000 processing")
                                 extraWidth=width
                                 extraHeight=height
                                 width=0
                                 height=0
+                                maxWidth=0
                                 blobRowHeight=[0]
+                                blobRows=0
                                 x=math.inf
                                 y=math.inf
-                                for i in levelDic[hierarchy[level]]:
-                                    blobRows=0
+                                lastx=levelDic[hierarchy[level]][0]['x']
+                                for c,i in enumerate(levelDic[hierarchy[level]]):
+                                    
                                     #if i['width'] > width:
                                     width+=i['width'] + NODESIZE*5
-                                    if width > 2000:
+                                    if i['x'] < lastx or c==len(levelDic[hierarchy[level]])-1:
+                                    #if width > 2000:
+                                        if width > maxWidth:
+                                            maxWidth=width
                                         blobRows+=1
                                         blobRowHeight.append(0)
                                         width=i['width']+ NODESIZE*5
@@ -4636,11 +4651,14 @@ class MainWindow(QMainWindow):
                                         x=i['x']
                                     if i['y'] < y:
                                         y=i['y']
+                                    lastx=i['x']
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
+                                    print("blobrows", blobRows, blobRowHeight)
                                 if blobRows>0:
-                                    width=2000
+                                    width=maxWidth
                                     height=0
                                     for b in blobRowHeight:
-                                        height+=b
+                                        height+=b+NODESIZE*3
                                 else:
                                     height=blobRowHeight[0]
                                 print("subgroups AND nodes extra", extraWidth, extraHeight, "groups", width, height )
@@ -4650,22 +4668,20 @@ class MainWindow(QMainWindow):
                                 height+=NODESIZE*2
                                 if height>maxBlobHeight:
                                     maxBlobHeight=height
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
                                     print("new width and height", width, height)
                                 blobDimensions[level][0]=x
                                 blobDimensions[level][1]=y
                                 blobDimensions[level][2]=width
                                 blobDimensions[level][3]=height
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
                                     print("blobd now", blobDimensions[level])
                                 if len(hierarchy)>1:
                                     levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':width, 'height':height})
-                                    if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
+                                    if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
                                         print("leveldic now", levelDic[hierarchy[-2]], hierarchy[-2], hierarchy[level-1])
                                 
                         else: #this is an outer level with no loose nodes
-                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
-                                print("no nodes")
                             #width=levelDic[hierarchy[level]][0]['width']
                             #height=levelDic[hierarchy[level]][0]['height']
                             #x=levelDic[hierarchy[level]][0]['x']
@@ -4703,8 +4719,8 @@ class MainWindow(QMainWindow):
                             blobDimensions[level][1]=y
                             blobDimensions[level][2]=width
                             blobDimensions[level][3]=height
-                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
-                                print("blobd now", blobDimensions[level])
+                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
+                                print("000 blobd now", blobDimensions[level])
                             if len(hierarchy)>1:
                                 levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':width, 'height':height})
                         blobId=hierarchy[level]

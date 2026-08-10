@@ -546,7 +546,7 @@ MNUMBERSMAP [type="group", label="Numbers (The Basics)"] {
     MNUMS298 -> MNUMS301
     
     MNUMS031 {    /*THIS IS THE "Natural & Whole Numbers" GROUP*/
-      MNUMS311 ->MNUMS310
+      MNUMS311 -> MNUMS310
       MNUMS311 -> MNUMS314
       MNUMS311 -> MNUMS315
       MNUMS313 -> MNUMS312

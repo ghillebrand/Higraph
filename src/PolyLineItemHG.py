@@ -413,7 +413,7 @@ class HermiteSplineItem(QGraphicsItem):
         self.setFlag(self.GraphicsItemFlag.ItemSendsScenePositionChanges,True)
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._baseColor = DRAWING_COLOUR
+        self._baseColor = QColor("red")
         self._hoverColor = HOVER_COLOUR
         self._selectColor = SELECT_COLOUR
         self.pen = QPen(self._baseColor, 1)# QPen(Qt.darkBlue, 1) 

@@ -372,7 +372,7 @@ class VisHyperEdgeItem(QGraphicsObject):
         self.setZValue(0)
         self.setAcceptHoverEvents(True)
         self.isHovered=False
-        self._baseColor = "red"
+        self._baseColor = QColor("red")
         self._hoverColor = HOVER_COLOUR
         self._selectColor = SELECT_COLOUR
         
