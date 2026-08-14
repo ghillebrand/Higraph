@@ -4358,8 +4358,8 @@ class MainWindow(QMainWindow):
             f.write(pretty_str)
 
     def action_FileImport(self):
-        #outFIleName="Numeracy.higraphml"
-        outFIleName="NumberBasics10.higraphml"
+        outFIleName="Numeracy1.higraphml"
+        #outFIleName="NumberBasics11.higraphml"
         self.fileName=outFIleName
         if self.fileName:
             #Generate the graph header info
@@ -4416,8 +4416,8 @@ class MainWindow(QMainWindow):
 
 
         #open input file
-        #infile=open("Numeracy.map", "r",encoding="utf-8")
-        infile=open("NumberBasics.map", "r",encoding="utf-8")
+        infile=open("Numeracy.map", "r",encoding="utf-8")
+        #infile=open("NumberBasics.map", "r",encoding="utf-8")
         nodeXrefDic={}
         nodeInfoDic={}
         blobXrefDic={}
@@ -4429,15 +4429,14 @@ class MainWindow(QMainWindow):
         processingEdges=False
         for inline in infile:
             if processingGroups==True:
-                if "/*DECLARE ALL NODES BY GROUPS MEMBERSHIP*/" in inline:
-                #if "/*DECLARE ALL NODES CLUSTERED BY GROUP*/" in inline:
+                #if "/*DECLARE ALL NODES BY GROUPS MEMBERSHIP*/" in inline:
+                if "/*DECLARE ALL NODES CLUSTERED BY GROUP*/" in inline:
                     processingNodes=True
                     processingGroups=False
                 else:
                     inline = inline.strip()
                     if inline != "":
                         groupName=inline[0:inline.find(" ")]
-                        print("processing group name", groupName)
                         groupType=inline[inline.find("type=")+6: inline.find(",")-1]
                         groupDesc=inline[inline.find("label=")+7: -2]
                         newdesc=""
@@ -4504,9 +4503,6 @@ class MainWindow(QMainWindow):
                     if "{" in inline:
                         level+=1
                         groupNodeName=inline[0:inline.find(" ")]
-                        if groupNodeName=="MNUMS040":
-                            print("Processing MNUMS040")
-                            print("hierarchy", hierarchy, "level", level, "lastlevel", lastLevel)
                         hierarchy.append(blobXrefDic[groupNodeName])
                         levelDic[blobXrefDic[groupNodeName]]=[]
                         optimiseEdges[level]=[]
@@ -4515,8 +4511,6 @@ class MainWindow(QMainWindow):
                             blobDimensions[level]=[blobDimensions[level-1][0], blobDimensions[level-1][1], 0, 0]
                         lastLevel=level
                     elif "}" in inline:
-                        if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
-                            print("MNUMS040 found on outgoing. hierarchy", hierarchy, "level", level)
                         optimiseNodesDic={}
                         positionX=NODESIZE*2   #these are normalised positions (needed if optimising)
                         positionY=NODESIZE*5
@@ -4547,11 +4541,7 @@ class MainWindow(QMainWindow):
                             width=0
                             height=0
                             # if there are also groups inside this group place nodes after them
-                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
-                                print("level dic etc", levelDic[hierarchy[level]])
-                            if len(levelDic[hierarchy[level]]) >0:  #this is over simplified
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
-                                    print("blob dimensions a", blobDimensions[level])
+                            if len(levelDic[hierarchy[level]]) >0:  
                                 thisSectionX=levelDic[hierarchy[level]][0]['x']
                                 #find tallest blob height
                                 tallest=-math.inf
@@ -4561,8 +4551,6 @@ class MainWindow(QMainWindow):
                                 #thisSectionY=levelDic[hierarchy[level]][-1]['y']+levelDic[hierarchy[level]][-1]['height']+NODESIZE*2
                                 thisSectionY=tallest+NODESIZE*2
                             else:
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS040":
-                                    print("blob dimensions b", blobDimensions[level])
                                 thisSectionX=blobDimensions[level][0]
                                 thisSectionY=blobDimensions[level][1]
                             for node in [*newPositions]:
@@ -4578,8 +4566,6 @@ class MainWindow(QMainWindow):
                                     data = ET.SubElement(xmlNode, "data", key="data_node")
                                     shape = ET.SubElement(data, "y:" + "ShapeNode")
                                     ET.SubElement(shape, "y:Geometry", {'x':str(posn[0]+blobPosx), 'y':str(posn[1]+blobPosy)})
-                                    #for p in self._Ports:    
-                                    #    ET.SubElement(shape,"port",name=str(p.index), t=str(p.t), x=str(p.pos().x()), y=str(p.pos().y()) )
 
                                     nodeLabel = ET.SubElement(shape, "y:NodeLabel")
                                     
@@ -4622,8 +4608,6 @@ class MainWindow(QMainWindow):
                                 if len(hierarchy)>1:
                                     levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':blobDimensions[level][2], 'height':blobDimensions[level][3]})
                             else:   #there are included groups 
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
-                                    print("000 processing")
                                 extraWidth=width
                                 extraHeight=height
                                 width=0
@@ -4634,8 +4618,7 @@ class MainWindow(QMainWindow):
                                 x=math.inf
                                 y=math.inf
                                 lastx=levelDic[hierarchy[level]][0]['x']
-                                for c,i in enumerate(levelDic[hierarchy[level]]):
-                                    
+                                for c,i in enumerate(levelDic[hierarchy[level]]):                                   
                                     #if i['width'] > width:
                                     width+=i['width'] + NODESIZE*5
                                     if i['x'] < lastx or c==len(levelDic[hierarchy[level]])-1:
@@ -4652,8 +4635,7 @@ class MainWindow(QMainWindow):
                                     if i['y'] < y:
                                         y=i['y']
                                     lastx=i['x']
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
-                                    print("blobrows", blobRows, blobRowHeight)
+
                                 if blobRows>0:
                                     width=maxWidth
                                     height=0
@@ -4661,25 +4643,21 @@ class MainWindow(QMainWindow):
                                         height+=b+NODESIZE*3
                                 else:
                                     height=blobRowHeight[0]
-                                print("subgroups AND nodes extra", extraWidth, extraHeight, "groups", width, height )
+
                                 width1=max(width, extraWidth)+NODESIZE*3
                                 width=width1
                                 height+=extraHeight
                                 height+=NODESIZE*2
                                 if height>maxBlobHeight:
                                     maxBlobHeight=height
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
-                                    print("new width and height", width, height)
+
                                 blobDimensions[level][0]=x
                                 blobDimensions[level][1]=y
                                 blobDimensions[level][2]=width
                                 blobDimensions[level][3]=height
-                                if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
-                                    print("blobd now", blobDimensions[level])
+
                                 if len(hierarchy)>1:
                                     levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':width, 'height':height})
-                                    if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
-                                        print("leveldic now", levelDic[hierarchy[-2]], hierarchy[-2], hierarchy[level-1])
                                 
                         else: #this is an outer level with no loose nodes
                             #width=levelDic[hierarchy[level]][0]['width']
@@ -4719,8 +4697,7 @@ class MainWindow(QMainWindow):
                             blobDimensions[level][1]=y
                             blobDimensions[level][2]=width
                             blobDimensions[level][3]=height
-                            if blobInfoDic[hierarchy[level]]['name']=="MNUMS000":
-                                print("000 blobd now", blobDimensions[level])
+
                             if len(hierarchy)>1:
                                 levelDic[hierarchy[-2]].append({'x':blobDimensions[level][0],'y':blobDimensions[level][1], 'width':width, 'height':height})
                         blobId=hierarchy[level]
@@ -4748,8 +4725,6 @@ class MainWindow(QMainWindow):
 
                         hierarchy.pop()
 
-                        if blobInfoDic[blobId]['name']=="MNUMS040":
-                            print("blobPosx", blobPosx, width, blobDimensions[level])
                         blobPosx=blobDimensions[level][0]
                         #blobPosy=blobDimensions[level][1]
                         blobPosx+=width+NODESIZE*8
@@ -4760,8 +4735,6 @@ class MainWindow(QMainWindow):
                             maxBlobHeight=0
                         #else:
                         blobDimensions[level]=[blobPosx, blobPosy, 0, 0]
-                        if blobInfoDic[blobId]['name']=="MNUMS040":
-                            print("and finishing off blob d", blobDimensions[level])
                         
                         level-=1
 
@@ -4777,8 +4750,8 @@ class MainWindow(QMainWindow):
                             else:
                                 endNodeName=restOfLine
                                 done=True
-                            #print(startNodeName, endNodeName)
-                            if startNodeName not in nodeXrefDic or endNodeName not in nodeXrefDic:
+                            if (startNodeName not in nodeXrefDic and startNodeName not in blobXrefDic) or \
+                                    (endNodeName not in nodeXrefDic and endNodeName not in blobXrefDic):
                                 print("Error processing", inline)
                                 done=True
                             else:
@@ -4789,22 +4762,28 @@ class MainWindow(QMainWindow):
                                 ET.SubElement(xmlEdge, "y:Arrows", {'source':"none", 'target':"standard"})  
                                 xmlEdge.set("lineType", "Spline")
                                 nL = ET.SubElement(xmlEdge,"h:nodeList")
-                                ET.SubElement(nL,"start" , source= str(nodeXrefDic[startNodeName]), sourceport=str(-1))
-                                ET.SubElement(nL,"end", target = str(nodeXrefDic[endNodeName]), targetport=str(-1))
+                                if startNodeName in nodeXrefDic:
+                                    source=nodeXrefDic[startNodeName]
+                                else:
+                                    source=blobXrefDic[startNodeName]
+                                ET.SubElement(nL,"start" , source= str(source), sourceport=str(-1))
+                                if endNodeName in nodeXrefDic:
+                                    target=nodeXrefDic[endNodeName]
+                                else:
+                                    target=blobXrefDic[endNodeName]
+                                ET.SubElement(nL,"end", target = str(target), targetport=str(-1))
                                 metaEl  = ET.SubElement(xmlEdge, "h:metadata", {"key":"name","value":""})
                                 metaAtt = ET.SubElement(metaEl, "h:metadataAttribute", {"key":"display","value":str(False)})
                                 dL = ET.SubElement(xmlEdge,"h:dummyNodeList")
                                 eLL = ET.SubElement(xmlEdge,"h:edgeLineList")
                                 graph.append(xmlEdge)
-                                optimiseEdges[level].append((nodeXrefDic[startNodeName],nodeXrefDic[endNodeName]))
+                                #optimiseEdges[level].append((nodeXrefDic[startNodeName],nodeXrefDic[endNodeName]))
 
-                                if nodeInfoDic[nodeXrefDic[startNodeName]]['placed']=='N' and \
+                                if startNodeName in nodeXrefDic and nodeInfoDic[nodeXrefDic[startNodeName]]['placed']=='N' and \
                                         nodeXrefDic[startNodeName] not in optimiseNodes[level]:
-                                    #print("placing", startNodeName, nodeXrefDic[startNodeName])
                                     optimiseNodes[level].append(nodeXrefDic[startNodeName])
-                                if nodeInfoDic[nodeXrefDic[endNodeName]]['placed']=='N' and \
+                                if endNodeName in nodeXrefDic and nodeInfoDic[nodeXrefDic[endNodeName]]['placed']=='N' and \
                                         nodeXrefDic[endNodeName] not in optimiseNodes[level]:
-                                    #print("placing", endNodeName, nodeXrefDic[endNodeName])
                                     optimiseNodes[level].append(nodeXrefDic[endNodeName])
                                 if not done:
                                     startNodeName=endNodeName
@@ -4816,17 +4795,11 @@ class MainWindow(QMainWindow):
                         else:
                             if nodeInfoDic[nodeXrefDic[startNodeName]]['placed']=='N' and \
                                     nodeXrefDic[startNodeName] not in optimiseNodes[level]:
-                                #print("placing", startNodeName, nodeXrefDic[startNodeName])
                                 optimiseNodes[level].append(nodeXrefDic[startNodeName])
 
-            #print(inline.strip())  # .strip() to remove newline characters
             if "/*DECLARE ALL 'Group' NODES; INDENTED Groups are Subgroups!*/" in inline:
-                print("processing groups")
                 processingGroups=True
-                #blobPosX=-200
-                #blobPosY=-300
 
-        #content=infile.read()
         infile.close()
         #Write to file
         raw_str = ET.tostring(higraphml)
