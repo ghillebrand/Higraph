@@ -155,7 +155,9 @@ class BlobTextItem(QGraphicsTextItem):
         # Optional: Draw a subtle background behind the text
         if 'description' in self.parentItem().metadataAttributes and \
                 self.parentItem().metadataAttributes['description']['display']: 
-            painter.setClipRect(self.boundingRect())
+            #Fit it _inside_ the rect
+            clipR = self.boundingRect().adjusted(2,0,-2,0)
+            painter.setClipRect(clipR)
             painter.setBrush(QColor(240, 240, 240, 240))
             painter.setPen(Qt.NoPen)
             painter.drawRect(self.boundingRect())
@@ -186,7 +188,21 @@ class BlobTextItem(QGraphicsTextItem):
     def textChanged(self):
         self.setTextSize(self.parentItem())
         return
-    
+
+    def keyPressEvent(self, event):
+        """ 
+            <enter> to accept
+             <alt><enter> to generate an embedded newline
+        """
+        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+            if event.modifiers() & Qt.AltModifier:
+                self.textCursor().insertText("\n")
+            else:
+                self.clearFocus()
+            #event.accept()
+        else:
+            super().keyPressEvent(event)
+
         
     def mousePressEvent(self, event):
         # Forward to parent
@@ -266,8 +282,11 @@ class VisNodeItem(QGraphicsObject):
 
         #a place to display metadata
         self.metaDisplay = TransparentTextItem("", parent=self)
-        #self.metaDisplay = NameTextItem("",self)  
+        #TODO: Enabling this messes with the treeHierarchy
+        #self.metaDisplay = NameTextItem("",parent=self)  
         self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2.5))  #NODESIZE/2,0))
+        #Updating the attrib pos of `node`s doesn't make a lot of sense
+        #self.metaDisplay.setPos(QPointF(NODESIZE/2,-NODESIZE*2.5 + self.nameText.boundingRect().height()))  
         #Set the text to italic to differentiate it from name and description
         metaDisplayFont = QFont()
         metaDisplayFont.setItalic(True)
@@ -919,14 +938,17 @@ class VisBlobItem(VisNodeItem):
                             if hitrect.contains(QPointF(p)):
                                 #self.scene().blobInsidePoints.append((i.edgeNum, eL.lineNum, countP+1))
                                 self.scene().blobInsidePoints.append((i, eL.lineNum, countP+1))
-
+            
+            """
+            #TODO: rethink selecting multiple blobs. This breaks copying and other selection things
             onlyBlobsSelected=True
             for i in self.scene().selectedItems():
                 if type(i) != VisBlobItem:
                     onlyBlobsSelected=False
                     break
-            #if value == 1 and self.isOnlySelected: #when selected
-            if value == 1 and onlyBlobsSelected:
+            """
+            if value == 1 and self.isOnlySelected: #when selected
+            #if value == 1 and onlyBlobsSelected:
                 #Make group
                 self.childGroup = QGraphicsItemGroup(self)
                 if self.childGroup not in self.scene().items():

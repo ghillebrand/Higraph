@@ -582,7 +582,9 @@ class VisHyperEdgeItem(QGraphicsObject):
             #  >>> There is a  `textChanged` method...
             ##if change == QGraphicsItem.GraphicsItemChange.ItemToolTipChange:
             ##    self.nameText.setPlainText(self.model.Gr.edgeD[self.edgeNum].metadata['name'] )
-        
+            #TODO:
+            #Update textpos if the nameText has changed (for metadata)
+            
         return super().itemChange(change, value)
 
     def setPolylineType(self, lineType:int):
@@ -871,7 +873,8 @@ class VisHyperEdgeItem(QGraphicsObject):
             if newPos is None:
                 textPt = self.textPosfromTD(self.nameText.edgeLine, self.nameText.posT, self.nameText.posD)
                 self.nameText.setPos(textPt)
-                self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+                #self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+                #self.metaDisplay.setPos(self.nameText.pos() + QPointF(0,-NODESIZE*1.9 + self.nameText.boundingRect().height()))
             else: #relative position _has_ changed.
                 #NOTE: Could the functions not set these directly???
                 el,t,d = self.textTDfromXY(newPos)
@@ -879,7 +882,10 @@ class VisHyperEdgeItem(QGraphicsObject):
                 self.nameText.posT = t
                 self.nameText.posD = d
                 #Also update the metadata pos
-                self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+                #self.metaDisplay.setPos(self.nameText.pos()+QPointF(0,0))
+                #Offset for multiline names
+                #self.metaDisplay.setPos(self.nameText.pos() + QPointF(0,-NODESIZE*2.1 + self.nameText.boundingRect().height()))
+            self.metaDisplay.setPos(self.nameText.pos() + QPointF(0,-NODESIZE*1.9 + self.nameText.boundingRect().height()))
 
     def addSegment(self, edgeLine, newNode, start, nodePt, splitPoint:QPointF ):
         """ Adds another segment to a hyperedge, between `newNode` and the segment `edgeLine`, 
