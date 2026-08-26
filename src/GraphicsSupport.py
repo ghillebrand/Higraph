@@ -140,9 +140,16 @@ class NameTextItem(QGraphicsTextItem):
         return super().itemChange(change, value)
 
     def keyPressEvent(self, event):
+        """ 
+            <enter> to accept
+             <alt><enter> to generate an embedded newline
+        """
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
-            self.clearFocus()
-            event.accept()
+            if event.modifiers() & Qt.AltModifier:
+                self.textCursor().insertText("\n")
+            else:
+                self.clearFocus()
+            #event.accept()
         else:
             super().keyPressEvent(event)
 

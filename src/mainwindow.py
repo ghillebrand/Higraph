@@ -3556,7 +3556,7 @@ class MainWindow(QMainWindow):
 
         # Preprocessing of file for ease of parsing
         #TODO: Check how this will mess with multiline metadata
-        higraphStr = higraphStr.replace("\n", " ")  # line returns
+        #higraphStr = higraphStr.replace("\n", " ")  # line returns
         higraphStr = higraphStr.replace("\r", " ")  # line returns
         higraphStr = higraphStr.replace("\t", " ")  # tabs
         higraphStr = re.sub("<graphml .*?>", "<graphml>", higraphStr)  # unneeded schema
