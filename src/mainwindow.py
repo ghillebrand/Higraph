@@ -42,7 +42,7 @@ from PySide6.QtGui import (QStandardItemModel, QStandardItem, QPolygonF,QPainter
             QGuiApplication, QImage, QPixmap)
 
 from PySide6.QtCore import (QCoreApplication, QLineF, QPointF,QPoint, QRect, QRectF, 
-            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent,
+            QSize, QSizeF, Qt, Signal, Slot, QTimer, QObject, QEvent, QStandardPaths,
             QMimeData, QBuffer, QByteArray, QIODevice, QItemSelectionModel)
 
 from PySide6.QtSvg import QSvgGenerator
@@ -4790,7 +4790,7 @@ class action_CreditsDlg(QDialog):
 #import cProfile
 
 if __name__ == "__main__":
-    print("start up ","="*100)
+
 
     #set the app name in Windows
     basedir = os.path.dirname(__file__)
@@ -4808,7 +4808,18 @@ if __name__ == "__main__":
     app.setOrganizationName("isijingi")
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
-    
+    #Send print statements to a file if not debugging
+    if not DEBUG:
+        import datetime as dt
+        from pathlib import Path
+        baseDir = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
+        timeStamp:str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        errorFileName:str = os.path.join(baseDir,"_higraph_errors_" + timeStamp + "_" +".txt")
+        print(f"{errorFileName=}")
+        errorFile = open(errorFileName,'wt')
+        sys.stdout = errorFile
+    print("start up ","="*100)
+
     #Make sure this will work on "dark Mode" themes
     # This is a patch to force the colour scheme
     app.setStyle("Fusion")
@@ -4824,3 +4835,6 @@ if __name__ == "__main__":
     MainWin.show()
     #cProfile.run('sys.exit(app.exec())')
     sys.exit(app.exec())
+
+    #TODO: When to delete these files?
+    errorFile.close()
