@@ -2,6 +2,7 @@
 
 #Absolute System Constants
 #-------------------------
+DEBUG = False  #Set this to False for "production" releases
 
 #Constants for edge type
 STRAIGHT = 0
@@ -9,7 +10,7 @@ SPLINE = 1
 
 APP_NAME = "Higraph"
 # Attempt to follow semantic versioning https://semver.org/spec/v2.0.0.html
-APP_VERSION = "0.3.3"
+APP_VERSION = "0.3.4"
 
 # Indices for Qt Item metadata tags 
 from PySide6.QtCore import Qt
@@ -42,12 +43,6 @@ roleDic={ROLE_NODE: "ROLE_NODE",
         ROLE_POLYLINE:"ROLE_POLYLINE",
         ROLE_DUMMYNODE:"ROLE_DUMMYNODE"}
 
-
-#Being replaced by prefs dataclass
-
-#User Preferences
-#----------------
-#TODO: Reverse the prefs version
 NODESIZE = 15
 #Selection tolerance
 HITSIZE = 5
@@ -56,6 +51,12 @@ PASTE_OFFSET = 100
 
 BLOB_CORNER_RADIUS = 10
 TANGENT_SCALE_FACTOR = 20
+
+
+#Being replaced by prefs dataclass
+
+#User Preferences
+#----------------
 
 #options and defaults
 from PySide6.QtGui import QColor
@@ -67,7 +68,7 @@ BLOB_HANDLE_COLOUR=QColor("green")
 EDGE_HANDLE_COLOUR=QColor("green")
 POINT_COLOUR=QColor("purple")
 
-# End of user prefs (to be deleted")
+
 from PySide6.QtCore import QSettings
 from PySide6.QtGui import QColor
 from dataclasses import dataclass, fields,  field
