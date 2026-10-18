@@ -433,9 +433,26 @@ class HermiteSplineItem(QGraphicsItem):
     def boundingRect(self) -> QRectF:
         adjust = 2
         self._boundingRect = self._path.boundingRect().adjusted(-adjust, -adjust, adjust, adjust)
-        #TODO: THis includes (0,0) from a child. WHich one!
-        #self._boundingRect = self._boundingRect.united (self.childrenBoundingRect().adjusted(-adjust, -adjust, adjust, adjust))
+
+        #if selected, add the tangent lines and handle rects to the rect
+        
+        if self.isSelected():
+            #Tangent line bounding rects:
+            self._boundingRect = self._boundingRect.united(QRectF(self._p[0], self._p[0] + self._t[0][1]).normalized())
+            for i in range(1,len(self._p)-1):
+                self._boundingRect = self._boundingRect.united(QRectF(self._p[i], self._p[i] - self._t[i][0]).normalized())      #left
+                self._boundingRect = self._boundingRect.united(QRectF(self._p[i], self._p[i] + self._t[i][1]).normalized())      #right
+            self._boundingRect = self._boundingRect.united(QRectF(self._p[-1], self._p[-1] - self._t[-1][0]).normalized())
+
+        #Handle rects:
+        for p in self._pHandles:
+            self._boundingRect = self._boundingRect.united(p.rect())
+        for t in self._tHandles:
+            self._boundingRect = self._boundingRect.united(t[0].rect())
+            self._boundingRect = self._boundingRect.united(t[1].rect())
+
         return self._boundingRect
+
     def shape(self):
         outlinePath = QPainterPathStroker()
         outlinePath.setWidth(HITSIZE*2)
@@ -765,8 +782,8 @@ class HermiteSplineItem(QGraphicsItem):
         #Tangent handles
         self._tHandles = []
         #start
-        # no left tgt, use 0
-        self._tHandles.append((QPointF(0,0),
+        # no left tgt, use 0 size HandleItem for consistency
+        self._tHandles.append((HandleItem(QPointF(0,0)),
                                 HandleItem(self._t[0][1],color=self._selectColor,parent=self._pHandles[0]))) 
         #Middle
         for i in range(1,len(self._t) -1): #End points have 1 tgt, mid pts 2
@@ -774,8 +791,8 @@ class HermiteSplineItem(QGraphicsItem):
                                    HandleItem(self._t[i][1],color=self._selectColor,parent=self._pHandles[i]))) #right
         #End
         #no right tangent, use 0, must be a QPointF
-        self._tHandles.append((HandleItem(-self._t[-1][0],color=self._selectColor,parent=self._pHandles[-1]),
-                                QPointF(0,0))) 
+        self._tHandles.append( (HandleItem(-self._t[-1][0],color=self._selectColor,parent=self._pHandles[-1]),
+                                HandleItem(QPointF(0,0))) ) 
 
         for ph in self._pHandles:
             ph.setMoveCallback(self._updateFromHandles)

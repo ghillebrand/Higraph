@@ -3110,7 +3110,7 @@ class MainWindow(QMainWindow):
         newBlob.suppressItemChange = False
         return newBlob
     
-    def edgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
+    def xxedgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
         """ Create a new edge from an XML string
             if newID is True, the item is created with a newID,otherwise, the read value.
             This is the difference between file load (new items) and edit paste (structure)

@@ -486,7 +486,8 @@ class VisHyperEdgeItem(QGraphicsObject):
         bRect = self.edgeLines[0].boundingRect().normalized()
         for edgeLine in self.edgeLines[1:]:
             bRect = bRect.united(edgeLine.boundingRect().normalized()).normalized()
-        return bRect        
+            
+        return bRect   
 
     def paint(self, painter, option, widget=None):
         #print(f" Paint {self.edgeNum =}")
