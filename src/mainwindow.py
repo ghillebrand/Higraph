@@ -1201,7 +1201,7 @@ class grScene(QGraphicsScene):
                     edgeLine = item.edgeLineAt(mPos)
                     edgeLine._deleteHandles()
                     edgeLine.addPoint(mPos)
-                    edgeLine.setSelected(True)
+                    item.setSelected(True)
 
                 elif cxChoice == "delPt":
                     edgeLine = item.edgeLineAt(mPos)
@@ -3110,7 +3110,7 @@ class MainWindow(QMainWindow):
         newBlob.suppressItemChange = False
         return newBlob
     
-    def edgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
+    def xxedgeFromXML(self,xEdge,newID=False,newStartID=None, newEndID=None)->VisEdgeItem:
         """ Create a new edge from an XML string
             if newID is True, the item is created with a newID,otherwise, the read value.
             This is the difference between file load (new items) and edit paste (structure)
@@ -4815,9 +4815,13 @@ if __name__ == "__main__":
         baseDir = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
         timeStamp:str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         errorFileName:str = os.path.join(baseDir,"_higraph_errors_" + timeStamp + "_" +".txt")
-        print(f"{errorFileName=}")
-        errorFile = open(errorFileName,'wt')
+        #print(f"{errorFileName=}")
+        #Note buffering, to ensure errors are available if the user opens the file before closing the app
+        errorFile = open(errorFileName,'wt',buffering=1)
         sys.stdout = errorFile
+        sys.stderr = errorFile
+        print(f"Starting at {timeStamp}")
+
     print("start up ","="*100)
 
     #Make sure this will work on "dark Mode" themes
@@ -4829,7 +4833,7 @@ if __name__ == "__main__":
     app.setPalette(newPalette)
 
     #NOTE: also put `os.path.join(basedir,` into ui_form.py after generation
-    app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icons\\icon2.ico')))  #'qtpyGraphEdit.ico')))
+    app.setWindowIcon(QtGui.QIcon(os.path.join(basedir,'icons\\icon2.ico')))
     MainWin = MainWindow()
     MainWin.resize(1000, 700)
     MainWin.show()
