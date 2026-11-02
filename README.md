@@ -50,7 +50,10 @@ Double-clicking on any item in the dictionary or on the image allows its various
     
 
 # Getting started
-For Windows, there is a binary release [here](https://github.com/ghillebrand/Higraph/releases)
+For Windows, there is a binary release [here](https://github.com/ghillebrand/Higraph/releases). 
+
+Currently, this doesn't seem to properly associate `higraph.exe` with `.higraphml` files. Do this by creating a `.higraphml` file from the program, and, from Windows Explorer, right-clicking on it and choosing `Open With`, `choose another app`, scrolling to the bottom of the list, and choosing `more apps`, then `look for another app on this PC`, then navigating to `"C:\Program Files (x86)\isijingi\Higraph\higraph.exe"`. (I know - happy to take suggestions as to how to fix this!)
+To create a desktop shortcut, right-click on the desktop, choose `New shortcut`, then `browse` to `"C:\Program Files (x86)\isijingi\Higraph\higraph.exe"`
 
 For other platforms:
 - create a folder, 
