@@ -2,7 +2,7 @@
 
 #Absolute System Constants
 #-------------------------
-DEBUG = True #False  #Set this to False for "production" releases
+DEBUG = False  #Set this to False for "production" releases
 
 #Constants for edge type
 STRAIGHT = 0
