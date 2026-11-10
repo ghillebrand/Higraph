@@ -4151,16 +4151,33 @@ class MainWindow(QMainWindow):
         # Create SVG generator
         generator = QSvgGenerator()
         generator.setFileName(filePath)
-        #TODO: bounding box still not snug, but workable.
-        generator.setSize(self.Scene.sceneRect().size().toSize())  #itemsBoundingRect().size().toSize())
+
+        #generator.setSize(self.Scene.sceneRect().size().toSize())  #itemsBoundingRect().size().toSize())
         #generator.setSize(self.Scene.itemsBoundingRect().size().toSize())
-        #TODO: Why is there a lot of white space at the top left?
-        generator.setTitle(f"{APP_NAME} Export")
+        
+        generator.setTitle(f"{APP_NAME} export of {self.fileName}")
+
+        #Why is there a lot of white space at the top left?
+        #The offset occurs because itemsBoundingRect() often starts at an offset $(x, y)$ coordinate within the scene (e.g., $x=50, y=100$), but QGraphicsScene.render() defaults to drawing at $(0, 0)$ on the painter target.To get a tightly cropped SVG without margins or offset shifts, normalize both the viewBox and target rectangle to (0, 0) while keeping source as itemsBoundingRect()
+
+        rect = self.Scene.itemsBoundingRect()
+
+        size = rect.size().toSize()
+        # set generator to start at (0, 0)
+        target_rect = QRectF(0, 0, rect.width(), rect.height())
+        generator.setSize(size)
+        generator.setViewBox(target_rect)
 
         # Paint the scene into the generator
         #TODO: Deselect before painting, then reselect (copy from copy bitmap code)
+
         painter = QPainter(generator)
-        self.Scene.render(painter)
+        #stop the font getting too small
+        #font = painter.font()
+        #font.setPointSize(14)  # Set size in points 
+        #painter.setFont(font)  
+
+        self.Scene.render(painter, target=target_rect, source=rect)
         painter.end()
 
     def action_EditCopy(self):
@@ -4809,17 +4826,26 @@ if __name__ == "__main__":
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
     #Send print statements to a file if not debugging
+    errorFile = None
     if not DEBUG:
         import datetime as dt
         from pathlib import Path
         baseDir = QStandardPaths.writableLocation(QStandardPaths.StandardLocation.AppDataLocation)
+        #Ensure the path is there
+        Path(baseDir).mkdir(parents=True, exist_ok=True)
+
         timeStamp:str = dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         errorFileName:str = os.path.join(baseDir,"_higraph_errors_" + timeStamp + "_" +".txt")
-        #print(f"{errorFileName=}")
+        print(f"{errorFileName=}")
         #Note buffering, to ensure errors are available if the user opens the file before closing the app
-        errorFile = open(errorFileName,'wt',buffering=1)
-        sys.stdout = errorFile
-        sys.stderr = errorFile
+        try:
+            errorFile = open(errorFileName,'wt',buffering=1)
+            sys.stdout = errorFile
+            sys.stderr = errorFile
+        except errorFile:
+            #This is unlikely to ever appear, since not DEBUG should not have a console ...
+            print(f"Error opening {errorFileName}")
+
         print(f"Starting at {timeStamp}")
 
     print("start up ","="*100)
@@ -4841,4 +4867,5 @@ if __name__ == "__main__":
     sys.exit(app.exec())
 
     #TODO: When to delete these files?
-    errorFile.close()
+    if errorFile:
+        errorFile.close()
