@@ -801,9 +801,12 @@ class VisBlobItem(VisNodeItem):
         return xmlBlob
 
     def boundingRect(self):
-        #TODO: Add in the displayed text
-        return self.nodeShape._rect.adjusted(-5, -5, 5, 5)
-    
+        bRect =  self.nodeShape._rect.adjusted(-5, -5, 5, 5)
+        #Add text, etc
+        bRect = bRect.united(self.childrenBoundingRect())
+
+        return bRect
+
     def shape(self):
         # Combined shape: Hollow Border + Solid Text Area
         #print("Blob shape udpate")

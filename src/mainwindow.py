@@ -4274,13 +4274,27 @@ class MainWindow(QMainWindow):
         boundingRect = boundingRect.toAlignedRect()
 
         # Create the image
-        image = QImage(boundingRect.size(), QImage.Format.Format_RGB16)
+        #image = QImage(boundingRect.size(), QImage.Format.Format_RGB16)
+        #image.fill(Qt.white)
+        
+        #create a hi-res bitmap
+        targetDPI = 300
+        scaleFactor = targetDPI / 96.0  # Scale relative to standard 96 DPI screen
+
+        # Create higher resolution QImage
+        scaledSize = (boundingRect.size() * scaleFactor)
+        image = QImage(scaledSize, QImage.Format.Format_RGB16)
+
+        # Set DPI metadata inside the image file
+        dpm = int(targetDPI / 0.0254)  # Convert DPI to dots per meter
+        image.setDotsPerMeterX(dpm)
+        image.setDotsPerMeterY(dpm)
+
+        targetRect = QRectF(0, 0, scaledSize.width(), scaledSize.height())
+
         image.fill(Qt.white)
-
         #Deselect to show in black, not blue!
-        #if len(selectedItems) == 1 and selectedItems[0].data(KEY_ROLE) == ROLE_EDGE:
-        #    self.Scene.clearEdgeOnly(selectedItems[0])
-
+   
         if self.Scene.thisHandleObjectSelected != None and \
                 (self.Scene.thisHandleObjectSelected in selectedItems or \
                 self.Scene.thisHandleObjectSelected.parentItem() in selectedItems):
@@ -4293,12 +4307,7 @@ class MainWindow(QMainWindow):
         painter = QPainter(image)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        # Translate so that boundingRect.topLeft() is (0,0)
-        #Only use this when calling item.paint(), not with Scene.render()
-        #painter.translate(-boundingRect.topLeft())
-
         # Draw only selected items
-        #"""
         itemsInRect = self.Scene.itemsHere((0,0),0,[ROLE_EDGE,ROLE_NODE,ROLE_BLOB],boundingRect)
         visibleItems=[]
         for it in itemsInRect:
@@ -4306,32 +4315,8 @@ class MainWindow(QMainWindow):
                 visibleItems.append(it)
                 it.setVisible(False)
 
-        # Temp - chop off at bounding rect
-        self.Scene.render(painter, target=QRectF(), source=boundingRect) # item.sceneBoundingRect())
-        #"""
+        self.Scene.render(painter, target=targetRect, source=boundingRect)
 
-        # Paint only the selected items (and the children of compound items)
-        """
-        painter.setPen(Qt.black)
-        option = QStyleOptionGraphicsItem()
-        #TODO: Get children items of NDOES to properly translate. 
-        # This may be a deeper issue with structure of the objects
-        painter.translate(-boundingRect.topLeft())
-        for item in selectedItems:
-            print(f"{item.data(KEY_INDEX) =} {item.pos() =}")
-            #paintItemAndChildren(item,painter)
-            item.paint(painter, option)
-            
-            for child in item.childItems():
-                print(f"{child =}")
-                painter.save()
-                #Works for edges, not nodes:
-                painter.translate(item.scenePos())
-                painter.setTransform(child.sceneTransform(), True)
-                
-                child.paint(painter,option,widget=None)
-                painter.restore()
-        """
         painter.end()
         for it in visibleItems:
             it.setVisible(True)
